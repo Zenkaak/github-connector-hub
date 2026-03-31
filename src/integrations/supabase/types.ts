@@ -118,6 +118,7 @@ export type Database = {
           description: string | null
           id: string
           is_public: boolean
+          joining_fee: number | null
           late_contribution_penalty: number | null
           max_members: number | null
           meeting_absence_penalty: number | null
@@ -136,6 +137,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_public?: boolean
+          joining_fee?: number | null
           late_contribution_penalty?: number | null
           max_members?: number | null
           meeting_absence_penalty?: number | null
@@ -154,6 +156,7 @@ export type Database = {
           description?: string | null
           id?: string
           is_public?: boolean
+          joining_fee?: number | null
           late_contribution_penalty?: number | null
           max_members?: number | null
           meeting_absence_penalty?: number | null
@@ -722,31 +725,43 @@ export type Database = {
       chama_support_messages: {
         Row: {
           created_at: string
+          file_name: string | null
           file_url: string | null
           group_id: string
           id: string
           is_read: boolean
           message: string
+          message_type: string | null
+          receiver_id: string | null
+          sender_id: string | null
           sender_type: string
           user_id: string
         }
         Insert: {
           created_at?: string
+          file_name?: string | null
           file_url?: string | null
           group_id: string
           id?: string
           is_read?: boolean
           message: string
+          message_type?: string | null
+          receiver_id?: string | null
+          sender_id?: string | null
           sender_type?: string
           user_id: string
         }
         Update: {
           created_at?: string
+          file_name?: string | null
           file_url?: string | null
           group_id?: string
           id?: string
           is_read?: boolean
           message?: string
+          message_type?: string | null
+          receiver_id?: string | null
+          sender_id?: string | null
           sender_type?: string
           user_id?: string
         }
@@ -902,6 +917,7 @@ export type Database = {
       }
       chama_withdrawals: {
         Row: {
+          admin_reason: string | null
           amount: number
           created_at: string
           group_id: string
@@ -911,6 +927,7 @@ export type Database = {
           status: string
         }
         Insert: {
+          admin_reason?: string | null
           amount: number
           created_at?: string
           group_id: string
@@ -920,6 +937,7 @@ export type Database = {
           status?: string
         }
         Update: {
+          admin_reason?: string | null
           amount?: number
           created_at?: string
           group_id?: string
