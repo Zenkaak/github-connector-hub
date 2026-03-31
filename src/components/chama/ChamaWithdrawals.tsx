@@ -76,11 +76,10 @@ export function ChamaWithdrawals({ groupId, members, myRole, savings }: Props) {
       // Create approval records for all 3 leaders
       const approvalRecords = leaders.map(l => ({
         withdrawal_id: wd.id,
-        approver_id: l.user_id,
-        approver_role: l.role,
-        decision: 'pending',
+        user_id: l.user_id,
+        approved: null,
       }));
-      await supabase.from('chama_withdrawal_approvals').insert(approvalRecords);
+      await supabase.from('chama_withdrawal_approvals').insert(approvalRecords as any);
 
       // Notify all leaders
       await supabase.from('notifications').insert(
