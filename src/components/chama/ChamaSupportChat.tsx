@@ -65,12 +65,12 @@ export function ChamaSupportChat({ groupId, members, myRole }: Props) {
 
     // Mark as read
     if (data && data.length > 0) {
-      await supabase
+      await (supabase
         .from('chama_support_messages')
         .update({ is_read: true } as any)
-        .eq('group_id', groupId)
-        .eq('receiver_id' as any, user.id)
-        .eq('sender_id' as any, otherUserId);
+        .eq('group_id', groupId) as any)
+        .eq('receiver_id', user.id)
+        .eq('sender_id', otherUserId);
     }
   };
 
