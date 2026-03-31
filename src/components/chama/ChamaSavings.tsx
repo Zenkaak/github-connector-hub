@@ -312,7 +312,7 @@ export function ChamaSavings({
         <Card className="p-4">
           <p className="text-xs text-muted-foreground">Amount</p>
           <p className="font-bold">
-            KES {group?.savings_amount?.toLocaleString() || '0'}
+            KES {group?.contribution_amount?.toLocaleString() || '0'}
           </p>
         </Card>
 
