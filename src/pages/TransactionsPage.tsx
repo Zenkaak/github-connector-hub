@@ -477,7 +477,7 @@ export default function TransactionsPage() {
                   <div className="space-y-2">
                     {requests.map((req, i) => {
                       const isRequester = req.requester_id === user?.id;
-                      const otherName = requestNames[isRequester ? req.target_id : req.requester_id] || 'Unknown';
+                      const otherName = requestNames[isRequester ? req.requested_from_id : req.requester_id] || 'Unknown';
                       const statusColor = req.status === 'paid' ? 'text-success' : req.status === 'declined' ? 'text-destructive' : 'text-accent';
                       const statusBg = req.status === 'paid' ? 'bg-success/10' : req.status === 'declined' ? 'bg-destructive/10' : 'bg-accent/10';
                       const StatusIcon = req.status === 'paid' ? CheckCircle2 : req.status === 'declined' ? XCircle : Clock;

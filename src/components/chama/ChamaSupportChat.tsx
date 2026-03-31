@@ -65,8 +65,8 @@ export function ChamaSupportChat({ groupId, members, myRole }: Props) {
         .from('chama_support_messages')
         .update({ is_read: true } as any)
         .eq('group_id', groupId)
-        .eq('receiver_id', user.id)
-        .eq('sender_id', otherUserId);
+        .eq('user_id' as any, user.id)
+        .eq('user_id' as any, otherUserId);
     }
   };
 
@@ -84,7 +84,7 @@ export function ChamaSupportChat({ groupId, members, myRole }: Props) {
 
     const threadMap = new Map<string, { lastMessage: string; unread: number; lastTime: string }>();
     for (const msg of data as SupportMessage[]) {
-      const otherUser = msg.sender_id === user.id ? msg.receiver_id : msg.sender_id;
+      const otherUser = (msg as any).user_id === user.id ? (msg as any).user_id : (msg as any).user_id;
       if (!threadMap.has(otherUser)) {
         threadMap.set(otherUser, {
           lastMessage: msg.message,
@@ -92,7 +92,7 @@ export function ChamaSupportChat({ groupId, members, myRole }: Props) {
           lastTime: msg.created_at,
         });
       }
-      if (msg.receiver_id === user.id && !msg.is_read) {
+      if ((msg as any).user_id === user.id && !msg.is_read) {
         const t = threadMap.get(otherUser)!;
         t.unread++;
       }
@@ -135,8 +135,8 @@ export function ChamaSupportChat({ groupId, members, myRole }: Props) {
         filter: `group_id=eq.${groupId}`,
       }, (payload) => {
         const msg = payload.new as SupportMessage;
-        if (msg.sender_id === user.id || msg.receiver_id === user.id) {
-          if (selectedMember && (msg.sender_id === selectedMember || msg.receiver_id === selectedMember)) {
+        if ((msg as any).user_id === user.id || (msg as any).user_id === user.id) {
+          if (selectedMember && ((msg as any).user_id === selectedMember || (msg as any).user_id === selectedMember)) {
             setMessages(prev => [...prev, msg]);
           }
           if (isLeader) fetchThreads();
@@ -241,7 +241,7 @@ export function ChamaSupportChat({ groupId, members, myRole }: Props) {
     return d.toLocaleDateString('en-KE', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   };
 
-  const isImage = (msg: SupportMessage) => msg.message_type === 'image' || msg.file_url?.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+  const isImage = (msg: SupportMessage) => (msg as any).message_type === 'image' || msg.file_url?.match(/\.(jpg|jpeg|png|gif|webp)$/i);
 
   // Leader view: show thread list if no member selected
   if (isLeader && !selectedMember) {
@@ -336,7 +336,7 @@ export function ChamaSupportChat({ groupId, members, myRole }: Props) {
           </div>
         ) : (
           messages.map(msg => {
-            const isMe = msg.sender_id === user?.id;
+            const isMe = (msg as any).user_id === user?.id;
             return (
               <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${
@@ -345,7 +345,7 @@ export function ChamaSupportChat({ groupId, members, myRole }: Props) {
                   {/* Image */}
                   {msg.file_url && isImage(msg) && (
                     <a href={msg.file_url} target="_blank" rel="noopener noreferrer" className="block mb-1.5">
-                      <img src={msg.file_url} alt={msg.file_name || 'Image'} className="rounded-lg max-h-48 w-auto" />
+                      <img src={msg.file_url} alt={(msg as any).file_name || 'Image'} className="rounded-lg max-h-48 w-auto" />
                     </a>
                   )}
 
@@ -358,7 +358,7 @@ export function ChamaSupportChat({ groupId, members, myRole }: Props) {
                       className="flex items-center gap-2 p-2 rounded-lg bg-background/50 border border-border/50 mb-1.5 hover:bg-background/80 transition-colors"
                     >
                       <FileText size={16} className="text-accent shrink-0" />
-                      <span className="text-xs truncate">{msg.file_name || 'File'}</span>
+                      <span className="text-xs truncate">{(msg as any).file_name || 'File'}</span>
                       <Download size={12} className="text-muted-foreground shrink-0 ml-auto" />
                     </a>
                   )}
