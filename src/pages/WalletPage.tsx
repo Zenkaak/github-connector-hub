@@ -88,6 +88,7 @@ interface Transfer {
   receiver_name: string | null;
   status: string;
   created_at: string;
+  cancelled_at: string | null;
 }
 
 interface DeviceSession {
