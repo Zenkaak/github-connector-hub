@@ -15,8 +15,7 @@ interface Penalty {
   user_id: string;
   amount: number;
   reason: string;
-  status: string;
-  period_date: string;
+  is_paid: boolean;
   created_at: string;
 }
 
@@ -76,7 +75,7 @@ export function ChamaPenalties({ groupId, group, members, myRole }: Props) {
         .from('chama_savings')
         .select('user_id')
         .eq('group_id', groupId)
-        .gte('period_date', periodDate);
+        .gte('created_at', periodDate);
 
       const paidUserIds = new Set(savings?.map(s => s.user_id) || []);
 
@@ -84,7 +83,7 @@ export function ChamaPenalties({ groupId, group, members, myRole }: Props) {
         .from('chama_penalties')
         .select('user_id')
         .eq('group_id', groupId)
-        .eq('period_date', periodDate)
+        .gte('created_at', periodDate)
         .eq('reason', 'Late contribution penalty');
 
       const penalizedUserIds = new Set((existingPenalties as any[])?.map(p => p.user_id) || []);
@@ -164,10 +163,10 @@ export function ChamaPenalties({ groupId, group, members, myRole }: Props) {
     }
   };
 
-  const totalUnpaid = penalties.filter(p => p.status === 'unpaid').reduce((sum, p) => sum + p.amount, 0);
-  const totalPaid = penalties.filter(p => p.status === 'paid').reduce((sum, p) => sum + p.amount, 0);
+  const totalUnpaid = penalties.filter(p => !p.is_paid).reduce((sum, p) => sum + p.amount, 0);
+  const totalPaid = penalties.filter(p => p.is_paid).reduce((sum, p) => sum + p.amount, 0);
   const myPenalties = penalties.filter(p => p.user_id === user?.id);
-  const myUnpaid = myPenalties.filter(p => p.status === 'unpaid');
+  const myUnpaid = myPenalties.filter(p => !p.is_paid);
 
   if (loading) return <div className="p-8 text-center"><Loader2 className="animate-spin mx-auto text-muted-foreground" /></div>;
 
@@ -224,13 +223,13 @@ export function ChamaPenalties({ groupId, group, members, myRole }: Props) {
         <div className="space-y-2">
           {/* Leaders see all penalties, members see only theirs */}
           {(isLeader ? penalties : myPenalties).map(p => (
-            <Card key={p.id} className={`p-4 ${p.status === 'unpaid' ? 'border-destructive/20' : ''}`}>
+            <Card key={p.id} className={`p-4 ${!p.is_paid ? 'border-destructive/20' : ''}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                    p.status === 'paid' ? 'bg-emerald-500/10' : 'bg-destructive/10'
+                    p.is_paid ? 'bg-emerald-500/10' : 'bg-destructive/10'
                   }`}>
-                    {p.status === 'paid' ? <CheckCircle size={14} className="text-emerald-500" /> : <AlertTriangle size={14} className="text-destructive" />}
+                    {p.is_paid ? <CheckCircle size={14} className="text-emerald-500" /> : <AlertTriangle size={14} className="text-destructive" />}
                   </div>
                   <div>
                     <p className="text-sm font-medium">{isLeader ? getMemberName(p.user_id) : p.reason}</p>
@@ -238,11 +237,11 @@ export function ChamaPenalties({ groupId, group, members, myRole }: Props) {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`text-sm font-bold ${p.status === 'paid' ? 'text-emerald-500' : 'text-destructive'}`}>
+                  <span className={`text-sm font-bold ${p.is_paid ? 'text-emerald-500' : 'text-destructive'}`}>
                     KES {p.amount.toLocaleString()}
                   </span>
                   {/* Pay Now button for ANY member with unpaid penalty (including leaders) */}
-                  {p.status === 'unpaid' && p.user_id === user?.id && (
+                  {!p.is_paid && p.user_id === user?.id && (
                     <Button size="sm" variant="gold" className="text-xs h-7 gap-1" onClick={() => {
                       const myPhone = members.find(m => m.user_id === user?.id)?.profile?.phone || '';
                       setPayPhone(myPhone);
@@ -251,7 +250,7 @@ export function ChamaPenalties({ groupId, group, members, myRole }: Props) {
                       <Send size={12} /> Pay Now
                     </Button>
                   )}
-                  {isLeader && p.status === 'unpaid' && p.user_id !== user?.id && (
+                  {isLeader && !p.is_paid && p.user_id !== user?.id && (
                     <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => handleMarkPaid(p.id)}>
                       Mark Paid
                     </Button>
@@ -272,7 +271,7 @@ export function ChamaPenalties({ groupId, group, members, myRole }: Props) {
               <Card className="p-3 bg-destructive/5 border-destructive/20">
                 <p className="text-sm font-medium text-destructive">{payDialog.penalty.reason}</p>
                 <p className="text-2xl font-bold mt-1">KES {payDialog.penalty.amount.toLocaleString()}</p>
-                <p className="text-xs text-muted-foreground mt-1">Period: {payDialog.penalty.period_date}</p>
+                <p className="text-xs text-muted-foreground mt-1">Date: {format(new Date(payDialog.penalty.created_at), 'MMM d, yyyy')}</p>
               </Card>
               <div>
                 <Label>M-Pesa Phone Number</Label>

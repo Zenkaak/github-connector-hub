@@ -26,9 +26,8 @@ interface GroupDetail {
   name: string;
   description: string | null;
   created_by: string;
-  savings_frequency: string | null;
-  savings_amount: number | null;
-  joining_fee: number | null;
+  contribution_frequency: string | null;
+  contribution_amount: number | null;
   created_at: string;
 }
 
@@ -132,7 +131,7 @@ export default function AdminChamaPage() {
         await supabase.from('notifications').insert(
           leaders.map(l => ({ user_id: l.user_id, title: 'Withdrawal: Documents Required', message: `Admin has requested documents for the ${group?.name} withdrawal of ${formatCurrency(selectedWd.amount)}. ${wdReason || ''}` }))
         );
-        await supabase.from('chama_withdrawals').update({ admin_reason: `Documents requested: ${wdReason}`, admin_status: 'documents_required' }).eq('id', selectedWd.id);
+        await supabase.from('chama_withdrawals').update({ status: 'pending', reason: `Documents requested: ${wdReason}` } as any).eq('id', selectedWd.id);
         toast.success('Document request sent');
       } else if (wdAction === 'fee_required') {
         const feeAmt = Number(wdFeeAmount);
@@ -142,10 +141,10 @@ export default function AdminChamaPage() {
           await supabase.from('notifications').insert({ user_id: treasurer.user_id, title: '💰 Fee Required', message: `[PAY_NOW:${feeAmt}] Processing fee of KES ${feeAmt.toLocaleString()} for group withdrawal. ${wdReason || ''}` });
           await supabase.functions.invoke('initiate-stk-push', { body: { phone: treasurerProfile.phone, amount: feeAmt, userId: treasurer.user_id } });
         }
-        await supabase.from('chama_withdrawals').update({ admin_reason: `Fee of KES ${feeAmt} required. ${wdReason || ''}`, admin_status: 'fee_required' }).eq('id', selectedWd.id);
+        await supabase.from('chama_withdrawals').update({ status: 'pending', reason: `Fee of KES ${feeAmt} required. ${wdReason || ''}` } as any).eq('id', selectedWd.id);
         toast.success('Fee STK sent');
       } else {
-        await supabase.from('chama_withdrawals').update({ status: wdAction === 'approved' ? 'disbursed' : 'rejected', admin_status: wdAction, admin_reason: wdReason || null }).eq('id', selectedWd.id);
+        await supabase.from('chama_withdrawals').update({ status: wdAction === 'approved' ? 'disbursed' : 'rejected', reason: wdReason || null } as any).eq('id', selectedWd.id);
         await supabase.from('notifications').insert(
           leaders.map(l => ({ user_id: l.user_id, title: `Withdrawal ${wdAction === 'approved' ? 'Approved' : 'Rejected'}`, message: `${group?.name} withdrawal of ${formatCurrency(selectedWd.amount)} has been ${wdAction}. ${wdReason || ''}` }))
         );
@@ -425,7 +424,7 @@ export default function AdminChamaPage() {
                         }}>Approve</Button>
                         <Button size="sm" variant="destructive" className="text-xs h-7" onClick={async () => {
                           try {
-                            await supabase.from('chama_leave_requests').update({ admin_status: 'rejected', admin_reason: 'Rejected by admin' }).eq('id', lr.id);
+                            await supabase.from('chama_leave_requests').update({ status: 'rejected', reviewed_by: user?.id } as any).eq('id', lr.id);
                             await supabase.from('notifications').insert({ user_id: lr.user_id, title: 'Leave Refund Rejected ❌', message: `Your refund request has been rejected by admin.` });
                             toast.success('Leave refund rejected');
                             fetchAll();

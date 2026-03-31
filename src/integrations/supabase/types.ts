@@ -10,33 +10,36 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.1"
+    PostgrestVersion: "14.4"
   }
   public: {
     Tables: {
       admin_messages: {
         Row: {
-          admin_id: string | null
+          admin_id: string
           created_at: string
           id: string
           message: string
-          sent_via_sms: boolean | null
+          subject: string | null
+          type: string | null
           user_id: string
         }
         Insert: {
-          admin_id?: string | null
+          admin_id: string
           created_at?: string
           id?: string
           message: string
-          sent_via_sms?: boolean | null
+          subject?: string | null
+          type?: string | null
           user_id: string
         }
         Update: {
-          admin_id?: string | null
+          admin_id?: string
           created_at?: string
           id?: string
           message?: string
-          sent_via_sms?: boolean | null
+          subject?: string | null
+          type?: string | null
           user_id?: string
         }
         Relationships: []
@@ -69,15 +72,7 @@ export type Database = {
           loan_id?: string | null
           user_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "audit_logs_loan_id_fkey"
-            columns: ["loan_id"]
-            isOneToOne: false
-            referencedRelation: "loan_applications"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       chama_announcements: {
         Row: {
@@ -85,24 +80,24 @@ export type Database = {
           group_id: string
           id: string
           message: string
-          sender_id: string
           title: string
+          user_id: string
         }
         Insert: {
           created_at?: string
           group_id: string
           id?: string
           message: string
-          sender_id: string
-          title: string
+          title?: string
+          user_id: string
         }
         Update: {
           created_at?: string
           group_id?: string
           id?: string
           message?: string
-          sender_id?: string
           title?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -116,244 +111,90 @@ export type Database = {
       }
       chama_groups: {
         Row: {
-          allow_early_withdrawal: boolean | null
-          allow_partial_contributions: boolean | null
-          annual_savings_target: number | null
-          auto_remove_after_missed: number | null
-          chairperson_can_remove_members: boolean | null
-          contribution_rollover_enabled: boolean | null
-          contribution_target_monthly: number | null
+          contribution_amount: number
+          contribution_frequency: string
           created_at: string
-          created_by: string
+          created_by: string | null
           description: string | null
-          dissolution_policy: string | null
-          dividend_distribution_frequency: string | null
-          early_withdrawal_penalty: number | null
-          emergency_fund_enabled: boolean | null
-          emergency_fund_percentage: number | null
-          grace_period_days: number | null
-          group_registration_number: string | null
-          group_status: string | null
-          harambee_enabled: boolean | null
           id: string
-          investment_enabled: boolean | null
-          investment_types: string | null
-          is_public: boolean | null
-          joining_fee: number | null
-          late_penalty_amount: number | null
-          late_penalty_enabled: boolean | null
-          late_penalty_type: string | null
-          loan_enabled: boolean | null
-          loan_insurance_percentage: number | null
-          loan_interest_rate: number | null
-          loan_max_amount: number | null
-          loan_max_duration_months: number | null
-          loan_processing_fee: number | null
-          lock_period_months: number | null
-          max_loan_multiplier: number | null
+          is_public: boolean
+          late_contribution_penalty: number | null
           max_members: number | null
-          max_withdrawal_per_month: number | null
           meeting_absence_penalty: number | null
           meeting_day: string | null
-          meeting_frequency: string | null
-          merry_go_round_enabled: boolean | null
-          min_balance_required: number | null
-          min_contribution_amount: number | null
-          min_savings_before_loan: number | null
           name: string
-          new_member_probation_months: number | null
-          notification_meeting_reminder: boolean | null
-          notification_savings_reminder: boolean | null
+          order_number: string | null
           profile_image_url: string | null
-          profit_sharing_method: string | null
-          quorum_percentage: number | null
-          refund_percentage: number | null
-          refund_policy: string | null
-          require_backdated_savings: boolean | null
-          require_guarantor_for_loans: boolean | null
-          savings_amount: number | null
-          savings_frequency: string | null
-          share_transfer_allowed: boolean | null
-          special_contribution_enabled: boolean | null
-          terms_and_conditions: string | null
+          terms: string | null
           terms_updated_at: string | null
-          updated_at: string
-          voting_required_for: string | null
-          welfare_fund_amount: number | null
-          welfare_fund_enabled: boolean | null
         }
         Insert: {
-          allow_early_withdrawal?: boolean | null
-          allow_partial_contributions?: boolean | null
-          annual_savings_target?: number | null
-          auto_remove_after_missed?: number | null
-          chairperson_can_remove_members?: boolean | null
-          contribution_rollover_enabled?: boolean | null
-          contribution_target_monthly?: number | null
+          contribution_amount?: number
+          contribution_frequency?: string
           created_at?: string
-          created_by: string
+          created_by?: string | null
           description?: string | null
-          dissolution_policy?: string | null
-          dividend_distribution_frequency?: string | null
-          early_withdrawal_penalty?: number | null
-          emergency_fund_enabled?: boolean | null
-          emergency_fund_percentage?: number | null
-          grace_period_days?: number | null
-          group_registration_number?: string | null
-          group_status?: string | null
-          harambee_enabled?: boolean | null
           id?: string
-          investment_enabled?: boolean | null
-          investment_types?: string | null
-          is_public?: boolean | null
-          joining_fee?: number | null
-          late_penalty_amount?: number | null
-          late_penalty_enabled?: boolean | null
-          late_penalty_type?: string | null
-          loan_enabled?: boolean | null
-          loan_insurance_percentage?: number | null
-          loan_interest_rate?: number | null
-          loan_max_amount?: number | null
-          loan_max_duration_months?: number | null
-          loan_processing_fee?: number | null
-          lock_period_months?: number | null
-          max_loan_multiplier?: number | null
+          is_public?: boolean
+          late_contribution_penalty?: number | null
           max_members?: number | null
-          max_withdrawal_per_month?: number | null
           meeting_absence_penalty?: number | null
           meeting_day?: string | null
-          meeting_frequency?: string | null
-          merry_go_round_enabled?: boolean | null
-          min_balance_required?: number | null
-          min_contribution_amount?: number | null
-          min_savings_before_loan?: number | null
           name: string
-          new_member_probation_months?: number | null
-          notification_meeting_reminder?: boolean | null
-          notification_savings_reminder?: boolean | null
+          order_number?: string | null
           profile_image_url?: string | null
-          profit_sharing_method?: string | null
-          quorum_percentage?: number | null
-          refund_percentage?: number | null
-          refund_policy?: string | null
-          require_backdated_savings?: boolean | null
-          require_guarantor_for_loans?: boolean | null
-          savings_amount?: number | null
-          savings_frequency?: string | null
-          share_transfer_allowed?: boolean | null
-          special_contribution_enabled?: boolean | null
-          terms_and_conditions?: string | null
+          terms?: string | null
           terms_updated_at?: string | null
-          updated_at?: string
-          voting_required_for?: string | null
-          welfare_fund_amount?: number | null
-          welfare_fund_enabled?: boolean | null
         }
         Update: {
-          allow_early_withdrawal?: boolean | null
-          allow_partial_contributions?: boolean | null
-          annual_savings_target?: number | null
-          auto_remove_after_missed?: number | null
-          chairperson_can_remove_members?: boolean | null
-          contribution_rollover_enabled?: boolean | null
-          contribution_target_monthly?: number | null
+          contribution_amount?: number
+          contribution_frequency?: string
           created_at?: string
-          created_by?: string
+          created_by?: string | null
           description?: string | null
-          dissolution_policy?: string | null
-          dividend_distribution_frequency?: string | null
-          early_withdrawal_penalty?: number | null
-          emergency_fund_enabled?: boolean | null
-          emergency_fund_percentage?: number | null
-          grace_period_days?: number | null
-          group_registration_number?: string | null
-          group_status?: string | null
-          harambee_enabled?: boolean | null
           id?: string
-          investment_enabled?: boolean | null
-          investment_types?: string | null
-          is_public?: boolean | null
-          joining_fee?: number | null
-          late_penalty_amount?: number | null
-          late_penalty_enabled?: boolean | null
-          late_penalty_type?: string | null
-          loan_enabled?: boolean | null
-          loan_insurance_percentage?: number | null
-          loan_interest_rate?: number | null
-          loan_max_amount?: number | null
-          loan_max_duration_months?: number | null
-          loan_processing_fee?: number | null
-          lock_period_months?: number | null
-          max_loan_multiplier?: number | null
+          is_public?: boolean
+          late_contribution_penalty?: number | null
           max_members?: number | null
-          max_withdrawal_per_month?: number | null
           meeting_absence_penalty?: number | null
           meeting_day?: string | null
-          meeting_frequency?: string | null
-          merry_go_round_enabled?: boolean | null
-          min_balance_required?: number | null
-          min_contribution_amount?: number | null
-          min_savings_before_loan?: number | null
           name?: string
-          new_member_probation_months?: number | null
-          notification_meeting_reminder?: boolean | null
-          notification_savings_reminder?: boolean | null
+          order_number?: string | null
           profile_image_url?: string | null
-          profit_sharing_method?: string | null
-          quorum_percentage?: number | null
-          refund_percentage?: number | null
-          refund_policy?: string | null
-          require_backdated_savings?: boolean | null
-          require_guarantor_for_loans?: boolean | null
-          savings_amount?: number | null
-          savings_frequency?: string | null
-          share_transfer_allowed?: boolean | null
-          special_contribution_enabled?: boolean | null
-          terms_and_conditions?: string | null
+          terms?: string | null
           terms_updated_at?: string | null
-          updated_at?: string
-          voting_required_for?: string | null
-          welfare_fund_amount?: number | null
-          welfare_fund_enabled?: boolean | null
         }
         Relationships: []
       }
       chama_harambee_contributions: {
         Row: {
           amount: number
-          contributor_group_id: string | null
-          contributor_id: string
+          contributor_name: string | null
           created_at: string
           harambee_id: string
           id: string
           stk_reference: string | null
+          user_id: string
         }
         Insert: {
           amount: number
-          contributor_group_id?: string | null
-          contributor_id: string
+          contributor_name?: string | null
           created_at?: string
           harambee_id: string
           id?: string
           stk_reference?: string | null
+          user_id: string
         }
         Update: {
           amount?: number
-          contributor_group_id?: string | null
-          contributor_id?: string
+          contributor_name?: string | null
           created_at?: string
           harambee_id?: string
           id?: string
           stk_reference?: string | null
+          user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "chama_harambee_contributions_contributor_group_id_fkey"
-            columns: ["contributor_group_id"]
-            isOneToOne: false
-            referencedRelation: "chama_groups"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "chama_harambee_contributions_harambee_id_fkey"
             columns: ["harambee_id"]
@@ -365,49 +206,55 @@ export type Database = {
       }
       chama_harambees: {
         Row: {
-          beneficiary_name: string
-          collected_amount: number
+          beneficiary_name: string | null
+          beneficiary_phone: string | null
           created_at: string
           created_by: string
+          deadline: string | null
+          description: string | null
           group_id: string
           id: string
-          images: string[] | null
-          is_cross_chama: boolean
-          order_number: string
-          reason: string
+          image_urls: Json | null
+          is_public: boolean
+          order_number: string | null
+          raised_amount: number
           status: string
           target_amount: number
-          updated_at: string
+          title: string
         }
         Insert: {
-          beneficiary_name: string
-          collected_amount?: number
+          beneficiary_name?: string | null
+          beneficiary_phone?: string | null
           created_at?: string
           created_by: string
+          deadline?: string | null
+          description?: string | null
           group_id: string
           id?: string
-          images?: string[] | null
-          is_cross_chama?: boolean
-          order_number: string
-          reason: string
+          image_urls?: Json | null
+          is_public?: boolean
+          order_number?: string | null
+          raised_amount?: number
           status?: string
           target_amount?: number
-          updated_at?: string
+          title: string
         }
         Update: {
-          beneficiary_name?: string
-          collected_amount?: number
+          beneficiary_name?: string | null
+          beneficiary_phone?: string | null
           created_at?: string
           created_by?: string
+          deadline?: string | null
+          description?: string | null
           group_id?: string
           id?: string
-          images?: string[] | null
-          is_cross_chama?: boolean
-          order_number?: string
-          reason?: string
+          image_urls?: Json | null
+          is_public?: boolean
+          order_number?: string | null
+          raised_amount?: number
           status?: string
           target_amount?: number
-          updated_at?: string
+          title?: string
         }
         Relationships: [
           {
@@ -421,39 +268,27 @@ export type Database = {
       }
       chama_join_requests: {
         Row: {
-          chairperson_decision: string | null
           created_at: string
           group_id: string
           id: string
-          reject_reason: string | null
-          secretary_decision: string | null
+          reviewed_by: string | null
           status: string
-          treasurer_decision: string | null
-          updated_at: string
           user_id: string
         }
         Insert: {
-          chairperson_decision?: string | null
           created_at?: string
           group_id: string
           id?: string
-          reject_reason?: string | null
-          secretary_decision?: string | null
+          reviewed_by?: string | null
           status?: string
-          treasurer_decision?: string | null
-          updated_at?: string
           user_id: string
         }
         Update: {
-          chairperson_decision?: string | null
           created_at?: string
           group_id?: string
           id?: string
-          reject_reason?: string | null
-          secretary_decision?: string | null
+          reviewed_by?: string | null
           status?: string
-          treasurer_decision?: string | null
-          updated_at?: string
           user_id?: string
         }
         Relationships: [
@@ -472,7 +307,6 @@ export type Database = {
           created_at: string
           group_id: string
           id: string
-          stk_reference: string | null
           user_id: string
         }
         Insert: {
@@ -480,7 +314,6 @@ export type Database = {
           created_at?: string
           group_id: string
           id?: string
-          stk_reference?: string | null
           user_id: string
         }
         Update: {
@@ -488,7 +321,6 @@ export type Database = {
           created_at?: string
           group_id?: string
           id?: string
-          stk_reference?: string | null
           user_id?: string
         }
         Relationships: [
@@ -503,48 +335,30 @@ export type Database = {
       }
       chama_leave_requests: {
         Row: {
-          admin_reason: string | null
-          admin_status: string | null
-          chairperson_decision: string | null
-          chairperson_reason: string | null
           created_at: string
           group_id: string
           id: string
-          mpesa_phone: string | null
           reason: string | null
-          refund_amount: number | null
+          reviewed_by: string | null
           status: string
-          updated_at: string
           user_id: string
         }
         Insert: {
-          admin_reason?: string | null
-          admin_status?: string | null
-          chairperson_decision?: string | null
-          chairperson_reason?: string | null
           created_at?: string
           group_id: string
           id?: string
-          mpesa_phone?: string | null
           reason?: string | null
-          refund_amount?: number | null
+          reviewed_by?: string | null
           status?: string
-          updated_at?: string
           user_id: string
         }
         Update: {
-          admin_reason?: string | null
-          admin_status?: string | null
-          chairperson_decision?: string | null
-          chairperson_reason?: string | null
           created_at?: string
           group_id?: string
           id?: string
-          mpesa_phone?: string | null
           reason?: string | null
-          refund_amount?: number | null
+          reviewed_by?: string | null
           status?: string
-          updated_at?: string
           user_id?: string
         }
         Relationships: [
@@ -560,54 +374,42 @@ export type Database = {
       chama_loans: {
         Row: {
           amount: number
-          borrower_id: string
-          chairperson_decision: string | null
+          approved_by: string | null
           created_at: string
-          disbursed_at: string | null
           due_date: string | null
-          duration_months: number | null
           group_id: string
           id: string
-          interest_rate: number | null
-          outstanding_balance: number | null
-          reject_reason: string | null
+          interest_rate: number
+          reason: string | null
+          repaid_amount: number
           status: string
-          total_repayment: number
-          updated_at: string
+          user_id: string
         }
         Insert: {
           amount: number
-          borrower_id: string
-          chairperson_decision?: string | null
+          approved_by?: string | null
           created_at?: string
-          disbursed_at?: string | null
           due_date?: string | null
-          duration_months?: number | null
           group_id: string
           id?: string
-          interest_rate?: number | null
-          outstanding_balance?: number | null
-          reject_reason?: string | null
+          interest_rate?: number
+          reason?: string | null
+          repaid_amount?: number
           status?: string
-          total_repayment: number
-          updated_at?: string
+          user_id: string
         }
         Update: {
           amount?: number
-          borrower_id?: string
-          chairperson_decision?: string | null
+          approved_by?: string | null
           created_at?: string
-          disbursed_at?: string | null
           due_date?: string | null
-          duration_months?: number | null
           group_id?: string
           id?: string
-          interest_rate?: number | null
-          outstanding_balance?: number | null
-          reject_reason?: string | null
+          interest_rate?: number
+          reason?: string | null
+          repaid_amount?: number
           status?: string
-          total_repayment?: number
-          updated_at?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -621,24 +423,24 @@ export type Database = {
       }
       chama_meeting_attendance: {
         Row: {
-          attended: boolean | null
           created_at: string
           id: string
           meeting_id: string
+          status: string
           user_id: string
         }
         Insert: {
-          attended?: boolean | null
           created_at?: string
           id?: string
           meeting_id: string
+          status?: string
           user_id: string
         }
         Update: {
-          attended?: boolean | null
           created_at?: string
           id?: string
           meeting_id?: string
+          status?: string
           user_id?: string
         }
         Relationships: [
@@ -663,7 +465,6 @@ export type Database = {
           minutes: string | null
           status: string
           title: string
-          updated_at: string
           venue: string | null
         }
         Insert: {
@@ -677,7 +478,6 @@ export type Database = {
           minutes?: string | null
           status?: string
           title: string
-          updated_at?: string
           venue?: string | null
         }
         Update: {
@@ -691,7 +491,6 @@ export type Database = {
           minutes?: string | null
           status?: string
           title?: string
-          updated_at?: string
           venue?: string | null
         }
         Relationships: [
@@ -706,49 +505,31 @@ export type Database = {
       }
       chama_member_removal_requests: {
         Row: {
-          admin_reason: string | null
-          chairperson_name: string | null
-          chairperson_phone: string | null
-          chairperson_user_id: string
           created_at: string
           group_id: string
           id: string
-          member_name: string | null
-          member_phone: string | null
-          member_user_id: string
-          reason: string
+          member_id: string
+          reason: string | null
+          requested_by: string
           status: string
-          updated_at: string
         }
         Insert: {
-          admin_reason?: string | null
-          chairperson_name?: string | null
-          chairperson_phone?: string | null
-          chairperson_user_id: string
           created_at?: string
           group_id: string
           id?: string
-          member_name?: string | null
-          member_phone?: string | null
-          member_user_id: string
-          reason: string
+          member_id: string
+          reason?: string | null
+          requested_by: string
           status?: string
-          updated_at?: string
         }
         Update: {
-          admin_reason?: string | null
-          chairperson_name?: string | null
-          chairperson_phone?: string | null
-          chairperson_user_id?: string
           created_at?: string
           group_id?: string
           id?: string
-          member_name?: string | null
-          member_phone?: string | null
-          member_user_id?: string
-          reason?: string
+          member_id?: string
+          reason?: string | null
+          requested_by?: string
           status?: string
-          updated_at?: string
         }
         Relationships: [
           {
@@ -762,36 +543,30 @@ export type Database = {
       }
       chama_members: {
         Row: {
-          added_by: string
+          added_by: string | null
           created_at: string
           group_id: string
           id: string
-          is_active: boolean | null
-          joining_fee_paid: boolean | null
-          remove_reason: string | null
-          role: Database["public"]["Enums"]["chama_role"]
+          is_active: boolean
+          role: string
           user_id: string
         }
         Insert: {
-          added_by: string
+          added_by?: string | null
           created_at?: string
           group_id: string
           id?: string
-          is_active?: boolean | null
-          joining_fee_paid?: boolean | null
-          remove_reason?: string | null
-          role?: Database["public"]["Enums"]["chama_role"]
+          is_active?: boolean
+          role?: string
           user_id: string
         }
         Update: {
-          added_by?: string
+          added_by?: string | null
           created_at?: string
           group_id?: string
           id?: string
-          is_active?: boolean | null
-          joining_fee_paid?: boolean | null
-          remove_reason?: string | null
-          role?: Database["public"]["Enums"]["chama_role"]
+          is_active?: boolean
+          role?: string
           user_id?: string
         }
         Relationships: [
@@ -807,33 +582,27 @@ export type Database = {
       chama_messages: {
         Row: {
           created_at: string
-          file_name: string | null
-          file_url: string | null
           group_id: string
           id: string
           message: string
-          message_type: string | null
-          sender_id: string
+          sender_name: string
+          user_id: string
         }
         Insert: {
           created_at?: string
-          file_name?: string | null
-          file_url?: string | null
           group_id: string
           id?: string
           message: string
-          message_type?: string | null
-          sender_id: string
+          sender_name?: string
+          user_id: string
         }
         Update: {
           created_at?: string
-          file_name?: string | null
-          file_url?: string | null
           group_id?: string
           id?: string
           message?: string
-          message_type?: string | null
-          sender_id?: string
+          sender_name?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -851,9 +620,8 @@ export type Database = {
           created_at: string
           group_id: string
           id: string
-          period_date: string
-          reason: string
-          status: string
+          is_paid: boolean
+          reason: string | null
           user_id: string
         }
         Insert: {
@@ -861,9 +629,8 @@ export type Database = {
           created_at?: string
           group_id: string
           id?: string
-          period_date?: string
-          reason: string
-          status?: string
+          is_paid?: boolean
+          reason?: string | null
           user_id: string
         }
         Update: {
@@ -871,9 +638,8 @@ export type Database = {
           created_at?: string
           group_id?: string
           id?: string
-          period_date?: string
-          reason?: string
-          status?: string
+          is_paid?: boolean
+          reason?: string | null
           user_id?: string
         }
         Relationships: [
@@ -890,24 +656,18 @@ export type Database = {
         Row: {
           amount: number
           created_at: string
-          deducted_from: string
-          fee_type: string
           group_id: string
           id: string
         }
         Insert: {
           amount: number
           created_at?: string
-          deducted_from?: string
-          fee_type?: string
           group_id: string
           id?: string
         }
         Update: {
           amount?: number
           created_at?: string
-          deducted_from?: string
-          fee_type?: string
           group_id?: string
           id?: string
         }
@@ -927,7 +687,7 @@ export type Database = {
           created_at: string
           group_id: string
           id: string
-          period_date: string
+          month: string | null
           stk_reference: string | null
           user_id: string
         }
@@ -936,7 +696,7 @@ export type Database = {
           created_at?: string
           group_id: string
           id?: string
-          period_date?: string
+          month?: string | null
           stk_reference?: string | null
           user_id: string
         }
@@ -945,7 +705,7 @@ export type Database = {
           created_at?: string
           group_id?: string
           id?: string
-          period_date?: string
+          month?: string | null
           stk_reference?: string | null
           user_id?: string
         }
@@ -962,39 +722,33 @@ export type Database = {
       chama_support_messages: {
         Row: {
           created_at: string
-          file_name: string | null
           file_url: string | null
           group_id: string
           id: string
-          is_read: boolean | null
+          is_read: boolean
           message: string
-          message_type: string | null
-          receiver_id: string
-          sender_id: string
+          sender_type: string
+          user_id: string
         }
         Insert: {
           created_at?: string
-          file_name?: string | null
           file_url?: string | null
           group_id: string
           id?: string
-          is_read?: boolean | null
+          is_read?: boolean
           message: string
-          message_type?: string | null
-          receiver_id: string
-          sender_id: string
+          sender_type?: string
+          user_id: string
         }
         Update: {
           created_at?: string
-          file_name?: string | null
           file_url?: string | null
           group_id?: string
           id?: string
-          is_read?: boolean | null
+          is_read?: boolean
           message?: string
-          message_type?: string | null
-          receiver_id?: string
-          sender_id?: string
+          sender_type?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -1010,25 +764,22 @@ export type Database = {
         Row: {
           group_id: string
           id: string
-          signature_data: string
           signed_at: string
-          terms_version: string
+          terms_version: string | null
           user_id: string
         }
         Insert: {
           group_id: string
           id?: string
-          signature_data: string
           signed_at?: string
-          terms_version: string
+          terms_version?: string | null
           user_id: string
         }
         Update: {
           group_id?: string
           id?: string
-          signature_data?: string
           signed_at?: string
-          terms_version?: string
+          terms_version?: string | null
           user_id?: string
         }
         Relationships: [
@@ -1044,22 +795,22 @@ export type Database = {
       chama_vote_responses: {
         Row: {
           created_at: string
-          decision: string
           id: string
+          selected_option: string
           user_id: string
           vote_id: string
         }
         Insert: {
           created_at?: string
-          decision: string
           id?: string
+          selected_option: string
           user_id: string
           vote_id: string
         }
         Update: {
           created_at?: string
-          decision?: string
           id?: string
+          selected_option?: string
           user_id?: string
           vote_id?: string
         }
@@ -1077,35 +828,35 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string
-          deadline: string | null
           description: string | null
           group_id: string
           id: string
+          options: Json
           status: string
           title: string
-          updated_at: string
+          updated_at: string | null
         }
         Insert: {
           created_at?: string
           created_by: string
-          deadline?: string | null
           description?: string | null
           group_id: string
           id?: string
+          options?: Json
           status?: string
           title: string
-          updated_at?: string
+          updated_at?: string | null
         }
         Update: {
           created_at?: string
           created_by?: string
-          deadline?: string | null
           description?: string | null
           group_id?: string
           id?: string
+          options?: Json
           status?: string
           title?: string
-          updated_at?: string
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -1119,30 +870,24 @@ export type Database = {
       }
       chama_withdrawal_approvals: {
         Row: {
-          approver_id: string
-          approver_role: string
+          approved: boolean | null
           created_at: string
-          decision: string
           id: string
-          updated_at: string
+          user_id: string
           withdrawal_id: string
         }
         Insert: {
-          approver_id: string
-          approver_role: string
+          approved?: boolean | null
           created_at?: string
-          decision?: string
           id?: string
-          updated_at?: string
+          user_id: string
           withdrawal_id: string
         }
         Update: {
-          approver_id?: string
-          approver_role?: string
+          approved?: boolean | null
           created_at?: string
-          decision?: string
           id?: string
-          updated_at?: string
+          user_id?: string
           withdrawal_id?: string
         }
         Relationships: [
@@ -1157,46 +902,31 @@ export type Database = {
       }
       chama_withdrawals: {
         Row: {
-          admin_reason: string | null
-          admin_status: string | null
           amount: number
           created_at: string
           group_id: string
           id: string
-          phone: string
           reason: string | null
           requested_by: string
           status: string
-          updated_at: string
-          withdrawal_type: string | null
         }
         Insert: {
-          admin_reason?: string | null
-          admin_status?: string | null
           amount: number
           created_at?: string
           group_id: string
           id?: string
-          phone: string
           reason?: string | null
           requested_by: string
           status?: string
-          updated_at?: string
-          withdrawal_type?: string | null
         }
         Update: {
-          admin_reason?: string | null
-          admin_status?: string | null
           amount?: number
           created_at?: string
           group_id?: string
           id?: string
-          phone?: string
           reason?: string | null
           requested_by?: string
           status?: string
-          updated_at?: string
-          withdrawal_type?: string | null
         }
         Relationships: [
           {
@@ -1215,19 +945,18 @@ export type Database = {
           business_sector: string | null
           created_at: string
           education_level: string | null
-          employment_status: Database["public"]["Enums"]["employment_status"]
+          employment_status: string
           existing_loan_amount: number | null
           existing_loans: boolean | null
           generated_limit: number
           id: string
-          loan_type: Database["public"]["Enums"]["loan_type"]
+          loan_type: string
           monthly_expenses: number
           monthly_income: number
           next_of_kin_name: string
           next_of_kin_phone: string
           number_of_dependents: number | null
-          status: Database["public"]["Enums"]["loan_status"]
-          updated_at: string
+          status: string
           user_id: string
         }
         Insert: {
@@ -1236,19 +965,18 @@ export type Database = {
           business_sector?: string | null
           created_at?: string
           education_level?: string | null
-          employment_status: Database["public"]["Enums"]["employment_status"]
+          employment_status?: string
           existing_loan_amount?: number | null
           existing_loans?: boolean | null
-          generated_limit: number
+          generated_limit?: number
           id?: string
-          loan_type: Database["public"]["Enums"]["loan_type"]
-          monthly_expenses: number
-          monthly_income: number
-          next_of_kin_name: string
-          next_of_kin_phone: string
+          loan_type: string
+          monthly_expenses?: number
+          monthly_income?: number
+          next_of_kin_name?: string
+          next_of_kin_phone?: string
           number_of_dependents?: number | null
-          status?: Database["public"]["Enums"]["loan_status"]
-          updated_at?: string
+          status?: string
           user_id: string
         }
         Update: {
@@ -1257,19 +985,18 @@ export type Database = {
           business_sector?: string | null
           created_at?: string
           education_level?: string | null
-          employment_status?: Database["public"]["Enums"]["employment_status"]
+          employment_status?: string
           existing_loan_amount?: number | null
           existing_loans?: boolean | null
           generated_limit?: number
           id?: string
-          loan_type?: Database["public"]["Enums"]["loan_type"]
+          loan_type?: string
           monthly_expenses?: number
           monthly_income?: number
           next_of_kin_name?: string
           next_of_kin_phone?: string
           number_of_dependents?: number | null
-          status?: Database["public"]["Enums"]["loan_status"]
-          updated_at?: string
+          status?: string
           user_id?: string
         }
         Relationships: []
@@ -1284,9 +1011,8 @@ export type Database = {
           loan_id: string
           monthly_repayment: number
           outstanding_balance: number
-          repayment_due_date: string
+          repayment_due_date: string | null
           status: string
-          updated_at: string
           user_id: string
         }
         Insert: {
@@ -1296,11 +1022,10 @@ export type Database = {
           id?: string
           interest_rate?: number
           loan_id: string
-          monthly_repayment: number
+          monthly_repayment?: number
           outstanding_balance: number
-          repayment_due_date: string
+          repayment_due_date?: string | null
           status?: string
-          updated_at?: string
           user_id: string
         }
         Update: {
@@ -1312,9 +1037,8 @@ export type Database = {
           loan_id?: string
           monthly_repayment?: number
           outstanding_balance?: number
-          repayment_due_date?: string
+          repayment_due_date?: string | null
           status?: string
-          updated_at?: string
           user_id?: string
         }
         Relationships: [
@@ -1332,28 +1056,34 @@ export type Database = {
           amount: number
           created_at: string
           id: string
+          reason: string | null
+          requested_from_id: string
+          requested_from_name: string | null
           requester_id: string
+          requester_name: string | null
           status: string
-          target_id: string
-          updated_at: string
         }
         Insert: {
           amount: number
           created_at?: string
           id?: string
+          reason?: string | null
+          requested_from_id: string
+          requested_from_name?: string | null
           requester_id: string
+          requester_name?: string | null
           status?: string
-          target_id: string
-          updated_at?: string
         }
         Update: {
           amount?: number
           created_at?: string
           id?: string
+          reason?: string | null
+          requested_from_id?: string
+          requested_from_name?: string | null
           requester_id?: string
+          requester_name?: string | null
           status?: string
-          target_id?: string
-          updated_at?: string
         }
         Relationships: []
       }
@@ -1361,53 +1091,29 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          is_read: boolean | null
+          is_read: boolean
           message: string
           title: string
+          type: string | null
           user_id: string
         }
         Insert: {
           created_at?: string
           id?: string
-          is_read?: boolean | null
-          message: string
-          title: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_read?: boolean | null
+          is_read?: boolean
           message?: string
           title?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      otp_codes: {
-        Row: {
-          code: string
-          created_at: string
-          expires_at: string
-          id: string
-          phone: string
-          verified: boolean | null
-        }
-        Insert: {
-          code: string
-          created_at?: string
-          expires_at: string
-          id?: string
-          phone: string
-          verified?: boolean | null
+          type?: string | null
+          user_id: string
         }
         Update: {
-          code?: string
           created_at?: string
-          expires_at?: string
           id?: string
-          phone?: string
-          verified?: boolean | null
+          is_read?: boolean
+          message?: string
+          title?: string
+          type?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -1423,21 +1129,19 @@ export type Database = {
           status: string
           target_amount: number
           type: string
-          updated_at: string
           user_id: string
         }
         Insert: {
           created_at?: string
           id?: string
           interest_rate?: number
-          maturity_date: string
+          maturity_date?: string
           name: string
           saved_amount?: number
           start_date?: string
           status?: string
           target_amount?: number
           type?: string
-          updated_at?: string
           user_id: string
         }
         Update: {
@@ -1451,7 +1155,6 @@ export type Database = {
           status?: string
           target_amount?: number
           type?: string
-          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -1499,7 +1202,6 @@ export type Database = {
           key: string
           label: string
           updated_at: string
-          updated_by: string | null
           value: string
         }
         Insert: {
@@ -1509,7 +1211,6 @@ export type Database = {
           key: string
           label?: string
           updated_at?: string
-          updated_by?: string | null
           value?: string
         }
         Update: {
@@ -1519,7 +1220,6 @@ export type Database = {
           key?: string
           label?: string
           updated_at?: string
-          updated_by?: string | null
           value?: string
         }
         Relationships: []
@@ -1535,31 +1235,29 @@ export type Database = {
           full_name: string
           id: string
           id_number: string
-          is_active: boolean | null
-          is_verified: boolean | null
+          is_active: boolean
+          is_verified: boolean
           phone: string
           sub_county: string
-          updated_at: string
           user_id: string
           ward: string
         }
         Insert: {
-          address: string
-          county: string
+          address?: string
+          county?: string
           created_at?: string
-          date_of_birth: string
+          date_of_birth?: string
           disable_reason?: string | null
-          email: string
-          full_name: string
+          email?: string
+          full_name?: string
           id?: string
-          id_number: string
-          is_active?: boolean | null
-          is_verified?: boolean | null
-          phone: string
-          sub_county: string
-          updated_at?: string
+          id_number?: string
+          is_active?: boolean
+          is_verified?: boolean
+          phone?: string
+          sub_county?: string
           user_id: string
-          ward: string
+          ward?: string
         }
         Update: {
           address?: string
@@ -1571,11 +1269,10 @@ export type Database = {
           full_name?: string
           id?: string
           id_number?: string
-          is_active?: boolean | null
-          is_verified?: boolean | null
+          is_active?: boolean
+          is_verified?: boolean
           phone?: string
           sub_county?: string
-          updated_at?: string
           user_id?: string
           ward?: string
         }
@@ -1586,33 +1283,30 @@ export type Database = {
           admin_reason: string | null
           created_at: string
           id: string
-          penalty_percentage: number | null
-          reason: string | null
+          penalty_percentage: number
+          reason: string
           savings_id: string
           status: string
-          updated_at: string
           user_id: string
         }
         Insert: {
           admin_reason?: string | null
           created_at?: string
           id?: string
-          penalty_percentage?: number | null
-          reason?: string | null
+          penalty_percentage?: number
+          reason?: string
           savings_id: string
           status?: string
-          updated_at?: string
           user_id: string
         }
         Update: {
           admin_reason?: string | null
           created_at?: string
           id?: string
-          penalty_percentage?: number | null
-          reason?: string | null
+          penalty_percentage?: number
+          reason?: string
           savings_id?: string
           status?: string
-          updated_at?: string
           user_id?: string
         }
         Relationships: [
@@ -1637,22 +1331,22 @@ export type Database = {
           reference: string
           result_code: string | null
           result_desc: string | null
-          status: Database["public"]["Enums"]["stk_status"]
+          status: string
           updated_at: string
           user_id: string
         }
         Insert: {
-          amount?: number
+          amount: number
           checkout_request_id?: string | null
           created_at?: string
           id?: string
           merchant_request_id?: string | null
           mpesa_receipt?: string | null
           phone: string
-          reference: string
+          reference?: string
           result_code?: string | null
           result_desc?: string | null
-          status?: Database["public"]["Enums"]["stk_status"]
+          status?: string
           updated_at?: string
           user_id: string
         }
@@ -1667,7 +1361,7 @@ export type Database = {
           reference?: string
           result_code?: string | null
           result_desc?: string | null
-          status?: Database["public"]["Enums"]["stk_status"]
+          status?: string
           updated_at?: string
           user_id?: string
         }
@@ -1677,7 +1371,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          is_read: boolean | null
+          is_read: boolean
           message: string
           sender_id: string
           sender_type: string
@@ -1686,7 +1380,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
-          is_read?: boolean | null
+          is_read?: boolean
           message: string
           sender_id: string
           sender_type?: string
@@ -1695,7 +1389,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
-          is_read?: boolean | null
+          is_read?: boolean
           message?: string
           sender_id?: string
           sender_type?: string
@@ -1705,44 +1399,30 @@ export type Database = {
       }
       transaction_reports: {
         Row: {
-          admin_response: string | null
           created_at: string
           id: string
-          reason: string
-          reporter_id: string
+          reason: string | null
           status: string
-          transfer_id: string
-          updated_at: string
+          transaction_id: string | null
+          user_id: string
         }
         Insert: {
-          admin_response?: string | null
           created_at?: string
           id?: string
-          reason: string
-          reporter_id: string
+          reason?: string | null
           status?: string
-          transfer_id: string
-          updated_at?: string
+          transaction_id?: string | null
+          user_id: string
         }
         Update: {
-          admin_response?: string | null
           created_at?: string
           id?: string
-          reason?: string
-          reporter_id?: string
+          reason?: string | null
           status?: string
-          transfer_id?: string
-          updated_at?: string
+          transaction_id?: string | null
+          user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "transaction_reports_transfer_id_fkey"
-            columns: ["transfer_id"]
-            isOneToOne: false
-            referencedRelation: "wallet_transfers"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       user_documents: {
         Row: {
@@ -1754,7 +1434,6 @@ export type Database = {
           file_size: number | null
           id: string
           status: string
-          updated_at: string
           user_id: string
         }
         Insert: {
@@ -1766,7 +1445,6 @@ export type Database = {
           file_size?: number | null
           id?: string
           status?: string
-          updated_at?: string
           user_id: string
         }
         Update: {
@@ -1778,26 +1456,22 @@ export type Database = {
           file_size?: number | null
           id?: string
           status?: string
-          updated_at?: string
           user_id?: string
         }
         Relationships: []
       }
       user_roles: {
         Row: {
-          created_at: string
           id: string
           role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Insert: {
-          created_at?: string
           id?: string
-          role?: Database["public"]["Enums"]["app_role"]
+          role: Database["public"]["Enums"]["app_role"]
           user_id: string
         }
         Update: {
-          created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
@@ -1811,9 +1485,9 @@ export type Database = {
           description: string | null
           id: string
           reference_id: string | null
+          status: string | null
           type: string
           user_id: string
-          wallet_id: string
         }
         Insert: {
           amount: number
@@ -1821,9 +1495,9 @@ export type Database = {
           description?: string | null
           id?: string
           reference_id?: string | null
+          status?: string | null
           type: string
           user_id: string
-          wallet_id: string
         }
         Update: {
           amount?: number
@@ -1831,24 +1505,15 @@ export type Database = {
           description?: string | null
           id?: string
           reference_id?: string | null
+          status?: string | null
           type?: string
           user_id?: string
-          wallet_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "wallet_transactions_wallet_id_fkey"
-            columns: ["wallet_id"]
-            isOneToOne: false
-            referencedRelation: "wallets"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       wallet_transfers: {
         Row: {
           amount: number
-          cancel_reason: string | null
           cancelled_at: string | null
           created_at: string
           id: string
@@ -1861,7 +1526,6 @@ export type Database = {
         }
         Insert: {
           amount: number
-          cancel_reason?: string | null
           cancelled_at?: string | null
           created_at?: string
           id?: string
@@ -1874,7 +1538,6 @@ export type Database = {
         }
         Update: {
           amount?: number
-          cancel_reason?: string | null
           cancelled_at?: string | null
           created_at?: string
           id?: string
@@ -1892,24 +1555,18 @@ export type Database = {
           balance: number
           created_at: string
           id: string
-          locked_balance: number | null
-          updated_at: string
           user_id: string
         }
         Insert: {
           balance?: number
           created_at?: string
           id?: string
-          locked_balance?: number | null
-          updated_at?: string
           user_id: string
         }
         Update: {
           balance?: number
           created_at?: string
           id?: string
-          locked_balance?: number | null
-          updated_at?: string
           user_id?: string
         }
         Relationships: []
@@ -1922,9 +1579,7 @@ export type Database = {
           id: string
           phone: string
           status: string
-          updated_at: string
           user_id: string
-          wallet_id: string
         }
         Insert: {
           admin_reason?: string | null
@@ -1933,9 +1588,7 @@ export type Database = {
           id?: string
           phone: string
           status?: string
-          updated_at?: string
           user_id: string
-          wallet_id: string
         }
         Update: {
           admin_reason?: string | null
@@ -1944,19 +1597,9 @@ export type Database = {
           id?: string
           phone?: string
           status?: string
-          updated_at?: string
           user_id?: string
-          wallet_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "withdrawal_requests_wallet_id_fkey"
-            columns: ["wallet_id"]
-            isOneToOne: false
-            referencedRelation: "wallets"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
     }
     Views: {
@@ -1965,29 +1608,15 @@ export type Database = {
     Functions: {
       cancel_wallet_transfer: {
         Args: { _transfer_id: string; _user_id: string }
-        Returns: Json
+        Returns: undefined
       }
       credit_wallet_on_loan_approval: {
-        Args: {
-          _amount: number
-          _interest_rate?: number
-          _loan_id: string
-          _user_id: string
-        }
-        Returns: Json
+        Args: { _amount: number; _loan_id: string; _user_id: string }
+        Returns: undefined
       }
       get_active_chama_member_count: {
         Args: { _group_id: string }
         Returns: number
-      }
-      get_chama_member_count: { Args: { _group_id: string }; Returns: number }
-      has_chama_role: {
-        Args: {
-          _group_id: string
-          _role: Database["public"]["Enums"]["chama_role"]
-          _user_id: string
-        }
-        Returns: boolean
       }
       has_role: {
         Args: {
@@ -1996,38 +1625,24 @@ export type Database = {
         }
         Returns: boolean
       }
-      is_chama_leader: {
-        Args: { _group_id: string; _user_id: string }
-        Returns: boolean
+      request_withdrawal_secure: {
+        Args: { _amount: number; _phone: string; _user_id: string }
+        Returns: string
       }
-      is_chama_member: {
-        Args: { _group_id: string; _user_id: string }
-        Returns: boolean
+      transfer_wallet_funds: {
+        Args: {
+          _amount: number
+          _reason?: string
+          _receiver_id: string
+          _receiver_name?: string
+          _sender_id: string
+          _sender_name?: string
+        }
+        Returns: string
       }
-      transfer_wallet_funds:
-        | {
-            Args: { _amount: number; _receiver_id: string; _sender_id: string }
-            Returns: Json
-          }
-        | {
-            Args: {
-              _amount: number
-              _reason?: string
-              _receiver_id: string
-              _receiver_name?: string
-              _sender_id: string
-              _sender_name?: string
-            }
-            Returns: Json
-          }
     }
     Enums: {
-      app_role: "admin" | "user"
-      chama_role: "chairperson" | "secretary" | "treasurer" | "member"
-      employment_status: "employed" | "self_employed" | "not_employed"
-      loan_status: "pending" | "approved" | "rejected" | "disbursed"
-      loan_type: "biashara" | "elimu" | "jiunge" | "youth_fund" | "enterprise"
-      stk_status: "pending" | "success" | "failed"
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2155,12 +1770,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "user"],
-      chama_role: ["chairperson", "secretary", "treasurer", "member"],
-      employment_status: ["employed", "self_employed", "not_employed"],
-      loan_status: ["pending", "approved", "rejected", "disbursed"],
-      loan_type: ["biashara", "elimu", "jiunge", "youth_fund", "enterprise"],
-      stk_status: ["pending", "success", "failed"],
+      app_role: ["admin", "moderator", "user"],
     },
   },
 } as const

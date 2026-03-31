@@ -43,7 +43,7 @@ interface Transaction {
 interface MoneyRequest {
   id: string;
   requester_id: string;
-  target_id: string;
+  requested_from_id: string;
   amount: number;
   status: string;
   created_at: string;
@@ -110,7 +110,7 @@ export default function TransactionsPage() {
         supabase
           .from('money_requests')
           .select('*')
-          .or(`requester_id.eq.${user?.id},target_id.eq.${user?.id}`)
+          .or(`requester_id.eq.${user?.id},requested_from_id.eq.${user?.id}`)
           .order('created_at', { ascending: false })
           .limit(50),
       ]);
@@ -119,7 +119,7 @@ export default function TransactionsPage() {
       
       if (reqRes.data && reqRes.data.length > 0) {
         setRequests(reqRes.data);
-        const userIds = [...new Set(reqRes.data.map(r => r.requester_id === user?.id ? r.target_id : r.requester_id))];
+        const userIds = [...new Set(reqRes.data.map(r => r.requester_id === user?.id ? r.requested_from_id : r.requester_id))];
         const { data: profiles } = await supabase.from('profiles').select('user_id, full_name').in('user_id', userIds);
         if (profiles) {
           const nameMap: Record<string, string> = {};
@@ -477,7 +477,7 @@ export default function TransactionsPage() {
                   <div className="space-y-2">
                     {requests.map((req, i) => {
                       const isRequester = req.requester_id === user?.id;
-                      const otherName = requestNames[isRequester ? req.target_id : req.requester_id] || 'Unknown';
+                      const otherName = requestNames[isRequester ? req.requested_from_id : req.requester_id] || 'Unknown';
                       const statusColor = req.status === 'paid' ? 'text-success' : req.status === 'declined' ? 'text-destructive' : 'text-accent';
                       const statusBg = req.status === 'paid' ? 'bg-success/10' : req.status === 'declined' ? 'bg-destructive/10' : 'bg-accent/10';
                       const StatusIcon = req.status === 'paid' ? CheckCircle2 : req.status === 'declined' ? XCircle : Clock;

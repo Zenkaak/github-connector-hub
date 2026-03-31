@@ -13,11 +13,13 @@ import { cn } from '@/lib/utils';
 interface MoneyRequest {
   id: string;
   requester_id: string;
-  target_id: string;
+  requested_from_id: string;
   amount: number;
+  reason: string | null;
+  requester_name: string | null;
+  requested_from_name: string | null;
   status: string;
   created_at: string;
-  updated_at: string;
 }
 
 interface MoneyRequestsSectionProps {
@@ -45,14 +47,14 @@ export function MoneyRequestsSection({ walletBalance, onRefresh }: MoneyRequests
       const { data } = await supabase
         .from('money_requests')
         .select('*')
-        .or(`target_id.eq.${user.id},requester_id.eq.${user.id}`)
+        .or(`requested_from_id.eq.${user.id},requester_id.eq.${user.id}`)
         .order('created_at', { ascending: false })
         .limit(20);
 
       if (data && data.length > 0) {
         setRequests(data);
         // Fetch requester names
-        const userIds = [...new Set(data.map(r => r.requester_id === user.id ? r.target_id : r.requester_id))];
+        const userIds = [...new Set(data.map(r => r.requester_id === user.id ? r.requested_from_id : r.requester_id))];
         const { data: profiles } = await supabase
           .from('profiles')
           .select('user_id, full_name')
@@ -176,8 +178,8 @@ export function MoneyRequestsSection({ walletBalance, onRefresh }: MoneyRequests
         </CardHeader>
         <CardContent className="space-y-2">
           {requests.map((req) => {
-            const isIncoming = req.target_id === user?.id;
-            const otherName = requesterNames[isIncoming ? req.requester_id : req.target_id] || 'Unknown';
+            const isIncoming = req.requested_from_id === user?.id;
+            const otherName = requesterNames[isIncoming ? req.requester_id : req.requested_from_id] || 'Unknown';
             const isPending = req.status === 'pending';
 
             return (

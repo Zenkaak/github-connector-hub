@@ -76,11 +76,10 @@ export function ChamaWithdrawals({ groupId, members, myRole, savings }: Props) {
       // Create approval records for all 3 leaders
       const approvalRecords = leaders.map(l => ({
         withdrawal_id: wd.id,
-        approver_id: l.user_id,
-        approver_role: l.role,
-        decision: 'pending',
+        user_id: l.user_id,
+        approved: null,
       }));
-      await supabase.from('chama_withdrawal_approvals').insert(approvalRecords);
+      await supabase.from('chama_withdrawal_approvals').insert(approvalRecords as any);
 
       // Notify all leaders
       await supabase.from('notifications').insert(
@@ -107,9 +106,9 @@ export function ChamaWithdrawals({ groupId, members, myRole, savings }: Props) {
     try {
       // Update my approval
       await supabase.from('chama_withdrawal_approvals')
-        .update({ decision, updated_at: new Date().toISOString() })
+        .update({ approved: decision === 'approved' } as any)
         .eq('withdrawal_id', withdrawalId)
-        .eq('approver_id', user.id);
+        .eq('user_id', user.id);
 
       // Check all approvals for this withdrawal
       const { data: allApprovals } = await supabase
@@ -119,13 +118,13 @@ export function ChamaWithdrawals({ groupId, members, myRole, savings }: Props) {
 
       if (!allApprovals) return;
 
-      const updatedApprovals = allApprovals.map(a => a.approver_id === user.id ? { ...a, decision } : a);
-      const rejected = updatedApprovals.find(a => a.decision === 'rejected');
-      const allApproved = updatedApprovals.every(a => a.decision === 'approved');
+      const updatedApprovals = allApprovals.map((a: any) => a.user_id === user.id ? { ...a, approved: decision === 'approved' } : a);
+      const rejected = updatedApprovals.find((a: any) => a.approved === false);
+      const allApproved = updatedApprovals.every((a: any) => a.approved === true);
 
       if (rejected) {
         // Notify all 3 leaders about rejection
-        const rejectorRole = members.find(m => m.user_id === rejected.approver_id)?.role || 'leader';
+        const rejectorRole = members.find(m => m.user_id === (rejected as any).user_id)?.role || 'leader';
         const roleLabel = rejectorRole.charAt(0).toUpperCase() + rejectorRole.slice(1);
 
         await supabase.from('chama_withdrawals')

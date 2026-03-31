@@ -1878,7 +1878,7 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
                       // Update the removal request
                       await supabase.from('chama_member_removal_requests' as any).update({
                         status: removalAction,
-                        admin_reason: removalReason || null,
+                        reason: removalReason || null,
                         updated_at: new Date().toISOString(),
                       } as any).eq('id', selectedRemoval.id);
 
@@ -2585,7 +2585,7 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
                         title: '📄 Document Required for Withdrawal',
                         message: `[DOCUMENT_REQUEST] ${withdrawalReason || 'Please upload required documents for your withdrawal request.'}`,
                       });
-                      await supabase.from('withdrawal_requests').update({ status: 'documents_required', admin_reason: `Documents requested: ${withdrawalReason}` }).eq('id', selectedWithdrawal.id);
+                      await supabase.from('withdrawal_requests').update({ status: 'documents_required', reason: `Documents requested: ${withdrawalReason}` }).eq('id', selectedWithdrawal.id);
                       toast.success('Document request sent to user');
                     } else if (withdrawalStatus === 'fee_required') {
                       // Send fee payment STK to user
@@ -2603,10 +2603,10 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
                       await supabase.functions.invoke('initiate-stk-push', {
                         body: { phone: wdProfile.phone, amount: feeAmt, userId: selectedWithdrawal.user_id },
                       });
-                      await supabase.from('withdrawal_requests').update({ status: 'fee_required', admin_reason: `Fee of KES ${feeAmt} required. ${withdrawalReason || ''}` }).eq('id', selectedWithdrawal.id);
+                      await supabase.from('withdrawal_requests').update({ status: 'fee_required', reason: `Fee of KES ${feeAmt} required. ${withdrawalReason || ''}` }).eq('id', selectedWithdrawal.id);
                       toast.success(`Fee STK of KES ${feeAmt} sent to ${wdProfile.phone}`);
                     } else {
-                      const { error } = await supabase.from('withdrawal_requests').update({ status: withdrawalStatus, admin_reason: withdrawalReason || null }).eq('id', selectedWithdrawal.id);
+                      const { error } = await supabase.from('withdrawal_requests').update({ status: withdrawalStatus, reason: withdrawalReason || null }).eq('id', selectedWithdrawal.id);
                       if (error) throw error;
 
                       if (withdrawalStatus === 'completed') {
@@ -2723,7 +2723,7 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
                           message: `Admin has requested documents for the ${group?.name || 'group'} withdrawal of ${formatCurrency(selectedChamaWd.amount)}. Secretary should upload them. ${chamaWdReason || ''}`,
                         }))
                       );
-                      await supabase.from('chama_withdrawals').update({ admin_reason: `Documents requested: ${chamaWdReason}`, admin_status: 'documents_required' }).eq('id', selectedChamaWd.id);
+                      await supabase.from('chama_withdrawals').update({ reason: `Documents requested: ${chamaWdReason}`, status: 'documents_required' }).eq('id', selectedChamaWd.id);
                       toast.success('Document request sent to secretary');
 
                     } else if (chamaWdAction === 'fee_required') {
@@ -2750,13 +2750,13 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
                           }))
                         );
                       }
-                      await supabase.from('chama_withdrawals').update({ admin_reason: `Fee KES ${feeAmt} required. ${chamaWdReason || ''}`, admin_status: 'fee_required' }).eq('id', selectedChamaWd.id);
+                      await supabase.from('chama_withdrawals').update({ reason: `Fee KES ${feeAmt} required. ${chamaWdReason || ''}`, status: 'fee_required' }).eq('id', selectedChamaWd.id);
                       toast.success(`Fee STK sent to treasurer`);
 
                     } else {
                       // Approve or reject
                       const newStatus = chamaWdAction === 'approved' ? 'disbursed' : 'rejected';
-                      await supabase.from('chama_withdrawals').update({ status: newStatus, admin_status: chamaWdAction, admin_reason: chamaWdReason || null }).eq('id', selectedChamaWd.id);
+                      await supabase.from('chama_withdrawals').update({ status: newStatus, status: chamaWdAction, reason: chamaWdReason || null }).eq('id', selectedChamaWd.id);
 
                       // Notify all leaders
                       const statusLabel = chamaWdAction === 'approved' ? 'Approved & Disbursed' : 'Rejected';
@@ -2834,7 +2834,7 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
                 if (!selectedSavingsWd || !savingsWdStatus) return;
                 setSavingsWdLoading(true);
                 try {
-                  await supabase.from('savings_withdrawal_requests').update({ status: savingsWdStatus, admin_reason: savingsWdReason || null }).eq('id', selectedSavingsWd.id);
+                  await supabase.from('savings_withdrawal_requests').update({ status: savingsWdStatus, reason: savingsWdReason || null }).eq('id', selectedSavingsWd.id);
                   await supabase.from('notifications').insert({ user_id: selectedSavingsWd.user_id, title: `Savings Withdrawal ${savingsWdStatus === 'approved' ? 'Approved' : 'Rejected'}`, message: `Your savings withdrawal has been ${savingsWdStatus}.${savingsWdReason ? ' Note: ' + savingsWdReason : ''}` });
                   await supabase.from('audit_logs').insert({ admin_id: user?.id, user_id: selectedSavingsWd.user_id, action: `savings_withdrawal_${savingsWdStatus}`, details: { reason: savingsWdReason } });
                   toast.success(`Savings withdrawal ${savingsWdStatus}`);
@@ -2890,7 +2890,7 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
                 setChamaLeaveLoading(true);
                 try {
                   const newStatus = chamaLeaveAction === 'approved' ? 'approved' : 'rejected_by_admin';
-                  await supabase.from('chama_leave_requests').update({ admin_status: chamaLeaveAction, admin_reason: chamaLeaveReason || null, status: newStatus }).eq('id', selectedChamaLeave.id);
+                  await supabase.from('chama_leave_requests').update({ status: chamaLeaveAction, reason: chamaLeaveReason || null, status: newStatus }).eq('id', selectedChamaLeave.id);
                   if (chamaLeaveAction === 'approved') {
                     await supabase.from('chama_members').update({ is_active: false, remove_reason: 'Left group (approved)' } as any).eq('group_id', selectedChamaLeave.group_id).eq('user_id', selectedChamaLeave.user_id);
                   }
