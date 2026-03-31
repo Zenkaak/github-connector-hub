@@ -54,8 +54,8 @@ export function ChamaSavings({
   const [depositing, setDepositing] = useState(false);
 
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [frequency, setFrequency] = useState(group?.savings_frequency || 'monthly');
-  const [savingsAmount, setSavingsAmount] = useState(group?.savings_amount?.toString() || '0');
+  const [frequency, setFrequency] = useState(group?.contribution_frequency || 'monthly');
+  const [savingsAmount, setSavingsAmount] = useState(group?.contribution_amount?.toString() || '0');
 
   const isChairperson = myRole === 'chairperson';
 
