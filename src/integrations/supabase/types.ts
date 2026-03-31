@@ -14,16 +14,1635 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      admin_messages: {
+        Row: {
+          admin_id: string
+          created_at: string
+          id: string
+          message: string
+          subject: string | null
+          type: string | null
+          user_id: string
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string
+          id?: string
+          message: string
+          subject?: string | null
+          type?: string | null
+          user_id: string
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string
+          id?: string
+          message?: string
+          subject?: string | null
+          type?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      audit_logs: {
+        Row: {
+          action: string
+          admin_id: string | null
+          created_at: string
+          details: Json | null
+          id: string
+          loan_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          action: string
+          admin_id?: string | null
+          created_at?: string
+          details?: Json | null
+          id?: string
+          loan_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          action?: string
+          admin_id?: string | null
+          created_at?: string
+          details?: Json | null
+          id?: string
+          loan_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      chama_announcements: {
+        Row: {
+          created_at: string
+          group_id: string
+          id: string
+          message: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          id?: string
+          message: string
+          title?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          id?: string
+          message?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chama_announcements_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "chama_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chama_groups: {
+        Row: {
+          contribution_amount: number
+          contribution_frequency: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_public: boolean
+          late_contribution_penalty: number | null
+          max_members: number | null
+          meeting_absence_penalty: number | null
+          meeting_day: string | null
+          name: string
+          order_number: string | null
+          profile_image_url: string | null
+          terms: string | null
+          terms_updated_at: string | null
+        }
+        Insert: {
+          contribution_amount?: number
+          contribution_frequency?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          late_contribution_penalty?: number | null
+          max_members?: number | null
+          meeting_absence_penalty?: number | null
+          meeting_day?: string | null
+          name: string
+          order_number?: string | null
+          profile_image_url?: string | null
+          terms?: string | null
+          terms_updated_at?: string | null
+        }
+        Update: {
+          contribution_amount?: number
+          contribution_frequency?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_public?: boolean
+          late_contribution_penalty?: number | null
+          max_members?: number | null
+          meeting_absence_penalty?: number | null
+          meeting_day?: string | null
+          name?: string
+          order_number?: string | null
+          profile_image_url?: string | null
+          terms?: string | null
+          terms_updated_at?: string | null
+        }
+        Relationships: []
+      }
+      chama_harambee_contributions: {
+        Row: {
+          amount: number
+          contributor_name: string | null
+          created_at: string
+          harambee_id: string
+          id: string
+          stk_reference: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          contributor_name?: string | null
+          created_at?: string
+          harambee_id: string
+          id?: string
+          stk_reference?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          contributor_name?: string | null
+          created_at?: string
+          harambee_id?: string
+          id?: string
+          stk_reference?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chama_harambee_contributions_harambee_id_fkey"
+            columns: ["harambee_id"]
+            isOneToOne: false
+            referencedRelation: "chama_harambees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chama_harambees: {
+        Row: {
+          beneficiary_name: string | null
+          beneficiary_phone: string | null
+          created_at: string
+          created_by: string
+          deadline: string | null
+          description: string | null
+          group_id: string
+          id: string
+          image_urls: Json | null
+          is_public: boolean
+          order_number: string | null
+          raised_amount: number
+          status: string
+          target_amount: number
+          title: string
+        }
+        Insert: {
+          beneficiary_name?: string | null
+          beneficiary_phone?: string | null
+          created_at?: string
+          created_by: string
+          deadline?: string | null
+          description?: string | null
+          group_id: string
+          id?: string
+          image_urls?: Json | null
+          is_public?: boolean
+          order_number?: string | null
+          raised_amount?: number
+          status?: string
+          target_amount?: number
+          title: string
+        }
+        Update: {
+          beneficiary_name?: string | null
+          beneficiary_phone?: string | null
+          created_at?: string
+          created_by?: string
+          deadline?: string | null
+          description?: string | null
+          group_id?: string
+          id?: string
+          image_urls?: Json | null
+          is_public?: boolean
+          order_number?: string | null
+          raised_amount?: number
+          status?: string
+          target_amount?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chama_harambees_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "chama_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chama_join_requests: {
+        Row: {
+          created_at: string
+          group_id: string
+          id: string
+          reviewed_by: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          id?: string
+          reviewed_by?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          id?: string
+          reviewed_by?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chama_join_requests_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "chama_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chama_joining_fees: {
+        Row: {
+          amount: number
+          created_at: string
+          group_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          group_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          group_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chama_joining_fees_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "chama_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chama_leave_requests: {
+        Row: {
+          created_at: string
+          group_id: string
+          id: string
+          reason: string | null
+          reviewed_by: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          id?: string
+          reason?: string | null
+          reviewed_by?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          id?: string
+          reason?: string | null
+          reviewed_by?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chama_leave_requests_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "chama_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chama_loans: {
+        Row: {
+          amount: number
+          approved_by: string | null
+          created_at: string
+          due_date: string | null
+          group_id: string
+          id: string
+          interest_rate: number
+          reason: string | null
+          repaid_amount: number
+          status: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          approved_by?: string | null
+          created_at?: string
+          due_date?: string | null
+          group_id: string
+          id?: string
+          interest_rate?: number
+          reason?: string | null
+          repaid_amount?: number
+          status?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          approved_by?: string | null
+          created_at?: string
+          due_date?: string | null
+          group_id?: string
+          id?: string
+          interest_rate?: number
+          reason?: string | null
+          repaid_amount?: number
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chama_loans_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "chama_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chama_meeting_attendance: {
+        Row: {
+          created_at: string
+          id: string
+          meeting_id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          meeting_id: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          meeting_id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chama_meeting_attendance_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "chama_meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chama_meetings: {
+        Row: {
+          agenda: string | null
+          created_at: string
+          created_by: string
+          description: string | null
+          group_id: string
+          id: string
+          meeting_date: string
+          minutes: string | null
+          status: string
+          title: string
+          venue: string | null
+        }
+        Insert: {
+          agenda?: string | null
+          created_at?: string
+          created_by: string
+          description?: string | null
+          group_id: string
+          id?: string
+          meeting_date: string
+          minutes?: string | null
+          status?: string
+          title: string
+          venue?: string | null
+        }
+        Update: {
+          agenda?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          group_id?: string
+          id?: string
+          meeting_date?: string
+          minutes?: string | null
+          status?: string
+          title?: string
+          venue?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chama_meetings_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "chama_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chama_member_removal_requests: {
+        Row: {
+          created_at: string
+          group_id: string
+          id: string
+          member_id: string
+          reason: string | null
+          requested_by: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          id?: string
+          member_id: string
+          reason?: string | null
+          requested_by: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          id?: string
+          member_id?: string
+          reason?: string | null
+          requested_by?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chama_member_removal_requests_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "chama_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chama_members: {
+        Row: {
+          added_by: string | null
+          created_at: string
+          group_id: string
+          id: string
+          is_active: boolean
+          role: string
+          user_id: string
+        }
+        Insert: {
+          added_by?: string | null
+          created_at?: string
+          group_id: string
+          id?: string
+          is_active?: boolean
+          role?: string
+          user_id: string
+        }
+        Update: {
+          added_by?: string | null
+          created_at?: string
+          group_id?: string
+          id?: string
+          is_active?: boolean
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chama_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "chama_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chama_messages: {
+        Row: {
+          created_at: string
+          group_id: string
+          id: string
+          message: string
+          sender_name: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          group_id: string
+          id?: string
+          message: string
+          sender_name?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          group_id?: string
+          id?: string
+          message?: string
+          sender_name?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chama_messages_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "chama_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chama_penalties: {
+        Row: {
+          amount: number
+          created_at: string
+          group_id: string
+          id: string
+          is_paid: boolean
+          reason: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          group_id: string
+          id?: string
+          is_paid?: boolean
+          reason?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          group_id?: string
+          id?: string
+          is_paid?: boolean
+          reason?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chama_penalties_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "chama_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chama_platform_fees: {
+        Row: {
+          amount: number
+          created_at: string
+          group_id: string
+          id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          group_id: string
+          id?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          group_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chama_platform_fees_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "chama_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chama_savings: {
+        Row: {
+          amount: number
+          created_at: string
+          group_id: string
+          id: string
+          month: string | null
+          stk_reference: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          group_id: string
+          id?: string
+          month?: string | null
+          stk_reference?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          group_id?: string
+          id?: string
+          month?: string | null
+          stk_reference?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chama_savings_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "chama_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chama_support_messages: {
+        Row: {
+          created_at: string
+          file_url: string | null
+          group_id: string
+          id: string
+          is_read: boolean
+          message: string
+          sender_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_url?: string | null
+          group_id: string
+          id?: string
+          is_read?: boolean
+          message: string
+          sender_type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          file_url?: string | null
+          group_id?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          sender_type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chama_support_messages_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "chama_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chama_term_signatures: {
+        Row: {
+          group_id: string
+          id: string
+          signed_at: string
+          terms_version: string | null
+          user_id: string
+        }
+        Insert: {
+          group_id: string
+          id?: string
+          signed_at?: string
+          terms_version?: string | null
+          user_id: string
+        }
+        Update: {
+          group_id?: string
+          id?: string
+          signed_at?: string
+          terms_version?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chama_term_signatures_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "chama_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chama_vote_responses: {
+        Row: {
+          created_at: string
+          id: string
+          selected_option: string
+          user_id: string
+          vote_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          selected_option: string
+          user_id: string
+          vote_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          selected_option?: string
+          user_id?: string
+          vote_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chama_vote_responses_vote_id_fkey"
+            columns: ["vote_id"]
+            isOneToOne: false
+            referencedRelation: "chama_votes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chama_votes: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string | null
+          group_id: string
+          id: string
+          options: Json
+          status: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string | null
+          group_id: string
+          id?: string
+          options?: Json
+          status?: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string | null
+          group_id?: string
+          id?: string
+          options?: Json
+          status?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chama_votes_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "chama_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chama_withdrawal_approvals: {
+        Row: {
+          approved: boolean | null
+          created_at: string
+          id: string
+          user_id: string
+          withdrawal_id: string
+        }
+        Insert: {
+          approved?: boolean | null
+          created_at?: string
+          id?: string
+          user_id: string
+          withdrawal_id: string
+        }
+        Update: {
+          approved?: boolean | null
+          created_at?: string
+          id?: string
+          user_id?: string
+          withdrawal_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chama_withdrawal_approvals_withdrawal_id_fkey"
+            columns: ["withdrawal_id"]
+            isOneToOne: false
+            referencedRelation: "chama_withdrawals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chama_withdrawals: {
+        Row: {
+          amount: number
+          created_at: string
+          group_id: string
+          id: string
+          reason: string | null
+          requested_by: string
+          status: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          group_id: string
+          id?: string
+          reason?: string | null
+          requested_by: string
+          status?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          group_id?: string
+          id?: string
+          reason?: string | null
+          requested_by?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chama_withdrawals_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "chama_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      loan_applications: {
+        Row: {
+          admin_message: string | null
+          applied_amount: number
+          business_sector: string | null
+          created_at: string
+          education_level: string | null
+          employment_status: string
+          existing_loan_amount: number | null
+          existing_loans: boolean | null
+          generated_limit: number
+          id: string
+          loan_type: string
+          monthly_expenses: number
+          monthly_income: number
+          next_of_kin_name: string
+          next_of_kin_phone: string
+          number_of_dependents: number | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          admin_message?: string | null
+          applied_amount: number
+          business_sector?: string | null
+          created_at?: string
+          education_level?: string | null
+          employment_status?: string
+          existing_loan_amount?: number | null
+          existing_loans?: boolean | null
+          generated_limit?: number
+          id?: string
+          loan_type: string
+          monthly_expenses?: number
+          monthly_income?: number
+          next_of_kin_name?: string
+          next_of_kin_phone?: string
+          number_of_dependents?: number | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          admin_message?: string | null
+          applied_amount?: number
+          business_sector?: string | null
+          created_at?: string
+          education_level?: string | null
+          employment_status?: string
+          existing_loan_amount?: number | null
+          existing_loans?: boolean | null
+          generated_limit?: number
+          id?: string
+          loan_type?: string
+          monthly_expenses?: number
+          monthly_income?: number
+          next_of_kin_name?: string
+          next_of_kin_phone?: string
+          number_of_dependents?: number | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      loan_disbursements: {
+        Row: {
+          created_at: string
+          disbursed_amount: number
+          disbursed_at: string
+          id: string
+          interest_rate: number
+          loan_id: string
+          monthly_repayment: number
+          outstanding_balance: number
+          repayment_due_date: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          disbursed_amount: number
+          disbursed_at?: string
+          id?: string
+          interest_rate?: number
+          loan_id: string
+          monthly_repayment?: number
+          outstanding_balance: number
+          repayment_due_date?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          disbursed_amount?: number
+          disbursed_at?: string
+          id?: string
+          interest_rate?: number
+          loan_id?: string
+          monthly_repayment?: number
+          outstanding_balance?: number
+          repayment_due_date?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "loan_disbursements_loan_id_fkey"
+            columns: ["loan_id"]
+            isOneToOne: false
+            referencedRelation: "loan_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      money_requests: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          reason: string | null
+          requested_from_id: string
+          requested_from_name: string | null
+          requester_id: string
+          requester_name: string | null
+          status: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          reason?: string | null
+          requested_from_id: string
+          requested_from_name?: string | null
+          requester_id: string
+          requester_name?: string | null
+          status?: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          reason?: string | null
+          requested_from_id?: string
+          requested_from_name?: string | null
+          requester_id?: string
+          requester_name?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          title: string
+          type: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          title?: string
+          type?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          title?: string
+          type?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      personal_savings: {
+        Row: {
+          created_at: string
+          id: string
+          interest_rate: number
+          maturity_date: string
+          name: string
+          saved_amount: number
+          start_date: string
+          status: string
+          target_amount: number
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          interest_rate?: number
+          maturity_date?: string
+          name: string
+          saved_amount?: number
+          start_date?: string
+          status?: string
+          target_amount?: number
+          type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          interest_rate?: number
+          maturity_date?: string
+          name?: string
+          saved_amount?: number
+          start_date?: string
+          status?: string
+          target_amount?: number
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      personal_savings_deposits: {
+        Row: {
+          amount: number
+          created_at: string
+          id: string
+          savings_id: string
+          stk_reference: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          id?: string
+          savings_id: string
+          stk_reference?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          id?: string
+          savings_id?: string
+          stk_reference?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "personal_savings_deposits_savings_id_fkey"
+            columns: ["savings_id"]
+            isOneToOne: false
+            referencedRelation: "personal_savings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      platform_settings: {
+        Row: {
+          category: string
+          description: string | null
+          id: string
+          key: string
+          label: string
+          updated_at: string
+          value: string
+        }
+        Insert: {
+          category?: string
+          description?: string | null
+          id?: string
+          key: string
+          label?: string
+          updated_at?: string
+          value?: string
+        }
+        Update: {
+          category?: string
+          description?: string | null
+          id?: string
+          key?: string
+          label?: string
+          updated_at?: string
+          value?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          address: string
+          county: string
+          created_at: string
+          date_of_birth: string
+          disable_reason: string | null
+          email: string
+          full_name: string
+          id: string
+          id_number: string
+          is_active: boolean
+          is_verified: boolean
+          phone: string
+          sub_county: string
+          user_id: string
+          ward: string
+        }
+        Insert: {
+          address?: string
+          county?: string
+          created_at?: string
+          date_of_birth?: string
+          disable_reason?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          id_number?: string
+          is_active?: boolean
+          is_verified?: boolean
+          phone?: string
+          sub_county?: string
+          user_id: string
+          ward?: string
+        }
+        Update: {
+          address?: string
+          county?: string
+          created_at?: string
+          date_of_birth?: string
+          disable_reason?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          id_number?: string
+          is_active?: boolean
+          is_verified?: boolean
+          phone?: string
+          sub_county?: string
+          user_id?: string
+          ward?: string
+        }
+        Relationships: []
+      }
+      savings_withdrawal_requests: {
+        Row: {
+          admin_reason: string | null
+          created_at: string
+          id: string
+          penalty_percentage: number
+          reason: string
+          savings_id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          admin_reason?: string | null
+          created_at?: string
+          id?: string
+          penalty_percentage?: number
+          reason?: string
+          savings_id: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          admin_reason?: string | null
+          created_at?: string
+          id?: string
+          penalty_percentage?: number
+          reason?: string
+          savings_id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "savings_withdrawal_requests_savings_id_fkey"
+            columns: ["savings_id"]
+            isOneToOne: false
+            referencedRelation: "personal_savings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      stk_transactions: {
+        Row: {
+          amount: number
+          checkout_request_id: string | null
+          created_at: string
+          id: string
+          merchant_request_id: string | null
+          mpesa_receipt: string | null
+          phone: string
+          reference: string
+          result_code: string | null
+          result_desc: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          checkout_request_id?: string | null
+          created_at?: string
+          id?: string
+          merchant_request_id?: string | null
+          mpesa_receipt?: string | null
+          phone: string
+          reference?: string
+          result_code?: string | null
+          result_desc?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          checkout_request_id?: string | null
+          created_at?: string
+          id?: string
+          merchant_request_id?: string | null
+          mpesa_receipt?: string | null
+          phone?: string
+          reference?: string
+          result_code?: string | null
+          result_desc?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      support_messages: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          message: string
+          sender_id: string
+          sender_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message: string
+          sender_id: string
+          sender_type?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          message?: string
+          sender_id?: string
+          sender_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      transaction_reports: {
+        Row: {
+          created_at: string
+          id: string
+          reason: string | null
+          status: string
+          transaction_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reason?: string | null
+          status?: string
+          transaction_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reason?: string | null
+          status?: string
+          transaction_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_documents: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          document_type: string
+          file_name: string
+          file_path: string
+          file_size: number | null
+          id: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          document_type: string
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          document_type?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      wallet_transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          description: string | null
+          id: string
+          reference_id: string | null
+          status: string | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          reference_id?: string | null
+          status?: string | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          description?: string | null
+          id?: string
+          reference_id?: string | null
+          status?: string | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      wallet_transfers: {
+        Row: {
+          amount: number
+          cancelled_at: string | null
+          created_at: string
+          id: string
+          reason: string | null
+          receiver_id: string
+          receiver_name: string | null
+          sender_id: string
+          sender_name: string | null
+          status: string
+        }
+        Insert: {
+          amount: number
+          cancelled_at?: string | null
+          created_at?: string
+          id?: string
+          reason?: string | null
+          receiver_id: string
+          receiver_name?: string | null
+          sender_id: string
+          sender_name?: string | null
+          status?: string
+        }
+        Update: {
+          amount?: number
+          cancelled_at?: string | null
+          created_at?: string
+          id?: string
+          reason?: string | null
+          receiver_id?: string
+          receiver_name?: string | null
+          sender_id?: string
+          sender_name?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      wallets: {
+        Row: {
+          balance: number
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      withdrawal_requests: {
+        Row: {
+          admin_reason: string | null
+          amount: number
+          created_at: string
+          id: string
+          phone: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          admin_reason?: string | null
+          amount: number
+          created_at?: string
+          id?: string
+          phone: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          admin_reason?: string | null
+          amount?: number
+          created_at?: string
+          id?: string
+          phone?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      cancel_wallet_transfer: {
+        Args: { _transfer_id: string; _user_id: string }
+        Returns: undefined
+      }
+      credit_wallet_on_loan_approval: {
+        Args: { _amount: number; _loan_id: string; _user_id: string }
+        Returns: undefined
+      }
+      get_active_chama_member_count: {
+        Args: { _group_id: string }
+        Returns: number
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      request_withdrawal_secure: {
+        Args: { _amount: number; _phone: string; _user_id: string }
+        Returns: string
+      }
+      transfer_wallet_funds: {
+        Args: {
+          _amount: number
+          _reason?: string
+          _receiver_id: string
+          _receiver_name?: string
+          _sender_id: string
+          _sender_name?: string
+        }
+        Returns: string
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "moderator" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +1769,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "moderator", "user"],
+    },
   },
 } as const
