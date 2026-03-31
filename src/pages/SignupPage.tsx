@@ -85,8 +85,8 @@ export default function SignupPage() {
       }
 
       if (authData.user) {
-        const { error: profileError } = await supabase.from('profiles').insert({
-          user_id: authData.user.id,
+        // With auto-confirm, user is now authenticated. Update the profile created by trigger.
+        const { error: profileError } = await supabase.from('profiles').update({
           full_name: data.fullName,
           email: data.email,
           phone: phone,
@@ -98,7 +98,7 @@ export default function SignupPage() {
           date_of_birth: data.dateOfBirth,
           is_verified: true,
           is_active: true,
-        });
+        }).eq('user_id', authData.user.id);
         if (profileError) throw profileError;
 
         const { error: roleError } = await supabase.from('user_roles').insert({
