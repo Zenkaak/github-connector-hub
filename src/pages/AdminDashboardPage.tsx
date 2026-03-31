@@ -2756,7 +2756,7 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
                     } else {
                       // Approve or reject
                       const newStatus = chamaWdAction === 'approved' ? 'disbursed' : 'rejected';
-                      await supabase.from('chama_withdrawals').update({ status: newStatus, status: chamaWdAction, reason: chamaWdReason || null }).eq('id', selectedChamaWd.id);
+                      await supabase.from('chama_withdrawals').update({ status: chamaWdAction === 'approved' ? 'disbursed' : 'rejected', reason: chamaWdReason || null } as any).eq('id', selectedChamaWd.id);
 
                       // Notify all leaders
                       const statusLabel = chamaWdAction === 'approved' ? 'Approved & Disbursed' : 'Rejected';
