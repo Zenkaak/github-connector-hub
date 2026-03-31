@@ -223,13 +223,13 @@ export function ChamaPenalties({ groupId, group, members, myRole }: Props) {
         <div className="space-y-2">
           {/* Leaders see all penalties, members see only theirs */}
           {(isLeader ? penalties : myPenalties).map(p => (
-            <Card key={p.id} className={`p-4 ${p.status === 'unpaid' ? 'border-destructive/20' : ''}`}>
+            <Card key={p.id} className={`p-4 ${!p.is_paid ? 'border-destructive/20' : ''}`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
-                    p.status === 'paid' ? 'bg-emerald-500/10' : 'bg-destructive/10'
+                    p.is_paid ? 'bg-emerald-500/10' : 'bg-destructive/10'
                   }`}>
-                    {p.status === 'paid' ? <CheckCircle size={14} className="text-emerald-500" /> : <AlertTriangle size={14} className="text-destructive" />}
+                    {p.is_paid ? <CheckCircle size={14} className="text-emerald-500" /> : <AlertTriangle size={14} className="text-destructive" />}
                   </div>
                   <div>
                     <p className="text-sm font-medium">{isLeader ? getMemberName(p.user_id) : p.reason}</p>
@@ -237,11 +237,11 @@ export function ChamaPenalties({ groupId, group, members, myRole }: Props) {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`text-sm font-bold ${p.status === 'paid' ? 'text-emerald-500' : 'text-destructive'}`}>
+                  <span className={`text-sm font-bold ${p.is_paid ? 'text-emerald-500' : 'text-destructive'}`}>
                     KES {p.amount.toLocaleString()}
                   </span>
                   {/* Pay Now button for ANY member with unpaid penalty (including leaders) */}
-                  {p.status === 'unpaid' && p.user_id === user?.id && (
+                  {!p.is_paid && p.user_id === user?.id && (
                     <Button size="sm" variant="gold" className="text-xs h-7 gap-1" onClick={() => {
                       const myPhone = members.find(m => m.user_id === user?.id)?.profile?.phone || '';
                       setPayPhone(myPhone);
@@ -250,7 +250,7 @@ export function ChamaPenalties({ groupId, group, members, myRole }: Props) {
                       <Send size={12} /> Pay Now
                     </Button>
                   )}
-                  {isLeader && p.status === 'unpaid' && p.user_id !== user?.id && (
+                  {isLeader && !p.is_paid && p.user_id !== user?.id && (
                     <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => handleMarkPaid(p.id)}>
                       Mark Paid
                     </Button>
