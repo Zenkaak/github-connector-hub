@@ -272,8 +272,8 @@ export function ChamaSavings({
   };
 
   const freqLabel =
-    FREQUENCY_LABELS[group?.savings_frequency] ||
-    group?.savings_frequency ||
+    FREQUENCY_LABELS[group?.contribution_frequency] ||
+    group?.contribution_frequency ||
     'Not Set';
 
   return (
