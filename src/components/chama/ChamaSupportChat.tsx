@@ -12,8 +12,12 @@ interface SupportMessage {
   id: string;
   user_id: string;
   sender_type: string;
+  sender_id?: string;
+  receiver_id?: string;
   message: string;
+  message_type?: string;
   file_url?: string | null;
+  file_name?: string | null;
   is_read?: boolean;
   created_at: string;
   group_id: string;
@@ -61,12 +65,12 @@ export function ChamaSupportChat({ groupId, members, myRole }: Props) {
 
     // Mark as read
     if (data && data.length > 0) {
-      await supabase
+      await (supabase
         .from('chama_support_messages')
         .update({ is_read: true } as any)
-        .eq('group_id', groupId)
-        .eq('user_id' as any, user.id)
-        .eq('user_id' as any, otherUserId);
+        .eq('group_id', groupId) as any)
+        .eq('receiver_id', user.id)
+        .eq('sender_id', otherUserId);
     }
   };
 

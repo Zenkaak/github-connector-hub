@@ -598,7 +598,7 @@ export default function TransactionsPage() {
           </DialogHeader>
           {selectedRequest && (() => {
             const isRequester = selectedRequest.requester_id === user?.id;
-            const otherName = requestNames[isRequester ? selectedRequest.target_id : selectedRequest.requester_id] || 'Unknown';
+            const otherName = requestNames[isRequester ? selectedRequest.requested_from_id : selectedRequest.requester_id] || 'Unknown';
             const statusColor = selectedRequest.status === 'paid' ? 'text-success' : selectedRequest.status === 'declined' ? 'text-destructive' : 'text-accent';
             const statusBg = selectedRequest.status === 'paid' ? 'bg-success/10' : selectedRequest.status === 'declined' ? 'bg-destructive/10' : 'bg-accent/10';
             const StatusIcon = selectedRequest.status === 'paid' ? CheckCircle2 : selectedRequest.status === 'declined' ? XCircle : Clock;

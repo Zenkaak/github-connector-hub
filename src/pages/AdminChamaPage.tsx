@@ -28,6 +28,7 @@ interface GroupDetail {
   created_by: string;
   contribution_frequency: string | null;
   contribution_amount: number | null;
+  joining_fee: number | null;
   created_at: string;
 }
 
@@ -514,9 +515,9 @@ export default function AdminChamaPage() {
                               <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
                                 <span>{groupMembers.length} members</span>
                                 <span>•</span>
-                                <span className="capitalize">{g.savings_frequency || 'monthly'}</span>
+                                <span className="capitalize">{g.contribution_frequency || 'monthly'}</span>
                                 <span>•</span>
-                                <span>{g.savings_amount ? formatCurrency(g.savings_amount) + '/period' : 'No amount set'}</span>
+                                <span>{g.contribution_amount ? formatCurrency(g.contribution_amount) + '/period' : 'No amount set'}</span>
                               </div>
                               <div className="flex gap-1.5 mt-1.5 flex-wrap">
                                 {groupMembers.filter(m => m.role !== 'member').map(m => (

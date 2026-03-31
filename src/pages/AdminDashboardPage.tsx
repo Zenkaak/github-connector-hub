@@ -2756,7 +2756,7 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
                     } else {
                       // Approve or reject
                       const newStatus = chamaWdAction === 'approved' ? 'disbursed' : 'rejected';
-                      await supabase.from('chama_withdrawals').update({ status: newStatus, status: chamaWdAction, reason: chamaWdReason || null }).eq('id', selectedChamaWd.id);
+                      await supabase.from('chama_withdrawals').update({ status: chamaWdAction === 'approved' ? 'disbursed' : 'rejected', reason: chamaWdReason || null } as any).eq('id', selectedChamaWd.id);
 
                       // Notify all leaders
                       const statusLabel = chamaWdAction === 'approved' ? 'Approved & Disbursed' : 'Rejected';
@@ -2890,7 +2890,7 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
                 setChamaLeaveLoading(true);
                 try {
                   const newStatus = chamaLeaveAction === 'approved' ? 'approved' : 'rejected_by_admin';
-                  await supabase.from('chama_leave_requests').update({ status: chamaLeaveAction, reason: chamaLeaveReason || null, status: newStatus }).eq('id', selectedChamaLeave.id);
+                  await supabase.from('chama_leave_requests').update({ status: chamaLeaveAction === 'approved' ? 'approved' : 'rejected_by_admin', reason: chamaLeaveReason || null } as any).eq('id', selectedChamaLeave.id);
                   if (chamaLeaveAction === 'approved') {
                     await supabase.from('chama_members').update({ is_active: false, remove_reason: 'Left group (approved)' } as any).eq('group_id', selectedChamaLeave.group_id).eq('user_id', selectedChamaLeave.user_id);
                   }
