@@ -54,7 +54,7 @@ export function MoneyRequestsSection({ walletBalance, onRefresh }: MoneyRequests
       if (data && data.length > 0) {
         setRequests(data);
         // Fetch requester names
-        const userIds = [...new Set(data.map(r => r.requester_id === user.id ? r.target_id : r.requester_id))];
+        const userIds = [...new Set(data.map(r => r.requester_id === user.id ? r.requested_from_id : r.requester_id))];
         const { data: profiles } = await supabase
           .from('profiles')
           .select('user_id, full_name')
