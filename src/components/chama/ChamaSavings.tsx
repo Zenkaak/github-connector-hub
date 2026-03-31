@@ -124,7 +124,7 @@ export function ChamaSavings({
   // MPESA PAYMENT
   const handleDeposit = async () => {
 
-    if (!user || !group?.savings_amount) return;
+    if (!user || !group?.contribution_amount) return;
 
     setDepositing(true);
 
