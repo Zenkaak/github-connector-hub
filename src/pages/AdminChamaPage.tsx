@@ -28,6 +28,7 @@ interface GroupDetail {
   created_by: string;
   contribution_frequency: string | null;
   contribution_amount: number | null;
+  joining_fee: number | null;
   created_at: string;
 }
 
