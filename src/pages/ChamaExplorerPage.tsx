@@ -187,7 +187,7 @@ export default function ChamaExplorerPage() {
                         {group.description && <p className="text-xs text-muted-foreground line-clamp-1">{group.description}</p>}
                         <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                           <span className="flex items-center gap-1"><Users size={11} /> {group.member_count} members</span>
-                          <span className="flex items-center gap-1"><DollarSign size={11} /> KES {group.savings_amount || 0} {FREQUENCY_LABELS[group.savings_frequency] || ''}</span>
+                          <span className="flex items-center gap-1"><DollarSign size={11} /> KES {group.contribution_amount || 0} {FREQUENCY_LABELS[group.contribution_frequency] || ''}</span>
                           {(group.joining_fee || 0) > 0 && <span className="flex items-center gap-1"><ShieldCheck size={11} /> Fee: KES {group.joining_fee}</span>}
                         </div>
                       </div>
