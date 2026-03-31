@@ -67,9 +67,9 @@ export function ChamaChat({ groupId, members }: ChamaChatProps) {
         filter: `group_id=eq.${groupId}`,
       }, (payload) => {
         const newMsg = payload.new as any;
-        setMessages(prev => [...prev, { ...newMsg, sender_name: getMemberName(newMsg.sender_id) }]);
+        setMessages(prev => [...prev, { ...newMsg, sender_name: getMemberName(newMsg.user_id) }]);
         
-        if (newMsg.sender_id !== user?.id) {
+        if (newMsg.user_id !== user?.id) {
           playSound();
         }
       })
