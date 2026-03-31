@@ -107,6 +107,7 @@ export default function WalletPage() {
   const [transactions, setTransactions] = useState<WalletTransaction[]>([]);
   const [withdrawals, setWithdrawals] = useState<WithdrawalRequest[]>([]);
   const [transfers, setTransfers] = useState<Transfer[]>([]);
+  const [selectedTransfer, setSelectedTransfer] = useState<Transfer | null>(null);
   const [loading, setLoading] = useState(true);
   const [session, setSession] = useState<DeviceSession>({ ip: 'Detecting...', model: 'Detecting...', os: '', browser: '' });
   
