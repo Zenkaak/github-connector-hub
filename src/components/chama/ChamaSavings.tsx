@@ -210,7 +210,7 @@ export function ChamaSavings({
           await supabase.from('chama_savings').insert({
             group_id: groupId,
             user_id: user?.id,
-            amount: group?.savings_amount || 0,
+            amount: group?.contribution_amount || 0,
             payment_method: 'mpesa',
             status: 'completed',
           } as any);
