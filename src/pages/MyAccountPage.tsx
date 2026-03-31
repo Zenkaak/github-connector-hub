@@ -87,11 +87,8 @@ export default function MyAccountPage() {
   const handleLogoutOtherDevices = async (deviceId: number) => {
     setIsRevoking(deviceId);
     try {
-      // Logic for revoking other sessions in Supabase
       const { error } = await supabase.auth.signOut({ scope: 'others' });
       if (error) throw error;
-      
-      setActiveDevices(prev => prev.filter(d => d.id !== deviceId || d.current));
       toast.success("Other sessions have been revoked.");
     } catch (error: any) {
       toast.error("Failed to revoke session.");
