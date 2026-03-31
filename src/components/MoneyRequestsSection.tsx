@@ -178,8 +178,8 @@ export function MoneyRequestsSection({ walletBalance, onRefresh }: MoneyRequests
         </CardHeader>
         <CardContent className="space-y-2">
           {requests.map((req) => {
-            const isIncoming = req.target_id === user?.id;
-            const otherName = requesterNames[isIncoming ? req.requester_id : req.target_id] || 'Unknown';
+            const isIncoming = req.requested_from_id === user?.id;
+            const otherName = requesterNames[isIncoming ? req.requester_id : req.requested_from_id] || 'Unknown';
             const isPending = req.status === 'pending';
 
             return (

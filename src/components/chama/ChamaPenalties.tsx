@@ -83,7 +83,7 @@ export function ChamaPenalties({ groupId, group, members, myRole }: Props) {
         .from('chama_penalties')
         .select('user_id')
         .eq('group_id', groupId)
-        .eq('period_date', periodDate)
+        .gte('created_at', periodDate)
         .eq('reason', 'Late contribution penalty');
 
       const penalizedUserIds = new Set((existingPenalties as any[])?.map(p => p.user_id) || []);

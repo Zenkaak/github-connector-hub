@@ -93,11 +93,11 @@ export function ChamaChat({ groupId, members }: ChamaChatProps) {
     if (!newMessage.trim() || !user) return;
     setSending(true);
     try {
-      const { error } = await supabase.from('chama_messages').insert({
+      const { error } = await supabase.from('chama_messages').insert([{
         group_id: groupId,
-        sender_id: user.id,
+        user_id: user.id,
         message: newMessage.trim(),
-      });
+      }]);
       if (error) throw error;
 
       const otherMembers = members.filter(m => m.user_id !== user.id);

@@ -10,14 +10,13 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 
 interface SupportMessage {
   id: string;
-  sender_id: string;
-  receiver_id: string;
+  user_id: string;
+  sender_type: string;
   message: string;
   file_url?: string | null;
-  file_name?: string | null;
-  message_type?: string | null;
   is_read?: boolean;
   created_at: string;
+  group_id: string;
 }
 
 interface Props {

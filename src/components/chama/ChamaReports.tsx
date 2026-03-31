@@ -100,7 +100,7 @@ export function ChamaReports({ groupId, group, members }: Props) {
         return [
           h?.beneficiary_name || '',
           h?.order_number || '',
-          getMemberName(c.contributor_id),
+          getMemberName(c.user_id),
           String(c.amount),
           c.stk_reference || '',
           format(new Date(c.created_at), 'yyyy-MM-dd HH:mm'),

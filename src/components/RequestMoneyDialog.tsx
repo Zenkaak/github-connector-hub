@@ -84,11 +84,11 @@ export function RequestMoneyDialog({ open, onOpenChange, onSuccess }: RequestMon
 
     setSubmitting(true);
     try {
-      const { error } = await supabase.from('money_requests').insert({
+      const { error } = await supabase.from('money_requests').insert([{
         requester_id: user.id,
-        target_id: targetId,
+        requested_from_id: targetId,
         amount: amt,
-      });
+      }]);
       if (error) throw error;
 
       // Notify target user

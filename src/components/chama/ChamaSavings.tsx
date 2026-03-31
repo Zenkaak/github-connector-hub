@@ -249,9 +249,9 @@ export function ChamaSavings({
       const { error } = await supabase
         .from('chama_groups')
         .update({
-          savings_frequency: frequency,
-          savings_amount: parseInt(savingsAmount),
-        })
+          contribution_frequency: frequency,
+          contribution_amount: parseInt(savingsAmount),
+        } as any)
         .eq('id', groupId);
 
       if (error) throw error;
