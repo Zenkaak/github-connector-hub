@@ -163,10 +163,10 @@ export function ChamaPenalties({ groupId, group, members, myRole }: Props) {
     }
   };
 
-  const totalUnpaid = penalties.filter(p => p.status === 'unpaid').reduce((sum, p) => sum + p.amount, 0);
-  const totalPaid = penalties.filter(p => p.status === 'paid').reduce((sum, p) => sum + p.amount, 0);
+  const totalUnpaid = penalties.filter(p => !p.is_paid).reduce((sum, p) => sum + p.amount, 0);
+  const totalPaid = penalties.filter(p => p.is_paid).reduce((sum, p) => sum + p.amount, 0);
   const myPenalties = penalties.filter(p => p.user_id === user?.id);
-  const myUnpaid = myPenalties.filter(p => p.status === 'unpaid');
+  const myUnpaid = myPenalties.filter(p => !p.is_paid);
 
   if (loading) return <div className="p-8 text-center"><Loader2 className="animate-spin mx-auto text-muted-foreground" /></div>;
 
