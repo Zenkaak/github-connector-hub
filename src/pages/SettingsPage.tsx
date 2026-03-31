@@ -177,8 +177,7 @@ export default function SettingsPage() {
                     variant="gold"
                     size="sm"
                     onClick={handleChangePassword}
-                    loading={changingPassword}
-                    disabled={!newPassword || !confirmPassword}
+                    disabled={changingPassword || !newPassword || !confirmPassword}
                   >
                     Update Password
                   </Button>

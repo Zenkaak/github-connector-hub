@@ -79,7 +79,7 @@ export default function VerifyOtpPage() {
           </p>
         </div>
 
-        <Card variant="elevated">
+        <Card className="premium-card">
           <CardHeader className="text-center">
             <CardTitle>Enter Verification Code</CardTitle>
             <CardDescription>

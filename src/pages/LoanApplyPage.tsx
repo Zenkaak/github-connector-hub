@@ -233,7 +233,7 @@ export default function LoanApplyPage() {
           Back to Products
         </Button>
 
-        <Card variant="elevated">
+        <Card className="premium-card">
           <CardHeader>
             <div className="flex items-center gap-4">
               <span className="text-4xl">{product.icon}</span>
