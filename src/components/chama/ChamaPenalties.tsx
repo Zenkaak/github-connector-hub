@@ -15,8 +15,7 @@ interface Penalty {
   user_id: string;
   amount: number;
   reason: string;
-  status: string;
-  period_date: string;
+  is_paid: boolean;
   created_at: string;
 }
 
