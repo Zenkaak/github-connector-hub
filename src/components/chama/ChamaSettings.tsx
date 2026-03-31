@@ -47,8 +47,8 @@ export function ChamaSettings({ groupId, group, members, onRefreshGroup }: Props
   const [saving, setSaving] = useState(false);
 
   // Savings
-  const [frequency, setFrequency] = useState(group?.savings_frequency || 'monthly');
-  const [savingsAmount, setSavingsAmount] = useState(group?.savings_amount?.toString() || '0');
+  const [frequency, setFrequency] = useState(group?.contribution_frequency || 'monthly');
+  const [savingsAmount, setSavingsAmount] = useState(group?.contribution_amount?.toString() || '0');
   const [allowPartial, setAllowPartial] = useState(group?.allow_partial_contributions || false);
   const [minContribution, setMinContribution] = useState(group?.min_contribution_amount?.toString() || '0');
   const [annualTarget, setAnnualTarget] = useState(group?.annual_savings_target?.toString() || '0');
