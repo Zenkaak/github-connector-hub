@@ -106,9 +106,9 @@ export function ChamaWithdrawals({ groupId, members, myRole, savings }: Props) {
     try {
       // Update my approval
       await supabase.from('chama_withdrawal_approvals')
-        .update({ decision, updated_at: new Date().toISOString() })
+        .update({ approved: decision === 'approved' } as any)
         .eq('withdrawal_id', withdrawalId)
-        .eq('approver_id', user.id);
+        .eq('user_id', user.id);
 
       // Check all approvals for this withdrawal
       const { data: allApprovals } = await supabase
