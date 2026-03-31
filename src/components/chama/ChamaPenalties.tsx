@@ -75,7 +75,7 @@ export function ChamaPenalties({ groupId, group, members, myRole }: Props) {
         .from('chama_savings')
         .select('user_id')
         .eq('group_id', groupId)
-        .gte('period_date', periodDate);
+        .gte('created_at', periodDate);
 
       const paidUserIds = new Set(savings?.map(s => s.user_id) || []);
 
