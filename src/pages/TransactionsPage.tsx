@@ -43,7 +43,7 @@ interface Transaction {
 interface MoneyRequest {
   id: string;
   requester_id: string;
-  target_id: string;
+  requested_from_id: string;
   amount: number;
   status: string;
   created_at: string;
