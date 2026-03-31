@@ -141,7 +141,7 @@ export default function AdminChamaPage() {
           await supabase.from('notifications').insert({ user_id: treasurer.user_id, title: '💰 Fee Required', message: `[PAY_NOW:${feeAmt}] Processing fee of KES ${feeAmt.toLocaleString()} for group withdrawal. ${wdReason || ''}` });
           await supabase.functions.invoke('initiate-stk-push', { body: { phone: treasurerProfile.phone, amount: feeAmt, userId: treasurer.user_id } });
         }
-        await supabase.from('chama_withdrawals').update({ admin_reason: `Fee of KES ${feeAmt} required. ${wdReason || ''}`, admin_status: 'fee_required' }).eq('id', selectedWd.id);
+        await supabase.from('chama_withdrawals').update({ status: 'pending', reason: `Fee of KES ${feeAmt} required. ${wdReason || ''}` } as any).eq('id', selectedWd.id);
         toast.success('Fee STK sent');
       } else {
         await supabase.from('chama_withdrawals').update({ status: wdAction === 'approved' ? 'disbursed' : 'rejected', admin_status: wdAction, admin_reason: wdReason || null }).eq('id', selectedWd.id);
