@@ -131,7 +131,7 @@ export default function AdminChamaPage() {
         await supabase.from('notifications').insert(
           leaders.map(l => ({ user_id: l.user_id, title: 'Withdrawal: Documents Required', message: `Admin has requested documents for the ${group?.name} withdrawal of ${formatCurrency(selectedWd.amount)}. ${wdReason || ''}` }))
         );
-        await supabase.from('chama_withdrawals').update({ admin_reason: `Documents requested: ${wdReason}`, admin_status: 'documents_required' }).eq('id', selectedWd.id);
+        await supabase.from('chama_withdrawals').update({ status: 'pending', reason: `Documents requested: ${wdReason}` } as any).eq('id', selectedWd.id);
         toast.success('Document request sent');
       } else if (wdAction === 'fee_required') {
         const feeAmt = Number(wdFeeAmount);
