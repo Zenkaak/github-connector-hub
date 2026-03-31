@@ -26,9 +26,8 @@ interface GroupDetail {
   name: string;
   description: string | null;
   created_by: string;
-  savings_frequency: string | null;
-  savings_amount: number | null;
-  joining_fee: number | null;
+  contribution_frequency: string | null;
+  contribution_amount: number | null;
   created_at: string;
 }
 
