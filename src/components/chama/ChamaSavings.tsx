@@ -384,7 +384,7 @@ export function ChamaSavings({
           >
             {depositing
               ? 'Processing...'
-              : `Pay KES ${group?.savings_amount}`}
+              : `Pay KES ${group?.contribution_amount}`}
           </Button>
 
         </DialogContent>

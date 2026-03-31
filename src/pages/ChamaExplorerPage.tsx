@@ -228,7 +228,7 @@ export default function ChamaExplorerPage() {
                 </Card>
                 <Card className="p-3">
                   <p className="text-[11px] text-muted-foreground">Savings</p>
-                  <p className="font-bold">KES {selectedGroup.savings_amount || 0} {FREQUENCY_LABELS[selectedGroup.savings_frequency] || ''}</p>
+                  <p className="font-bold">KES {selectedGroup.contribution_amount || 0} {FREQUENCY_LABELS[selectedGroup.contribution_frequency] || ''}</p>
                 </Card>
                 <Card className="p-3">
                   <p className="text-[11px] text-muted-foreground">Joining Fee</p>

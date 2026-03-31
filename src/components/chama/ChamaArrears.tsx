@@ -52,7 +52,7 @@ export function ChamaArrears({ groupId, group, members }: Props) {
     const memberSavings = savings.filter(s => s.user_id === m.user_id);
     const paidCount = memberSavings.length;
     const missedCount = Math.max(0, expectedCount - paidCount);
-    const arrearsAmount = missedCount * (group?.savings_amount || 0);
+    const arrearsAmount = missedCount * (group?.contribution_amount || 0);
     return {
       ...m,
       paidCount,
