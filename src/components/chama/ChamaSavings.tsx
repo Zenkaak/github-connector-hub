@@ -327,9 +327,9 @@ export function ChamaSavings({
 
       {/* ACTION */}
 
-      {group?.savings_amount > 0 && (
+      {group?.contribution_amount > 0 && (
         <Button onClick={() => setDepositOpen(true)}>
-          <Wallet size={16} /> Deposit KES {group.savings_amount}
+          <Wallet size={16} /> Deposit KES {group.contribution_amount}
         </Button>
       )}
 
