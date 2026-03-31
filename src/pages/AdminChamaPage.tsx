@@ -424,7 +424,7 @@ export default function AdminChamaPage() {
                         }}>Approve</Button>
                         <Button size="sm" variant="destructive" className="text-xs h-7" onClick={async () => {
                           try {
-                            await supabase.from('chama_leave_requests').update({ admin_status: 'rejected', admin_reason: 'Rejected by admin' }).eq('id', lr.id);
+                            await supabase.from('chama_leave_requests').update({ status: 'rejected', reviewed_by: user?.id } as any).eq('id', lr.id);
                             await supabase.from('notifications').insert({ user_id: lr.user_id, title: 'Leave Refund Rejected ❌', message: `Your refund request has been rejected by admin.` });
                             toast.success('Leave refund rejected');
                             fetchAll();

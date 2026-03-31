@@ -137,11 +137,11 @@ export function ChamaChat({ groupId, members }: ChamaChatProps) {
           </div>
         ) : (
           messages.map((msg) => {
-            const isMe = msg.sender_id === user?.id;
+            const isMe = msg.user_id === user?.id;
             return (
               <div key={msg.id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
                 <div className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${isMe ? 'bg-primary text-primary-foreground rounded-br-md' : 'bg-muted rounded-bl-md'}`}>
-                  {!isMe && <p className="text-[11px] font-semibold mb-0.5 opacity-70">{getRoleEmoji(msg.sender_id)}{msg.sender_name}</p>}
+                  {!isMe && <p className="text-[11px] font-semibold mb-0.5 opacity-70">{getRoleEmoji(msg.user_id)}{msg.sender_name}</p>}
                   <p className="text-sm whitespace-pre-wrap">{msg.message}</p>
                   <p className={`text-[10px] mt-1 ${isMe ? 'text-primary-foreground/60' : 'text-muted-foreground'}`}>
                     {formatTime(msg.created_at)}

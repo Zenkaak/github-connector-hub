@@ -271,7 +271,7 @@ export function ChamaPenalties({ groupId, group, members, myRole }: Props) {
               <Card className="p-3 bg-destructive/5 border-destructive/20">
                 <p className="text-sm font-medium text-destructive">{payDialog.penalty.reason}</p>
                 <p className="text-2xl font-bold mt-1">KES {payDialog.penalty.amount.toLocaleString()}</p>
-                <p className="text-xs text-muted-foreground mt-1">Period: {payDialog.penalty.period_date}</p>
+                <p className="text-xs text-muted-foreground mt-1">Date: {format(new Date(payDialog.penalty.created_at), 'MMM d, yyyy')}</p>
               </Card>
               <div>
                 <Label>M-Pesa Phone Number</Label>

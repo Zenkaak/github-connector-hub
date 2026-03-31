@@ -118,13 +118,13 @@ export function ChamaWithdrawals({ groupId, members, myRole, savings }: Props) {
 
       if (!allApprovals) return;
 
-      const updatedApprovals = allApprovals.map(a => a.approver_id === user.id ? { ...a, decision } : a);
-      const rejected = updatedApprovals.find(a => a.decision === 'rejected');
-      const allApproved = updatedApprovals.every(a => a.decision === 'approved');
+      const updatedApprovals = allApprovals.map((a: any) => a.user_id === user.id ? { ...a, approved: decision === 'approved' } : a);
+      const rejected = updatedApprovals.find((a: any) => a.approved === false);
+      const allApproved = updatedApprovals.every((a: any) => a.approved === true);
 
       if (rejected) {
         // Notify all 3 leaders about rejection
-        const rejectorRole = members.find(m => m.user_id === rejected.approver_id)?.role || 'leader';
+        const rejectorRole = members.find(m => m.user_id === (rejected as any).user_id)?.role || 'leader';
         const roleLabel = rejectorRole.charAt(0).toUpperCase() + rejectorRole.slice(1);
 
         await supabase.from('chama_withdrawals')

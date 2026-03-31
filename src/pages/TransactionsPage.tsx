@@ -119,7 +119,7 @@ export default function TransactionsPage() {
       
       if (reqRes.data && reqRes.data.length > 0) {
         setRequests(reqRes.data);
-        const userIds = [...new Set(reqRes.data.map(r => r.requester_id === user?.id ? r.target_id : r.requester_id))];
+        const userIds = [...new Set(reqRes.data.map(r => r.requester_id === user?.id ? r.requested_from_id : r.requester_id))];
         const { data: profiles } = await supabase.from('profiles').select('user_id, full_name').in('user_id', userIds);
         if (profiles) {
           const nameMap: Record<string, string> = {};
