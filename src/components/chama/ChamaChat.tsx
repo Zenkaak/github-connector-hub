@@ -8,7 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 
 interface ChatMessage {
   id: string;
-  sender_id: string;
+  user_id: string;
   message: string;
   created_at: string;
   sender_name?: string;
