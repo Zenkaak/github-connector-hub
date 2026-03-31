@@ -1,0 +1,59 @@
+{
+  "id": "datavend-ventures-ke",
+  "name": "Datavend Ventures: Digital Chama & Harambee",
+  "short_name": "Datavend",
+  "description": "The premium digital ledger for Kenyan Chamas, Harambees, and community lending.",
+  "start_url": "/?source=pwa",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "lang": "en-KE",
+  "dir": "ltr",
+  "categories": ["finance", "social", "productivity"],
+  "icons": [
+    {
+      "src": "/icons/pwa-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/pwa-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "My Chama",
+      "short_name": "Chama",
+      "url": "/dashboard/chama",
+      "icons": [{ "src": "/icons/chama-96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Quick Harambee",
+      "short_name": "Harambee",
+      "url": "/fundraise/new",
+      "icons": [{ "src": "/icons/fund-96.png", "sizes": "96x96" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/mobile-dash.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Secure Chama Dashboard"
+    },
+    {
+      "src": "/screenshots/desktop-dash.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Enterprise Financial View"
+    }
+  ]
+}
