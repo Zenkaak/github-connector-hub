@@ -47,7 +47,7 @@ export function MoneyRequestsSection({ walletBalance, onRefresh }: MoneyRequests
       const { data } = await supabase
         .from('money_requests')
         .select('*')
-        .or(`target_id.eq.${user.id},requester_id.eq.${user.id}`)
+        .or(`requested_from_id.eq.${user.id},requester_id.eq.${user.id}`)
         .order('created_at', { ascending: false })
         .limit(20);
 
