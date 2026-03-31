@@ -224,7 +224,7 @@ export default function WalletPage() {
 
     setActionLoading(true);
     try {
-      const { error } = await supabase.rpc('request_withdrawal_secure', {
+      const { error } = await supabase.rpc('request_withdrawal_secure' as any, {
         p_user_id: user!.id,
         p_wallet_id: wallet.id,
         p_amount: amount,
