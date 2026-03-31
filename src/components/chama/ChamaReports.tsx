@@ -48,7 +48,7 @@ export function ChamaReports({ groupId, group, members }: Props) {
         getMemberName(s.user_id),
         getMemberPhone(s.user_id),
         String(s.amount),
-        s.period_date,
+        s.month || '',
         s.stk_reference || '',
         format(new Date(s.created_at), 'yyyy-MM-dd HH:mm'),
       ]);
