@@ -110,7 +110,7 @@ export default function TransactionsPage() {
         supabase
           .from('money_requests')
           .select('*')
-          .or(`requester_id.eq.${user?.id},target_id.eq.${user?.id}`)
+          .or(`requester_id.eq.${user?.id},requested_from_id.eq.${user?.id}`)
           .order('created_at', { ascending: false })
           .limit(50),
       ]);
