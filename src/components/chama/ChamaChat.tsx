@@ -51,7 +51,7 @@ export function ChamaChat({ groupId, members }: ChamaChatProps) {
       .limit(200);
 
     if (data) {
-      setMessages(data.map(m => ({ ...m, sender_name: getMemberName(m.sender_id) })));
+      setMessages(data.map(m => ({ ...m, sender_name: getMemberName(m.user_id) })));
     }
   };
 
