@@ -143,7 +143,7 @@ export function ChamaSavings({
         {
           body: {
             phone: formattedPhone,
-            amount: group.savings_amount,
+            amount: group.contribution_amount,
             userId: user.id,
             purpose: 'chama_savings',
             groupId,
