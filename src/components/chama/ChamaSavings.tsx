@@ -88,7 +88,7 @@ export function ChamaSavings({
   // PERIOD CALCULATION
   const getCurrentPeriodStart = () => {
 
-    const freq = group?.savings_frequency || 'monthly';
+    const freq = group?.contribution_frequency || 'monthly';
     const hours = FREQUENCY_HOURS[freq] || 720;
 
     const now = new Date();
