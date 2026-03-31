@@ -27,8 +27,8 @@ export function ChamaArrears({ groupId, group, members }: Props) {
   }, [groupId]);
 
   const getExpectedPeriods = () => {
-    if (!group?.savings_amount || group.savings_amount === 0) return [];
-    const freq = group?.savings_frequency || 'monthly';
+    if (!group?.contribution_amount || group.contribution_amount === 0) return [];
+    const freq = group?.contribution_frequency || 'monthly';
     const hours = FREQUENCY_HOURS[freq] || 720;
     const start = new Date(group.created_at);
     const now = new Date();
@@ -52,7 +52,7 @@ export function ChamaArrears({ groupId, group, members }: Props) {
     const memberSavings = savings.filter(s => s.user_id === m.user_id);
     const paidCount = memberSavings.length;
     const missedCount = Math.max(0, expectedCount - paidCount);
-    const arrearsAmount = missedCount * (group?.savings_amount || 0);
+    const arrearsAmount = missedCount * (group?.contribution_amount || 0);
     return {
       ...m,
       paidCount,

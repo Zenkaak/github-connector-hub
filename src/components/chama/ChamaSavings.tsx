@@ -54,8 +54,8 @@ export function ChamaSavings({
   const [depositing, setDepositing] = useState(false);
 
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [frequency, setFrequency] = useState(group?.savings_frequency || 'monthly');
-  const [savingsAmount, setSavingsAmount] = useState(group?.savings_amount?.toString() || '0');
+  const [frequency, setFrequency] = useState(group?.contribution_frequency || 'monthly');
+  const [savingsAmount, setSavingsAmount] = useState(group?.contribution_amount?.toString() || '0');
 
   const isChairperson = myRole === 'chairperson';
 
@@ -88,7 +88,7 @@ export function ChamaSavings({
   // PERIOD CALCULATION
   const getCurrentPeriodStart = () => {
 
-    const freq = group?.savings_frequency || 'monthly';
+    const freq = group?.contribution_frequency || 'monthly';
     const hours = FREQUENCY_HOURS[freq] || 720;
 
     const now = new Date();
@@ -124,7 +124,7 @@ export function ChamaSavings({
   // MPESA PAYMENT
   const handleDeposit = async () => {
 
-    if (!user || !group?.savings_amount) return;
+    if (!user || !group?.contribution_amount) return;
 
     setDepositing(true);
 
@@ -143,7 +143,7 @@ export function ChamaSavings({
         {
           body: {
             phone: formattedPhone,
-            amount: group.savings_amount,
+            amount: group.contribution_amount,
             userId: user.id,
             purpose: 'chama_savings',
             groupId,
@@ -210,7 +210,7 @@ export function ChamaSavings({
           await supabase.from('chama_savings').insert({
             group_id: groupId,
             user_id: user?.id,
-            amount: group?.savings_amount || 0,
+            amount: group?.contribution_amount || 0,
             payment_method: 'mpesa',
             status: 'completed',
           } as any);
@@ -251,7 +251,7 @@ export function ChamaSavings({
         .update({
           contribution_frequency: frequency,
           contribution_amount: parseInt(savingsAmount),
-        } as any)
+        })
         .eq('id', groupId);
 
       if (error) throw error;
@@ -272,8 +272,8 @@ export function ChamaSavings({
   };
 
   const freqLabel =
-    FREQUENCY_LABELS[group?.savings_frequency] ||
-    group?.savings_frequency ||
+    FREQUENCY_LABELS[group?.contribution_frequency] ||
+    group?.contribution_frequency ||
     'Not Set';
 
   return (
@@ -312,7 +312,7 @@ export function ChamaSavings({
         <Card className="p-4">
           <p className="text-xs text-muted-foreground">Amount</p>
           <p className="font-bold">
-            KES {group?.savings_amount?.toLocaleString() || '0'}
+            KES {group?.contribution_amount?.toLocaleString() || '0'}
           </p>
         </Card>
 
@@ -327,9 +327,9 @@ export function ChamaSavings({
 
       {/* ACTION */}
 
-      {group?.savings_amount > 0 && (
+      {group?.contribution_amount > 0 && (
         <Button onClick={() => setDepositOpen(true)}>
-          <Wallet size={16} /> Deposit KES {group.savings_amount}
+          <Wallet size={16} /> Deposit KES {group.contribution_amount}
         </Button>
       )}
 
@@ -384,7 +384,7 @@ export function ChamaSavings({
           >
             {depositing
               ? 'Processing...'
-              : `Pay KES ${group?.savings_amount}`}
+              : `Pay KES ${group?.contribution_amount}`}
           </Button>
 
         </DialogContent>

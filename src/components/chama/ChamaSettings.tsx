@@ -47,8 +47,8 @@ export function ChamaSettings({ groupId, group, members, onRefreshGroup }: Props
   const [saving, setSaving] = useState(false);
 
   // Savings
-  const [frequency, setFrequency] = useState(group?.savings_frequency || 'monthly');
-  const [savingsAmount, setSavingsAmount] = useState(group?.savings_amount?.toString() || '0');
+  const [frequency, setFrequency] = useState(group?.contribution_frequency || 'monthly');
+  const [savingsAmount, setSavingsAmount] = useState(group?.contribution_amount?.toString() || '0');
   const [allowPartial, setAllowPartial] = useState(group?.allow_partial_contributions || false);
   const [minContribution, setMinContribution] = useState(group?.min_contribution_amount?.toString() || '0');
   const [annualTarget, setAnnualTarget] = useState(group?.annual_savings_target?.toString() || '0');
@@ -126,61 +126,16 @@ export function ChamaSettings({ groupId, group, members, onRefreshGroup }: Props
     try {
       const { error } = await supabase.from('chama_groups').update({
         description: description || null,
-        savings_frequency: frequency,
-        savings_amount: parseInt(savingsAmount) || 0,
-        allow_partial_contributions: allowPartial,
-        min_contribution_amount: parseInt(minContribution) || 0,
-        annual_savings_target: parseInt(annualTarget) || 0,
+        contribution_frequency: frequency,
+        contribution_amount: parseInt(savingsAmount) || 0,
         joining_fee: parseInt(joiningFee) || 0,
-        refund_policy: refundPolicy,
-        refund_percentage: refundPolicy === 'percentage' ? parseFloat(refundPercentage) || 0 : 0,
         max_members: parseInt(maxMembers) || 50,
         is_public: isPublic,
-        lock_period_months: parseInt(lockPeriod) || 0,
-        chairperson_can_remove_members: chairCanRemove,
-        auto_remove_after_missed: parseInt(autoRemoveAfterMissed) || 0,
-        group_registration_number: regNumber || null,
-        late_penalty_enabled: penaltyEnabled,
-        late_penalty_amount: parseInt(penaltyAmount) || 0,
-        late_penalty_type: penaltyType,
-        grace_period_days: parseInt(gracePeriod) || 0,
-        loan_enabled: loanEnabled,
-        loan_max_amount: parseInt(loanMaxAmount) || 0,
-        loan_interest_rate: parseFloat(loanInterestRate) || 5,
-        loan_max_duration_months: parseInt(loanMaxDuration) || 3,
-        require_guarantor_for_loans: requireGuarantor,
-        max_loan_multiplier: parseFloat(maxLoanMultiplier) || 3,
-        meeting_frequency: meetingFrequency,
         meeting_day: meetingDay || null,
-        quorum_percentage: parseFloat(quorumPercentage) || 50,
-        voting_required_for: votingRequired,
-        emergency_fund_enabled: emergencyFundEnabled,
-        emergency_fund_percentage: parseFloat(emergencyFundPercentage) || 10,
-        notification_savings_reminder: notifSavingsReminder,
-        notification_meeting_reminder: notifMeetingReminder,
-        dissolution_policy: dissolutionPolicy,
+        late_contribution_penalty: parseInt(penaltyAmount) || 0,
         meeting_absence_penalty: parseInt(meetingAbsencePenalty) || 0,
-        max_withdrawal_per_month: parseInt(maxWithdrawalPerMonth) || 0,
-        contribution_rollover_enabled: contributionRollover,
-        new_member_probation_months: parseInt(probationMonths) || 0,
-        dividend_distribution_frequency: dividendFrequency,
-        profit_sharing_method: profitSharing,
-        special_contribution_enabled: specialContribution,
-        welfare_fund_enabled: welfareFundEnabled,
-        welfare_fund_amount: parseInt(welfareFundAmount) || 0,
-        harambee_enabled: harambeeEnabled,
-        require_backdated_savings: requireBackdatedSavings,
-        loan_processing_fee: parseFloat(loanProcessingFee) || 0,
-        loan_insurance_percentage: parseFloat(loanInsurancePercentage) || 0,
-        min_savings_before_loan: parseInt(minSavingsBeforeLoan) || 0,
-        allow_early_withdrawal: allowEarlyWithdrawal,
-        early_withdrawal_penalty: parseFloat(earlyWithdrawalPenalty) || 0,
-        merry_go_round_enabled: merryGoRoundEnabled,
-        investment_enabled: investmentEnabled,
-        investment_types: investmentTypes,
-        share_transfer_allowed: shareTransferAllowed,
-        min_balance_required: parseInt(minBalanceRequired) || 0,
-      } as any).eq('id', groupId);
+        terms: group?.terms || null,
+      }).eq('id', groupId);
 
       if (error) throw error;
 

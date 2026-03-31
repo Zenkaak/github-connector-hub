@@ -1244,8 +1244,8 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
                               <div className="min-w-0">
                                 <p className="font-semibold text-sm">{g.name}</p>
                                 <p className="text-xs text-muted-foreground">
-                                  {groupMembers.length} members • {g.savings_frequency || 'monthly'} savings
-                                  {g.savings_amount ? ` • KES ${g.savings_amount.toLocaleString()}` : ''}
+                                  {groupMembers.length} members • {g.contribution_frequency || 'monthly'} savings
+                                  {g.contribution_amount ? ` • KES ${g.contribution_amount.toLocaleString()}` : ''}
                                 </p>
                                 <div className="flex gap-1 mt-1 flex-wrap">
                                   {groupMembers.filter((m: any) => ['chairperson', 'secretary', 'treasurer'].includes(m.role)).map((m: any) => (
