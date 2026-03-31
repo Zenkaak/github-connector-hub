@@ -251,7 +251,7 @@ export function ChamaSavings({
         .update({
           contribution_frequency: frequency,
           contribution_amount: parseInt(savingsAmount),
-        } as any)
+        })
         .eq('id', groupId);
 
       if (error) throw error;
