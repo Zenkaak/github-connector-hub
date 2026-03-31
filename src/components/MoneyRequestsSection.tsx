@@ -13,11 +13,13 @@ import { cn } from '@/lib/utils';
 interface MoneyRequest {
   id: string;
   requester_id: string;
-  target_id: string;
+  requested_from_id: string;
   amount: number;
+  reason: string | null;
+  requester_name: string | null;
+  requested_from_name: string | null;
   status: string;
   created_at: string;
-  updated_at: string;
 }
 
 interface MoneyRequestsSectionProps {
