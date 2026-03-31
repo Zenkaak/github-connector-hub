@@ -32,11 +32,34 @@ export default function MyAccountPage() {
   const membershipId = profile?.id ? `NYOTA-${profile.id.slice(0, 8).toUpperCase()}` : 'NYOTA-PENDING';
   const initials = displayName?.split(' ').filter(Boolean).map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'U';
 
-  // Device Data - In a real app, you can fetch session list via a Supabase Edge Function
-  // For now, we map your specific devices for the UI
-  const [activeDevices, setActiveDevices] = useState([
-    { id: 1, name: 'Infinix Hot 8', location: 'Bomet, KE', ip: '197.248.31.66', current: true, icon: Smartphone },
-    { id: 2, name: 'Windows PC - Chrome', location: 'Nairobi, KE', ip: '102.135.42.11', current: false, icon: Monitor },
+  // Detect current device from browser user agent
+  const getDeviceInfo = () => {
+    const ua = navigator.userAgent;
+    let name = 'Unknown Device';
+    if (/Android/i.test(ua)) {
+      const match = ua.match(/;\s*([^;)]+)\s*Build/);
+      name = match ? match[1].trim() : 'Android Device';
+    } else if (/iPhone/i.test(ua)) {
+      name = 'iPhone';
+    } else if (/iPad/i.test(ua)) {
+      name = 'iPad';
+    } else if (/Windows/i.test(ua)) {
+      name = 'Windows PC';
+    } else if (/Mac/i.test(ua)) {
+      name = 'Mac';
+    } else if (/Linux/i.test(ua)) {
+      name = 'Linux PC';
+    }
+    // Append browser
+    if (/Chrome/i.test(ua) && !/Edg/i.test(ua)) name += ' — Chrome';
+    else if (/Firefox/i.test(ua)) name += ' — Firefox';
+    else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) name += ' — Safari';
+    else if (/Edg/i.test(ua)) name += ' — Edge';
+    return name;
+  };
+
+  const [activeDevices] = useState([
+    { id: 1, name: getDeviceInfo(), location: 'Current Session', ip: '—', current: true, icon: /Mobi|Android/i.test(navigator.userAgent) ? Smartphone : Monitor },
   ]);
 
   // DATABASE SYNC: Update Password
@@ -64,11 +87,8 @@ export default function MyAccountPage() {
   const handleLogoutOtherDevices = async (deviceId: number) => {
     setIsRevoking(deviceId);
     try {
-      // Logic for revoking other sessions in Supabase
       const { error } = await supabase.auth.signOut({ scope: 'others' });
       if (error) throw error;
-      
-      setActiveDevices(prev => prev.filter(d => d.id !== deviceId || d.current));
       toast.success("Other sessions have been revoked.");
     } catch (error: any) {
       toast.error("Failed to revoke session.");
