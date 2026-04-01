@@ -1844,6 +1844,216 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
               )}
             </div>
           </TabsContent>
+
+          {/* ===== HARAMBEES TAB ===== */}
+          <TabsContent value="harambees" className="space-y-4">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="relative flex-1 sm:max-w-xs">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <Input placeholder="Search harambees..." value={harambeeSearch} onChange={(e) => setHarambeeSearch(e.target.value)} className="pl-9 h-9 text-sm" />
+              </div>
+              <span className="text-xs text-muted-foreground">{chamaHarambees.length} total</span>
+            </div>
+            {chamaHarambees.filter((h: any) => {
+              if (!harambeeSearch) return true;
+              const q = harambeeSearch.toLowerCase();
+              return h.title?.toLowerCase().includes(q) || h.beneficiary_name?.toLowerCase().includes(q);
+            }).length === 0 ? (
+              <EmptyState icon={Heart} title="No Harambees" description="No harambee fundraisers found." />
+            ) : (
+              <div className="space-y-2">
+                {chamaHarambees.filter((h: any) => {
+                  if (!harambeeSearch) return true;
+                  const q = harambeeSearch.toLowerCase();
+                  return h.title?.toLowerCase().includes(q) || h.beneficiary_name?.toLowerCase().includes(q);
+                }).map((h: any) => {
+                  const group = chamaGroups.find((g: any) => g.id === h.group_id);
+                  const contributions = (h.raised_amount || 0);
+                  const progress = h.target_amount > 0 ? Math.min(100, Math.round((contributions / h.target_amount) * 100)) : 0;
+                  return (
+                    <Card key={h.id} className="border-border/50">
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-sm truncate">{h.title}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">Group: {group?.name || 'Unknown'}</p>
+                            {h.beneficiary_name && <p className="text-xs text-muted-foreground">Beneficiary: {h.beneficiary_name} · {h.beneficiary_phone}</p>}
+                            <div className="flex items-center gap-3 mt-2">
+                              <span className="text-xs font-medium">{formatCurrency(contributions)} / {formatCurrency(h.target_amount)}</span>
+                              <span className="text-xs text-muted-foreground">{progress}%</span>
+                            </div>
+                            <div className="w-full bg-muted rounded-full h-1.5 mt-1">
+                              <div className="bg-accent h-1.5 rounded-full transition-all" style={{ width: `${progress}%` }} />
+                            </div>
+                            {h.deadline && <p className="text-[10px] text-muted-foreground mt-1">Deadline: {new Date(h.deadline).toLocaleDateString()}</p>}
+                          </div>
+                          <span className={cn('text-[11px] px-2 py-0.5 rounded-full font-medium capitalize',
+                            h.status === 'active' && 'bg-success/10 text-success',
+                            h.status === 'completed' && 'bg-primary/10 text-primary',
+                            h.status === 'cancelled' && 'bg-destructive/10 text-destructive',
+                          )}>{h.status}</span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-2 text-[10px] text-muted-foreground">
+                          <span>{h.is_public ? '🌐 Public' : '🔒 Private'}</span>
+                          <span>· Created {new Date(h.created_at).toLocaleDateString()}</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* ===== NOTIFICATIONS TAB ===== */}
+          <TabsContent value="notifications" className="space-y-4">
+            <Card className="border-border/50">
+              <CardContent className="p-4 space-y-3">
+                <h3 className="text-sm font-semibold flex items-center gap-2"><Bell size={16} /> Send Bulk Notification</h3>
+                <Input placeholder="Title" value={bulkNotifTitle} onChange={(e) => setBulkNotifTitle(e.target.value)} className="h-9 text-sm" />
+                <Textarea placeholder="Message to all users..." value={bulkNotifMessage} onChange={(e) => setBulkNotifMessage(e.target.value)} rows={3} className="text-sm" />
+                <Button
+                  size="sm"
+                  disabled={bulkNotifSending || !bulkNotifTitle.trim() || !bulkNotifMessage.trim()}
+                  onClick={async () => {
+                    setBulkNotifSending(true);
+                    try {
+                      const notifs = profiles.map(p => ({
+                        user_id: p.user_id,
+                        title: bulkNotifTitle.trim(),
+                        message: bulkNotifMessage.trim(),
+                      }));
+                      const { error } = await supabase.from('notifications').insert(notifs);
+                      if (error) throw error;
+                      toast.success(`Notification sent to ${profiles.length} users`);
+                      setBulkNotifTitle('');
+                      setBulkNotifMessage('');
+                      fetchData();
+                    } catch (err: any) {
+                      toast.error(err.message || 'Failed');
+                    } finally {
+                      setBulkNotifSending(false);
+                    }
+                  }}
+                >
+                  {bulkNotifSending ? <Loader2 className="animate-spin" size={14} /> : `Send to All (${profiles.length})`}
+                </Button>
+              </CardContent>
+            </Card>
+
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1 sm:max-w-xs">
+                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                <Input placeholder="Search notifications..." value={notifSearch} onChange={(e) => setNotifSearch(e.target.value)} className="pl-9 h-9 text-sm" />
+              </div>
+              <span className="text-xs text-muted-foreground">{allNotifications.length} total</span>
+            </div>
+            {allNotifications.filter((n: any) => {
+              if (!notifSearch) return true;
+              const q = notifSearch.toLowerCase();
+              return n.title?.toLowerCase().includes(q) || n.message?.toLowerCase().includes(q) || getUserName(n.user_id).toLowerCase().includes(q);
+            }).slice(0, 100).length === 0 ? (
+              <EmptyState icon={Bell} title="No Notifications" description="No notifications found." />
+            ) : (
+              <div className="space-y-2">
+                {allNotifications.filter((n: any) => {
+                  if (!notifSearch) return true;
+                  const q = notifSearch.toLowerCase();
+                  return n.title?.toLowerCase().includes(q) || n.message?.toLowerCase().includes(q) || getUserName(n.user_id).toLowerCase().includes(q);
+                }).slice(0, 100).map((n: any) => (
+                  <Card key={n.id} className="border-border/50">
+                    <CardContent className="p-3 flex items-start gap-3">
+                      <div className={cn('w-2 h-2 rounded-full mt-1.5 shrink-0', n.is_read ? 'bg-muted' : 'bg-accent')} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium truncate">{n.title}</p>
+                        <p className="text-xs text-muted-foreground line-clamp-2">{n.message}</p>
+                        <div className="flex items-center gap-2 mt-1 text-[10px] text-muted-foreground">
+                          <span>{getUserName(n.user_id)}</span>
+                          <span>· {new Date(n.created_at).toLocaleString('en-KE')}</span>
+                          <span className={n.is_read ? 'text-muted-foreground' : 'text-accent font-medium'}>
+                            {n.is_read ? 'Read' : 'Unread'}
+                          </span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* ===== SETTINGS TAB ===== */}
+          <TabsContent value="settings" className="space-y-4">
+            {platformSettings.length === 0 ? (
+              <EmptyState icon={Settings} title="No Settings" description="No platform settings configured yet." />
+            ) : (
+              <>
+                {Object.entries(
+                  platformSettings.reduce((acc: Record<string, any[]>, s: any) => {
+                    const cat = s.category || 'general';
+                    if (!acc[cat]) acc[cat] = [];
+                    acc[cat].push(s);
+                    return acc;
+                  }, {})
+                ).map(([category, items]) => (
+                  <Card key={category} className="border-border/50">
+                    <CardContent className="p-4">
+                      <h3 className="text-sm font-semibold capitalize mb-3">{category}</h3>
+                      <div className="space-y-3">
+                        {(items as any[]).map((setting: any) => {
+                          const isBoolean = setting.value === 'true' || setting.value === 'false';
+                          const editedValue = settingEdits[setting.key] ?? setting.value;
+                          return (
+                            <div key={setting.id} className="flex items-center justify-between gap-4">
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium">{setting.label || setting.key}</p>
+                                {setting.description && <p className="text-[11px] text-muted-foreground">{setting.description}</p>}
+                              </div>
+                              {isBoolean ? (
+                                <Switch
+                                  checked={editedValue === 'true'}
+                                  onCheckedChange={(checked) => setSettingEdits(prev => ({ ...prev, [setting.key]: checked ? 'true' : 'false' }))}
+                                />
+                              ) : (
+                                <Input
+                                  value={editedValue}
+                                  onChange={(e) => setSettingEdits(prev => ({ ...prev, [setting.key]: e.target.value }))}
+                                  className="h-8 w-40 text-sm"
+                                />
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+                {Object.keys(settingEdits).length > 0 && (
+                  <Button
+                    disabled={settingSaving}
+                    onClick={async () => {
+                      setSettingSaving(true);
+                      try {
+                        for (const [key, value] of Object.entries(settingEdits)) {
+                          await supabase.from('platform_settings').update({ value, updated_at: new Date().toISOString() }).eq('key', key);
+                        }
+                        toast.success('Settings saved');
+                        setSettingEdits({});
+                        fetchData();
+                      } catch (err: any) {
+                        toast.error(err.message || 'Failed');
+                      } finally {
+                        setSettingSaving(false);
+                      }
+                    }}
+                  >
+                    {settingSaving ? <Loader2 className="animate-spin mr-2" size={14} /> : null}
+                    Save {Object.keys(settingEdits).length} Change{Object.keys(settingEdits).length > 1 ? 's' : ''}
+                  </Button>
+                )}
+              </>
+            )}
+          </TabsContent>
         </Tabs>
 
         {/* ===== REMOVAL REVIEW DIALOG ===== */}
