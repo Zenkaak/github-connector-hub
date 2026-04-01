@@ -325,6 +325,13 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
       if (platformFeesRes.data) setChamaPlatformFees(platformFeesRes.data);
       if (disbursementsRes.data) setLoanDisbursements(disbursementsRes.data);
       if (depositsRes.data) setSavingsDeposits(depositsRes.data);
+      // Fetch notifications & settings separately
+      const [notifsRes, settingsRes] = await Promise.all([
+        supabase.from('notifications').select('*').order('created_at', { ascending: false }).limit(500),
+        supabase.from('platform_settings').select('*').order('category', { ascending: true }),
+      ]);
+      if (notifsRes.data) setAllNotifications(notifsRes.data);
+      if (settingsRes.data) setPlatformSettings(settingsRes.data);
     } catch (error) {
       console.error('Error fetching admin data:', error);
     } finally {
