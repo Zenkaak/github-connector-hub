@@ -382,7 +382,7 @@ export function ChamaTerms({ groupId, group, members, myRole, onRefreshGroup }: 
         )}
       </Card>
 
-      {group?.terms_and_conditions && !hasSigned && (
+      {group?.terms && !hasSigned && (
         <Card className="p-4 border-accent/30 bg-accent/5">
           <div className="flex items-center justify-between">
             <div>
