@@ -210,7 +210,7 @@ export function ChamaTerms({ groupId, group, members, myRole, onRefreshGroup }: 
   const { user } = useAuth();
   const { toast } = useToast();
   const [editing, setEditing] = useState(false);
-  const [terms, setTerms] = useState(group?.terms_and_conditions || '');
+  const [terms, setTerms] = useState(group?.terms || '');
   const [saving, setSaving] = useState(false);
   const [signatures, setSignatures] = useState<any[]>([]);
   const [signOpen, setSignOpen] = useState(false);
