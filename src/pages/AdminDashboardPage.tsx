@@ -258,6 +258,16 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
   const [loanDisbursements, setLoanDisbursements] = useState<any[]>([]);
   const [savingsDeposits, setSavingsDeposits] = useState<any[]>([]);
   const [txSearch, setTxSearch] = useState('');
+  // Notifications & Settings
+  const [allNotifications, setAllNotifications] = useState<any[]>([]);
+  const [platformSettings, setPlatformSettings] = useState<any[]>([]);
+  const [settingEdits, setSettingEdits] = useState<Record<string, string>>({});
+  const [settingSaving, setSettingSaving] = useState(false);
+  const [notifSearch, setNotifSearch] = useState('');
+  const [bulkNotifTitle, setBulkNotifTitle] = useState('');
+  const [bulkNotifMessage, setBulkNotifMessage] = useState('');
+  const [bulkNotifSending, setBulkNotifSending] = useState(false);
+  const [harambeeSearch, setHarambeeSearch] = useState('');
 
   useEffect(() => {
     fetchData();
