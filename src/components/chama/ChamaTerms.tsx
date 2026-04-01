@@ -353,7 +353,7 @@ export function ChamaTerms({ groupId, group, members, myRole, onRefreshGroup }: 
             <FileText size={18} /> Terms & Conditions
           </h3>
           {isChairperson && !editing && (
-            <Button variant="outline" size="sm" onClick={() => { setTerms(group?.terms_and_conditions || ''); setEditing(true); }}>
+            <Button variant="outline" size="sm" onClick={() => { setTerms(group?.terms || ''); setEditing(true); }}>
               Edit Terms
             </Button>
           )}
