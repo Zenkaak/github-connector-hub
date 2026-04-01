@@ -242,11 +242,11 @@ export default function ChamaExplorerPage() {
                 </Card>
               </div>
 
-              {selectedGroup.terms_and_conditions && (
+              {selectedGroup.terms && (
                 <div>
                   <h4 className="font-semibold text-sm mb-2">Terms & Conditions</h4>
                   <ScrollArea className="h-[200px] rounded border p-3">
-                    <p className="text-xs text-muted-foreground whitespace-pre-wrap">{selectedGroup.terms_and_conditions}</p>
+                    <p className="text-xs text-muted-foreground whitespace-pre-wrap">{selectedGroup.terms}</p>
                   </ScrollArea>
                 </div>
               )}

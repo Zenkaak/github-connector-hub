@@ -210,7 +210,7 @@ export function ChamaTerms({ groupId, group, members, myRole, onRefreshGroup }: 
   const { user } = useAuth();
   const { toast } = useToast();
   const [editing, setEditing] = useState(false);
-  const [terms, setTerms] = useState(group?.terms_and_conditions || '');
+  const [terms, setTerms] = useState(group?.terms || '');
   const [saving, setSaving] = useState(false);
   const [signatures, setSignatures] = useState<any[]>([]);
   const [signOpen, setSignOpen] = useState(false);
@@ -222,16 +222,16 @@ export function ChamaTerms({ groupId, group, members, myRole, onRefreshGroup }: 
   const isLeader = ['chairperson', 'secretary', 'treasurer'].includes(myRole);
 
   useEffect(() => {
-    if (isLeader && !group?.terms_and_conditions) {
+    if (isLeader && !group?.terms) {
       autoCreateTerms();
     }
-  }, [group?.terms_and_conditions, isChairperson]);
+  }, [group?.terms, isChairperson]);
 
   const autoCreateTerms = async () => {
     try {
       const now = new Date().toISOString();
       const { error } = await supabase.from('chama_groups').update({
-        terms_and_conditions: DEFAULT_TERMS,
+        terms: DEFAULT_TERMS,
         terms_updated_at: now,
       }).eq('id', groupId);
       if (!error) onRefreshGroup();
@@ -258,7 +258,7 @@ export function ChamaTerms({ groupId, group, members, myRole, onRefreshGroup }: 
     try {
       const now = new Date().toISOString();
       const { error } = await supabase.from('chama_groups').update({
-        terms_and_conditions: terms,
+        terms: terms,
         terms_updated_at: now,
       }).eq('id', groupId);
 
@@ -353,7 +353,7 @@ export function ChamaTerms({ groupId, group, members, myRole, onRefreshGroup }: 
             <FileText size={18} /> Terms & Conditions
           </h3>
           {isChairperson && !editing && (
-            <Button variant="outline" size="sm" onClick={() => { setTerms(group?.terms_and_conditions || ''); setEditing(true); }}>
+            <Button variant="outline" size="sm" onClick={() => { setTerms(group?.terms || ''); setEditing(true); }}>
               Edit Terms
             </Button>
           )}
@@ -367,9 +367,9 @@ export function ChamaTerms({ groupId, group, members, myRole, onRefreshGroup }: 
               <Button variant="ghost" onClick={() => setEditing(false)}>Cancel</Button>
             </div>
           </div>
-        ) : group?.terms_and_conditions ? (
+        ) : group?.terms ? (
           <div className="whitespace-pre-wrap text-sm text-muted-foreground leading-relaxed max-h-[400px] overflow-y-auto">
-            {group.terms_and_conditions}
+            {group.terms}
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">No terms and conditions set yet.</p>
@@ -382,7 +382,7 @@ export function ChamaTerms({ groupId, group, members, myRole, onRefreshGroup }: 
         )}
       </Card>
 
-      {group?.terms_and_conditions && !hasSigned && (
+      {group?.terms && !hasSigned && (
         <Card className="p-4 border-accent/30 bg-accent/5">
           <div className="flex items-center justify-between">
             <div>
