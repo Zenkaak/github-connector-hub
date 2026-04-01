@@ -860,6 +860,9 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
                 { value: 'chama', icon: Crown, label: 'Chama' },
                 { value: 'reports', icon: AlertTriangle, label: 'Reports' },
                 { value: 'removals', icon: Ban, label: 'Removals' },
+                { value: 'harambees', icon: Heart, label: 'Harambee' },
+                { value: 'notifications', icon: Bell, label: 'Notifs' },
+                { value: 'settings', icon: Settings, label: 'Settings' },
               ] as const).map((tab) => (
                 <TabsTrigger
                   key={tab.value}
