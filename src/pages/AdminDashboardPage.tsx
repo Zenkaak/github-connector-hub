@@ -155,6 +155,9 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
     chama: '/dashboard/admin/chama',
     reports: '/dashboard/admin/reports',
     removals: '/dashboard/admin/removals',
+    harambees: '/dashboard/admin/harambees',
+    notifications: '/dashboard/admin/notifications',
+    settings: '/dashboard/admin/settings',
   };
   const handleTabChange = useCallback((value: string) => {
     const route = tabRouteMap[value] || '/dashboard/admin';
