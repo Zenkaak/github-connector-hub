@@ -222,16 +222,16 @@ export function ChamaTerms({ groupId, group, members, myRole, onRefreshGroup }: 
   const isLeader = ['chairperson', 'secretary', 'treasurer'].includes(myRole);
 
   useEffect(() => {
-    if (isLeader && !group?.terms_and_conditions) {
+    if (isLeader && !group?.terms) {
       autoCreateTerms();
     }
-  }, [group?.terms_and_conditions, isChairperson]);
+  }, [group?.terms, isChairperson]);
 
   const autoCreateTerms = async () => {
     try {
       const now = new Date().toISOString();
       const { error } = await supabase.from('chama_groups').update({
-        terms_and_conditions: DEFAULT_TERMS,
+        terms: DEFAULT_TERMS,
         terms_updated_at: now,
       }).eq('id', groupId);
       if (!error) onRefreshGroup();
