@@ -258,7 +258,7 @@ export function ChamaTerms({ groupId, group, members, myRole, onRefreshGroup }: 
     try {
       const now = new Date().toISOString();
       const { error } = await supabase.from('chama_groups').update({
-        terms_and_conditions: terms,
+        terms: terms,
         terms_updated_at: now,
       }).eq('id', groupId);
 
