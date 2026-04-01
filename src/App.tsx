@@ -141,7 +141,9 @@ function AppRoutes() {
       <Route path="/dashboard/admin/savings" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="savings" /></ProtectedRoute>} />
       <Route path="/dashboard/admin/reports" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="reports" /></ProtectedRoute>} />
       <Route path="/dashboard/admin/removals" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="removals" /></ProtectedRoute>} />
-      <Route path="/dashboard/admin/settings" element={<ProtectedRoute requireAdmin><AdminSettingsPage /></ProtectedRoute>} />
+      <Route path="/dashboard/admin/harambees" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="harambees" /></ProtectedRoute>} />
+      <Route path="/dashboard/admin/notifications" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="notifications" /></ProtectedRoute>} />
+      <Route path="/dashboard/admin/settings" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="settings" /></ProtectedRoute>} />
       <Route path="/dashboard/admin/chama" element={<ProtectedRoute requireAdmin><AdminChamaPage /></ProtectedRoute>} />
 
       <Route path="*" element={<NotFound />} />
