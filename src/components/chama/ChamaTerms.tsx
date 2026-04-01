@@ -367,9 +367,9 @@ export function ChamaTerms({ groupId, group, members, myRole, onRefreshGroup }: 
               <Button variant="ghost" onClick={() => setEditing(false)}>Cancel</Button>
             </div>
           </div>
-        ) : group?.terms_and_conditions ? (
+        ) : group?.terms ? (
           <div className="whitespace-pre-wrap text-sm text-muted-foreground leading-relaxed max-h-[400px] overflow-y-auto">
-            {group.terms_and_conditions}
+            {group.terms}
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">No terms and conditions set yet.</p>
