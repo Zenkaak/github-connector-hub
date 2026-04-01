@@ -150,7 +150,7 @@ export default function ChamaGroupsPage() {
         name: newGroup.name.trim(),
         description: newGroup.description.trim() || null,
         created_by: user.id,
-        terms_and_conditions: DEFAULT_TERMS,
+        terms: DEFAULT_TERMS,
         terms_updated_at: now,
       });
       if (groupError) throw groupError;
