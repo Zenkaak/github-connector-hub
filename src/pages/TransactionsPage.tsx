@@ -97,7 +97,7 @@ export default function TransactionsPage() {
 
   const fetchTransactions = async () => {
     try {
-      const [stkRes, trRes, reqRes] = await Promise.all([
+      const [stkRes, trRes, reqRes, walletRes] = await Promise.all([
         supabase
           .from('stk_transactions')
           .select('*')
@@ -115,7 +115,15 @@ export default function TransactionsPage() {
           .or(`requester_id.eq.${user?.id},requested_from_id.eq.${user?.id}`)
           .order('created_at', { ascending: false })
           .limit(50),
+        supabase
+          .from('wallet_transactions')
+          .select('*')
+          .eq('user_id', user?.id)
+          .order('created_at', { ascending: false })
+          .limit(100),
       ]);
+
+      if (walletRes.data) setWalletTxns(walletRes.data);
 
       if (trRes.data) setTransfers(trRes.data);
       
