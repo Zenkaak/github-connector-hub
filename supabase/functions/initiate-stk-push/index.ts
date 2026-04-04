@@ -1,5 +1,10 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
-import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2.95.0/cors";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
+};
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -7,7 +12,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { phone, amount, userId, purpose, groupId } = await req.json();
+    const { phone, amount, userId, purpose, groupId, savingsId } = await req.json();
 
     if (!phone || !amount || !userId) {
       return new Response(
@@ -24,7 +29,6 @@ Deno.serve(async (req) => {
       formattedPhone = "254" + formattedPhone;
     }
 
-    // Get Daraja access token
     const consumerKey = Deno.env.get("MPESA_CONSUMER_KEY")!;
     const consumerSecret = Deno.env.get("MPESA_CONSUMER_SECRET")!;
     const shortcode = Deno.env.get("MPESA_SHORTCODE")!;
@@ -37,7 +41,7 @@ Deno.serve(async (req) => {
       { headers: { Authorization: `Basic ${auth}` } }
     );
     const tokenData = await tokenRes.json();
-    
+
     if (!tokenData.access_token) {
       console.error("Token error:", tokenData);
       return new Response(
@@ -48,7 +52,6 @@ Deno.serve(async (req) => {
 
     const accessToken = tokenData.access_token;
 
-    // Generate timestamp and password
     const now = new Date();
     const timestamp =
       now.getFullYear().toString() +
@@ -60,14 +63,21 @@ Deno.serve(async (req) => {
 
     const password = btoa(`${shortcode}${passkey}${timestamp}`);
 
-    // Generate unique reference
-    const reference = `PAY${Date.now()}${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+    // Generate purpose-specific reference prefix
+    const prefixMap: Record<string, string> = {
+      chama_savings: "CHAMA_",
+      personal_savings: "PSAV_",
+      loan_repayment: "REPAY_",
+      harambee: "HRB_",
+      activation: "ACT_",
+      chama_joining_fee: "CJFEE_",
+    };
+    const prefix = prefixMap[purpose] || "PAY";
+    const reference = `${prefix}${Date.now()}${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
 
-    // Callback URL
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const callbackUrl = `${supabaseUrl}/functions/v1/mpesa-callback`;
 
-    // STK Push request
     const stkBody = {
       BusinessShortCode: shortcode,
       Password: password,
@@ -110,7 +120,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Save to stk_transactions using service role
+    // Save to stk_transactions with purpose and group_id
     const supabase = createClient(
       supabaseUrl,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -124,6 +134,9 @@ Deno.serve(async (req) => {
       checkout_request_id: stkData.CheckoutRequestID,
       merchant_request_id: stkData.MerchantRequestID,
       status: "pending",
+      purpose: purpose || "activation",
+      group_id: groupId || null,
+      savings_id: savingsId || null,
     });
 
     return new Response(
