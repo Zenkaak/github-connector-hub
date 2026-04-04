@@ -1342,13 +1342,16 @@ export type Database = {
           amount: number
           checkout_request_id: string | null
           created_at: string
+          group_id: string | null
           id: string
           merchant_request_id: string | null
           mpesa_receipt: string | null
           phone: string
+          purpose: string | null
           reference: string
           result_code: string | null
           result_desc: string | null
+          savings_id: string | null
           status: string
           updated_at: string
           user_id: string
@@ -1357,13 +1360,16 @@ export type Database = {
           amount: number
           checkout_request_id?: string | null
           created_at?: string
+          group_id?: string | null
           id?: string
           merchant_request_id?: string | null
           mpesa_receipt?: string | null
           phone: string
+          purpose?: string | null
           reference?: string
           result_code?: string | null
           result_desc?: string | null
+          savings_id?: string | null
           status?: string
           updated_at?: string
           user_id: string
@@ -1372,18 +1378,36 @@ export type Database = {
           amount?: number
           checkout_request_id?: string | null
           created_at?: string
+          group_id?: string | null
           id?: string
           merchant_request_id?: string | null
           mpesa_receipt?: string | null
           phone?: string
+          purpose?: string | null
           reference?: string
           result_code?: string | null
           result_desc?: string | null
+          savings_id?: string | null
           status?: string
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "stk_transactions_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "chama_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stk_transactions_savings_id_fkey"
+            columns: ["savings_id"]
+            isOneToOne: false
+            referencedRelation: "personal_savings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       support_messages: {
         Row: {
