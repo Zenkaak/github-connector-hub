@@ -146,7 +146,7 @@ export function ChamaSavings({
             amount: group.contribution_amount,
             userId: user.id,
             purpose: 'chama_savings',
-            groupId,
+            groupId: groupId,
           },
         }
       );
@@ -198,24 +198,8 @@ export function ChamaSavings({
 
         clearInterval(interval);
 
-        const { data: existing } = await supabase
-          .from('chama_savings')
-          .select('id')
-          .eq('group_id', groupId)
-          .eq('user_id', user?.id)
-          .limit(1);
-
-        if (!existing || existing.length === 0) {
-
-          await supabase.from('chama_savings').insert({
-            group_id: groupId,
-            user_id: user?.id,
-            amount: group?.contribution_amount || 0,
-            payment_method: 'mpesa',
-            status: 'completed',
-          } as any);
-        }
-
+        // The mpesa-callback edge function already records into chama_savings
+        // Just refresh data
         toast({
           title: 'Payment Confirmed ✅',
           description: 'Savings recorded successfully.',

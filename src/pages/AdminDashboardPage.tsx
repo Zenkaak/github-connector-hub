@@ -893,73 +893,72 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
             {filteredUsers.length === 0 ? (
               <EmptyState icon={Users} title="No Users Found" description="No users match your search." />
             ) : (
-              <div className="space-y-2">
-                {filteredUsers.map((p, i) => (
-                  <motion.div key={p.id} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.02 * i }}>
-                    <Card
-                      className="border-border/50 hover:border-accent/30 transition-all cursor-pointer"
-                      onClick={() => handleViewUser(p)}
-                    >
-                      <CardContent className="p-3">
-                        <div className="flex items-start gap-3">
-                          {/* Avatar */}
-                          <div className={cn(
-                            'w-11 h-11 rounded-xl flex items-center justify-center font-bold text-sm shrink-0',
-                            p.is_active ? 'bg-accent text-accent-foreground' : 'bg-muted text-muted-foreground'
-                          )}>
-                            {p.full_name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()}
-                          </div>
-
-                          {/* Info */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1.5">
-                              <p className="font-semibold text-sm truncate">{p.full_name}</p>
-                              {p.is_verified && <BadgeCheck size={14} className="text-primary shrink-0" />}
-                              <StatusBadge status={p.is_active ? 'active' : 'inactive'} />
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border/50 text-xs text-muted-foreground">
+                      <th className="text-left p-2 font-medium">User</th>
+                      <th className="text-left p-2 font-medium hidden sm:table-cell">Phone</th>
+                      <th className="text-left p-2 font-medium hidden md:table-cell">County</th>
+                      <th className="text-left p-2 font-medium">Status</th>
+                      <th className="text-right p-2 font-medium">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredUsers.map((p) => (
+                      <tr
+                        key={p.id}
+                        className="border-b border-border/30 hover:bg-muted/40 cursor-pointer transition-colors"
+                        onClick={() => handleViewUser(p)}
+                      >
+                        <td className="p-2">
+                          <div className="flex items-center gap-2">
+                            <div className={cn(
+                              'w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0',
+                              p.is_active ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+                            )}>
+                              {p.full_name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()}
                             </div>
-                            <p className="text-xs text-muted-foreground truncate mt-0.5">{p.phone} • {p.id_number}</p>
-                            <p className="text-[11px] text-muted-foreground truncate">{p.email}</p>
-                            {!p.is_active && p.disable_reason && (
-                              <p className="text-[10px] text-destructive mt-0.5 truncate">Reason: {p.disable_reason}</p>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-1">
+                                <span className="font-medium text-sm truncate">{p.full_name}</span>
+                                {p.is_verified && <BadgeCheck size={12} className="text-primary shrink-0" />}
+                              </div>
+                              <p className="text-[11px] text-muted-foreground truncate">{p.email}</p>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="p-2 text-xs text-muted-foreground hidden sm:table-cell">{p.phone}</td>
+                        <td className="p-2 text-xs text-muted-foreground hidden md:table-cell">{p.county}</td>
+                        <td className="p-2">
+                          <StatusBadge status={p.is_active ? 'active' : 'inactive'} />
+                        </td>
+                        <td className="p-2">
+                          <div className="flex gap-1 justify-end" onClick={(e) => e.stopPropagation()}>
+                            <Button size="sm" variant="outline" className="h-7 w-7 p-0" onClick={() => openEditDialog(p)} title="Edit">
+                              <Pencil size={12} />
+                            </Button>
+                            {p.is_active ? (
+                              <Button size="sm" variant="outline" className="h-7 w-7 p-0 text-destructive border-destructive/30" onClick={() => { setDisableDialog({ open: true, profile: p }); setDisableReason(''); }} title="Disable">
+                                <Ban size={12} />
+                              </Button>
+                            ) : (
+                              <Button size="sm" className="h-7 w-7 p-0 bg-success hover:bg-success/90 text-success-foreground" onClick={() => handleActivateAccount(p)} disabled={togglingUser === p.user_id} title="Activate">
+                                {togglingUser === p.user_id ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle size={12} />}
+                              </Button>
                             )}
+                            <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => setStkDialog({ open: true, userId: p.user_id, phone: p.phone, name: p.full_name })} title="STK Push">
+                              <Smartphone size={12} />
+                            </Button>
+                            <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => setMessageDialog({ open: true, userId: p.user_id, name: p.full_name })} title="Message">
+                              <Send size={12} />
+                            </Button>
                           </div>
-
-                          {/* Quick Actions */}
-                          <div className="flex flex-col gap-1 shrink-0">
-                            <div className="flex gap-1">
-                              <Button size="sm" variant="outline" className="h-7 w-7 p-0" onClick={(e) => { e.stopPropagation(); openEditDialog(p); }} title="Edit">
-                                <Pencil size={12} />
-                              </Button>
-                              {p.is_active ? (
-                                <Button size="sm" variant="outline" className="h-7 w-7 p-0 text-destructive border-destructive/30" onClick={(e) => { e.stopPropagation(); setDisableDialog({ open: true, profile: p }); setDisableReason(''); }} title="Disable">
-                                  <Ban size={12} />
-                                </Button>
-                              ) : (
-                                <Button size="sm" className="h-7 w-7 p-0 bg-success hover:bg-success/90 text-success-foreground" onClick={(e) => { e.stopPropagation(); handleActivateAccount(p); }} disabled={togglingUser === p.user_id} title="Activate">
-                                  {togglingUser === p.user_id ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle size={12} />}
-                                </Button>
-                              )}
-                            </div>
-                            <div className="flex gap-1">
-                              <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={(e) => { e.stopPropagation(); setStkDialog({ open: true, userId: p.user_id, phone: p.phone, name: p.full_name }); }} title="STK Push">
-                                <Smartphone size={12} />
-                              </Button>
-                              <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={(e) => { e.stopPropagation(); setMessageDialog({ open: true, userId: p.user_id, name: p.full_name }); }} title="Message">
-                                <Send size={12} />
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Footer meta */}
-                        <div className="flex items-center gap-3 mt-2 pt-2 border-t border-border/30">
-                          <span className="text-[10px] text-muted-foreground">{p.county}, {p.sub_county}</span>
-                          <span className="text-[10px] text-muted-foreground ml-auto">Joined {new Date(p.created_at).toLocaleDateString('en-KE', { month: 'short', day: 'numeric', year: '2-digit' })}</span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </TabsContent>

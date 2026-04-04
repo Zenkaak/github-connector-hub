@@ -79,6 +79,7 @@ export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [transfers, setTransfers] = useState<any[]>([]);
   const [requests, setRequests] = useState<MoneyRequest[]>([]);
+  const [walletTxns, setWalletTxns] = useState<any[]>([]);
   const [requestNames, setRequestNames] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterStatus>('all');
@@ -87,7 +88,8 @@ export default function TransactionsPage() {
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
   const [selectedTransfer, setSelectedTransfer] = useState<any>(null);
   const [selectedRequest, setSelectedRequest] = useState<MoneyRequest | null>(null);
-  const [activeView, setActiveView] = useState<'mpesa' | 'transfers' | 'requests'>('mpesa');
+  const [activeView, setActiveView] = useState<'mpesa' | 'wallet' | 'transfers' | 'requests'>('mpesa');
+  const [walletFilter, setWalletFilter] = useState<'all' | 'deposit' | 'credit' | 'debit' | 'withdrawal'>('all');
 
   useEffect(() => {
     if (user) fetchTransactions();
@@ -95,7 +97,7 @@ export default function TransactionsPage() {
 
   const fetchTransactions = async () => {
     try {
-      const [stkRes, trRes, reqRes] = await Promise.all([
+      const [stkRes, trRes, reqRes, walletRes] = await Promise.all([
         supabase
           .from('stk_transactions')
           .select('*')
@@ -113,7 +115,15 @@ export default function TransactionsPage() {
           .or(`requester_id.eq.${user?.id},requested_from_id.eq.${user?.id}`)
           .order('created_at', { ascending: false })
           .limit(50),
+        supabase
+          .from('wallet_transactions')
+          .select('*')
+          .eq('user_id', user?.id)
+          .order('created_at', { ascending: false })
+          .limit(100),
       ]);
+
+      if (walletRes.data) setWalletTxns(walletRes.data);
 
       if (trRes.data) setTransfers(trRes.data);
       
@@ -220,6 +230,14 @@ export default function TransactionsPage() {
             className="gap-1.5"
           >
             <Receipt size={14} /> M-Pesa ({transactions.length})
+          </Button>
+          <Button
+            variant={activeView === 'wallet' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setActiveView('wallet')}
+            className="gap-1.5"
+          >
+            <Wallet size={14} /> Wallet ({walletTxns.length})
           </Button>
           <Button
             variant={activeView === 'transfers' ? 'default' : 'outline'}
@@ -387,6 +405,85 @@ export default function TransactionsPage() {
               </Card>
             </motion.div>
           </>
+        ) : activeView === 'wallet' ? (
+          /* ===== WALLET TRANSACTIONS VIEW ===== */
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+            <Card className="border-border/50">
+              <CardHeader className="pb-3">
+                <div className="text-base font-semibold flex items-center gap-2">
+                  <Wallet size={16} className="text-primary" /> Wallet Activity
+                </div>
+                <p className="text-xs text-muted-foreground">Deposits, withdrawals, and wallet movements</p>
+                <div className="flex gap-1.5 mt-2 overflow-x-auto">
+                  {(['all', 'deposit', 'credit', 'debit', 'withdrawal'] as const).map((f) => (
+                    <button
+                      key={f}
+                      onClick={() => setWalletFilter(f)}
+                      className={cn(
+                        'px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all capitalize',
+                        walletFilter === f
+                          ? 'bg-primary text-primary-foreground'
+                          : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                      )}
+                    >
+                      {f === 'all' ? 'All' : f} ({f === 'all' ? walletTxns.length : walletTxns.filter(t => t.type === f).length})
+                    </button>
+                  ))}
+                </div>
+              </CardHeader>
+              <CardContent>
+                {(() => {
+                  const filtered = walletFilter === 'all' ? walletTxns : walletTxns.filter(t => t.type === walletFilter);
+                  if (filtered.length === 0) {
+                    return (
+                      <div className="text-center py-12">
+                        <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-muted flex items-center justify-center">
+                          <Wallet size={22} className="text-muted-foreground" />
+                        </div>
+                        <p className="font-semibold text-sm mb-1">No wallet transactions</p>
+                        <p className="text-xs text-muted-foreground">Your wallet activity will appear here</p>
+                      </div>
+                    );
+                  }
+                  return (
+                    <div className="space-y-2">
+                      {filtered.map((tx: any) => {
+                        const isIncoming = tx.type === 'deposit' || tx.type === 'credit';
+                        return (
+                          <div
+                            key={tx.id}
+                            className={cn(
+                              'flex items-center justify-between p-3 rounded-xl border transition-colors',
+                              'bg-muted/30 hover:bg-muted/50',
+                              isIncoming ? 'border-success/20' : 'border-destructive/20'
+                            )}
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className={cn('w-9 h-9 rounded-xl flex items-center justify-center shrink-0',
+                                isIncoming ? 'bg-success/10' : 'bg-destructive/10'
+                              )}>
+                                {isIncoming ? <ArrowDownLeft size={16} className="text-success" /> : <ArrowUpRight size={16} className="text-destructive" />}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="font-medium text-sm truncate capitalize">{tx.type}</p>
+                                <p className="text-xs text-muted-foreground truncate">{tx.description || 'Wallet transaction'}</p>
+                                <p className="text-[10px] text-muted-foreground">{formatDate(tx.created_at)}</p>
+                              </div>
+                            </div>
+                            <div className="text-right shrink-0">
+                              <p className={cn('font-bold text-sm', isIncoming ? 'text-success' : 'text-destructive')}>
+                                {isIncoming ? '+' : '-'}{formatCurrency(tx.amount)}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
+              </CardContent>
+            </Card>
+          </motion.div>
         ) : activeView === 'transfers' ? (
           /* ===== WALLET TRANSFERS VIEW ===== */
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
