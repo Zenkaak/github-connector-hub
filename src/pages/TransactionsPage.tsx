@@ -232,6 +232,14 @@ export default function TransactionsPage() {
             <Receipt size={14} /> M-Pesa ({transactions.length})
           </Button>
           <Button
+            variant={activeView === 'wallet' ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => setActiveView('wallet')}
+            className="gap-1.5"
+          >
+            <Wallet size={14} /> Wallet ({walletTxns.length})
+          </Button>
+          <Button
             variant={activeView === 'transfers' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setActiveView('transfers')}
