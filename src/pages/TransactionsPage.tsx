@@ -79,6 +79,7 @@ export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [transfers, setTransfers] = useState<any[]>([]);
   const [requests, setRequests] = useState<MoneyRequest[]>([]);
+  const [walletTxns, setWalletTxns] = useState<any[]>([]);
   const [requestNames, setRequestNames] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<FilterStatus>('all');
@@ -87,7 +88,8 @@ export default function TransactionsPage() {
   const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
   const [selectedTransfer, setSelectedTransfer] = useState<any>(null);
   const [selectedRequest, setSelectedRequest] = useState<MoneyRequest | null>(null);
-  const [activeView, setActiveView] = useState<'mpesa' | 'transfers' | 'requests'>('mpesa');
+  const [activeView, setActiveView] = useState<'mpesa' | 'wallet' | 'transfers' | 'requests'>('mpesa');
+  const [walletFilter, setWalletFilter] = useState<'all' | 'deposit' | 'credit' | 'debit' | 'withdrawal'>('all');
 
   useEffect(() => {
     if (user) fetchTransactions();
