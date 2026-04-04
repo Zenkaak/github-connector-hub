@@ -146,7 +146,7 @@ export function ChamaSavings({
             amount: group.contribution_amount,
             userId: user.id,
             purpose: 'chama_savings',
-            groupId,
+            groupId: groupId,
           },
         }
       );
