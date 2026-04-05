@@ -1042,11 +1042,30 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
                               </p>
                             </div>
                           </div>
-                          <span className={cn('text-[10px] font-bold px-2 py-1 rounded-full uppercase shrink-0',
-                            d.status === 'active' && 'bg-accent/10 text-accent',
-                            d.status === 'paid' && 'bg-success/10 text-success',
-                            d.status === 'defaulted' && 'bg-destructive/10 text-destructive',
-                          )}>{d.status}</span>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className={cn('text-[10px] font-bold px-2 py-1 rounded-full uppercase',
+                              d.status === 'active' && 'bg-accent/10 text-accent',
+                              d.status === 'paid' && 'bg-success/10 text-success',
+                              d.status === 'defaulted' && 'bg-destructive/10 text-destructive',
+                            )}>{d.status}</span>
+                            {d.status === 'active' && (
+                              <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => {
+                                const newBal = prompt(`Update outstanding balance for ${getUserName(d.user_id)}.\nCurrent: KES ${d.outstanding_balance}\n\nEnter new balance:`);
+                                if (newBal !== null && !isNaN(Number(newBal))) {
+                                  const bal = Number(newBal);
+                                  supabase.from('loan_disbursements').update({ outstanding_balance: bal, status: bal <= 0 ? 'paid' : 'active' }).eq('id', d.id).then(() => {
+                                    if (bal <= 0) {
+                                      supabase.from('loan_applications').update({ status: 'paid' as any }).eq('id', d.loan_id);
+                                    }
+                                    toast.success(`Balance updated to KES ${bal.toLocaleString()}`);
+                                    fetchData();
+                                  });
+                                }
+                              }}>
+                                <Pencil size={10} className="mr-1" /> Balance
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
