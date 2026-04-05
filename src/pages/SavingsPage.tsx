@@ -200,7 +200,7 @@ export default function SavingsPage() {
     setSubmitting(false);
   };
 
-  const pollStkStatus = async (reference: string, savingsId: string) => {
+  const pollStkStatus = async (reference: string, _savingsId: string) => {
     let attempts = 0;
     const poll = setInterval(async () => {
       attempts++;
@@ -213,20 +213,8 @@ export default function SavingsPage() {
       if (data?.status === 'success') {
         clearInterval(poll);
         setStkPolling(false);
-        // Record deposit and update saved_amount
-        await supabase.from('personal_savings_deposits').insert({
-          savings_id: savingsId,
-          user_id: user!.id,
-          amount: data.amount,
-          stk_reference: reference,
-        });
-        // Update saved amount
-        const saving = savings.find(s => s.id === savingsId);
-        if (saving) {
-          await supabase.from('personal_savings')
-            .update({ saved_amount: saving.saved_amount + data.amount })
-            .eq('id', savingsId);
-        }
+        // The mpesa-callback edge function already records the deposit and updates saved_amount
+        // Just refresh data here
         toast.success(`KES ${data.amount.toLocaleString()} deposited successfully!`);
         fetchAll();
       } else if (data?.status === 'failed') {
