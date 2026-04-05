@@ -12,7 +12,7 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const { phone, amount, userId, purpose, groupId, savingsId } = await req.json();
+    const { phone, amount, userId, purpose, groupId, savingsId, loanId, disbursementId } = await req.json();
 
     if (!phone || !amount || !userId) {
       return new Response(
@@ -70,6 +70,7 @@ Deno.serve(async (req) => {
       loan_repayment: "REPAY_",
       harambee: "HRB_",
       activation: "ACT_",
+      wallet_deposit: "DEP_",
       chama_joining_fee: "CJFEE_",
     };
     const prefix = prefixMap[purpose] || "PAY";
