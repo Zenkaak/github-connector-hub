@@ -98,14 +98,12 @@ Deno.serve(async (req) => {
       }
 
       if (purpose === "harambee" && txn.group_id) {
-        // group_id used as harambee_id for harambee contributions
         await supabase.from("chama_harambee_contributions").insert({
           harambee_id: txn.group_id,
           user_id: txn.user_id,
           amount: txn.amount,
           stk_reference: txn.reference,
         });
-        // Update raised_amount
         const { data: harambee } = await supabase
           .from("chama_harambees")
           .select("raised_amount")
@@ -120,7 +118,50 @@ Deno.serve(async (req) => {
         console.log("Harambee contribution recorded");
       }
 
-      if (purpose === "activation") {
+      if (purpose === "loan_repayment") {
+        // Update loan disbursement outstanding balance
+        // Extract disbursementId from the reference or find from stk_transactions metadata
+        // For now, find the active disbursement for this user
+        const { data: activeDisbursements } = await supabase
+          .from("loan_disbursements")
+          .select("*")
+          .eq("user_id", txn.user_id)
+          .eq("status", "active")
+          .order("created_at", { ascending: false })
+          .limit(1);
+
+        if (activeDisbursements && activeDisbursements.length > 0) {
+          const disb = activeDisbursements[0];
+          const newBalance = Math.max(0, (disb.outstanding_balance || 0) - txn.amount);
+          const newStatus = newBalance <= 0 ? "paid" : "active";
+
+          await supabase
+            .from("loan_disbursements")
+            .update({ outstanding_balance: newBalance, status: newStatus })
+            .eq("id", disb.id);
+
+          // Record wallet transaction for the repayment
+          await supabase.from("wallet_transactions").insert({
+            user_id: txn.user_id,
+            type: "debit",
+            amount: txn.amount,
+            description: `Loan repayment via M-Pesa ${mpesaReceipt}`,
+            reference_id: txn.reference,
+          });
+
+          if (newStatus === "paid") {
+            // Update loan application status
+            await supabase
+              .from("loan_applications")
+              .update({ status: "paid" as any })
+              .eq("id", disb.loan_id);
+          }
+
+          console.log("Loan repayment recorded. New balance:", newBalance);
+        }
+      }
+
+      if (purpose === "activation" || purpose === "wallet_deposit") {
         // Credit wallet with deposit amount
         const { data: wallet } = await supabase
           .from("wallets")

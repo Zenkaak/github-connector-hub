@@ -1667,6 +1667,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_chama_leader: {
+        Args: { _group_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_chama_member: {
+        Args: { _group_id: string; _user_id: string }
+        Returns: boolean
+      }
       request_withdrawal_secure: {
         Args: { _amount: number; _phone: string; _user_id: string }
         Returns: string

@@ -1042,11 +1042,30 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
                               </p>
                             </div>
                           </div>
-                          <span className={cn('text-[10px] font-bold px-2 py-1 rounded-full uppercase shrink-0',
-                            d.status === 'active' && 'bg-accent/10 text-accent',
-                            d.status === 'paid' && 'bg-success/10 text-success',
-                            d.status === 'defaulted' && 'bg-destructive/10 text-destructive',
-                          )}>{d.status}</span>
+                          <div className="flex items-center gap-2 shrink-0">
+                            <span className={cn('text-[10px] font-bold px-2 py-1 rounded-full uppercase',
+                              d.status === 'active' && 'bg-accent/10 text-accent',
+                              d.status === 'paid' && 'bg-success/10 text-success',
+                              d.status === 'defaulted' && 'bg-destructive/10 text-destructive',
+                            )}>{d.status}</span>
+                            {d.status === 'active' && (
+                              <Button size="sm" variant="outline" className="text-xs h-7" onClick={() => {
+                                const newBal = prompt(`Update outstanding balance for ${getUserName(d.user_id)}.\nCurrent: KES ${d.outstanding_balance}\n\nEnter new balance:`);
+                                if (newBal !== null && !isNaN(Number(newBal))) {
+                                  const bal = Number(newBal);
+                                  supabase.from('loan_disbursements').update({ outstanding_balance: bal, status: bal <= 0 ? 'paid' : 'active' }).eq('id', d.id).then(() => {
+                                    if (bal <= 0) {
+                                      supabase.from('loan_applications').update({ status: 'paid' as any }).eq('id', d.loan_id);
+                                    }
+                                    toast.success(`Balance updated to KES ${bal.toLocaleString()}`);
+                                    fetchData();
+                                  });
+                                }
+                              }}>
+                                <Pencil size={10} className="mr-1" /> Balance
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       </CardContent>
                     </Card>
@@ -3070,9 +3089,32 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
                 if (!selectedSavingsWd || !savingsWdStatus) return;
                 setSavingsWdLoading(true);
                 try {
-                  await supabase.from('savings_withdrawal_requests').update({ status: savingsWdStatus, reason: savingsWdReason || null }).eq('id', selectedSavingsWd.id);
-                  await supabase.from('notifications').insert({ user_id: selectedSavingsWd.user_id, title: `Savings Withdrawal ${savingsWdStatus === 'approved' ? 'Approved' : 'Rejected'}`, message: `Your savings withdrawal has been ${savingsWdStatus}.${savingsWdReason ? ' Note: ' + savingsWdReason : ''}` });
-                  await supabase.from('audit_logs').insert({ admin_id: user?.id, user_id: selectedSavingsWd.user_id, action: `savings_withdrawal_${savingsWdStatus}`, details: { reason: savingsWdReason } });
+                  const savingsPlan = personalSavings.find((s: any) => s.id === selectedSavingsWd.savings_id);
+                  await supabase.from('savings_withdrawal_requests').update({ status: savingsWdStatus, admin_reason: savingsWdReason || null }).eq('id', selectedSavingsWd.id);
+
+                  if (savingsWdStatus === 'approved' && savingsPlan) {
+                    // Calculate payout after penalty
+                    const penalty = (selectedSavingsWd.penalty_percentage || 20) / 100;
+                    const payout = Math.round(savingsPlan.saved_amount * (1 - penalty));
+
+                    // Credit user wallet with payout
+                    const { data: wallet } = await supabase.from('wallets').select('balance').eq('user_id', selectedSavingsWd.user_id).single();
+                    if (wallet) {
+                      await supabase.from('wallets').update({ balance: (wallet.balance || 0) + payout }).eq('user_id', selectedSavingsWd.user_id);
+                    }
+                    await supabase.from('wallet_transactions').insert({
+                      user_id: selectedSavingsWd.user_id,
+                      type: 'credit',
+                      amount: payout,
+                      description: `Savings withdrawal from "${savingsPlan.name}" (${selectedSavingsWd.penalty_percentage || 20}% penalty applied)`,
+                    });
+
+                    // Close the savings plan
+                    await supabase.from('personal_savings').update({ saved_amount: 0, status: 'withdrawn' }).eq('id', selectedSavingsWd.savings_id);
+                  }
+
+                  await supabase.from('notifications').insert({ user_id: selectedSavingsWd.user_id, title: `Savings Withdrawal ${savingsWdStatus === 'approved' ? 'Approved' : 'Rejected'}`, message: savingsWdStatus === 'approved' && savingsPlan ? `Your savings withdrawal from "${savingsPlan.name}" has been approved. KES ${Math.round(savingsPlan.saved_amount * (1 - (selectedSavingsWd.penalty_percentage || 20) / 100)).toLocaleString()} has been credited to your wallet after ${selectedSavingsWd.penalty_percentage || 20}% penalty.` : `Your savings withdrawal has been rejected.${savingsWdReason ? ' Note: ' + savingsWdReason : ''}` });
+                  await supabase.from('audit_logs').insert({ admin_id: user?.id, user_id: selectedSavingsWd.user_id, action: `savings_withdrawal_${savingsWdStatus}`, details: { reason: savingsWdReason, savings_name: savingsPlan?.name } });
                   toast.success(`Savings withdrawal ${savingsWdStatus}`);
                   setSelectedSavingsWd(null);
                   fetchData();
