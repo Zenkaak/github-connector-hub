@@ -252,7 +252,7 @@ export default function LoanApplicationsPage() {
                             <Progress value={repaymentProgress} className="h-2" />
                           </div>
 
-                          <div className="flex items-center justify-between">
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
                             <div className="flex items-center gap-2">
                               <Calendar size={12} className="text-muted-foreground" />
                               <span className="text-xs text-muted-foreground">
@@ -277,6 +277,12 @@ export default function LoanApplicationsPage() {
                                 <Wallet size={12} /> Pay via M-Pesa
                               </Button>
                             )}
+                          </div>
+
+                          {/* Till Number Info */}
+                          <div className="p-2 rounded-lg bg-muted/30 border border-border/30 mt-1">
+                            <p className="text-[10px] text-muted-foreground">You can also pay directly via M-Pesa Buy Goods:</p>
+                            <p className="text-xs font-bold">Till: 8448104 (Dasnet Ventures)</p>
                           </div>
 
                           <div className={cn('text-[10px] font-semibold px-2 py-1 rounded-full w-fit',
@@ -324,9 +330,11 @@ export default function LoanApplicationsPage() {
                   <Label className="text-xs">Amount to Pay (KES)</Label>
                   <Input type="number" value={repayAmount} onChange={(e) => setRepayAmount(e.target.value)} placeholder="Enter amount" className="mt-1" />
                 </div>
-                <div className="p-3 rounded-lg bg-muted/30 border border-border/30">
-                  <p className="text-xs text-muted-foreground">Payment will be sent to</p>
+                <div className="p-3 rounded-lg bg-muted/30 border border-border/30 space-y-1">
+                  <p className="text-xs text-muted-foreground">STK Push will be sent to:</p>
                   <p className="font-semibold text-sm">{profile?.phone || '—'}</p>
+                  <p className="text-xs text-muted-foreground mt-2">Or pay directly via M-Pesa Buy Goods:</p>
+                  <p className="font-semibold text-sm">Till: 8448104 (Dasnet Ventures)</p>
                 </div>
                 <p className="text-xs text-muted-foreground">An M-Pesa STK push will be sent to your phone. Enter your M-Pesa PIN to complete the payment.</p>
                 <div className="flex justify-end gap-2">
