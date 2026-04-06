@@ -26,6 +26,7 @@ interface Transaction {
   checkout_request_id: string | null;
   created_at: string;
   user_id: string;
+  purpose: string | null;
 }
 
 const statusConfig = {
@@ -49,11 +50,11 @@ export function ChamaTransactions({ groupId, members }: Props) {
   }, [groupId]);
 
   const fetchTransactions = async () => {
-    // Fetch all STK transactions with CHAMA_ reference for this group
+    // Query by group_id column instead of reference pattern
     const { data } = await supabase
       .from('stk_transactions')
       .select('*')
-      .like('reference', `CHAMA_${groupId}%`)
+      .eq('group_id', groupId)
       .order('created_at', { ascending: false });
 
     if (data) setTransactions(data as Transaction[]);

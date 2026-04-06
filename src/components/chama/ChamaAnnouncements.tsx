@@ -46,10 +46,10 @@ export function ChamaAnnouncements({ groupId, members, myRole }: Props) {
     try {
       const { error } = await supabase.from('chama_announcements').insert({
         group_id: groupId,
-        sender_id: user.id,
+        user_id: user.id,
         title: title.trim(),
         message: message.trim(),
-      } as any);
+      });
       if (error) throw error;
 
       // Notify all members
@@ -73,8 +73,8 @@ export function ChamaAnnouncements({ groupId, members, myRole }: Props) {
     }
   };
 
-  const getSenderName = (senderId: string) => {
-    return members.find(m => m.user_id === senderId)?.profile?.full_name || 'Unknown';
+  const getSenderName = (userId: string) => {
+    return members.find(m => m.user_id === userId)?.profile?.full_name || 'Unknown';
   };
 
   return (
@@ -108,7 +108,7 @@ export function ChamaAnnouncements({ groupId, members, myRole }: Props) {
                   <h4 className="font-semibold text-sm">{a.title}</h4>
                   <p className="text-sm text-muted-foreground mt-1 whitespace-pre-wrap">{a.message}</p>
                   <p className="text-[11px] text-muted-foreground mt-2">
-                    By {getSenderName(a.sender_id)} · {new Date(a.created_at).toLocaleString('en-KE')}
+                    By {getSenderName(a.user_id)} · {new Date(a.created_at).toLocaleString('en-KE')}
                   </p>
                 </div>
               </div>

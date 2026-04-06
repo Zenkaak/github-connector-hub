@@ -63,7 +63,9 @@ export function ChamaVotes({ groupId, members, myRole }: Props) {
         created_by: user.id,
         title: title.trim(),
         description: description.trim() || null,
-      } as any);
+        options: ['accept', 'decline'],
+        status: 'active',
+      });
       if (error) throw error;
 
       // Notify all members
@@ -78,17 +80,17 @@ export function ChamaVotes({ groupId, members, myRole }: Props) {
       // Post to announcements
       await supabase.from('chama_announcements').insert({
         group_id: groupId,
-        sender_id: user.id,
+        user_id: user.id,
         title: '🗳️ Vote: ' + title.trim(),
         message: `A vote has been created: "${title.trim()}". ${description.trim() || ''}\n\nPlease go to the Votes tab to cast your decision.`,
-      } as any);
+      });
 
       // Post to chat
       await supabase.from('chama_messages').insert({
         group_id: groupId,
-        sender_id: user.id,
+        user_id: user.id,
         message: `🗳️ NEW VOTE: "${title.trim()}" — Go to the Votes tab to accept or decline.`,
-      } as any);
+      });
 
       toast({ title: 'Vote Created', description: 'All members have been notified.' });
       setCreateOpen(false);
@@ -109,8 +111,8 @@ export function ChamaVotes({ groupId, members, myRole }: Props) {
       const { error } = await supabase.from('chama_vote_responses').insert({
         vote_id: voteId,
         user_id: user.id,
-        decision,
-      } as any);
+        selected_option: decision,
+      });
       if (error) throw error;
       toast({ title: decision === 'accept' ? 'Vote Accepted' : 'Vote Declined' });
       fetchVotes();
@@ -123,13 +125,13 @@ export function ChamaVotes({ groupId, members, myRole }: Props) {
 
   const handleCloseVote = async (voteId: string) => {
     try {
-      const { error } = await supabase.from('chama_votes').update({ status: 'closed', updated_at: new Date().toISOString() } as any).eq('id', voteId);
+      const { error } = await supabase.from('chama_votes').update({ status: 'closed', updated_at: new Date().toISOString() }).eq('id', voteId);
       if (error) throw error;
 
       const voteItem = votes.find(v => v.id === voteId);
       const voteResponses = responses.filter(r => r.vote_id === voteId);
-      const accepts = voteResponses.filter(r => r.decision === 'accept').length;
-      const declines = voteResponses.filter(r => r.decision === 'decline').length;
+      const accepts = voteResponses.filter(r => r.selected_option === 'accept').length;
+      const declines = voteResponses.filter(r => r.selected_option === 'decline').length;
 
       await supabase.from('notifications').insert(
         members.map(m => ({
@@ -167,8 +169,8 @@ export function ChamaVotes({ groupId, members, myRole }: Props) {
         <div className="space-y-3">
           {votes.map(vote => {
             const voteResponses = responses.filter(r => r.vote_id === vote.id);
-            const accepts = voteResponses.filter(r => r.decision === 'accept').length;
-            const declines = voteResponses.filter(r => r.decision === 'decline').length;
+            const accepts = voteResponses.filter(r => r.selected_option === 'accept').length;
+            const declines = voteResponses.filter(r => r.selected_option === 'decline').length;
             const total = members.length;
             const voted = voteResponses.length;
             const myResponse = voteResponses.find(r => r.user_id === user?.id);
@@ -232,7 +234,7 @@ export function ChamaVotes({ groupId, members, myRole }: Props) {
                 )}
                 {myResponse && (
                   <p className="text-[11px] mt-2 flex items-center gap-1">
-                    {myResponse.decision === 'accept' ? (
+                    {myResponse.selected_option === 'accept' ? (
                       <><CheckCircle2 size={12} className="text-emerald-500" /> You accepted</>
                     ) : (
                       <><XCircle size={12} className="text-destructive" /> You declined</>
@@ -248,8 +250,8 @@ export function ChamaVotes({ groupId, members, myRole }: Props) {
                       {voteResponses.map(r => (
                         <div key={r.id} className="flex items-center justify-between text-[11px]">
                           <span>{members.find(m => m.user_id === r.user_id)?.profile?.full_name || 'Unknown'}</span>
-                          <span className={r.decision === 'accept' ? 'text-emerald-500' : 'text-destructive'}>
-                            {r.decision === 'accept' ? '✓ Accepted' : '✗ Declined'}
+                          <span className={r.selected_option === 'accept' ? 'text-emerald-500' : 'text-destructive'}>
+                            {r.selected_option === 'accept' ? '✓ Accepted' : '✗ Declined'}
                           </span>
                         </div>
                       ))}
