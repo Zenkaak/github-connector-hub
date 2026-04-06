@@ -326,11 +326,9 @@ export function ChamaTerms({ groupId, group, members, myRole, onRefreshGroup }: 
     if (!canvas || !user || !group?.terms_updated_at) return;
     setSigning(true);
     try {
-      const signatureData = canvas.toDataURL('image/png');
       const { error } = await supabase.from('chama_term_signatures').insert({
         group_id: groupId,
         user_id: user.id,
-        signature_data: signatureData,
         terms_version: group.terms_updated_at,
       });
       if (error) throw error;
