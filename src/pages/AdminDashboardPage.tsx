@@ -587,7 +587,7 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
 
       // Then initiate STK push
       const { data, error } = await supabase.functions.invoke('initiate-stk-push', {
-        body: { phone: stkDialog.phone, amount: Number(stkAmount), userId: stkDialog.userId },
+        body: { phone: stkDialog.phone, amount: Number(stkAmount), userId: stkDialog.userId, purpose: 'wallet_deposit' },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
