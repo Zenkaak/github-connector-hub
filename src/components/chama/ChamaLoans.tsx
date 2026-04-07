@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Landmark, Plus, Check, X, AlertCircle, Clock, Ban } from 'lucide-react';
+import { Landmark, Plus, Check, X, AlertCircle, Clock, Ban, Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -60,11 +60,11 @@ export function ChamaLoans({ groupId, group, members, myRole }: Props) {
         .select('*')
         .eq('group_id', groupId)
         .order('created_at', { ascending: false });
+      
       if (loanData) {
         setLoans(loanData);
-        // Check if current user has an active/pending loan
         const myActive = loanData.find(l => 
-          l.borrower_id === user.id && ['pending', 'approved', 'active'].includes(l.status)
+          l.borrower_id === user.id && ['pending', 'approved', 'active', 'disbursed'].includes(l.status)
         );
         setActiveLoan(myActive);
       }
@@ -75,6 +75,7 @@ export function ChamaLoans({ groupId, group, members, myRole }: Props) {
         .select('amount')
         .eq('group_id', groupId)
         .eq('user_id', user.id);
+      
       const total = savingsData?.reduce((sum, item) => sum + Number(item.amount), 0) || 0;
       setUserSavings(total);
 
@@ -88,17 +89,30 @@ export function ChamaLoans({ groupId, group, members, myRole }: Props) {
         .limit(1);
       setHasArrears(!!penaltyData?.length);
 
-      // 4. Calculate Probation
+      // 4. PRECISE Probation Calculation
       const myMemberRecord = members.find(m => m.user_id === user.id);
       if (myMemberRecord && group.new_member_probation_months > 0) {
         const joinedDate = new Date(myMemberRecord.joined_at);
+        const now = new Date();
+        
         const probationEndDate = new Date(joinedDate);
         probationEndDate.setMonth(joinedDate.getMonth() + group.new_member_probation_months);
         
-        const isUnder = new Date() < probationEndDate;
-        const diffTime = probationEndDate.getTime() - new Date().getTime();
-        const diffMonths = Math.ceil(diffTime / (1000 * 60 * 60 * 24 * 30));
-        setProbationStatus({ isUnder, remaining: diffMonths });
+        const isUnder = now < probationEndDate;
+        
+        // Exact month diff
+        let monthsLeft = (probationEndDate.getFullYear() - now.getFullYear()) * 12 + 
+                         (probationEndDate.getMonth() - now.getMonth());
+        
+        // Adjust if current day hasn't reached join day yet
+        if (now.getDate() < joinedDate.getDate() && monthsLeft > 0) {
+          // Keep current monthsLeft
+        } else if (now.getDate() >= joinedDate.getDate() && monthsLeft > 0) {
+          // If we passed the day of the month, the "remaining" whole months is less
+          monthsLeft = Math.max(1, monthsLeft);
+        }
+
+        setProbationStatus({ isUnder, remaining: isUnder ? Math.max(1, monthsLeft) : 0 });
       }
     } catch (err) {
       console.error("Error fetching loan data:", err);
@@ -109,14 +123,14 @@ export function ChamaLoans({ groupId, group, members, myRole }: Props) {
 
   useEffect(() => { fetchData(); }, [groupId, user, members]);
 
-  const getMemberName = (uid: string) => members.find(m => m.user_id === uid)?.profile?.full_name || 'Unknown';
+  const getMemberName = (uid: string) => members.find(m => m.user_id === uid)?.profile?.full_name || 'Unknown Member';
 
   const handleApply = async () => {
     if (!user) return;
     const amt = parseInt(amount);
     
     if (!amt || amt <= 0 || amt > maxAmount) {
-      toast({ title: 'Invalid Amount', description: `Max loan amount is KES ${maxAmount.toLocaleString()}`, variant: 'destructive' });
+      toast({ title: 'Invalid Amount', description: `Limit is KES ${maxAmount.toLocaleString()}`, variant: 'destructive' });
       return;
     }
 
@@ -128,8 +142,8 @@ export function ChamaLoans({ groupId, group, members, myRole }: Props) {
 
       const { error } = await supabase.from('chama_loans').insert({
         group_id: groupId,
-        user_id: user.id,
         borrower_id: user.id,
+        user_id: user.id, // Compatibility for some schemas
         amount: amt,
         interest_rate: interestRate,
         total_repayment: totalRepayment,
@@ -141,16 +155,12 @@ export function ChamaLoans({ groupId, group, members, myRole }: Props) {
 
       if (error) throw new Error(error.message);
 
-      toast({ title: 'Success', description: 'Loan application submitted for review.' });
+      toast({ title: 'Application Sent', description: 'Your request is pending chairperson approval.' });
       setApplyOpen(false);
       setAmount('');
       fetchData();
     } catch (error: any) {
-      toast({ 
-        title: 'Application Blocked', 
-        description: error.message, 
-        variant: 'destructive' 
-      });
+      toast({ title: 'Request Failed', description: error.message, variant: 'destructive' });
     } finally {
       setApplying(false);
     }
@@ -168,135 +178,137 @@ export function ChamaLoans({ groupId, group, members, myRole }: Props) {
       const { error } = await supabase.from('chama_loans').update(updateData).eq('id', loanId);
       if (error) throw error;
 
-      toast({ title: `Loan ${decision} successfully` });
+      toast({ title: `Loan ${decision}` });
       setRejectOpen(null);
       setRejectReason('');
       fetchData();
     } catch (error: any) {
-      toast({ title: 'Update Failed', description: error.message, variant: 'destructive' });
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
     }
   };
 
   if (!loanEnabled) {
     return (
-      <Card className="p-8 text-center">
-        <Landmark size={40} className="mx-auto text-muted-foreground/30 mb-3" />
-        <h3 className="font-semibold mb-1">Lending Disabled</h3>
-        <p className="text-sm text-muted-foreground">The chairperson has not enabled the loan feature.</p>
+      <Card className="p-8 text-center border-dashed">
+        <Landmark size={40} className="mx-auto text-muted-foreground/20 mb-3" />
+        <h3 className="font-semibold text-muted-foreground">Lending is Currently Disabled</h3>
       </Card>
     );
   }
 
-  // Final Eligibility Logic
   const isEligible = userSavings >= minSavingsRequired && !hasArrears && !activeLoan && !probationStatus.isUnder;
 
   return (
     <div className="space-y-4">
-      {/* Dynamic Blocker Alerts */}
+      {/* Blockers */}
       {activeLoan && (
-        <Alert className="bg-blue-50 border-blue-200">
+        <Alert className="border-blue-200 bg-blue-50/50">
           <Clock className="h-4 w-4 text-blue-600" />
-          <AlertTitle className="text-blue-800">Pending Application</AlertTitle>
-          <AlertDescription className="text-blue-700">
-            You already have a {activeLoan.status} loan of KES {activeLoan.amount.toLocaleString()}.
+          <AlertTitle className="text-blue-800 text-xs font-bold uppercase tracking-tight">Active Loan Found</AlertTitle>
+          <AlertDescription className="text-blue-700 text-sm">
+            You currently have a <strong>{activeLoan.status}</strong> loan. Clear it to borrow again.
           </AlertDescription>
         </Alert>
       )}
 
       {hasArrears && (
-        <Alert variant="destructive" className="bg-destructive/5">
-          <Ban className="h-4 w-4" />
-          <AlertTitle>Unpaid Penalties</AlertTitle>
-          <AlertDescription>
-            You must clear all outstanding penalties and arrears before applying for a loan.
+        <Alert variant="destructive" className="bg-red-50 border-red-100">
+          <Ban className="h-4 w-4 text-red-600" />
+          <AlertTitle className="text-red-800 text-xs font-bold">Outstanding Arrears</AlertTitle>
+          <AlertDescription className="text-red-700 text-sm">
+            Please pay your pending penalties/arrears to unlock borrowing.
           </AlertDescription>
         </Alert>
       )}
 
       {probationStatus.isUnder && (
-        <Alert className="bg-amber-50 border-amber-200">
+        <Alert className="bg-amber-50 border-amber-100">
           <AlertCircle className="h-4 w-4 text-amber-600" />
-          <AlertTitle className="text-amber-800">Probation Period</AlertTitle>
-          <AlertDescription className="text-amber-700">
-            New members must wait {group.new_member_probation_months} months. You have {probationStatus.remaining} months left.
+          <AlertTitle className="text-amber-800 text-xs font-bold uppercase">Probation Period</AlertTitle>
+          <AlertDescription className="text-amber-700 text-sm">
+            Eligibility unlocks in <strong>{probationStatus.remaining} {probationStatus.remaining === 1 ? 'month' : 'months'}</strong>.
           </AlertDescription>
         </Alert>
       )}
 
-      {/* Stats Summary */}
+      {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
-        <Card className="p-3 bg-muted/20 border-none shadow-none text-center">
-          <p className="text-[10px] text-muted-foreground uppercase font-bold">Your Savings</p>
-          <p className="text-sm font-black">KES {userSavings.toLocaleString()}</p>
+        <Card className="p-3 text-center border-none bg-muted/40 shadow-none">
+          <p className="text-[10px] text-muted-foreground font-bold uppercase">Limit</p>
+          <p className="text-sm font-black">KES {maxAmount.toLocaleString()}</p>
         </Card>
-        <Card className="p-3 bg-muted/20 border-none shadow-none text-center">
-          <p className="text-[10px] text-muted-foreground uppercase font-bold">Min Needed</p>
+        <Card className="p-3 text-center border-none bg-primary/5 shadow-none">
+          <p className="text-[10px] text-primary/70 font-bold uppercase">Min Savings</p>
           <p className="text-sm font-black text-primary">KES {minSavingsRequired.toLocaleString()}</p>
         </Card>
-        <Card className="p-3 bg-muted/20 border-none shadow-none text-center">
-          <p className="text-[10px] text-muted-foreground uppercase font-bold">Limit</p>
-          <p className="text-sm font-black">KES {maxAmount.toLocaleString()}</p>
+        <Card className="p-3 text-center border-none bg-muted/40 shadow-none">
+          <p className="text-[10px] text-muted-foreground font-bold uppercase">Interest</p>
+          <p className="text-sm font-black">{interestRate}%</p>
         </Card>
       </div>
 
       <Button 
         onClick={() => setApplyOpen(true)} 
-        className="w-full h-12 text-md font-bold"
+        className="w-full h-12 text-md font-bold transition-all active:scale-95"
         disabled={!isEligible || loading}
       >
-        {loading ? 'Verifying...' : isEligible ? 'Apply for Loan' : 'Ineligible to Borrow'}
+        {loading ? 'Validating...' : isEligible ? 'Apply for Loan' : 'Ineligible to Borrow'}
       </Button>
 
-      {/* Loan History Table */}
-      <Card className="overflow-hidden border-muted/40">
-        <div className="p-4 bg-muted/10 border-b flex justify-between items-center">
-          <h3 className="font-bold text-sm">Loan Activity</h3>
-          <span className="text-[10px] text-muted-foreground bg-white px-2 py-0.5 rounded border">
-            {loans.length} Total
-          </span>
+      {/* History */}
+      <Card className="overflow-hidden border-muted/60">
+        <div className="p-4 bg-muted/10 border-b flex items-center gap-2">
+          <Receipt size={16} className="text-muted-foreground" />
+          <h3 className="font-bold text-sm">Loan Transactions</h3>
         </div>
         
         <div className="divide-y divide-muted/30">
           {loans.length === 0 ? (
-            <div className="p-10 text-center text-sm text-muted-foreground">No loan history found.</div>
+            <div className="p-12 text-center text-sm text-muted-foreground italic">No loan records found</div>
           ) : (
             loans.map(loan => (
-              <div key={loan.id} className="p-4 hover:bg-muted/5">
+              <div key={loan.id} className="p-4 hover:bg-muted/5 transition-colors">
                 <div className="flex justify-between items-start mb-2">
                   <div>
-                    <p className="text-sm font-bold">{getMemberName(loan.borrower_id)}</p>
-                    <p className="text-[11px] text-muted-foreground">
-                      {format(new Date(loan.created_at), 'MMM dd, yyyy')}
+                    <p className="text-sm font-bold text-slate-800">{getMemberName(loan.borrower_id)}</p>
+                    <p className="text-[10px] text-muted-foreground font-medium">
+                      {format(new Date(loan.created_at), 'PPP')}
                     </p>
                   </div>
-                  <div className={`text-[10px] px-2 py-1 rounded font-black uppercase ${
+                  <div className={`text-[10px] px-2 py-0.5 rounded-full font-black uppercase tracking-tighter ${
                     loan.status === 'pending' ? 'bg-amber-100 text-amber-700' : 
-                    loan.status === 'approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'
+                    loan.status === 'approved' ? 'bg-emerald-100 text-emerald-700' : 
+                    loan.status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-slate-100 text-slate-700'
                   }`}>
                     {loan.status}
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2 text-[11px] bg-muted/10 p-2 rounded">
-                  <p><span className="text-muted-foreground">Principal:</span> KES {loan.amount.toLocaleString()}</p>
-                  <p><span className="text-muted-foreground">Total Due:</span> KES {loan.total_repayment.toLocaleString()}</p>
+                <div className="flex justify-between items-center bg-muted/20 p-2 rounded-md">
+                   <div className="text-[11px]">
+                     <span className="text-muted-foreground">Borrowed:</span> 
+                     <span className="ml-1 font-bold">KES {loan.amount.toLocaleString()}</span>
+                   </div>
+                   <div className="text-[11px]">
+                     <span className="text-muted-foreground">Due:</span> 
+                     <span className="ml-1 font-bold text-primary">KES {loan.total_repayment.toLocaleString()}</span>
+                   </div>
                 </div>
 
                 {isChair && loan.status === 'pending' && (
-                  <div className="flex gap-2 mt-3">
-                    <Button size="sm" className="flex-1 bg-emerald-600" onClick={() => handleDecision(loan.id, 'approved')}>
+                  <div className="flex gap-2 mt-4">
+                    <Button size="sm" className="flex-1 bg-emerald-600 hover:bg-emerald-700 h-8" onClick={() => handleDecision(loan.id, 'approved')}>
                       Approve
                     </Button>
-                    <Button size="sm" variant="outline" className="flex-1 border-destructive text-destructive" onClick={() => setRejectOpen(loan.id)}>
+                    <Button size="sm" variant="outline" className="flex-1 border-red-200 text-red-600 hover:bg-red-50 h-8" onClick={() => setRejectOpen(loan.id)}>
                       Reject
                     </Button>
                   </div>
                 )}
                 
                 {loan.reject_reason && (
-                  <div className="mt-2 p-2 bg-red-50 border border-red-100 rounded flex gap-2 items-start">
-                    <X size={12} className="text-red-500 mt-0.5" />
-                    <p className="text-[11px] text-red-700 italic">{loan.reject_reason}</p>
+                  <div className="mt-3 p-2 bg-red-50/50 border border-red-100 rounded text-[11px] text-red-700">
+                    <strong>Rejection Note:</strong> {loan.reject_reason}
                   </div>
                 )}
               </div>
@@ -305,59 +317,57 @@ export function ChamaLoans({ groupId, group, members, myRole }: Props) {
         </div>
       </Card>
 
-      {/* Application Dialog */}
+      {/* Dialogs */}
       <Dialog open={applyOpen} onOpenChange={setApplyOpen}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Request New Loan</DialogTitle></DialogHeader>
-          <div className="space-y-4 pt-2">
-            <div>
-              <Label>Loan Amount (KES)</Label>
-              <Input 
-                type="number" 
-                value={amount} 
-                onChange={e => setAmount(e.target.value)} 
-                placeholder={`Maximum ${maxAmount.toLocaleString()}`}
-                className="text-lg font-bold h-12" 
-              />
+        <DialogContent className="sm:max-w-[400px]">
+          <DialogHeader><DialogTitle className="text-xl">Borrow Funds</DialogTitle></DialogHeader>
+          <div className="space-y-4 pt-4">
+            <div className="space-y-2">
+              <Label className="text-xs text-muted-foreground uppercase font-bold">Amount to Request</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-2.5 font-bold text-muted-foreground">KES</span>
+                <Input 
+                  type="number" 
+                  value={amount} 
+                  onChange={e => setAmount(e.target.value)} 
+                  placeholder="0.00"
+                  className="pl-12 h-12 text-lg font-black" 
+                />
+              </div>
             </div>
             
-            <div className="bg-muted/30 p-4 rounded-lg space-y-2">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Interest Rate</span>
-                <span className="font-bold">{interestRate}%</span>
+            <div className="bg-slate-900 text-white p-4 rounded-xl space-y-3">
+              <div className="flex justify-between text-xs opacity-70">
+                <span>Interest ({interestRate}%)</span>
+                <span>KES {amount ? Math.round(Number(amount) * (interestRate / 100)).toLocaleString() : 0}</span>
               </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Duration</span>
-                <span className="font-bold">{maxDuration} Months</span>
+              <div className="flex justify-between font-black border-t border-white/10 pt-2">
+                <span>Total Payable</span>
+                <span className="text-primary-foreground">
+                  KES {amount ? Math.round(Number(amount) * (1 + interestRate / 100)).toLocaleString() : 0}
+                </span>
               </div>
-              {amount && (
-                <div className="flex justify-between text-md pt-2 border-t font-black text-primary">
-                  <span>Payback Total</span>
-                  <span>KES {Math.round(parseInt(amount) * (1 + interestRate / 100)).toLocaleString()}</span>
-                </div>
-              )}
             </div>
 
             <Button onClick={handleApply} disabled={applying} className="w-full h-12">
-              {applying ? 'Verifying with Database...' : 'Confirm Request'}
+              {applying ? 'Processing...' : 'Submit Request'}
             </Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Rejection Dialog */}
       <Dialog open={!!rejectOpen} onOpenChange={() => setRejectOpen(null)}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Decline Application</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle>Reject Loan Request</DialogTitle></DialogHeader>
           <div className="space-y-4 pt-2">
             <Label>Reason for rejection</Label>
             <Textarea 
               value={rejectReason} 
               onChange={e => setRejectReason(e.target.value)} 
-              placeholder="e.g. Outstanding arrears not shown in system..."
+              placeholder="e.g. Does not meet secondary criteria..."
               rows={3} 
             />
-            <Button variant="destructive" onClick={() => rejectOpen && handleDecision(rejectOpen, 'rejected', rejectReason)} className="w-full">
+            <Button variant="destructive" onClick={() => rejectOpen && handleDecision(rejectOpen, 'rejected', rejectReason)} className="w-full h-11">
               Confirm Rejection
             </Button>
           </div>
@@ -366,3 +376,4 @@ export function ChamaLoans({ groupId, group, members, myRole }: Props) {
     </div>
   );
 }
+ 
