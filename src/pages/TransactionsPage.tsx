@@ -177,7 +177,7 @@ export default function TransactionsPage() {
 
   const filtered = transactions.filter((t) => {
     const matchesFilter = filter === 'all' || t.status === filter;
-    const matchesType = typeFilter === 'all' || getTxTypeKey(t.reference) === typeFilter;
+    const matchesType = typeFilter === 'all' || getTxTypeKey(t.reference, t.purpose || undefined) === typeFilter;
     const matchesSearch =
       search === '' ||
       t.reference.toLowerCase().includes(search.toLowerCase()) ||
@@ -210,11 +210,11 @@ export default function TransactionsPage() {
 
   const typeFilters: { label: string; value: TypeFilter; count: number }[] = [
     { label: 'All Types', value: 'all', count: transactions.length },
-    { label: 'Activation', value: 'activation', count: transactions.filter(t => getTxTypeKey(t.reference) === 'activation').length },
-    { label: 'Chama', value: 'chama', count: transactions.filter(t => getTxTypeKey(t.reference) === 'chama').length },
-    { label: 'Savings', value: 'savings', count: transactions.filter(t => getTxTypeKey(t.reference) === 'savings').length },
-    { label: 'Repayment', value: 'repayment', count: transactions.filter(t => getTxTypeKey(t.reference) === 'repayment').length },
-    { label: 'Harambee', value: 'harambee', count: transactions.filter(t => getTxTypeKey(t.reference) === 'harambee').length },
+    { label: 'Activation', value: 'activation', count: transactions.filter(t => getTxTypeKey(t.reference, t.purpose || undefined) === 'activation').length },
+    { label: 'Chama', value: 'chama', count: transactions.filter(t => getTxTypeKey(t.reference, t.purpose || undefined) === 'chama').length },
+    { label: 'Savings', value: 'savings', count: transactions.filter(t => getTxTypeKey(t.reference, t.purpose || undefined) === 'savings').length },
+    { label: 'Repayment', value: 'repayment', count: transactions.filter(t => getTxTypeKey(t.reference, t.purpose || undefined) === 'repayment').length },
+    { label: 'Harambee', value: 'harambee', count: transactions.filter(t => getTxTypeKey(t.reference, t.purpose || undefined) === 'harambee').length },
   ];
 
   return (
@@ -383,7 +383,7 @@ export default function TransactionsPage() {
                               <div className="min-w-0">
                                 <div className="flex items-center gap-2">
                                   <p className="font-medium text-sm truncate">{tx.reference}</p>
-                                  {(() => { const t = getTxType(tx.reference); return (
+                                  {(() => { const t = getTxType(tx.reference, (tx as any).purpose || undefined); return (
                                     <span className={cn('text-[10px] font-medium px-1.5 py-0.5 rounded-md shrink-0', t.bg, t.color)}>{t.label}</span>
                                   ); })()}
                                 </div>
@@ -655,7 +655,7 @@ export default function TransactionsPage() {
                 <div className="space-y-3 bg-muted/30 rounded-xl p-4">
                   {[
                     { icon: Hash, label: 'Reference', value: selectedTx.reference },
-                    { icon: Info, label: 'Type', value: getTxType(selectedTx.reference).label },
+                    { icon: Info, label: 'Type', value: getTxType(selectedTx.reference, (selectedTx as any).purpose || undefined).label },
                     { icon: Phone, label: 'Phone', value: selectedTx.phone },
                     { icon: Calendar, label: 'Date', value: formatDate(selectedTx.created_at) },
                     { icon: Receipt, label: 'M-Pesa Receipt', value: selectedTx.mpesa_receipt || '—' },
