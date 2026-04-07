@@ -227,38 +227,42 @@ export function ChamaHarambee({ groupId, group, members, myRole }: Props) {
   const handleContribute = async () => {
     if (!user) return;
     
-    // Safety check: Ensure the harambee is actually selected
-    if (!selectedHarambee || !selectedHarambee.id) {
+    // Safety check: Explicitly pull the latest selectedHarambee ID
+    const currentHarambeeId = selectedHarambee?.id;
+    const currentOrderNumber = selectedHarambee?.order_number;
+
+    if (!currentHarambeeId) {
       return toast({ 
-        title: "Session Error", 
-        description: "Harambee selection lost. Please try again.", 
+        title: "Selection Required", 
+        description: "Please select a specific Harambee cause to contribute.", 
         variant: "destructive" 
       });
     }
 
     const amount = Number(contributeAmount);
-    if (!amount || amount <= 0) return toast({ title: "Invalid amount", variant: "destructive" });
+    if (!amount || amount <= 0) return toast({ title: "Invalid amount", description: "Please enter a valid amount", variant: "destructive" });
     
     const phone = contributePhone.trim();
-    if (!/^07\d{8}$|^254\d{9}$/.test(phone)) return toast({ title: "Invalid phone", variant: "destructive" });
+    if (!/^07\d{8}$|^254\d{9}$/.test(phone)) return toast({ title: "Invalid phone", description: "Please use a valid Safaricom number", variant: "destructive" });
 
     setContributing(true);
     try {
-      const { error } = await supabase.functions.invoke("initiate-stk-push", {
+      // FIX: Passing harambee_id and other context to the STK Edge Function
+      const { data, error } = await supabase.functions.invoke("initiate-stk-push", {
         body: { 
           phone, 
           amount, 
           userId: user.id, 
           purpose: "harambee", 
           groupId: groupId, 
-          harambee_id: selectedHarambee.id, // THE UUID FIX
-          orderNumber: selectedHarambee.order_number 
+          harambee_id: currentHarambeeId, // Ensure this is not null
+          orderNumber: currentOrderNumber 
         },
       });
       
       if (error) throw error;
       
-      toast({ title: "STK Push Sent", description: "Enter pin on your phone" });
+      toast({ title: "STK Push Sent", description: "Please check your phone for the M-Pesa PIN prompt" });
       setContributeOpen(false);
       setContributeAmount('');
     } catch (error: any) {
