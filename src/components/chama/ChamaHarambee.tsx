@@ -83,7 +83,25 @@ export function ChamaHarambee({ groupId, group, members, myRole }: Props) {
     if (data) setContributions(data);
   };
 
-  useEffect(() => { fetchHarambees(); }, [groupId]);
+  // --- REALTIME SUBSCRIPTION LOGIC ---
+  useEffect(() => {
+    fetchHarambees();
+
+    // Listen for updates to harambee raised amounts and new contributions
+    const channel = supabase
+      .channel('harambee_updates')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'chama_harambees' }, () => {
+        fetchHarambees();
+      })
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chama_harambee_contributions' }, (payload) => {
+        if (selectedHarambee && payload.new.harambee_id === selectedHarambee.id) {
+          fetchContributions(selectedHarambee.id);
+        }
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [groupId, selectedHarambee?.id]);
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []);
@@ -186,17 +204,24 @@ export function ChamaHarambee({ groupId, group, members, myRole }: Props) {
     if (!user || !selectedHarambee) return;
     const amount = Number(contributeAmount);
     if (!amount || amount <= 0) return toast({ title: "Invalid amount", variant: "destructive" });
-    if (amount > 150000) return toast({ title: "M-Pesa Limit", description: "Max allowed is 150,000", variant: "destructive" });
     const phone = contributePhone.trim();
     if (!/^07\d{8}$/.test(phone)) return toast({ title: "Invalid phone", variant: "destructive" });
 
     setContributing(true);
     try {
-      const { data, error } = await supabase.functions.invoke("initiate-stk-push", {
-        body: { phone, amount, userId: user.id, purpose: "harambee", groupId: selectedHarambee.id, orderNumber: selectedHarambee.order_number },
+      const { error } = await supabase.functions.invoke("initiate-stk-push", {
+        body: { 
+          phone, 
+          amount, 
+          userId: user.id, 
+          purpose: "harambee", 
+          groupId: groupId, // Using the group ID
+          harambeeId: selectedHarambee.id, // Pass specific ID
+          orderNumber: selectedHarambee.order_number 
+        },
       });
       if (error) throw error;
-      toast({ title: "STK Push Sent", description: "Check your phone" });
+      toast({ title: "STK Push Sent", description: "Enter pin on your phone" });
       setContributeOpen(false);
       setContributeAmount('');
     } catch (error: any) {
@@ -208,57 +233,57 @@ export function ChamaHarambee({ groupId, group, members, myRole }: Props) {
 
   return (
     <div className="space-y-4">
-      {/* Create Button for leaders */}
       {isLeader && (
-        <Button onClick={() => setCreateOpen(true)} className="w-full gap-2">
-          <Plus size={16} /> Create Harambee
+        <Button onClick={() => setCreateOpen(true)} className="w-full gap-2 font-bold shadow-md">
+          <Plus size={18} /> Create Harambee
         </Button>
       )}
 
       {loading ? (
-        <div className="text-center py-8 text-muted-foreground text-sm">Loading harambees...</div>
+        <div className="text-center py-8 text-slate-500 text-sm">Loading harambees...</div>
       ) : harambees.length === 0 ? (
-        <div className="text-center py-12">
-          <HandCoins size={32} className="mx-auto mb-3 text-muted-foreground" />
-          <p className="font-semibold text-sm mb-1">No Harambees Yet</p>
-          <p className="text-xs text-muted-foreground">
-            {isLeader ? 'Create a harambee to start fundraising for a cause.' : 'No harambees have been created yet.'}
-          </p>
+        <div className="text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+          <HandCoins size={40} className="mx-auto mb-3 text-slate-300" />
+          <p className="font-bold text-slate-600 text-sm">No Harambees Yet</p>
+          <p className="text-xs text-slate-400">Causes requiring fundraising will appear here.</p>
         </div>
       ) : (
         harambees.map(h => {
           const progress = getProgress(h.raised_amount, h.target_amount);
           return (
-            <Card key={h.id} className="p-4">
-              <div className="flex justify-between">
-                <div>
-                  <h4 className="font-semibold text-sm">{h.beneficiary_name || h.title}</h4>
-                  <p className="text-xs text-muted-foreground">{h.description}</p>
-                  <p className="text-xs font-mono">{h.order_number}</p>
+            <Card key={h.id} className="p-4 border-slate-200 shadow-sm overflow-hidden">
+              <div className="flex justify-between items-start">
+                <div className="space-y-1">
+                  <h4 className="font-black text-slate-900 text-sm uppercase tracking-tight">{h.beneficiary_name || h.title}</h4>
+                  <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">{h.description}</p>
+                  <p className="text-[10px] font-black text-primary bg-primary/5 px-2 py-0.5 rounded w-fit">{h.order_number}</p>
                 </div>
-                <span className={cn("text-xs px-2 py-1 rounded-full h-fit", h.status === "active" ? "bg-success/10 text-success" : "bg-muted text-muted-foreground")}>
+                <span className={cn("text-[10px] font-black uppercase px-2 py-1 rounded-full", h.status === "active" ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500")}>
                   {h.status}
                 </span>
               </div>
-              <div className="mt-2">
-                <div className="flex justify-between text-xs">
-                  <span>{formatKES(h.raised_amount)}</span>
-                  <span>{formatKES(h.target_amount)}</span>
+
+              <div className="mt-4 p-3 bg-slate-50 rounded-lg border border-slate-100">
+                <div className="flex justify-between text-[11px] mb-1.5">
+                  <span className="font-black text-slate-900">Raised: {formatKES(h.raised_amount)}</span>
+                  <span className="text-slate-400 font-bold">Goal: {formatKES(h.target_amount)}</span>
                 </div>
-                <Progress value={progress} className="h-2 mt-1" />
+                <Progress value={progress} className="h-2 bg-slate-200" />
+                <p className="text-right text-[10px] mt-1 font-bold text-primary">{Math.round(progress)}% Complete</p>
               </div>
-              <div className="flex gap-2 mt-3">
-                <Button size="sm" variant="outline" onClick={() => handleCopyLink(h)}>
-                  {copiedId === h.id ? <Check size={14} /> : <Copy size={14} />}
+
+              <div className="flex gap-2 mt-4">
+                <Button size="sm" variant="outline" className="flex-1 font-bold h-9" onClick={() => handleCopyLink(h)}>
+                  {copiedId === h.id ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
                 </Button>
-                <Button size="sm" variant="outline" onClick={() => handleShare(h)}>
+                <Button size="sm" variant="outline" className="flex-1 font-bold h-9" onClick={() => handleShare(h)}>
                   <Share2 size={14} />
                 </Button>
-                <Button size="sm" onClick={() => { setSelectedHarambee(h); setDetailOpen(true); fetchContributions(h.id); }}>
+                <Button size="sm" variant="secondary" className="flex-1 font-bold h-9" onClick={() => { setSelectedHarambee(h); setDetailOpen(true); fetchContributions(h.id); }}>
                   <Eye size={14} className="mr-1" /> View
                 </Button>
                 {h.status === 'active' && (
-                  <Button size="sm" variant="gold" onClick={() => { setSelectedHarambee(h); setContributeOpen(true); }}>
+                  <Button size="sm" className="flex-[1.5] font-black h-9 bg-slate-900 text-white" onClick={() => { setSelectedHarambee(h); setContributeOpen(true); }}>
                     Contribute
                   </Button>
                 )}
@@ -268,122 +293,105 @@ export function ChamaHarambee({ groupId, group, members, myRole }: Props) {
         })
       )}
 
-      {/* Create Harambee Dialog */}
+      {/* Create Harambee Modal */}
       <Dialog open={createOpen} onOpenChange={setCreateOpen}>
-        <DialogContent>
-          <DialogHeader><DialogTitle className="flex items-center gap-2"><HandCoins size={18} /> Create Harambee</DialogTitle></DialogHeader>
-          <div className="space-y-4 mt-2">
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader><DialogTitle className="flex items-center gap-2 text-xl font-black"><HandCoins /> NEW HARAMBEE</DialogTitle></DialogHeader>
+          <div className="space-y-4 pt-4">
             <div>
-              <Label>Beneficiary Name *</Label>
-              <Input value={beneficiary} onChange={e => setBeneficiary(e.target.value)} placeholder="Who is this for?" className="mt-1" />
+              <Label className="text-[10px] font-black uppercase text-slate-500">Beneficiary Name</Label>
+              <Input value={beneficiary} onChange={e => setBeneficiary(e.target.value)} placeholder="e.g. John Doe Hospital Fund" className="mt-1 h-11 font-bold" />
             </div>
             <div>
-              <Label>Reason / Description *</Label>
-              <Textarea value={reason} onChange={e => setReason(e.target.value)} placeholder="Describe the purpose..." className="mt-1" />
+              <Label className="text-[10px] font-black uppercase text-slate-500">Reason / Description</Label>
+              <Textarea value={reason} onChange={e => setReason(e.target.value)} placeholder="Provide context for contributors..." className="mt-1 font-medium" />
             </div>
             <div>
-              <Label>Target Amount (KES) *</Label>
-              <Input type="number" value={targetAmount} onChange={e => setTargetAmount(e.target.value)} placeholder="e.g. 50000" className="mt-1" />
+              <Label className="text-[10px] font-black uppercase text-slate-500">Target Amount (KES)</Label>
+              <Input type="number" value={targetAmount} onChange={e => setTargetAmount(e.target.value)} placeholder="0.00" className="mt-1 h-11 font-black text-lg" />
             </div>
-            <div>
-              <Label>Deadline (Optional)</Label>
-              <Input type="date" value={deadline} onChange={e => setDeadline(e.target.value)} className="mt-1" />
-            </div>
-            <div className="flex items-center gap-3">
-              <Switch checked={isPublic} onCheckedChange={setIsPublic} />
-              <Label>Make public (visible outside group)</Label>
-            </div>
-            <div>
-              <Label>Images (max 3)</Label>
-              <div className="flex gap-2 mt-1">
-                {imagePreviews.map((p, i) => (
-                  <div key={i} className="relative w-16 h-16">
-                    <img src={p} alt="" className="w-full h-full rounded-lg object-cover" />
-                    <button onClick={() => removeImage(i)} className="absolute -top-1 -right-1 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center">
-                      <X size={10} />
-                    </button>
-                  </div>
-                ))}
-                {imageFiles.length < 3 && (
-                  <>
-                    <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} />
-                    <button onClick={() => fileInputRef.current?.click()} className="w-16 h-16 rounded-lg border-2 border-dashed border-border flex items-center justify-center hover:border-primary transition-colors">
-                      <ImagePlus size={20} className="text-muted-foreground" />
-                    </button>
-                  </>
-                )}
+            <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
+              <div className="space-y-0.5">
+                <Label className="text-xs font-bold">Public Harambee</Label>
+                <p className="text-[10px] text-slate-500">Allow non-members to contribute via link</p>
               </div>
+              <Switch checked={isPublic} onCheckedChange={setIsPublic} />
             </div>
-            <Button onClick={handleCreate} disabled={creating || !beneficiary.trim() || !reason.trim() || !targetAmount} className="w-full">
-              {creating ? <><Loader2 size={14} className="animate-spin mr-2" /> Creating...</> : 'Create Harambee'}
+            <Button onClick={handleCreate} disabled={creating} className="w-full h-12 text-md font-black shadow-lg">
+              {creating ? <Loader2 className="animate-spin" /> : 'LAUNCH HARAMBEE'}
             </Button>
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* View Detail Dialog */}
+      {/* Contribution Detail Modal */}
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
         <DialogContent className="max-w-md">
-          <DialogHeader><DialogTitle>Harambee Details</DialogTitle></DialogHeader>
+          <DialogHeader><DialogTitle className="font-black uppercase tracking-tight">Harambee Status</DialogTitle></DialogHeader>
           {selectedHarambee && (
-            <div className="space-y-4">
-              <div className="text-center">
-                <p className="text-lg font-bold">{selectedHarambee.beneficiary_name || selectedHarambee.title}</p>
-                <p className="text-xs text-muted-foreground">{selectedHarambee.description}</p>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="text-center p-3 rounded-lg bg-muted/40">
-                  <p className="text-xs text-muted-foreground">Raised</p>
-                  <p className="font-bold text-primary">{formatKES(selectedHarambee.raised_amount)}</p>
-                </div>
-                <div className="text-center p-3 rounded-lg bg-muted/40">
-                  <p className="text-xs text-muted-foreground">Target</p>
-                  <p className="font-bold">{formatKES(selectedHarambee.target_amount)}</p>
-                </div>
-              </div>
-              <Progress value={getProgress(selectedHarambee.raised_amount, selectedHarambee.target_amount)} className="h-2" />
-              <div>
-                <h4 className="text-xs font-bold uppercase text-muted-foreground mb-2">Contributions ({contributions.length})</h4>
-                {contributions.length === 0 ? (
-                  <p className="text-xs text-muted-foreground text-center py-4">No contributions yet</p>
-                ) : (
-                  <div className="space-y-1.5 max-h-48 overflow-y-auto">
-                    {contributions.map(c => (
-                      <div key={c.id} className="flex justify-between p-2 rounded-lg bg-muted/30 text-xs">
-                        <span>{c.contributor_name || members.find(m => m.user_id === c.user_id)?.profile?.full_name || 'Anonymous'}</span>
-                        <span className="font-bold">{formatKES(c.amount)}</span>
-                      </div>
-                    ))}
+            <div className="space-y-5">
+              <div className="bg-slate-900 p-4 rounded-xl text-white">
+                <p className="text-[10px] font-black uppercase opacity-60">Beneficiary</p>
+                <p className="text-lg font-black">{selectedHarambee.beneficiary_name}</p>
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <div>
+                    <p className="text-[9px] font-black opacity-60 uppercase">Raised</p>
+                    <p className="text-xl font-black text-emerald-400">{formatKES(selectedHarambee.raised_amount)}</p>
                   </div>
-                )}
+                  <div>
+                    <p className="text-[9px] font-black opacity-60 uppercase">Goal</p>
+                    <p className="text-xl font-black">{formatKES(selectedHarambee.target_amount)}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <h4 className="text-[10px] font-black uppercase text-slate-400 flex justify-between">
+                  <span>Recent Contributors</span>
+                  <span>{contributions.length} People</span>
+                </h4>
+                <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1">
+                  {contributions.length === 0 ? (
+                    <p className="text-xs text-center py-6 text-slate-400 bg-slate-50 rounded-lg border border-dashed italic">No contributions yet. Be the first!</p>
+                  ) : (
+                    contributions.map(c => (
+                      <div key={c.id} className="flex justify-between items-center p-3 rounded-xl bg-slate-50 border border-slate-100">
+                        <span className="text-xs font-bold text-slate-900">{c.contributor_name || 'Member'}</span>
+                        <span className="text-xs font-black text-primary">{formatKES(c.amount)}</span>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             </div>
           )}
         </DialogContent>
       </Dialog>
 
-      {/* Contribute Dialog */}
+      {/* Contribute Payment Modal */}
       <Dialog open={contributeOpen} onOpenChange={setContributeOpen}>
         <DialogContent>
-          <DialogHeader><DialogTitle>Contribute to Harambee</DialogTitle></DialogHeader>
-          <div className="space-y-4 mt-2">
-            {selectedHarambee && (
-              <div className="p-3 rounded-lg bg-muted/40 text-center">
-                <p className="text-xs text-muted-foreground">Contributing to</p>
-                <p className="font-semibold">{selectedHarambee.beneficiary_name || selectedHarambee.title}</p>
+          <DialogHeader><DialogTitle className="text-xl font-black uppercase">CONTRIBUTE</DialogTitle></DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="p-4 rounded-xl bg-blue-50 border border-blue-100 flex items-center gap-3">
+              <div className="bg-blue-600 p-2 rounded-lg text-white"><HandCoins size={20}/></div>
+              <div>
+                <p className="text-[10px] font-black text-blue-600 uppercase">Supporting</p>
+                <p className="text-sm font-bold text-blue-900">{selectedHarambee?.beneficiary_name}</p>
               </div>
-            )}
-            <div>
-              <Label>Amount (KES)</Label>
-              <Input type="number" value={contributeAmount} onChange={e => setContributeAmount(e.target.value)} placeholder="Enter amount" className="mt-1" />
             </div>
             <div>
-              <Label>M-Pesa Phone</Label>
-              <Input value={contributePhone} onChange={e => setContributePhone(e.target.value)} placeholder="0712345678" className="mt-1" />
+              <Label className="text-[10px] font-black uppercase text-slate-500">Amount (KES)</Label>
+              <Input type="number" value={contributeAmount} onChange={e => setContributeAmount(e.target.value)} placeholder="Enter amount" className="mt-1 h-12 text-xl font-black" />
             </div>
-            <Button onClick={handleContribute} disabled={contributing} className="w-full">
-              {contributing ? <><Loader2 size={14} className="animate-spin mr-2" /> Processing...</> : 'Pay via M-Pesa'}
+            <div>
+              <Label className="text-[10px] font-black uppercase text-slate-500">M-Pesa Number</Label>
+              <Input value={contributePhone} onChange={e => setContributePhone(e.target.value)} placeholder="07xxxxxxxx" className="mt-1 h-12 font-bold" />
+            </div>
+            <Button onClick={handleContribute} disabled={contributing} className="w-full h-14 text-lg font-black shadow-xl bg-emerald-600 hover:bg-emerald-700">
+              {contributing ? <Loader2 className="animate-spin mr-2" /> : 'SEND CONTRIBUTION'}
             </Button>
+            <p className="text-[10px] text-center text-slate-400 font-medium italic">An M-Pesa prompt will be sent to your phone</p>
           </div>
         </DialogContent>
       </Dialog>
