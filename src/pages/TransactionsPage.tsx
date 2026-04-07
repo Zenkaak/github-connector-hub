@@ -99,6 +99,21 @@ export default function TransactionsPage() {
     if (user) fetchTransactions();
   }, [user]);
 
+  // Realtime subscription for instant deposit reflection
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel('stk-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'stk_transactions', filter: `user_id=eq.${user.id}` }, () => {
+        fetchTransactions();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'wallet_transactions', filter: `user_id=eq.${user.id}` }, () => {
+        fetchTransactions();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
+
   const fetchTransactions = async () => {
     try {
       const [stkRes, trRes, reqRes, walletRes] = await Promise.all([
