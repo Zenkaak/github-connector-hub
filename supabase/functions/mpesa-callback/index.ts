@@ -34,7 +34,6 @@ Deno.serve(async (req) => {
 
     if (findError || !txn) {
       console.error("Transaction not found for CheckoutRequestID:", CheckoutRequestID);
-      // We return 200/Accepted to Safaricom to stop retries, even if we can't find it locally
       return new Response(JSON.stringify({ ResultCode: 0, ResultDesc: "Accepted" }), {
         headers: { "Content-Type": "application/json" },
       });
@@ -63,7 +62,6 @@ Deno.serve(async (req) => {
         .eq("id", txn.id);
 
       const purpose = txn.purpose || "activation";
-      console.log(`Processing successful payment. Purpose: ${purpose}, Amount: ${txn.amount}`);
 
       // --- PURPOSE LOGIC: CHAMA SAVINGS ---
       if (purpose === "chama_savings" && txn.group_id) {
@@ -98,39 +96,45 @@ Deno.serve(async (req) => {
         }
       }
 
-      // --- PURPOSE LOGIC: HARAMBEE (FIXED) ---
+      // --- PURPOSE LOGIC: HARAMBEE (STRICT FIX) ---
       if (purpose === "harambee") {
-        const targetHarambeeId = txn.harambee_id || txn.group_id;
+        // We use the harambee_id that was saved during the STK initiation
+        const targetHarambeeId = txn.harambee_id;
         
         if (targetHarambeeId) {
+          // 1. Record the individual contribution
           await supabase.from("chama_harambee_contributions").insert({
             harambee_id: targetHarambeeId,
             user_id: txn.user_id,
             amount: txn.amount,
             stk_reference: txn.reference,
+            contributor_name: "Member" // Optional: You can fetch user name here if needed
           });
           
+          // 2. Fetch current amount
           const { data: harambee } = await supabase
             .from("chama_harambees")
             .select("raised_amount")
             .eq("id", targetHarambeeId)
             .single();
             
+          // 3. Update the total raised amount in the Harambee table
           if (harambee) {
             await supabase
               .from("chama_harambees")
               .update({ raised_amount: (harambee.raised_amount || 0) + txn.amount })
               .eq("id", targetHarambeeId);
           }
+        } else {
+          console.error("Harambee contribution failed: No harambee_id found in transaction record.");
         }
       }
 
       // --- PURPOSE LOGIC: LOAN REPAYMENT ---
       if (purpose === "loan_repayment") {
-        // Use disbursement_id if available, otherwise find the active one
         const targetDisbId = txn.disbursement_id;
-        
         let disbData = null;
+
         if (targetDisbId) {
           const { data } = await supabase.from("loan_disbursements").select("*").eq("id", targetDisbId).single();
           disbData = data;
@@ -154,14 +158,6 @@ Deno.serve(async (req) => {
             .update({ outstanding_balance: newBalance, status: newStatus })
             .eq("id", disbData.id);
 
-          await supabase.from("wallet_transactions").insert({
-            user_id: txn.user_id,
-            type: "debit",
-            amount: txn.amount,
-            description: `Loan repayment: ${mpesaReceipt}`,
-            reference_id: txn.reference,
-          });
-
           if (newStatus === "paid") {
             await supabase.from("loan_applications").update({ status: "paid" }).eq("id", disbData.loan_id);
           }
@@ -169,7 +165,7 @@ Deno.serve(async (req) => {
       }
 
       // --- PURPOSE LOGIC: WALLET / ACTIVATION ---
-      if (purpose === "activation" || purpose === "wallet_deposit" || purpose === "chama_joining_fee") {
+      if (["activation", "wallet_deposit", "chama_joining_fee"].includes(purpose)) {
         const { data: wallet } = await supabase
           .from("wallets")
           .select("balance")
@@ -192,7 +188,7 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Global Notification for Success
+      // Notification
       await supabase.from("notifications").insert({
         user_id: txn.user_id,
         title: "Payment Confirmed ✅",
@@ -215,7 +211,7 @@ Deno.serve(async (req) => {
       await supabase.from("notifications").insert({
         user_id: txn.user_id,
         title: "Payment Failed ❌",
-        message: `Transaction for KES ${txn.amount} failed: ${ResultDesc}`,
+        message: `Transaction failed: ${ResultDesc}`,
         type: "payment",
       });
     }
