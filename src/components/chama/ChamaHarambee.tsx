@@ -240,7 +240,7 @@ export function ChamaHarambee({ groupId, group, members, myRole }: Props) {
           userId: user.id, 
           purpose: "harambee", 
           groupId: groupId, 
-          harambee_id: selectedHarambee.id, // Fixed key name
+          harambee_id: selectedHarambee.id, 
           orderNumber: selectedHarambee.order_number 
         },
       });
