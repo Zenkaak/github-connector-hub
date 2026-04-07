@@ -83,21 +83,48 @@ export function ChamaHarambee({ groupId, group, members, myRole }: Props) {
     if (data) setContributions(data);
   };
 
-  // --- REALTIME SUBSCRIPTION LOGIC ---
+  // --- REWRITTEN REALTIME SUBSCRIPTION ---
   useEffect(() => {
     fetchHarambees();
 
-    // Listen for updates to harambee raised amounts and new contributions
     const channel = supabase
-      .channel('harambee_updates')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'chama_harambees' }, () => {
-        fetchHarambees();
-      })
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chama_harambee_contributions' }, (payload) => {
-        if (selectedHarambee && payload.new.harambee_id === selectedHarambee.id) {
-          fetchContributions(selectedHarambee.id);
+      .channel(`harambee_realtime_${groupId}`)
+      .on(
+        'postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'chama_harambees',
+          filter: `group_id=eq.${groupId}` 
+        }, 
+        (payload) => {
+          console.log("Realtime Harambee Change:", payload);
+          if (payload.eventType === 'UPDATE') {
+            setHarambees(current => 
+              current.map(h => h.id === payload.new.id ? payload.new : h)
+            );
+            // If the user is currently viewing this specific harambee, update it in the modal too
+            if (selectedHarambee?.id === payload.new.id) {
+              setSelectedHarambee(payload.new);
+            }
+          } else {
+            fetchHarambees();
+          }
         }
-      })
+      )
+      .on(
+        'postgres_changes', 
+        { 
+          event: 'INSERT', 
+          schema: 'public', 
+          table: 'chama_harambee_contributions' 
+        }, 
+        (payload) => {
+          if (selectedHarambee && payload.new.harambee_id === selectedHarambee.id) {
+            fetchContributions(selectedHarambee.id);
+          }
+        }
+      )
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
@@ -200,12 +227,13 @@ export function ChamaHarambee({ groupId, group, members, myRole }: Props) {
     }
   };
 
+  // --- UPDATED CONTRIBUTE HANDLER WITH harambee_id ---
   const handleContribute = async () => {
     if (!user || !selectedHarambee) return;
     const amount = Number(contributeAmount);
     if (!amount || amount <= 0) return toast({ title: "Invalid amount", variant: "destructive" });
     const phone = contributePhone.trim();
-    if (!/^07\d{8}$/.test(phone)) return toast({ title: "Invalid phone", variant: "destructive" });
+    if (!/^07\d{8}$|^254\d{9}$/.test(phone)) return toast({ title: "Invalid phone number", variant: "destructive" });
 
     setContributing(true);
     try {
@@ -215,13 +243,13 @@ export function ChamaHarambee({ groupId, group, members, myRole }: Props) {
           amount, 
           userId: user.id, 
           purpose: "harambee", 
-          groupId: groupId, // Using the group ID
-          harambeeId: selectedHarambee.id, // Pass specific ID
+          groupId: groupId, 
+          harambee_id: selectedHarambee.id, // Fixed key name for database alignment
           orderNumber: selectedHarambee.order_number 
         },
       });
       if (error) throw error;
-      toast({ title: "STK Push Sent", description: "Enter pin on your phone" });
+      toast({ title: "STK Push Sent", description: "Enter your M-Pesa PIN when prompted" });
       setContributeOpen(false);
       setContributeAmount('');
     } catch (error: any) {
@@ -398,3 +426,4 @@ export function ChamaHarambee({ groupId, group, members, myRole }: Props) {
     </div>
   );
 }
+ 
