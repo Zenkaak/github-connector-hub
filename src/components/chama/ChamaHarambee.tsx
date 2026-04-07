@@ -251,7 +251,7 @@ export function ChamaHarambee({ groupId, group, members, myRole }: Props) {
           userId: user.id, 
           purpose: "harambee", 
           groupId: groupId, 
-          harambee_id: selectedHarambee.id, // Explicit UUID
+          harambee_id: selectedHarambee.id, // THE UUID FIX
           orderNumber: selectedHarambee.order_number 
         },
       });
