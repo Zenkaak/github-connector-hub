@@ -13,6 +13,10 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // ✅ Read and log raw request body
+    const body = await req.json();
+    console.log("RAW BODY:", body);
+
     const { 
       phone, 
       amount, 
@@ -20,10 +24,10 @@ Deno.serve(async (req) => {
       purpose, 
       groupId, 
       savingsId, 
-      harambee_id, // This matches the key we updated in your React component
+      harambee_id,
       loanId, 
       disbursementId 
-    } = await req.json();
+    } = body;
 
     // Validation
     if (!phone || !amount || !userId) {
@@ -66,7 +70,7 @@ Deno.serve(async (req) => {
 
     const accessToken = tokenData.access_token;
 
-    // 4. Generate M-Pesa Timestamp & Password
+    // 4. Generate timestamp & password
     const now = new Date();
     const timestamp =
       now.getFullYear().toString() +
@@ -78,7 +82,7 @@ Deno.serve(async (req) => {
 
     const password = btoa(`${shortcode}${passkey}${timestamp}`);
 
-    // 5. Set Reference Prefix based on transaction purpose
+    // 5. Reference prefix
     const prefixMap: Record<string, string> = {
       chama_savings: "CHAMA_",
       personal_savings: "PSAV_",
@@ -88,13 +92,14 @@ Deno.serve(async (req) => {
       wallet_deposit: "DEP_",
       chama_joining_fee: "CJFEE_",
     };
+
     const prefix = prefixMap[purpose] || "PAY";
     const reference = `${prefix}${Date.now()}${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const callbackUrl = `${supabaseUrl}/functions/v1/mpesa-callback`;
 
-    // 6. Prepare M-Pesa STK Push Body
+    // 6. STK Push body
     const stkBody = {
       BusinessShortCode: shortcode,
       Password: password,
@@ -111,7 +116,7 @@ Deno.serve(async (req) => {
 
     console.log("STK Push request:", JSON.stringify({ ...stkBody, Password: "[REDACTED]" }));
 
-    // 7. Send Request to Safaricom
+    // 7. Send STK request
     const stkRes = await fetch(
       "https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
       {
@@ -138,13 +143,13 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 8. Initialize Supabase Client
+    // 8. Supabase client
     const supabase = createClient(
       supabaseUrl,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // 9. Save transaction with ALL metadata IDs (Crucial Step)
+    // 9. Insert transaction
     const { error: insertError } = await supabase.from("stk_transactions").insert({
       user_id: userId,
       phone: formattedPhone,
@@ -156,14 +161,13 @@ Deno.serve(async (req) => {
       purpose: purpose || "activation",
       group_id: groupId || null,
       savings_id: savingsId || null,
-      harambee_id: harambee_id || null, // Corrected variable name from extraction
+      harambee_id: harambee_id || null,
       loan_id: loanId || null,
       disbursement_id: disbursementId || null
     });
 
     if (insertError) {
       console.error("Supabase insert error:", insertError);
-      // We don't return error here because the M-Pesa prompt has already reached the user's phone
     }
 
     return new Response(
@@ -175,6 +179,7 @@ Deno.serve(async (req) => {
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
+
   } catch (error: any) {
     console.error("STK Push error:", error);
     return new Response(
@@ -182,5 +187,4 @@ Deno.serve(async (req) => {
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
-});
- 
+}); 
