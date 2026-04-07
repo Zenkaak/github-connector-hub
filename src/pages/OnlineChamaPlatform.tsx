@@ -5,7 +5,7 @@ export default function OnlineChamaPlatform() {
       <h1>Online Chama Platform for Kenyan Investment Groups</h1>
 
       <p>
-        Datavend Ventures is an all-in-one digital platform for
+        Dasnet Ventures is an all-in-one digital platform for
         managing chamas online.
       </p>
 

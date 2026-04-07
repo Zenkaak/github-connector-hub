@@ -5,7 +5,7 @@ export default function ChamaFinancialManagement() {
       <h1>Chama Financial Management Platform</h1>
 
       <p>
-        Datavend provides tools for managing finances in Kenyan
+        Dasnet provides tools for managing finances in Kenyan
         investment groups and savings organizations.
       </p>
 

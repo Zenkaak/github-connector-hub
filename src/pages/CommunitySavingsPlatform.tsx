@@ -6,7 +6,7 @@ export default function CommunitySavingsPlatform() {
 
       <p>
         Community savings groups are a major part of financial
-        inclusion in Kenya. Datavend helps groups manage their
+        inclusion in Kenya. Dasnet helps groups manage their
         savings transparently and digitally.
       </p>
 

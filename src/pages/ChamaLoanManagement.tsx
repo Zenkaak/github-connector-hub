@@ -5,7 +5,7 @@ export default function ChamaLoanManagement() {
       <h1>Chama Loan Management Software</h1>
 
       <p>
-        Datavend provides a loan management system designed specifically
+        Dasnet provides a loan management system designed specifically
         for Kenyan chamas and investment groups.
       </p>
 

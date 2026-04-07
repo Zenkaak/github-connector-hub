@@ -42,7 +42,7 @@ export function useInstallPrompt() {
   return { canInstall, isInstalled, promptInstall };
 }
 
-const INSTALL_TOAST_KEY = 'datavend-install-toast-last';
+const INSTALL_TOAST_KEY = 'dasnet-install-toast-last';
 const TOAST_INTERVAL_MS = 30 * 60 * 1000; // 30 minutes
 
 export function shouldShowInstallToast(): boolean {

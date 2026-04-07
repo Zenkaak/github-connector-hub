@@ -5,7 +5,7 @@ export default function HarambeeDonationPlatform() {
       <h1>Harambee Donation Platform in Kenya</h1>
 
       <p>
-        Datavend enables communities to organize and manage Harambee
+        Dasnet enables communities to organize and manage Harambee
         donation campaigns online with full transparency.
       </p>
 

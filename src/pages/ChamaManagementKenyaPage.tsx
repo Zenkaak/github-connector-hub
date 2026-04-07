@@ -5,7 +5,7 @@ export default function ChamaManagementKenyaPage() {
       <h1>Digital Chama Management Platform in Kenya</h1>
 
       <p>
-        Datavend Ventures provides a modern digital platform for Kenyan
+        Dasnet Ventures provides a modern digital platform for Kenyan
         chamas and savings groups to manage contributions, track investments,
         and run transparent Harambee fundraising campaigns online.
       </p>
@@ -14,11 +14,11 @@ export default function ChamaManagementKenyaPage() {
 
       <p>
         Many investment groups in Kenya still track member contributions
-        manually. Datavend simplifies this by providing secure records,
+        manually. Dasnet simplifies this by providing secure records,
         automated reports, and integrated mobile money support.
       </p>
 
-      <h2>Features of Datavend</h2>
+      <h2>Features of Dasnet</h2>
 
       <ul>
         <li>Track member contributions</li>
@@ -31,7 +31,7 @@ export default function ChamaManagementKenyaPage() {
       <h2>Start Your Digital Chama Today</h2>
 
       <p>
-        Create your chama on Datavend Ventures and manage your group finances
+        Create your chama on Dasnet Ventures and manage your group finances
         securely from anywhere in Kenya.
       </p>
 

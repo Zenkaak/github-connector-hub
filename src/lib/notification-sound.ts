@@ -5,7 +5,7 @@
 
 export type NotificationSoundType = 'chime' | 'bell' | 'pop' | 'ding' | 'melody';
 
-const STORAGE_KEY = 'datavend-notification-sound';
+const STORAGE_KEY = 'dasnet-notification-sound';
 
 export function getSelectedSound(): NotificationSoundType {
   try {

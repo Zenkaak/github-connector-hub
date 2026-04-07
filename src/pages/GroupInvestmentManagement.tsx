@@ -6,7 +6,7 @@ export default function GroupInvestmentManagement() {
 
       <p>
         Many Kenyan chamas invest collectively in property,
-        agriculture, and businesses. Datavend helps manage
+        agriculture, and businesses. Dasnet helps manage
         these investments digitally.
       </p>
 

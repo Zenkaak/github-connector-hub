@@ -5,7 +5,7 @@ export default function GroupSavingsAppKenya() {
       <h1>Group Savings App in Kenya</h1>
 
       <p>
-        Datavend Ventures is a modern group savings application designed
+        Dasnet Ventures is a modern group savings application designed
         for Kenyan chamas and community investment groups.
       </p>
 

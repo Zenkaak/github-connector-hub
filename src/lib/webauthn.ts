@@ -3,7 +3,7 @@
  * Uses the Web Authentication API for biometric login.
  */
 
-const CREDENTIAL_KEY = 'datavend-webauthn-cred';
+const CREDENTIAL_KEY = 'dasnet-webauthn-cred';
 
 type SavedCredential = {
   credentialId: string;
@@ -84,7 +84,7 @@ export async function registerFingerprint(userId: string, email: string, passwor
       publicKey: {
         challenge,
         rp: {
-          name: 'DataVend Ventures',
+          name: 'Dasnet Ventures',
           id: rpId,
         },
         user: {

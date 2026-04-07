@@ -6,7 +6,7 @@ export default function SavingsCreditGroupsKenya() {
 
       <p>
         Savings and credit groups play an important role in financial
-        inclusion across Kenya. Datavend offers digital tools to help
+        inclusion across Kenya. Dasnet offers digital tools to help
         these groups manage funds securely.
       </p>
 

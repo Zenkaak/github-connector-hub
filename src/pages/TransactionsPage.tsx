@@ -492,7 +492,7 @@ export default function TransactionsPage() {
                 <div className="text-base font-semibold flex items-center gap-2">
                   <Send size={16} className="text-primary" /> Wallet Transfers
                 </div>
-                <p className="text-xs text-muted-foreground">Money sent & received between DataVend wallets</p>
+                <p className="text-xs text-muted-foreground">Money sent & received between Dasnet wallets</p>
               </CardHeader>
               <CardContent>
                 {transfers.length === 0 ? (

@@ -5,7 +5,7 @@ export default function ChamaContributionApp() {
       <h1>Chama Contribution App in Kenya</h1>
 
       <p>
-        Datavend simplifies contribution tracking for savings groups
+        Dasnet simplifies contribution tracking for savings groups
         with a modern digital contribution management system.
       </p>
 

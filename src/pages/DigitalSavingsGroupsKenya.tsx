@@ -6,7 +6,7 @@ export default function DigitalSavingsGroupsKenya() {
 
       <p>
         Savings groups are an important financial system across Kenya.
-        Datavend helps groups manage their savings digitally.
+        Dasnet helps groups manage their savings digitally.
       </p>
 
       <h2>Manage Contributions Easily</h2>

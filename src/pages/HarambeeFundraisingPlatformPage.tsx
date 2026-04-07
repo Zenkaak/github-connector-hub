@@ -5,7 +5,7 @@ export default function HarambeeFundraisingPlatformPage() {
       <h1>Online Harambee Fundraising Platform in Kenya</h1>
 
       <p>
-        Datavend Ventures provides a secure digital platform for running
+        Dasnet Ventures provides a secure digital platform for running
         Harambee fundraising campaigns in Kenya. Communities, families,
         and organizations can raise funds transparently online.
       </p>
@@ -14,7 +14,7 @@ export default function HarambeeFundraisingPlatformPage() {
 
       <p>
         Traditional Harambee events require physical gatherings and
-        manual accounting. Datavend allows contributors to send
+        manual accounting. Dasnet allows contributors to send
         donations online and track progress instantly.
       </p>
 

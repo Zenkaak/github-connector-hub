@@ -5,7 +5,7 @@ export default function CommunityLoansKenyaPage() {
         Community Loans in Kenya
       </h1>
       <p className="mt-4 text-lg">
-        Datavend helps Chamas manage community loans, savings,
+        Dasnet helps Chamas manage community loans, savings,
         and financial collaboration across Kenya.
       </p>
     </div>
