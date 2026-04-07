@@ -150,6 +150,7 @@ export function ChamaHarambee({ groupId, group, members, myRole }: Props) {
       const { error } = await supabase.from('chama_harambees').insert({
         group_id: groupId,
         created_by: user.id,
+        title: beneficiary.trim(),
         beneficiary_name: beneficiary.trim(),
         description: reason.trim(),
         target_amount: target,
