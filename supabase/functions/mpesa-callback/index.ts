@@ -1,143 +1,169 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
 Deno.serve(async (req) => {
-  // Only allow POST requests from Safaricom
   if (req.method !== "POST") {
     return new Response("Method not allowed", { status: 405 });
   }
 
   try {
-    const body = await req.json();
+    // -------------------------
+    // ✅ SAFE BODY PARSING
+    // -------------------------
+    let body: any;
+    try {
+      body = await req.json();
+    } catch {
+      console.error("Invalid JSON body");
+      return jsonResponse({ ResultCode: 0, ResultDesc: "Accepted" });
+    }
+
     console.log("M-Pesa callback received:", JSON.stringify(body));
 
     const callback = body?.Body?.stkCallback;
     if (!callback) {
-      console.error("Invalid callback body");
-      return new Response(JSON.stringify({ ResultCode: 0, ResultDesc: "Accepted" }), {
-        headers: { "Content-Type": "application/json" },
-      });
+      console.error("Invalid callback structure");
+      return jsonResponse({ ResultCode: 0, ResultDesc: "Accepted" });
     }
 
     const { CheckoutRequestID, ResultCode, ResultDesc } = callback;
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
+    if (!CheckoutRequestID) {
+      console.error("Missing CheckoutRequestID");
+      return jsonResponse({ ResultCode: 0, ResultDesc: "Accepted" });
+    }
 
-    // 1. Find the pending transaction in our database
+    // -------------------------
+    // ✅ ENV VALIDATION
+    // -------------------------
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+    if (!supabaseUrl || !serviceKey) {
+      throw new Error("Missing Supabase environment variables");
+    }
+
+    const supabase = createClient(supabaseUrl, serviceKey);
+
+    // -------------------------
+    // ✅ FETCH TRANSACTION
+    // -------------------------
     const { data: txn, error: findError } = await supabase
       .from("stk_transactions")
       .select("*")
       .eq("checkout_request_id", CheckoutRequestID)
-      .single();
+      .maybeSingle();
 
     if (findError || !txn) {
-      console.error("Transaction not found for CheckoutRequestID:", CheckoutRequestID);
-      return new Response(JSON.stringify({ ResultCode: 0, ResultDesc: "Accepted" }), {
-        headers: { "Content-Type": "application/json" },
-      });
+      console.error("Transaction not found:", CheckoutRequestID);
+      return jsonResponse({ ResultCode: 0, ResultDesc: "Accepted" });
     }
 
+    // -------------------------
+    // ✅ IDEMPOTENCY GUARD
+    // -------------------------
+    if (txn.status === "success" || txn.status === "failed") {
+      console.log("Transaction already processed:", txn.id);
+      return jsonResponse({ ResultCode: 0, ResultDesc: "Accepted" });
+    }
+
+    // -------------------------
+    // SUCCESS FLOW
+    // -------------------------
     if (ResultCode === 0) {
-      // SUCCESS CASE
-      let mpesaReceipt = "";
-      const metadata = callback.CallbackMetadata?.Item || [];
-      for (const item of metadata) {
-        if (item.Name === "MpesaReceiptNumber") {
-          mpesaReceipt = item.Value;
+      const metadataItems = callback?.CallbackMetadata?.Item || [];
+
+      const mpesaReceipt =
+        metadataItems.find((i: any) => i.Name === "MpesaReceiptNumber")?.Value ||
+        null;
+
+      const amount =
+        metadataItems.find((i: any) => i.Name === "Amount")?.Value ||
+        txn.amount;
+
+      // Update transaction first
+      await supabase.from("stk_transactions").update({
+        status: "success",
+        result_code: String(ResultCode),
+        result_desc: ResultDesc,
+        mpesa_receipt: mpesaReceipt,
+        updated_at: new Date().toISOString(),
+      }).eq("id", txn.id);
+
+      const purpose = txn.purpose;
+
+      // -------------------------
+      // HARAMBEE
+      // -------------------------
+      if (purpose === "harambee" && txn.harambee_id) {
+        const harambeeId = txn.harambee_id;
+
+        const { data: harambee } = await supabase
+          .from("chama_harambees")
+          .select("raised_amount")
+          .eq("id", harambeeId)
+          .maybeSingle();
+
+        if (harambee) {
+          await supabase
+            .from("chama_harambees")
+            .update({
+              raised_amount: (harambee.raised_amount || 0) + txn.amount,
+            })
+            .eq("id", harambeeId);
+
+          await supabase.from("chama_harambee_contributions").insert({
+            harambee_id: harambeeId,
+            user_id: txn.user_id,
+            amount: txn.amount,
+            stk_reference: txn.reference,
+          });
+        } else {
+          console.error("Harambee not found:", harambeeId);
         }
       }
 
-      // Update the main transaction record
-      await supabase
-        .from("stk_transactions")
-        .update({
-          status: "success",
-          result_code: String(ResultCode),
-          result_desc: ResultDesc,
-          mpesa_receipt: mpesaReceipt,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", txn.id);
-
-      const purpose = txn.purpose || "activation";
-
-      // --- PURPOSE LOGIC: CHAMA SAVINGS ---
-      if (purpose === "chama_savings" && txn.group_id) {
-        await supabase.from("chama_savings").insert({
-          group_id: txn.group_id,
-          user_id: txn.user_id,
-          amount: txn.amount,
-          stk_reference: txn.reference,
-        });
-      }
-
-      // --- PURPOSE LOGIC: PERSONAL SAVINGS ---
+      // -------------------------
+      // PERSONAL SAVINGS
+      // -------------------------
       if (purpose === "personal_savings" && txn.savings_id) {
-        await supabase.from("personal_savings_deposits").insert({
-          savings_id: txn.savings_id,
-          user_id: txn.user_id,
-          amount: txn.amount,
-          stk_reference: txn.reference,
-        });
-        
         const { data: savings } = await supabase
           .from("personal_savings")
           .select("saved_amount")
           .eq("id", txn.savings_id)
-          .single();
-          
+          .maybeSingle();
+
         if (savings) {
+          const newBalance = (savings.saved_amount || 0) + txn.amount;
+
           await supabase
             .from("personal_savings")
-            .update({ saved_amount: (savings.saved_amount || 0) + txn.amount })
+            .update({ saved_amount: newBalance })
             .eq("id", txn.savings_id);
-        }
-      }
 
-      // --- PURPOSE LOGIC: HARAMBEE (STRICT FIX) ---
-      if (purpose === "harambee") {
-        // We use the harambee_id that was saved during the STK initiation
-        const targetHarambeeId = txn.harambee_id;
-        
-        if (targetHarambeeId) {
-          // 1. Record the individual contribution
-          await supabase.from("chama_harambee_contributions").insert({
-            harambee_id: targetHarambeeId,
+          await supabase.from("personal_savings_deposits").insert({
+            savings_id: txn.savings_id,
             user_id: txn.user_id,
             amount: txn.amount,
             stk_reference: txn.reference,
-            contributor_name: "Member" // Optional: You can fetch user name here if needed
           });
-          
-          // 2. Fetch current amount
-          const { data: harambee } = await supabase
-            .from("chama_harambees")
-            .select("raised_amount")
-            .eq("id", targetHarambeeId)
-            .single();
-            
-          // 3. Update the total raised amount in the Harambee table
-          if (harambee) {
-            await supabase
-              .from("chama_harambees")
-              .update({ raised_amount: (harambee.raised_amount || 0) + txn.amount })
-              .eq("id", targetHarambeeId);
-          }
-        } else {
-          console.error("Harambee contribution failed: No harambee_id found in transaction record.");
         }
       }
 
-      // --- PURPOSE LOGIC: LOAN REPAYMENT ---
+      // -------------------------
+      // LOAN REPAYMENT
+      // -------------------------
       if (purpose === "loan_repayment") {
-        const targetDisbId = txn.disbursement_id;
-        let disbData = null;
+        const disbursementId = txn.disbursement_id;
 
-        if (targetDisbId) {
-          const { data } = await supabase.from("loan_disbursements").select("*").eq("id", targetDisbId).single();
-          disbData = data;
+        let disb = null;
+
+        if (disbursementId) {
+          const { data } = await supabase
+            .from("loan_disbursements")
+            .select("*")
+            .eq("id", disbursementId)
+            .maybeSingle();
+          disb = data;
         } else {
           const { data } = await supabase
             .from("loan_disbursements")
@@ -146,67 +172,85 @@ Deno.serve(async (req) => {
             .eq("status", "active")
             .order("created_at", { ascending: false })
             .limit(1);
-          if (data && data.length > 0) disbData = data[0];
+
+          disb = data?.[0];
         }
 
-        if (disbData) {
-          const newBalance = Math.max(0, (disbData.outstanding_balance || 0) - txn.amount);
+        if (disb) {
+          const newBalance = Math.max(
+            0,
+            (disb.outstanding_balance || 0) - txn.amount
+          );
+
           const newStatus = newBalance <= 0 ? "paid" : "active";
 
           await supabase
             .from("loan_disbursements")
-            .update({ outstanding_balance: newBalance, status: newStatus })
-            .eq("id", disbData.id);
+            .update({
+              outstanding_balance: newBalance,
+              status: newStatus,
+            })
+            .eq("id", disb.id);
 
           if (newStatus === "paid") {
-            await supabase.from("loan_applications").update({ status: "paid" }).eq("id", disbData.loan_id);
+            await supabase
+              .from("loan_applications")
+              .update({ status: "paid" })
+              .eq("id", disb.loan_id);
           }
         }
       }
 
-      // --- PURPOSE LOGIC: WALLET / ACTIVATION ---
-      if (["activation", "wallet_deposit", "chama_joining_fee"].includes(purpose)) {
+      // -------------------------
+      // WALLET / DEPOSITS
+      // -------------------------
+      if (
+        ["activation", "wallet_deposit", "chama_joining_fee"].includes(purpose)
+      ) {
         const { data: wallet } = await supabase
           .from("wallets")
           .select("balance")
           .eq("user_id", txn.user_id)
-          .single();
-          
+          .maybeSingle();
+
         if (wallet) {
+          const newBalance = (wallet.balance || 0) + txn.amount;
+
           await supabase
             .from("wallets")
-            .update({ balance: (wallet.balance || 0) + txn.amount })
+            .update({ balance: newBalance })
             .eq("user_id", txn.user_id);
         }
-        
+
         await supabase.from("wallet_transactions").insert({
           user_id: txn.user_id,
           type: "deposit",
           amount: txn.amount,
-          description: `M-Pesa Deposit: ${mpesaReceipt}`,
+          description: `M-Pesa Deposit: ${mpesaReceipt || ""}`,
           reference_id: txn.reference,
         });
       }
 
-      // Notification
+      // -------------------------
+      // NOTIFICATION
+      // -------------------------
       await supabase.from("notifications").insert({
         user_id: txn.user_id,
         title: "Payment Confirmed ✅",
-        message: `Your payment of KES ${txn.amount} was successful. Receipt: ${mpesaReceipt}`,
+        message: `KES ${txn.amount} received. Receipt: ${mpesaReceipt || "N/A"}`,
         type: "payment",
       });
 
     } else {
-      // FAILURE CASE
-      await supabase
-        .from("stk_transactions")
-        .update({
-          status: "failed",
-          result_code: String(ResultCode),
-          result_desc: ResultDesc,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", txn.id);
+      // -------------------------
+      // FAILURE FLOW
+      // -------------------------
+      await supabase.from("stk_transactions").update({
+        status: "failed",
+        result_code: String(ResultCode),
+        result_desc: ResultDesc,
+        updated_at: new Date().toISOString(),
+      }).eq("id", txn.id);
 
       await supabase.from("notifications").insert({
         user_id: txn.user_id,
@@ -216,15 +260,20 @@ Deno.serve(async (req) => {
       });
     }
 
-    return new Response(JSON.stringify({ ResultCode: 0, ResultDesc: "Accepted" }), {
-      headers: { "Content-Type": "application/json" },
-    });
+    return jsonResponse({ ResultCode: 0, ResultDesc: "Accepted" });
 
   } catch (error) {
     console.error("Callback processing error:", error);
-    return new Response(JSON.stringify({ ResultCode: 0, ResultDesc: "Accepted" }), {
-      headers: { "Content-Type": "application/json" },
-    });
+    return jsonResponse({ ResultCode: 0, ResultDesc: "Accepted" });
   }
 });
- 
+
+// -------------------------
+// ✅ Helper
+// -------------------------
+function jsonResponse(data: any, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
+            } 
