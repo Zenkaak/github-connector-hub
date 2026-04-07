@@ -97,31 +97,37 @@ Deno.serve(async (req) => {
         console.log("Personal savings deposit recorded:", txn.savings_id);
       }
 
-      if (purpose === "harambee" && txn.group_id) {
+      // FIXED HARAMBEE LOGIC
+      if (purpose === "harambee") {
+        // Use harambee_id specifically. Falling back to group_id ONLY if your 
+        // stk_transactions table stores the Harambee UUID in the group_id column.
+        const targetHarambeeId = txn.harambee_id || txn.group_id;
+
         await supabase.from("chama_harambee_contributions").insert({
-          harambee_id: txn.group_id,
+          harambee_id: targetHarambeeId,
           user_id: txn.user_id,
           amount: txn.amount,
           stk_reference: txn.reference,
         });
+        
         const { data: harambee } = await supabase
           .from("chama_harambees")
           .select("raised_amount")
-          .eq("id", txn.group_id)
+          .eq("id", targetHarambeeId)
           .single();
+          
         if (harambee) {
           await supabase
             .from("chama_harambees")
             .update({ raised_amount: (harambee.raised_amount || 0) + txn.amount })
-            .eq("id", txn.group_id);
+            .eq("id", targetHarambeeId);
+          console.log("Harambee contribution recorded and total updated");
+        } else {
+          console.error("Harambee record not found for ID:", targetHarambeeId);
         }
-        console.log("Harambee contribution recorded");
       }
 
       if (purpose === "loan_repayment") {
-        // Update loan disbursement outstanding balance
-        // Extract disbursementId from the reference or find from stk_transactions metadata
-        // For now, find the active disbursement for this user
         const { data: activeDisbursements } = await supabase
           .from("loan_disbursements")
           .select("*")
@@ -140,7 +146,6 @@ Deno.serve(async (req) => {
             .update({ outstanding_balance: newBalance, status: newStatus })
             .eq("id", disb.id);
 
-          // Record wallet transaction for the repayment
           await supabase.from("wallet_transactions").insert({
             user_id: txn.user_id,
             type: "debit",
@@ -150,7 +155,6 @@ Deno.serve(async (req) => {
           });
 
           if (newStatus === "paid") {
-            // Update loan application status
             await supabase
               .from("loan_applications")
               .update({ status: "paid" as any })
@@ -162,7 +166,6 @@ Deno.serve(async (req) => {
       }
 
       if (purpose === "activation" || purpose === "wallet_deposit") {
-        // Credit wallet with deposit amount
         const { data: wallet } = await supabase
           .from("wallets")
           .select("balance")
@@ -184,7 +187,6 @@ Deno.serve(async (req) => {
         console.log("Wallet credited:", txn.amount);
       }
 
-      // Send notification
       await supabase.from("notifications").insert({
         user_id: txn.user_id,
         title: "Payment Confirmed ✅",
@@ -193,7 +195,6 @@ Deno.serve(async (req) => {
       });
 
     } else {
-      // Payment failed
       await supabase
         .from("stk_transactions")
         .update({
