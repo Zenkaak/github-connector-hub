@@ -68,7 +68,7 @@ export function RequestMoneyDialog({ open, onOpenChange, onSuccess }: RequestMon
           setTargetId(data[0].user_id);
         }
       } else {
-        setTargetName('User not found on DataVend');
+        setTargetName('User not found on Dasnet');
       }
     } catch (err) {
       console.error('Search error:', err);

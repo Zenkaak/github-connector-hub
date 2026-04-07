@@ -5,7 +5,7 @@ export default function OnlineFundraisingKenya() {
       <h1>Online Fundraising Platform Kenya</h1>
 
       <p>
-        Datavend allows communities, schools, and organizations to
+        Dasnet allows communities, schools, and organizations to
         raise funds online through transparent fundraising campaigns.
       </p>
 

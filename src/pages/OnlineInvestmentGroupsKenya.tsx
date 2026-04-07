@@ -5,7 +5,7 @@ export default function OnlineInvestmentGroupsKenya() {
       <h1>Online Investment Groups in Kenya</h1>
 
       <p>
-        Datavend Ventures helps investment groups in Kenya manage
+        Dasnet Ventures helps investment groups in Kenya manage
         contributions, savings, and investments through a secure
         online platform.
       </p>

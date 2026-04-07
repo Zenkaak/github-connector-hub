@@ -45,7 +45,7 @@ export default function ContactPage() {
             <div className="lg:col-span-2 space-y-5">
               {[
                 { icon: Phone, label: 'Phone', value: '+254 725 336 731', sub: 'Mon-Fri 8am-6pm EAT' },
-                { icon: Mail, label: 'Email', value: 'support@datavend.site', sub: 'We reply within 2 hours' },
+                { icon: Mail, label: 'Email', value: 'support@dasnet.site', sub: 'We reply within 2 hours' },
                 { icon: MapPin, label: 'Office', value: 'Nairobi, Kenya', sub: 'CBD, Kenyatta Avenue' },
                 { icon: Clock, label: 'Working Hours', value: 'Mon - Fri: 8AM - 6PM', sub: 'Sat: 9AM - 1PM' },
               ].map((item, i) => (

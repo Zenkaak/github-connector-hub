@@ -6,7 +6,7 @@ export default function RotatingSavingsGroupsKenya() {
 
       <p>
         Rotating savings groups allow members to contribute regularly
-        and receive payouts in cycles. Datavend simplifies this system
+        and receive payouts in cycles. Dasnet simplifies this system
         with secure digital management.
       </p>
 

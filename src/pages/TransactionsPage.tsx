@@ -37,6 +37,7 @@ interface Transaction {
   mpesa_receipt: string | null;
   result_desc: string | null;
   checkout_request_id: string | null;
+  purpose: string | null;
   created_at: string;
 }
 
@@ -58,19 +59,22 @@ const statusConfig = {
   pending: { label: 'Pending', icon: Clock, color: 'text-accent', bg: 'bg-accent/10', border: 'border-accent/20' },
 };
 
-const getTxType = (ref: string) => {
-  if (ref.startsWith('CHAMA_')) return { label: 'Chama Savings', color: 'text-primary', bg: 'bg-primary/10' };
-  if (ref.startsWith('REPAY_')) return { label: 'Loan Repayment', color: 'text-accent', bg: 'bg-accent/10' };
-  if (ref.startsWith('HRB_')) return { label: 'Harambee', color: 'text-pink-500', bg: 'bg-pink-500/10' };
-  if (ref.startsWith('PSAV_')) return { label: 'Personal Savings', color: 'text-emerald-600', bg: 'bg-emerald-500/10' };
-  return { label: 'Activation', color: 'text-success', bg: 'bg-success/10' };
+const getTxType = (ref: string, purpose?: string) => {
+  if (ref.startsWith('CHAMA_') || purpose === 'chama_savings') return { label: 'Chama Savings', color: 'text-primary', bg: 'bg-primary/10' };
+  if (ref.startsWith('REPAY_') || purpose === 'loan_repayment') return { label: 'Loan Repayment', color: 'text-accent', bg: 'bg-accent/10' };
+  if (ref.startsWith('HRB_') || purpose === 'harambee') return { label: 'Harambee', color: 'text-pink-500', bg: 'bg-pink-500/10' };
+  if (ref.startsWith('PSAV_') || purpose === 'personal_savings') return { label: 'Personal Savings', color: 'text-emerald-600', bg: 'bg-emerald-500/10' };
+  if (ref.startsWith('DEP_') || purpose === 'wallet_deposit') return { label: 'Wallet Deposit', color: 'text-blue-500', bg: 'bg-blue-500/10' };
+  if (ref.startsWith('CJFEE_') || purpose === 'chama_joining_fee') return { label: 'Joining Fee', color: 'text-purple-500', bg: 'bg-purple-500/10' };
+  if (ref.startsWith('ACT_') || purpose === 'activation') return { label: 'Activation', color: 'text-success', bg: 'bg-success/10' };
+  return { label: 'Payment', color: 'text-success', bg: 'bg-success/10' };
 };
 
-const getTxTypeKey = (ref: string): TypeFilter => {
-  if (ref.startsWith('CHAMA_')) return 'chama';
-  if (ref.startsWith('REPAY_')) return 'repayment';
-  if (ref.startsWith('HRB_')) return 'harambee';
-  if (ref.startsWith('PSAV_')) return 'savings';
+const getTxTypeKey = (ref: string, purpose?: string): TypeFilter => {
+  if (ref.startsWith('CHAMA_') || purpose === 'chama_savings') return 'chama';
+  if (ref.startsWith('REPAY_') || purpose === 'loan_repayment') return 'repayment';
+  if (ref.startsWith('HRB_') || purpose === 'harambee') return 'harambee';
+  if (ref.startsWith('PSAV_') || purpose === 'personal_savings') return 'savings';
   return 'activation';
 };
 
@@ -93,6 +97,21 @@ export default function TransactionsPage() {
 
   useEffect(() => {
     if (user) fetchTransactions();
+  }, [user]);
+
+  // Realtime subscription for instant deposit reflection
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel('stk-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'stk_transactions', filter: `user_id=eq.${user.id}` }, () => {
+        fetchTransactions();
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'wallet_transactions', filter: `user_id=eq.${user.id}` }, () => {
+        fetchTransactions();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
   }, [user]);
 
   const fetchTransactions = async () => {
@@ -173,7 +192,7 @@ export default function TransactionsPage() {
 
   const filtered = transactions.filter((t) => {
     const matchesFilter = filter === 'all' || t.status === filter;
-    const matchesType = typeFilter === 'all' || getTxTypeKey(t.reference) === typeFilter;
+    const matchesType = typeFilter === 'all' || getTxTypeKey(t.reference, t.purpose || undefined) === typeFilter;
     const matchesSearch =
       search === '' ||
       t.reference.toLowerCase().includes(search.toLowerCase()) ||
@@ -206,11 +225,11 @@ export default function TransactionsPage() {
 
   const typeFilters: { label: string; value: TypeFilter; count: number }[] = [
     { label: 'All Types', value: 'all', count: transactions.length },
-    { label: 'Activation', value: 'activation', count: transactions.filter(t => getTxTypeKey(t.reference) === 'activation').length },
-    { label: 'Chama', value: 'chama', count: transactions.filter(t => getTxTypeKey(t.reference) === 'chama').length },
-    { label: 'Savings', value: 'savings', count: transactions.filter(t => getTxTypeKey(t.reference) === 'savings').length },
-    { label: 'Repayment', value: 'repayment', count: transactions.filter(t => getTxTypeKey(t.reference) === 'repayment').length },
-    { label: 'Harambee', value: 'harambee', count: transactions.filter(t => getTxTypeKey(t.reference) === 'harambee').length },
+    { label: 'Activation', value: 'activation', count: transactions.filter(t => getTxTypeKey(t.reference, t.purpose || undefined) === 'activation').length },
+    { label: 'Chama', value: 'chama', count: transactions.filter(t => getTxTypeKey(t.reference, t.purpose || undefined) === 'chama').length },
+    { label: 'Savings', value: 'savings', count: transactions.filter(t => getTxTypeKey(t.reference, t.purpose || undefined) === 'savings').length },
+    { label: 'Repayment', value: 'repayment', count: transactions.filter(t => getTxTypeKey(t.reference, t.purpose || undefined) === 'repayment').length },
+    { label: 'Harambee', value: 'harambee', count: transactions.filter(t => getTxTypeKey(t.reference, t.purpose || undefined) === 'harambee').length },
   ];
 
   return (
@@ -379,7 +398,7 @@ export default function TransactionsPage() {
                               <div className="min-w-0">
                                 <div className="flex items-center gap-2">
                                   <p className="font-medium text-sm truncate">{tx.reference}</p>
-                                  {(() => { const t = getTxType(tx.reference); return (
+                                  {(() => { const t = getTxType(tx.reference, (tx as any).purpose || undefined); return (
                                     <span className={cn('text-[10px] font-medium px-1.5 py-0.5 rounded-md shrink-0', t.bg, t.color)}>{t.label}</span>
                                   ); })()}
                                 </div>
@@ -492,7 +511,7 @@ export default function TransactionsPage() {
                 <div className="text-base font-semibold flex items-center gap-2">
                   <Send size={16} className="text-primary" /> Wallet Transfers
                 </div>
-                <p className="text-xs text-muted-foreground">Money sent & received between DataVend wallets</p>
+                <p className="text-xs text-muted-foreground">Money sent & received between Dasnet wallets</p>
               </CardHeader>
               <CardContent>
                 {transfers.length === 0 ? (
@@ -651,7 +670,7 @@ export default function TransactionsPage() {
                 <div className="space-y-3 bg-muted/30 rounded-xl p-4">
                   {[
                     { icon: Hash, label: 'Reference', value: selectedTx.reference },
-                    { icon: Info, label: 'Type', value: getTxType(selectedTx.reference).label },
+                    { icon: Info, label: 'Type', value: getTxType(selectedTx.reference, (selectedTx as any).purpose || undefined).label },
                     { icon: Phone, label: 'Phone', value: selectedTx.phone },
                     { icon: Calendar, label: 'Date', value: formatDate(selectedTx.created_at) },
                     { icon: Receipt, label: 'M-Pesa Receipt', value: selectedTx.mpesa_receipt || '—' },

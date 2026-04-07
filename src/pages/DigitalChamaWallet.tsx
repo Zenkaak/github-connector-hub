@@ -5,7 +5,7 @@ export default function DigitalChamaWallet() {
       <h1>Digital Chama Wallet for Kenyan Groups</h1>
 
       <p>
-        Datavend provides a secure digital wallet for chamas and
+        Dasnet provides a secure digital wallet for chamas and
         community savings groups to manage funds safely online.
       </p>
 

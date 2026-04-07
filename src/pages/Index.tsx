@@ -45,11 +45,11 @@ const fadeUp = {
 const stagger = { visible: { transition: { staggerChildren: 0.08 } } };
 
 const faqs = [
-  { q: 'What is a Chama?', a: 'A Chama is a traditional Kenyan savings group where members pool money together. DATAVEND VENTURES digitizes this process, making it easier to manage contributions, track savings, and handle withdrawals securely.' },
+  { q: 'What is a Chama?', a: 'A Chama is a traditional Kenyan savings group where members pool money together. DASNET VENTURES LTD VENTURES digitizes this process, making it easier to manage contributions, track savings, and handle withdrawals securely.' },
   { q: 'How do I create a Chama group?', a: 'Sign up for a free account, navigate to Chama Groups, and click "New Group." You become the Chairperson automatically. Then search members by phone number and assign roles like Secretary and Treasurer.' },
   { q: 'How are savings collected?', a: 'Your group chooses daily, weekly, or monthly contributions. Members pay via M-Pesa STK push directly from the app. Everyone can see who has paid and who is in arrears.' },
   { q: 'How do withdrawals work?', a: 'The Treasurer initiates a withdrawal request. All three leaders (Chairperson, Secretary, Treasurer) must approve. Once all approve, it goes to admin for final processing.' },
-  { q: 'Can I also get a personal loan?', a: 'Yes! DATAVEND VENTURES also offers personal loans — Biashara, Elimu, Youth Fund and more. Apply directly from your dashboard after activating your account.' },
+  { q: 'Can I also get a personal loan?', a: 'Yes! DASNET VENTURES LTD VENTURES also offers personal loans — Biashara, Elimu, Youth Fund and more. Apply directly from your dashboard after activating your account.' },
   { q: 'Is my money and data safe?', a: 'Absolutely. We use bank-grade encryption, multi-level approval workflows, and digital signature tracking. Every transaction is recorded with timestamps for full transparency.' },
 ];
 
@@ -310,7 +310,7 @@ export default function Index() {
           <motion.div className="text-center mb-16" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <span className="inline-block text-[11px] font-bold uppercase tracking-[0.2em] px-3.5 py-1.5 rounded-full bg-accent/10 text-accent mb-4">Testimonials</span>
             <h2 className="font-display text-3xl md:text-4xl font-bold mb-4 text-white">Trusted by Chama Groups</h2>
-            <p className="text-white/35 max-w-lg mx-auto">Hear from groups already managing their savings on DATAVEND VENTURES.</p>
+            <p className="text-white/35 max-w-lg mx-auto">Hear from groups already managing their savings on DASNET VENTURES LTD VENTURES.</p>
           </motion.div>
 
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -382,7 +382,7 @@ export default function Index() {
               <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-primary/20 flex items-center justify-center">
                 <Smartphone size={24} className="text-accent" />
               </div>
-              <h3 className="font-display text-2xl font-bold text-white mb-2">Download DataVend App</h3>
+              <h3 className="font-display text-2xl font-bold text-white mb-2">Download Dasnet App</h3>
               <p className="text-white/40 max-w-md mx-auto mb-6 text-sm leading-relaxed">
                 Install our app for a better experience — faster access, offline support, and instant notifications right on your phone.
               </p>
@@ -414,7 +414,7 @@ export default function Index() {
                 Start Your Chama Today
               </h2>
               <p className="text-white/40 max-w-lg mx-auto mb-8 leading-relaxed">
-                Join thousands of Kenyans managing their group savings digitally with DATAVEND VENTURES.
+                Join thousands of Kenyans managing their group savings digitally with DASNET VENTURES LTD VENTURES.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
                 <Link to="/signup">
@@ -479,14 +479,14 @@ export default function Index() {
               <h4 className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/20 mb-4">Contact</h4>
               <ul className="space-y-3">
                 <li className="flex items-center gap-2.5 text-sm text-white/30"><Phone size={14} className="text-accent/60" /> +254 725 336 731</li>
-                <li className="flex items-center gap-2.5 text-sm text-white/30"><Mail size={14} className="text-accent/60" /> support@datavend.site</li>
+                <li className="flex items-center gap-2.5 text-sm text-white/30"><Mail size={14} className="text-accent/60" /> support@dasnet.site</li>
                 <li className="flex items-start gap-2.5 text-sm text-white/30"><MapPin size={14} className="text-accent/60 mt-0.5" /> Nairobi, Kenya</li>
               </ul>
             </div>
           </div>
 
           <div className="pt-8 border-t border-white/[0.04] flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-[11px] text-white/15">© {new Date().getFullYear()} DATAVEND VENTURES. All rights reserved.</p>
+            <p className="text-[11px] text-white/15">© {new Date().getFullYear()} DASNET VENTURES LTD VENTURES. All rights reserved.</p>
             <p className="text-[11px] text-white/10">Chama Management &bull; Loans &bull; M-Pesa Integration</p>
           </div>
         </div>

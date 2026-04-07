@@ -282,7 +282,7 @@ export default function LoanApplicationsPage() {
                           {/* Till Number Info */}
                           <div className="p-2 rounded-lg bg-muted/30 border border-border/30 mt-1">
                             <p className="text-[10px] text-muted-foreground">You can also pay directly via M-Pesa Buy Goods:</p>
-                            <p className="text-xs font-bold">Till: 8448104 (Dasnet Ventures)</p>
+                            <p className="text-xs font-bold">Till: 8448104 (DASNET VENTURES LTD)</p>
                           </div>
 
                           <div className={cn('text-[10px] font-semibold px-2 py-1 rounded-full w-fit',
@@ -334,7 +334,7 @@ export default function LoanApplicationsPage() {
                   <p className="text-xs text-muted-foreground">STK Push will be sent to:</p>
                   <p className="font-semibold text-sm">{profile?.phone || '—'}</p>
                   <p className="text-xs text-muted-foreground mt-2">Or pay directly via M-Pesa Buy Goods:</p>
-                  <p className="font-semibold text-sm">Till: 8448104 (Dasnet Ventures)</p>
+                  <p className="font-semibold text-sm">Till: 8448104 (DASNET VENTURES LTD)</p>
                 </div>
                 <p className="text-xs text-muted-foreground">An M-Pesa STK push will be sent to your phone. Enter your M-Pesa PIN to complete the payment.</p>
                 <div className="flex justify-end gap-2">

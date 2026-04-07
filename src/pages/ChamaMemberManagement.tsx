@@ -5,7 +5,7 @@ export default function ChamaMemberManagement() {
       <h1>Chama Member Management System</h1>
 
       <p>
-        Datavend allows chamas to manage their membership digitally,
+        Dasnet allows chamas to manage their membership digitally,
         including member contributions, roles, and financial records.
       </p>
 

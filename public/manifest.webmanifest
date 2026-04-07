@@ -1,7 +1,7 @@
 {
-  "id": "datavend-ventures-ke",
-  "name": "Datavend Ventures: Digital Chama & Harambee",
-  "short_name": "Datavend",
+  "id": "dasnet-ventures-ke",
+  "name": "Dasnet Ventures: Digital Chama & Harambee",
+  "short_name": "Dasnet",
   "description": "The premium digital ledger for Kenyan Chamas, Harambees, and community lending.",
   "start_url": "/?source=pwa",
   "scope": "/",

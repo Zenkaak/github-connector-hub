@@ -6,7 +6,7 @@ export default function TableBankingKenya() {
 
       <p>
         Table banking is a common savings practice among Kenyan groups.
-        Datavend Ventures helps groups digitize table banking activities
+        Dasnet Ventures helps groups digitize table banking activities
         and track contributions transparently.
       </p>
 

@@ -6,7 +6,7 @@ export default function HarambeeFundraisingKenyaPage() {
       </h1>
 
       <p className="mt-6">
-        Datavend helps communities organize transparent Harambee fundraising
+        Dasnet helps communities organize transparent Harambee fundraising
         online. Manage contributions, track donors, and support causes easily.
       </p>
     </div>

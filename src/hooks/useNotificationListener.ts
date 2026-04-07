@@ -26,7 +26,7 @@ function showNativeNotification(title: string, body: string) {
             body,
             icon: '/pwa-192.png',
             badge: '/pwa-192.png',
-            tag: `datavend-${Date.now()}`,
+            tag: `dasnet-${Date.now()}`,
           } as NotificationOptions);
         });
       } else {

@@ -241,7 +241,7 @@ export default function DashboardPage() {
       const timer = setTimeout(() => {
         if (shouldShowInstallToast() && !isInstalled) {
           markInstallToastShown();
-          toast('📱 Download DataVend App', {
+          toast('📱 Download Dasnet App', {
             description: 'Install for faster access & instant notifications',
             action: {
               label: 'Install Now',
@@ -820,7 +820,7 @@ export default function DashboardPage() {
             >
               <Download size={20} className="shrink-0" />
               <div className="text-left flex-1">
-                <p className="font-bold text-sm">Download DataVend App</p>
+                <p className="font-bold text-sm">Download Dasnet App</p>
                 <p className="text-[11px] opacity-80">Install for faster access & instant notifications</p>
               </div>
               <ArrowRight size={16} className="shrink-0 opacity-70" />

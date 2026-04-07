@@ -6,7 +6,7 @@ export default function ChamaRecordKeepingSoftware() {
 
       <p>
         Keeping accurate financial records is essential for any chama.
-        Datavend provides digital tools for recording member
+        Dasnet provides digital tools for recording member
         contributions, loans, and investments.
       </p>
 

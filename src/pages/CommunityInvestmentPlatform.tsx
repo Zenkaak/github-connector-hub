@@ -5,7 +5,7 @@ export default function CommunityInvestmentPlatform() {
       <h1>Community Investment Platform in Kenya</h1>
 
       <p>
-        Datavend helps communities invest together by providing
+        Dasnet helps communities invest together by providing
         transparent digital tools for group financial management.
       </p>
 

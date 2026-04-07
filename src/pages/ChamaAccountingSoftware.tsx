@@ -5,7 +5,7 @@ export default function ChamaAccountingSoftware() {
       <h1>Chama Accounting Software in Kenya</h1>
 
       <p>
-        Datavend Ventures provides digital accounting tools designed
+        Dasnet Ventures provides digital accounting tools designed
         specifically for Kenyan chamas and savings groups.
       </p>
 

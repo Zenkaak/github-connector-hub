@@ -5,7 +5,7 @@ export default function MobileMoneyChamaPlatform() {
       <h1>Mobile Money Chama Platform Kenya</h1>
 
       <p>
-        Datavend integrates mobile money payments to simplify chama
+        Dasnet integrates mobile money payments to simplify chama
         contributions and financial management.
       </p>
 

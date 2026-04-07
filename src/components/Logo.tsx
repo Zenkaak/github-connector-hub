@@ -38,7 +38,7 @@ export function Logo({ size = 'md', variant = 'default' }: LogoProps) {
       </div>
       <div className="flex flex-col">
         <span className={`font-display font-bold ${sizes[size].text} ${colors[variant].text} leading-tight tracking-tight`}>
-          DataVend
+          Dasnet
         </span>
         <span className={`text-[10px] font-medium ${colors[variant].subtext} -mt-0.5 uppercase tracking-widest`}>
           Ventures

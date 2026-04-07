@@ -5,7 +5,7 @@ export default function ChamaContributionTracking() {
       <h1>Chama Contribution Tracking Software</h1>
 
       <p>
-        Datavend simplifies contribution tracking for Kenyan chamas
+        Dasnet simplifies contribution tracking for Kenyan chamas
         by recording every member payment and maintaining transparent
         financial records.
       </p>

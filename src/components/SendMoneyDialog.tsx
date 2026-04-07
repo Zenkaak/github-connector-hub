@@ -86,7 +86,7 @@ export function SendMoneyDialog({ open, onOpenChange, walletBalance, onSuccess }
           setRecipientId(data[0].user_id);
         }
       } else {
-        setRecipientName('User not found on DataVend');
+        setRecipientName('User not found on Dasnet');
       }
     } catch (err) {
       console.error('Search error:', err);
@@ -152,7 +152,7 @@ export function SendMoneyDialog({ open, onOpenChange, walletBalance, onSuccess }
         supabase.from('notifications').insert({
           user_id: recipientId,
           title: '💰 Money Received',
-          message: `You received ${formatCurrency(amt)} from ${profile?.full_name || 'a DataVend user'}.${reason ? ` Reason: ${reason}` : ''}`,
+          message: `You received ${formatCurrency(amt)} from ${profile?.full_name || 'a Dasnet user'}.${reason ? ` Reason: ${reason}` : ''}`,
         }),
         supabase.from('notifications').insert({
           user_id: user.id,
@@ -258,7 +258,7 @@ export function SendMoneyDialog({ open, onOpenChange, walletBalance, onSuccess }
               </>
             )}
 
-            <p className="text-xs text-muted-foreground">Free instant transfer between DataVend wallets.</p>
+            <p className="text-xs text-muted-foreground">Free instant transfer between Dasnet wallets.</p>
           </div>
         )}
 
