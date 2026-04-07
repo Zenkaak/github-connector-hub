@@ -70,11 +70,11 @@ const getTxType = (ref: string, purpose?: string) => {
   return { label: 'Payment', color: 'text-success', bg: 'bg-success/10' };
 };
 
-const getTxTypeKey = (ref: string): TypeFilter => {
-  if (ref.startsWith('CHAMA_')) return 'chama';
-  if (ref.startsWith('REPAY_')) return 'repayment';
-  if (ref.startsWith('HRB_')) return 'harambee';
-  if (ref.startsWith('PSAV_')) return 'savings';
+const getTxTypeKey = (ref: string, purpose?: string): TypeFilter => {
+  if (ref.startsWith('CHAMA_') || purpose === 'chama_savings') return 'chama';
+  if (ref.startsWith('REPAY_') || purpose === 'loan_repayment') return 'repayment';
+  if (ref.startsWith('HRB_') || purpose === 'harambee') return 'harambee';
+  if (ref.startsWith('PSAV_') || purpose === 'personal_savings') return 'savings';
   return 'activation';
 };
 
