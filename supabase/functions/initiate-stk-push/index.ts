@@ -7,12 +7,23 @@ const corsHeaders = {
 };
 
 Deno.serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    const { phone, amount, userId, purpose, groupId, savingsId, loanId, disbursementId } = await req.json();
+    const { 
+      phone, 
+      amount, 
+      userId, 
+      purpose, 
+      groupId, 
+      savingsId, 
+      harambeeId, 
+      loanId, 
+      disbursementId 
+    } = await req.json();
 
     if (!phone || !amount || !userId) {
       return new Response(
@@ -21,7 +32,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Format phone to 254...
+    // Format phone to 254... format
     let formattedPhone = phone.replace(/\s/g, "").replace(/\+/g, "");
     if (formattedPhone.startsWith("0")) {
       formattedPhone = "254" + formattedPhone.slice(1);
@@ -35,6 +46,7 @@ Deno.serve(async (req) => {
     const passkey = Deno.env.get("MPESA_PASSKEY")!;
     const partyB = Deno.env.get("PARTY_B") || shortcode;
 
+    // Get M-Pesa Access Token
     const auth = btoa(`${consumerKey}:${consumerSecret}`);
     const tokenRes = await fetch(
       "https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
@@ -52,6 +64,7 @@ Deno.serve(async (req) => {
 
     const accessToken = tokenData.access_token;
 
+    // Generate M-Pesa Timestamp
     const now = new Date();
     const timestamp =
       now.getFullYear().toString() +
@@ -63,7 +76,7 @@ Deno.serve(async (req) => {
 
     const password = btoa(`${shortcode}${passkey}${timestamp}`);
 
-    // Generate purpose-specific reference prefix
+    // Set Reference Prefix based on transaction purpose
     const prefixMap: Record<string, string> = {
       chama_savings: "CHAMA_",
       personal_savings: "PSAV_",
@@ -79,6 +92,7 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const callbackUrl = `${supabaseUrl}/functions/v1/mpesa-callback`;
 
+    // Prepare M-Pesa STK Push Body
     const stkBody = {
       BusinessShortCode: shortcode,
       Password: password,
@@ -95,6 +109,7 @@ Deno.serve(async (req) => {
 
     console.log("STK Push request:", JSON.stringify({ ...stkBody, Password: "[REDACTED]" }));
 
+    // Send Request to Safaricom
     const stkRes = await fetch(
       "https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
       {
@@ -121,13 +136,14 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Save to stk_transactions with purpose and group_id
+    // Initialize Supabase Client
     const supabase = createClient(
       supabaseUrl,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    await supabase.from("stk_transactions").insert({
+    // Save transaction with all IDs to allow the callback to update the correct records
+    const { error: insertError } = await supabase.from("stk_transactions").insert({
       user_id: userId,
       phone: formattedPhone,
       amount: Math.round(amount),
@@ -138,14 +154,20 @@ Deno.serve(async (req) => {
       purpose: purpose || "activation",
       group_id: groupId || null,
       savings_id: savingsId || null,
+      harambee_id: harambeeId || null, // Ensure this column exists in your table!
+      loan_id: loanId || null,
     });
+
+    if (insertError) {
+      console.error("Supabase insert error:", insertError);
+    }
 
     return new Response(
       JSON.stringify({
         success: true,
         reference,
         checkoutRequestId: stkData.CheckoutRequestID,
-        message: "STK Push sent. Check your phone.",
+        message: "STK Push sent successfully.",
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
@@ -157,3 +179,4 @@ Deno.serve(async (req) => {
     );
   }
 });
+ 
