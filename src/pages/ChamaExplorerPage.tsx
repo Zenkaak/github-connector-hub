@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Users, DollarSign, Clock, ChevronRight, ShieldCheck, Send, Loader2 } from 'lucide-react';
+import { Search, Users, DollarSign, Clock, ChevronRight, ShieldCheck, Send, Loader2, CheckCircle2, AlertCircle, RefreshCcw } from 'lucide-react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -46,9 +46,11 @@ export default function ChamaExplorerPage() {
     }
 
     if (user) {
-      const { data: memberships } = await supabase.from('chama_members').select('group_id').eq('user_id', user.id).or('is_active.eq.true,is_active.is.null');
+      // Fetch active memberships
+      const { data: memberships } = await supabase.from('chama_members').select('group_id').eq('user_id', user.id);
       if (memberships) setMyMemberships(memberships.map(m => m.group_id));
 
+      // Fetch all join requests for this user
       const { data: requests } = await supabase.from('chama_join_requests').select('*').eq('user_id', user.id);
       if (requests) setMyRequests(requests);
     }
@@ -56,7 +58,10 @@ export default function ChamaExplorerPage() {
     setLoading(false);
   };
 
-  useEffect(() => { fetchGroups(); }, [user]);
+  useEffect(() => { 
+    fetchGroups(); 
+    if (profile?.phone) setPayPhone(profile.phone);
+  }, [user, profile]);
 
   const filteredGroups = groups.filter(g =>
     g.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -65,9 +70,8 @@ export default function ChamaExplorerPage() {
 
   const handleRequestJoin = async (groupId: string) => {
     if (!user) return;
-
     if (myMemberships.length >= 3) {
-      toast({ title: 'Limit Reached', description: 'You can only join a maximum of 3 Chama groups.', variant: 'destructive' });
+      toast({ title: 'Limit Reached', description: 'Maximum of 3 groups allowed.', variant: 'destructive' });
       return;
     }
 
@@ -76,25 +80,25 @@ export default function ChamaExplorerPage() {
       const { error } = await supabase.from('chama_join_requests').insert({
         group_id: groupId,
         user_id: user.id,
-      } as any);
+        status: 'pending'
+      });
       if (error) throw error;
 
-      const { data: leaders } = await supabase.from('chama_members').select('user_id, role').eq('group_id', groupId).in('role', ['chairperson', 'secretary', 'treasurer']);
+      toast({ title: 'Request Sent', description: 'Group leaders have been notified.' });
+      fetchGroups();
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    } finally {
+      setRequesting(false);
+    }
+  };
 
-      const { data: userProfile } = await supabase.from('profiles').select('full_name').eq('user_id', user.id).single();
-
-      if (leaders) {
-        await supabase.from('notifications').insert(
-          leaders.map(l => ({
-            user_id: l.user_id,
-            title: 'New Join Request',
-            message: `${userProfile?.full_name || 'A user'} has requested to join your group. Review in the Requests tab.`,
-          }))
-        );
-      }
-
-      toast({ title: 'Request Sent', description: 'Group officials have been notified of your request.' });
-      setSelectedGroup(null);
+  const handleReapply = async (requestId: string) => {
+    setRequesting(true);
+    try {
+      // Delete the rejected/failed request so user can try again (fixes unique constraint error)
+      await supabase.from('chama_join_requests').delete().eq('id', requestId);
+      toast({ title: "Reset successful", description: "You can now request to join again." });
       fetchGroups();
     } catch (error: any) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
@@ -104,199 +108,205 @@ export default function ChamaExplorerPage() {
   };
 
   const handlePayJoiningFee = async (group: any) => {
-    if (!user || !payPhone.trim()) return;
+    if (!user || !payPhone.trim()) {
+      toast({ title: "Phone Required", description: "Please enter your M-Pesa phone number.", variant: "destructive" });
+      return;
+    }
+    
     setPayingFee(true);
     try {
-      const phone = payPhone.trim();
-      if (phone.length < 10) throw new Error('Enter a valid phone number');
-      
       const { data, error } = await supabase.functions.invoke('initiate-stk-push', {
         body: {
-          phone,
+          phone: payPhone.trim(),
           amount: group.joining_fee,
           userId: user.id,
-          purpose: 'chama_join',
+          purpose: 'chama_joining_fee',
           groupId: group.id,
         },
       });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
 
-      toast({ title: 'STK Push Sent', description: `Check your phone to pay KES ${group.joining_fee.toLocaleString()} joining fee.` });
+      if (error) throw error;
+
+      toast({ 
+        title: 'STK Push Sent', 
+        description: `Please enter your PIN to pay KES ${group.joining_fee.toLocaleString()} joining fee.` 
+      });
+      
       setSelectedGroup(null);
-      setPayPhone('');
     } catch (error: any) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      toast({ title: 'Payment Error', description: error.message, variant: 'destructive' });
     } finally {
       setPayingFee(false);
     }
   };
 
-  const getRequestStatus = (groupId: string) => {
-    const req = myRequests.find(r => r.group_id === groupId);
-    return req?.status;
-  };
+  const getRequest = (groupId: string) => myRequests.find(r => r.group_id === groupId);
 
   return (
     <DashboardLayout>
       <div className="p-4 lg:p-8 max-w-4xl mx-auto">
         <div className="mb-6">
-          <h1 className="text-2xl font-display font-bold">Explore Chama Groups</h1>
+          <h1 className="text-2xl font-display font-bold text-slate-900">Explore Chama Groups</h1>
           <p className="text-sm text-muted-foreground mt-1">Browse and join available savings groups</p>
         </div>
 
-        <div className="relative mb-4">
+        <div className="relative mb-6">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Search groups by name..."
-            className="pl-9"
+          <Input 
+            value={search} 
+            onChange={e => setSearch(e.target.value)} 
+            placeholder="Search groups by name or description..." 
+            className="pl-9 h-11 bg-white shadow-sm" 
           />
         </div>
 
-        {loading ? (
-          <div className="space-y-3">
-            {[1, 2, 3].map(i => <div key={i} className="h-24 bg-muted animate-pulse rounded-xl" />)}
-          </div>
-        ) : filteredGroups.length === 0 ? (
-          <Card className="p-12 text-center">
-            <Users size={48} className="mx-auto text-muted-foreground/30 mb-4" />
-            <h3 className="font-semibold text-lg mb-1">No Groups Found</h3>
-            <p className="text-sm text-muted-foreground">Try a different search term</p>
-          </Card>
-        ) : (
-          <div className="space-y-3">
-            {filteredGroups.map(group => {
+        <div className="space-y-3">
+          {loading ? (
+            [1, 2, 3].map(i => <div key={i} className="h-24 bg-muted animate-pulse rounded-xl" />)
+          ) : filteredGroups.length === 0 ? (
+            <Card className="p-12 text-center border-dashed">
+               <Users size={48} className="mx-auto text-slate-200 mb-4" />
+               <p className="text-slate-500 font-medium">No groups match your search.</p>
+            </Card>
+          ) : (
+            filteredGroups.map(group => {
               const isMember = myMemberships.includes(group.id);
-              const requestStatus = getRequestStatus(group.id);
+              const request = getRequest(group.id);
 
               return (
-                <Card
-                  key={group.id}
-                  className="p-4 hover:bg-muted/50 transition-colors cursor-pointer"
-                  onClick={() => !isMember && setSelectedGroup(group)}
+                <Card 
+                  key={group.id} 
+                  className="p-4 hover:border-primary/50 transition-all cursor-pointer shadow-sm group" 
+                  onClick={() => setSelectedGroup(group)}
                 >
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                        <Users size={22} className="text-primary" />
+                      <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                        <Users className="text-slate-400 group-hover:text-primary" size={20} />
                       </div>
                       <div>
-                        <h3 className="font-semibold">{group.name}</h3>
-                        {group.description && <p className="text-xs text-muted-foreground line-clamp-1">{group.description}</p>}
-                        <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1"><Users size={11} /> {group.member_count} members</span>
-                          <span className="flex items-center gap-1"><DollarSign size={11} /> KES {group.contribution_amount || 0} {FREQUENCY_LABELS[group.contribution_frequency] || ''}</span>
-                          {(group.joining_fee || 0) > 0 && <span className="flex items-center gap-1"><ShieldCheck size={11} /> Fee: KES {group.joining_fee}</span>}
+                        <h3 className="font-bold text-slate-900">{group.name}</h3>
+                        <div className="flex items-center gap-3 mt-1 text-[10px] text-slate-500 font-black uppercase tracking-widest">
+                          <span className="flex items-center gap-1"><Users size={10} /> {group.member_count} Members</span>
+                          <span className="flex items-center gap-1"><Clock size={10} /> {FREQUENCY_LABELS[group.contribution_frequency]}</span>
                         </div>
                       </div>
                     </div>
                     <div className="shrink-0">
                       {isMember ? (
-                        <span className="text-[11px] px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-500 font-medium">Joined</span>
-                      ) : requestStatus === 'pending' ? (
-                        <span className="text-[11px] px-2 py-1 rounded-full bg-yellow-500/10 text-yellow-600 font-medium">Pending</span>
-                      ) : requestStatus === 'approved' ? (
-                        <span className="text-[11px] px-2 py-1 rounded-full bg-blue-500/10 text-blue-500 font-medium">Pay Fee</span>
+                        <span className="text-[10px] px-2 py-1 rounded bg-emerald-50 text-emerald-600 font-black uppercase">Member</span>
+                      ) : request?.status === 'pending' ? (
+                        <span className="text-[10px] px-2 py-1 rounded bg-yellow-50 text-yellow-600 font-black uppercase">Pending</span>
+                      ) : request?.status === 'approved' ? (
+                        <span className="text-[10px] px-2 py-1 rounded bg-blue-600 text-white font-black uppercase italic animate-pulse">Pay Fee</span>
                       ) : (
-                        <ChevronRight size={18} className="text-muted-foreground" />
+                        <ChevronRight size={18} className="text-slate-300" />
                       )}
                     </div>
                   </div>
                 </Card>
               );
-            })}
-          </div>
-        )}
+            })
+          )}
+        </div>
       </div>
 
-      {/* Group detail / join dialog */}
-      <Dialog open={!!selectedGroup} onOpenChange={() => { setSelectedGroup(null); setPayPhone(''); }}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>{selectedGroup?.name}</DialogTitle></DialogHeader>
+      <Dialog open={!!selectedGroup} onOpenChange={() => setSelectedGroup(null)}>
+        <DialogContent className="max-w-lg p-0 overflow-hidden border-none shadow-2xl">
           {selectedGroup && (
-            <div className="space-y-4">
-              {selectedGroup.description && (
-                <p className="text-sm text-muted-foreground">{selectedGroup.description}</p>
-              )}
-
-              <div className="grid grid-cols-2 gap-3">
-                <Card className="p-3">
-                  <p className="text-[11px] text-muted-foreground">Members</p>
-                  <p className="font-bold">{selectedGroup.member_count}</p>
-                </Card>
-                <Card className="p-3">
-                  <p className="text-[11px] text-muted-foreground">Savings</p>
-                  <p className="font-bold">KES {selectedGroup.contribution_amount || 0} {FREQUENCY_LABELS[selectedGroup.contribution_frequency] || ''}</p>
-                </Card>
-                <Card className="p-3">
-                  <p className="text-[11px] text-muted-foreground">Joining Fee</p>
-                  <p className="font-bold">{selectedGroup.joining_fee > 0 ? `KES ${selectedGroup.joining_fee}` : 'Free'}</p>
-                </Card>
-                <Card className="p-3">
-                  <p className="text-[11px] text-muted-foreground">Refund Policy</p>
-                  <p className="font-bold text-xs">
-                    {selectedGroup.refund_policy === 'no_refund' ? 'No Refund' : selectedGroup.refund_policy === 'full_refund' ? 'Full Refund' : `${selectedGroup.refund_percentage}%`}
-                  </p>
-                </Card>
+            <>
+              <div className="bg-slate-900 p-6 text-white">
+                <DialogTitle className="text-2xl font-black uppercase tracking-tighter">{selectedGroup.name}</DialogTitle>
+                <p className="text-slate-400 text-xs mt-1 font-medium">{selectedGroup.description || 'No description provided.'}</p>
               </div>
 
-              {selectedGroup.terms && (
-                <div>
-                  <h4 className="font-semibold text-sm mb-2">Terms & Conditions</h4>
-                  <ScrollArea className="h-[200px] rounded border p-3">
-                    <p className="text-xs text-muted-foreground whitespace-pre-wrap">{selectedGroup.terms}</p>
-                  </ScrollArea>
-                </div>
-              )}
-
-              {getRequestStatus(selectedGroup.id) === 'approved' && selectedGroup.joining_fee > 0 ? (
-                /* Approved but needs to pay joining fee */
-                <div className="space-y-3">
-                  <Card className="p-4 bg-blue-500/5 border-blue-500/20">
-                    <p className="text-sm font-semibold text-blue-600">✅ Your request has been approved!</p>
-                    <p className="text-xs text-muted-foreground mt-1">Pay the joining fee of KES {selectedGroup.joining_fee.toLocaleString()} to complete your registration.</p>
-                  </Card>
-                  <div>
-                    <Label>M-Pesa Phone Number</Label>
-                    <Input
-                      value={payPhone}
-                      onChange={e => setPayPhone(e.target.value)}
-                      placeholder="0712345678"
-                      className="mt-1"
-                      defaultValue={profile?.phone || ''}
-                    />
+              <div className="p-6 space-y-6 bg-white">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <p className="text-[10px] font-black uppercase text-slate-400 mb-1">Savings Plan</p>
+                    <p className="font-bold text-slate-900">KES {selectedGroup.contribution_amount} / {FREQUENCY_LABELS[selectedGroup.contribution_frequency]}</p>
                   </div>
-                  <Button
-                    onClick={() => handlePayJoiningFee(selectedGroup)}
-                    disabled={payingFee || !payPhone.trim()}
-                    className="w-full gap-2"
-                  >
-                    {payingFee ? (
-                      <><Loader2 size={14} className="animate-spin" /> Processing...</>
-                    ) : (
-                      <><Send size={14} /> Pay KES {selectedGroup.joining_fee.toLocaleString()} Joining Fee</>
-                    )}
-                  </Button>
+                  <div className="p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <p className="text-[10px] font-black uppercase text-slate-400 mb-1">Joining Fee</p>
+                    <p className="font-bold text-slate-900">KES {selectedGroup.joining_fee || 0}</p>
+                  </div>
                 </div>
-              ) : getRequestStatus(selectedGroup.id) === 'pending' ? (
-                <Card className="p-3 bg-yellow-500/5 border-yellow-500/20 text-center">
-                  <p className="text-sm text-yellow-600">Your join request is pending review</p>
-                </Card>
-              ) : getRequestStatus(selectedGroup.id) === 'rejected' ? (
-                <Card className="p-3 bg-destructive/5 border-destructive/20 text-center">
-                  <p className="text-sm text-destructive">Your request was rejected</p>
-                </Card>
-              ) : (
-                <Button onClick={() => handleRequestJoin(selectedGroup.id)} disabled={requesting} className="w-full">
-                  {requesting ? 'Sending Request...' : 'Request to Join'}
-                </Button>
-              )}
-            </div>
+
+                {selectedGroup.terms && (
+                  <div className="space-y-2">
+                    <Label className="text-[10px] font-black uppercase text-slate-400">Terms & Conditions</Label>
+                    <ScrollArea className="h-32 rounded-xl border p-4 bg-slate-50/50">
+                      <p className="text-xs text-slate-600 leading-relaxed whitespace-pre-wrap">{selectedGroup.terms}</p>
+                    </ScrollArea>
+                  </div>
+                )}
+
+                {/* DYNAMIC ACTION BUTTONS */}
+                <div className="pt-2">
+                  {myMemberships.includes(selectedGroup.id) ? (
+                    <Button className="w-full h-12 bg-emerald-600 text-white font-black uppercase" disabled>
+                      <CheckCircle2 className="mr-2" size={18} /> You are a member
+                    </Button>
+                  ) : getRequest(selectedGroup.id)?.status === 'approved' ? (
+                    <div className="space-y-4 p-4 bg-blue-50 rounded-2xl border border-blue-100">
+                      <div className="flex items-center gap-2 text-blue-700">
+                        <CheckCircle2 size={18} />
+                        <p className="text-sm font-black uppercase tracking-tight">Application Approved!</p>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-[10px] font-black uppercase text-slate-500">Confirm Payment Phone</Label>
+                        <Input 
+                          value={payPhone} 
+                          onChange={e => setPayPhone(e.target.value)} 
+                          placeholder="07XXXXXXXX" 
+                          className="h-12 bg-white border-blue-200 focus:border-blue-500" 
+                        />
+                      </div>
+                      <Button 
+                        onClick={() => handlePayJoiningFee(selectedGroup)} 
+                        disabled={payingFee} 
+                        className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white font-black uppercase tracking-widest shadow-lg shadow-blue-200 gap-2"
+                      >
+                        {payingFee ? <Loader2 className="animate-spin" /> : <><Send size={18} /> Pay KES {selectedGroup.joining_fee} Now</>}
+                      </Button>
+                    </div>
+                  ) : getRequest(selectedGroup.id)?.status === 'pending' ? (
+                    <div className="p-5 bg-yellow-50 border border-yellow-100 rounded-2xl text-center space-y-2">
+                      <Clock className="mx-auto text-yellow-500 animate-pulse" size={24} />
+                      <p className="text-xs font-black uppercase text-yellow-700">Under Review</p>
+                      <p className="text-[10px] text-yellow-600 font-medium italic">Group officials are currently reviewing your request.</p>
+                    </div>
+                  ) : getRequest(selectedGroup.id)?.status === 'rejected' ? (
+                    <div className="space-y-3">
+                      <div className="p-5 bg-destructive/5 rounded-2xl border border-destructive/10 text-center">
+                        <AlertCircle className="mx-auto text-destructive mb-2" />
+                        <p className="text-xs font-black uppercase text-destructive tracking-widest">Request Declined</p>
+                        <p className="text-[10px] text-slate-500 mt-1 italic">"{getRequest(selectedGroup.id)?.reject_reason || 'No reason provided.'}"</p>
+                      </div>
+                      <Button 
+                        onClick={() => handleReapply(getRequest(selectedGroup.id).id)} 
+                        disabled={requesting} 
+                        className="w-full h-11 variant-outline border-slate-200 text-slate-600 font-bold uppercase text-[10px] gap-2"
+                      >
+                        <RefreshCcw size={14} /> Reapply to Join
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button 
+                      onClick={() => handleRequestJoin(selectedGroup.id)} 
+                      disabled={requesting} 
+                      className="w-full h-14 bg-slate-900 hover:bg-black text-white font-black uppercase tracking-widest shadow-xl"
+                    >
+                      {requesting ? <Loader2 className="animate-spin" /> : "Request to Join"}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </>
           )}
         </DialogContent>
       </Dialog>
     </DashboardLayout>
   );
 }
+ 
