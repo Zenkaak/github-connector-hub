@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Save, DollarSign, Users, Landmark, Shield, Calendar, AlertTriangle, Percent, Clock, Trash2, Bell, Target, Award, Gavel, FileText, Heart, Gift, TrendingUp, HandCoins } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -121,6 +121,72 @@ export function ChamaSettings({ groupId, group, members, onRefreshGroup }: Props
   const [shareTransferAllowed, setShareTransferAllowed] = useState(group?.share_transfer_allowed || false);
   const [minBalanceRequired, setMinBalanceRequired] = useState(group?.min_balance_required?.toString() || '0');
 
+  useEffect(() => {
+    if (!group) return;
+
+    setFrequency(group.contribution_frequency || 'monthly');
+    setSavingsAmount(group.contribution_amount?.toString() || '0');
+    setAllowPartial(group.allow_partial_contributions || false);
+    setMinContribution(group.min_contribution_amount?.toString() || '0');
+    setAnnualTarget(group.annual_savings_target?.toString() || '0');
+
+    setJoiningFee(group.joining_fee?.toString() || '0');
+    setRefundPolicy(group.refund_policy || 'no_refund');
+    setRefundPercentage(group.refund_percentage?.toString() || '0');
+    setMaxMembers(group.max_members?.toString() || '50');
+    setIsPublic(group.is_public !== false);
+    setLockPeriod(group.lock_period_months?.toString() || '0');
+
+    setPenaltyEnabled(group.late_penalty_enabled || false);
+    setPenaltyAmount(group.late_penalty_amount?.toString() || '0');
+    setPenaltyType(group.late_penalty_type || 'fixed');
+
+    setAllowEarlyWithdrawal(group.allow_early_withdrawal || false);
+    setMinBalanceRequired(group.min_balance_required?.toString() || '0');
+
+    setMerryGoRoundEnabled(group.merry_go_round_enabled || false);
+    setInvestmentEnabled(group.investment_enabled || false);
+    setShareTransferAllowed(group.share_transfer_allowed || false);
+
+    // Sync other missing fields as well
+    setChairCanRemove(group.chairperson_can_remove_members || false);
+    setAutoRemoveAfterMissed(group.auto_remove_after_missed?.toString() || '0');
+    setRegNumber(group.group_registration_number || '');
+    setDescription(group.description || '');
+    setGracePeriod(group.grace_period_days?.toString() || '0');
+    setLoanEnabled(group.loan_enabled || false);
+    setLoanMaxAmount(group.loan_max_amount?.toString() || '0');
+    setLoanInterestRate(group.loan_interest_rate?.toString() || '5');
+    setLoanMaxDuration(group.loan_max_duration_months?.toString() || '3');
+    setRequireGuarantor(group.require_guarantor_for_loans || false);
+    setMaxLoanMultiplier(group.max_loan_multiplier?.toString() || '3');
+    setMeetingFrequency(group.meeting_frequency || 'monthly');
+    setMeetingDay(group.meeting_day || '');
+    setQuorumPercentage(group.quorum_percentage?.toString() || '50');
+    setVotingRequired(group.voting_required_for || 'major_decisions');
+    setEmergencyFundEnabled(group.emergency_fund_enabled || false);
+    setEmergencyFundPercentage(group.emergency_fund_percentage?.toString() || '10');
+    setNotifSavingsReminder(group.notification_savings_reminder !== false);
+    setNotifMeetingReminder(group.notification_meeting_reminder !== false);
+    setDissolutionPolicy(group.dissolution_policy || 'equal_split');
+    setMeetingAbsencePenalty(group.meeting_absence_penalty?.toString() || '0');
+    setMaxWithdrawalPerMonth(group.max_withdrawal_per_month?.toString() || '0');
+    setContributionRollover(group.contribution_rollover_enabled || false);
+    setProbationMonths(group.new_member_probation_months?.toString() || '0');
+    setDividendFrequency(group.dividend_distribution_frequency || 'annually');
+    setProfitSharing(group.profit_sharing_method || 'proportional');
+    setSpecialContribution(group.special_contribution_enabled || false);
+    setWelfareFundEnabled(group.welfare_fund_enabled || false);
+    setWelfareFundAmount(group.welfare_fund_amount?.toString() || '0');
+    setHarambeeEnabled(group.harambee_enabled || false);
+    setRequireBackdatedSavings(group.require_backdated_savings || false);
+    setLoanProcessingFee(group.loan_processing_fee?.toString() || '0');
+    setLoanInsurancePercentage(group.loan_insurance_percentage?.toString() || '0');
+    setMinSavingsBeforeLoan(group.min_savings_before_loan?.toString() || '0');
+    setEarlyWithdrawalPenalty(group.early_withdrawal_penalty?.toString() || '0');
+    setInvestmentTypes(group.investment_types || 'none');
+  }, [group]);
+
   const handleSave = async () => {
     setSaving(true);
     try {
@@ -180,7 +246,7 @@ export function ChamaSettings({ groupId, group, members, onRefreshGroup }: Props
         investment_types: investmentTypes,
         share_transfer_allowed: shareTransferAllowed,
         min_balance_required: parseInt(minBalanceRequired) || 0,
-        late_contribution_penalty: parseInt(penaltyAmount) || 0, // Deprecated or alias field
+        late_contribution_penalty: parseInt(penaltyAmount) || 0,
         terms: group?.terms || null,
       }).eq('id', groupId);
 
