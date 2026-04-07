@@ -225,9 +225,20 @@ export function ChamaHarambee({ groupId, group, members, myRole }: Props) {
   };
 
   const handleContribute = async () => {
-    if (!user || !selectedHarambee) return;
+    if (!user) return;
+    
+    // Safety check: Ensure the harambee is actually selected
+    if (!selectedHarambee || !selectedHarambee.id) {
+      return toast({ 
+        title: "Session Error", 
+        description: "Harambee selection lost. Please try again.", 
+        variant: "destructive" 
+      });
+    }
+
     const amount = Number(contributeAmount);
     if (!amount || amount <= 0) return toast({ title: "Invalid amount", variant: "destructive" });
+    
     const phone = contributePhone.trim();
     if (!/^07\d{8}$|^254\d{9}$/.test(phone)) return toast({ title: "Invalid phone", variant: "destructive" });
 
@@ -240,11 +251,13 @@ export function ChamaHarambee({ groupId, group, members, myRole }: Props) {
           userId: user.id, 
           purpose: "harambee", 
           groupId: groupId, 
-          harambee_id: selectedHarambee.id, 
+          harambee_id: selectedHarambee.id, // Explicit UUID
           orderNumber: selectedHarambee.order_number 
         },
       });
+      
       if (error) throw error;
+      
       toast({ title: "STK Push Sent", description: "Enter pin on your phone" });
       setContributeOpen(false);
       setContributeAmount('');
