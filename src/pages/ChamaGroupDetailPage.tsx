@@ -418,62 +418,115 @@ export default function ChamaGroupDetailPage() {
             <div className="mb-3">
               <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Active Members ({members.length})</h2>
             </div>
-            <div className="space-y-2">
-              {members.map(member => {
-                const RoleIcon = roleIcons[member.role] || Users;
-                const isMe = member.user_id === user?.id;
-                return (
-                  <Card
-                    key={member.id}
-                    className={cn("p-4", isChair && !isMe && "cursor-pointer hover:border-accent/30 transition-colors")}
-                    onClick={() => { if (isChair && !isMe) setViewMember(member); }}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
-                          {member.profile?.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || '??'}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm">
-                            {member.profile?.full_name || 'Unknown'}
-                            {isMe && <span className="text-xs text-muted-foreground ml-1">(You)</span>}
-                          </p>
-                          <p className="text-xs text-muted-foreground">{member.profile?.phone}</p>
-                          {isChair && !isMe && member.profile?.county && (
-                            <p className="text-[11px] text-muted-foreground/70 truncate">
-                              {[member.profile.ward, member.profile.sub_county, member.profile.county].filter(Boolean).join(', ')}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {isChair && !isMe ? (
-                          <>
-                            <Select value={member.role} onValueChange={val => handleUpdateRole(member.id, val)}>
-                              <SelectTrigger className="h-8 text-xs w-[120px]" onClick={e => e.stopPropagation()}><SelectValue /></SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="member">Member</SelectItem>
-                                <SelectItem value="treasurer">Treasurer</SelectItem>
-                                <SelectItem value="secretary">Secretary</SelectItem>
-                                <SelectItem value="chairperson">Chairperson</SelectItem>
-                              </SelectContent>
-                            </Select>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={(e) => { e.stopPropagation(); openRemoveDialog(member.id, member.profile?.full_name || 'member'); }}>
-                              <LogOut size={14} />
-                            </Button>
-                          </>
-                        ) : (
-                          <span className={`text-[11px] px-2.5 py-1 rounded-full font-medium flex items-center gap-1 ${roleColors[member.role]}`}>
-                            <RoleIcon size={12} />
-                            {roleLabels[member.role]}
-                          </span>
-                        )}
+            {/* Leaders section */}
+            {(() => {
+              const leaders = members.filter(m => ['chairperson', 'secretary', 'treasurer'].includes(m.role));
+              const regularMembers = members.filter(m => !['chairperson', 'secretary', 'treasurer'].includes(m.role));
+              return (
+                <>
+                  {leaders.length > 0 && (
+                    <div className="mb-3">
+                      <p className="text-[11px] font-bold text-primary uppercase tracking-wider mb-2">👑 Leaders</p>
+                      <div className="space-y-2">
+                        {leaders.map(member => {
+                          const RoleIcon = roleIcons[member.role] || Users;
+                          const isMe = member.user_id === user?.id;
+                          return (
+                            <Card key={member.id} className={cn("p-4 border-primary/20", isChair && !isMe && "cursor-pointer hover:border-accent/30 transition-colors")} onClick={() => { if (isChair && !isMe) setViewMember(member); }}>
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                                    {member.profile?.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || '??'}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-medium text-sm">
+                                      {member.profile?.full_name || 'Unknown'}
+                                      {isMe && <span className="text-xs text-muted-foreground ml-1">(You)</span>}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">{member.profile?.phone}</p>
+                                  </div>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  {isChair && !isMe ? (
+                                    <>
+                                      <Select value={member.role} onValueChange={val => handleUpdateRole(member.id, val)}>
+                                        <SelectTrigger className="h-8 text-xs w-[120px]" onClick={e => e.stopPropagation()}><SelectValue /></SelectTrigger>
+                                        <SelectContent>
+                                          <SelectItem value="member">Member</SelectItem>
+                                          <SelectItem value="treasurer">Treasurer</SelectItem>
+                                          <SelectItem value="secretary">Secretary</SelectItem>
+                                          <SelectItem value="chairperson">Chairperson</SelectItem>
+                                        </SelectContent>
+                                      </Select>
+                                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={(e) => { e.stopPropagation(); openRemoveDialog(member.id, member.profile?.full_name || 'member'); }}>
+                                        <LogOut size={14} />
+                                      </Button>
+                                    </>
+                                  ) : (
+                                    <span className={`text-[11px] px-2.5 py-1 rounded-full font-medium flex items-center gap-1 ${roleColors[member.role]}`}>
+                                      <RoleIcon size={12} /> {roleLabels[member.role]}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </Card>
+                          );
+                        })}
                       </div>
                     </div>
-                  </Card>
-                );
-              })}
-            </div>
+                  )}
+                  <div>
+                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Members ({regularMembers.length})</p>
+                    <div className="space-y-2">
+                      {regularMembers.map(member => {
+                        const RoleIcon = roleIcons[member.role] || Users;
+                        const isMe = member.user_id === user?.id;
+                        return (
+                          <Card key={member.id} className={cn("p-4", isChair && !isMe && "cursor-pointer hover:border-accent/30 transition-colors")} onClick={() => { if (isChair && !isMe) setViewMember(member); }}>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                                  {member.profile?.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || '??'}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-sm">
+                                    {member.profile?.full_name || 'Unknown'}
+                                    {isMe && <span className="text-xs text-muted-foreground ml-1">(You)</span>}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">{member.profile?.phone}</p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {isChair && !isMe ? (
+                                  <>
+                                    <Select value={member.role} onValueChange={val => handleUpdateRole(member.id, val)}>
+                                      <SelectTrigger className="h-8 text-xs w-[120px]" onClick={e => e.stopPropagation()}><SelectValue /></SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="member">Member</SelectItem>
+                                        <SelectItem value="treasurer">Treasurer</SelectItem>
+                                        <SelectItem value="secretary">Secretary</SelectItem>
+                                        <SelectItem value="chairperson">Chairperson</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={(e) => { e.stopPropagation(); openRemoveDialog(member.id, member.profile?.full_name || 'member'); }}>
+                                      <LogOut size={14} />
+                                    </Button>
+                                  </>
+                                ) : (
+                                  <span className={`text-[11px] px-2.5 py-1 rounded-full font-medium flex items-center gap-1 ${roleColors[member.role]}`}>
+                                    <RoleIcon size={12} /> {roleLabels[member.role]}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </>
+              );
+            })()}
           </TabsContent>
 
           <TabsContent value="chat" className="mt-4">
