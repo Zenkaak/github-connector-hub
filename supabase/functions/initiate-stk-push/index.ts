@@ -20,11 +20,12 @@ Deno.serve(async (req) => {
       purpose, 
       groupId, 
       savingsId, 
-      harambeeId, 
+      harambee_id, // This matches the key we updated in your React component
       loanId, 
       disbursementId 
     } = await req.json();
 
+    // Validation
     if (!phone || !amount || !userId) {
       return new Response(
         JSON.stringify({ error: "Missing phone, amount, or userId" }),
@@ -32,7 +33,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Format phone to 254... format
+    // 1. Format phone to 254... format
     let formattedPhone = phone.replace(/\s/g, "").replace(/\+/g, "");
     if (formattedPhone.startsWith("0")) {
       formattedPhone = "254" + formattedPhone.slice(1);
@@ -40,14 +41,14 @@ Deno.serve(async (req) => {
       formattedPhone = "254" + formattedPhone;
     }
 
-    // Environment Variables
+    // 2. Environment Variables
     const consumerKey = Deno.env.get("MPESA_CONSUMER_KEY")!;
     const consumerSecret = Deno.env.get("MPESA_CONSUMER_SECRET")!;
     const shortcode = Deno.env.get("MPESA_SHORTCODE")!;
     const passkey = Deno.env.get("MPESA_PASSKEY")!;
     const partyB = Deno.env.get("PARTY_B") || shortcode;
 
-    // 1. Get M-Pesa Access Token
+    // 3. Get M-Pesa Access Token
     const auth = btoa(`${consumerKey}:${consumerSecret}`);
     const tokenRes = await fetch(
       "https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
@@ -65,7 +66,7 @@ Deno.serve(async (req) => {
 
     const accessToken = tokenData.access_token;
 
-    // 2. Generate M-Pesa Timestamp & Password
+    // 4. Generate M-Pesa Timestamp & Password
     const now = new Date();
     const timestamp =
       now.getFullYear().toString() +
@@ -77,7 +78,7 @@ Deno.serve(async (req) => {
 
     const password = btoa(`${shortcode}${passkey}${timestamp}`);
 
-    // 3. Set Reference Prefix based on transaction purpose
+    // 5. Set Reference Prefix based on transaction purpose
     const prefixMap: Record<string, string> = {
       chama_savings: "CHAMA_",
       personal_savings: "PSAV_",
@@ -93,7 +94,7 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const callbackUrl = `${supabaseUrl}/functions/v1/mpesa-callback`;
 
-    // 4. Prepare M-Pesa STK Push Body
+    // 6. Prepare M-Pesa STK Push Body
     const stkBody = {
       BusinessShortCode: shortcode,
       Password: password,
@@ -110,7 +111,7 @@ Deno.serve(async (req) => {
 
     console.log("STK Push request:", JSON.stringify({ ...stkBody, Password: "[REDACTED]" }));
 
-    // 5. Send Request to Safaricom
+    // 7. Send Request to Safaricom
     const stkRes = await fetch(
       "https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
       {
@@ -137,13 +138,13 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 6. Initialize Supabase Client
+    // 8. Initialize Supabase Client
     const supabase = createClient(
       supabaseUrl,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // 7. Save transaction with ALL metadata IDs
+    // 9. Save transaction with ALL metadata IDs (Crucial Step)
     const { error: insertError } = await supabase.from("stk_transactions").insert({
       user_id: userId,
       phone: formattedPhone,
@@ -155,13 +156,14 @@ Deno.serve(async (req) => {
       purpose: purpose || "activation",
       group_id: groupId || null,
       savings_id: savingsId || null,
-      harambee_id: harambeeId || null, 
+      harambee_id: harambee_id || null, // Corrected variable name from extraction
       loan_id: loanId || null,
       disbursement_id: disbursementId || null
     });
 
     if (insertError) {
       console.error("Supabase insert error:", insertError);
+      // We don't return error here because the M-Pesa prompt has already reached the user's phone
     }
 
     return new Response(
@@ -173,7 +175,7 @@ Deno.serve(async (req) => {
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("STK Push error:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
