@@ -4,7 +4,7 @@ export default function Footer() {
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
           <div>
-            <h2 className="text-white font-bold text-lg">DATAVEND VENTURES</h2>
+            <h2 className="text-white font-bold text-lg">DASNET VENTURES LTD</h2>
             <p className="text-xs">Support: +254725336731</p>
           </div>
           
@@ -14,7 +14,7 @@ export default function Footer() {
           </div>
           
           <p className="text-[10px] uppercase tracking-widest">
-            &copy; 2026 DATAVEND. All Rights Reserved.
+            &copy; 2026 DASNET VENTURES LTD. All Rights Reserved.
           </p>
         </div>
       </div>
