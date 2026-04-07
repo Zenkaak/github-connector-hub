@@ -40,13 +40,14 @@ Deno.serve(async (req) => {
       formattedPhone = "254" + formattedPhone;
     }
 
+    // Environment Variables
     const consumerKey = Deno.env.get("MPESA_CONSUMER_KEY")!;
     const consumerSecret = Deno.env.get("MPESA_CONSUMER_SECRET")!;
     const shortcode = Deno.env.get("MPESA_SHORTCODE")!;
     const passkey = Deno.env.get("MPESA_PASSKEY")!;
     const partyB = Deno.env.get("PARTY_B") || shortcode;
 
-    // Get M-Pesa Access Token
+    // 1. Get M-Pesa Access Token
     const auth = btoa(`${consumerKey}:${consumerSecret}`);
     const tokenRes = await fetch(
       "https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
@@ -64,7 +65,7 @@ Deno.serve(async (req) => {
 
     const accessToken = tokenData.access_token;
 
-    // Generate M-Pesa Timestamp
+    // 2. Generate M-Pesa Timestamp & Password
     const now = new Date();
     const timestamp =
       now.getFullYear().toString() +
@@ -76,7 +77,7 @@ Deno.serve(async (req) => {
 
     const password = btoa(`${shortcode}${passkey}${timestamp}`);
 
-    // Set Reference Prefix based on transaction purpose
+    // 3. Set Reference Prefix based on transaction purpose
     const prefixMap: Record<string, string> = {
       chama_savings: "CHAMA_",
       personal_savings: "PSAV_",
@@ -92,7 +93,7 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const callbackUrl = `${supabaseUrl}/functions/v1/mpesa-callback`;
 
-    // Prepare M-Pesa STK Push Body
+    // 4. Prepare M-Pesa STK Push Body
     const stkBody = {
       BusinessShortCode: shortcode,
       Password: password,
@@ -109,7 +110,7 @@ Deno.serve(async (req) => {
 
     console.log("STK Push request:", JSON.stringify({ ...stkBody, Password: "[REDACTED]" }));
 
-    // Send Request to Safaricom
+    // 5. Send Request to Safaricom
     const stkRes = await fetch(
       "https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
       {
@@ -136,13 +137,13 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Initialize Supabase Client
+    // 6. Initialize Supabase Client
     const supabase = createClient(
       supabaseUrl,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Save transaction with all IDs to allow the callback to update the correct records
+    // 7. Save transaction with ALL metadata IDs
     const { error: insertError } = await supabase.from("stk_transactions").insert({
       user_id: userId,
       phone: formattedPhone,
@@ -154,8 +155,9 @@ Deno.serve(async (req) => {
       purpose: purpose || "activation",
       group_id: groupId || null,
       savings_id: savingsId || null,
-      harambee_id: harambeeId || null, // Ensure this column exists in your table!
+      harambee_id: harambeeId || null, 
       loan_id: loanId || null,
+      disbursement_id: disbursementId || null
     });
 
     if (insertError) {
