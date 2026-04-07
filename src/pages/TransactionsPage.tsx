@@ -37,6 +37,7 @@ interface Transaction {
   mpesa_receipt: string | null;
   result_desc: string | null;
   checkout_request_id: string | null;
+  purpose: string | null;
   created_at: string;
 }
 
@@ -58,12 +59,15 @@ const statusConfig = {
   pending: { label: 'Pending', icon: Clock, color: 'text-accent', bg: 'bg-accent/10', border: 'border-accent/20' },
 };
 
-const getTxType = (ref: string) => {
-  if (ref.startsWith('CHAMA_')) return { label: 'Chama Savings', color: 'text-primary', bg: 'bg-primary/10' };
-  if (ref.startsWith('REPAY_')) return { label: 'Loan Repayment', color: 'text-accent', bg: 'bg-accent/10' };
-  if (ref.startsWith('HRB_')) return { label: 'Harambee', color: 'text-pink-500', bg: 'bg-pink-500/10' };
-  if (ref.startsWith('PSAV_')) return { label: 'Personal Savings', color: 'text-emerald-600', bg: 'bg-emerald-500/10' };
-  return { label: 'Activation', color: 'text-success', bg: 'bg-success/10' };
+const getTxType = (ref: string, purpose?: string) => {
+  if (ref.startsWith('CHAMA_') || purpose === 'chama_savings') return { label: 'Chama Savings', color: 'text-primary', bg: 'bg-primary/10' };
+  if (ref.startsWith('REPAY_') || purpose === 'loan_repayment') return { label: 'Loan Repayment', color: 'text-accent', bg: 'bg-accent/10' };
+  if (ref.startsWith('HRB_') || purpose === 'harambee') return { label: 'Harambee', color: 'text-pink-500', bg: 'bg-pink-500/10' };
+  if (ref.startsWith('PSAV_') || purpose === 'personal_savings') return { label: 'Personal Savings', color: 'text-emerald-600', bg: 'bg-emerald-500/10' };
+  if (ref.startsWith('DEP_') || purpose === 'wallet_deposit') return { label: 'Wallet Deposit', color: 'text-blue-500', bg: 'bg-blue-500/10' };
+  if (ref.startsWith('CJFEE_') || purpose === 'chama_joining_fee') return { label: 'Joining Fee', color: 'text-purple-500', bg: 'bg-purple-500/10' };
+  if (ref.startsWith('ACT_') || purpose === 'activation') return { label: 'Activation', color: 'text-success', bg: 'bg-success/10' };
+  return { label: 'Payment', color: 'text-success', bg: 'bg-success/10' };
 };
 
 const getTxTypeKey = (ref: string): TypeFilter => {
