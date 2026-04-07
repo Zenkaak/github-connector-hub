@@ -83,7 +83,6 @@ export function ChamaHarambee({ groupId, group, members, myRole }: Props) {
     if (data) setContributions(data);
   };
 
-  // --- REWRITTEN REALTIME SUBSCRIPTION ---
   useEffect(() => {
     fetchHarambees();
 
@@ -98,12 +97,10 @@ export function ChamaHarambee({ groupId, group, members, myRole }: Props) {
           filter: `group_id=eq.${groupId}` 
         }, 
         (payload) => {
-          console.log("Realtime Harambee Change:", payload);
           if (payload.eventType === 'UPDATE') {
             setHarambees(current => 
               current.map(h => h.id === payload.new.id ? payload.new : h)
             );
-            // If the user is currently viewing this specific harambee, update it in the modal too
             if (selectedHarambee?.id === payload.new.id) {
               setSelectedHarambee(payload.new);
             }
@@ -227,13 +224,12 @@ export function ChamaHarambee({ groupId, group, members, myRole }: Props) {
     }
   };
 
-  // --- UPDATED CONTRIBUTE HANDLER WITH harambee_id ---
   const handleContribute = async () => {
     if (!user || !selectedHarambee) return;
     const amount = Number(contributeAmount);
     if (!amount || amount <= 0) return toast({ title: "Invalid amount", variant: "destructive" });
     const phone = contributePhone.trim();
-    if (!/^07\d{8}$|^254\d{9}$/.test(phone)) return toast({ title: "Invalid phone number", variant: "destructive" });
+    if (!/^07\d{8}$|^254\d{9}$/.test(phone)) return toast({ title: "Invalid phone", variant: "destructive" });
 
     setContributing(true);
     try {
@@ -244,12 +240,12 @@ export function ChamaHarambee({ groupId, group, members, myRole }: Props) {
           userId: user.id, 
           purpose: "harambee", 
           groupId: groupId, 
-          harambee_id: selectedHarambee.id, // Fixed key name for database alignment
+          harambee_id: selectedHarambee.id, // Fixed key name
           orderNumber: selectedHarambee.order_number 
         },
       });
       if (error) throw error;
-      toast({ title: "STK Push Sent", description: "Enter your M-Pesa PIN when prompted" });
+      toast({ title: "STK Push Sent", description: "Enter pin on your phone" });
       setContributeOpen(false);
       setContributeAmount('');
     } catch (error: any) {
@@ -426,4 +422,3 @@ export function ChamaHarambee({ groupId, group, members, myRole }: Props) {
     </div>
   );
 }
- 
