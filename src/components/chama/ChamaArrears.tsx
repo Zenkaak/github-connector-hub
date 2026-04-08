@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
-import { AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Send, Loader2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 interface Props {
   groupId: string;
@@ -18,13 +21,63 @@ const FREQUENCY_HOURS: Record<string, number> = {
 };
 
 export function ChamaArrears({ groupId, group, members }: Props) {
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [savings, setSavings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [paying, setPaying] = useState<string | null>(null);
+
+  const fetchSavings = async () => {
+    const { data } = await supabase.from('chama_savings').select('*').eq('group_id', groupId);
+    if (data) setSavings(data);
+    setLoading(false);
+  };
 
   useEffect(() => {
-    supabase.from('chama_savings').select('*').eq('group_id', groupId)
-      .then(({ data }) => { if (data) setSavings(data); setLoading(false); });
+    fetchSavings();
+    
+    const channel = supabase
+      .channel('arrears-updates')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'chama_savings', filter: `group_id=eq.${groupId}` }, 
+        () => fetchSavings()
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, [groupId]);
+
+  const handlePayArrears = async (m: any) => {
+    if (!user || m.user_id !== user.id) return;
+    setPaying(m.user_id);
+    try {
+      const { data, error } = await supabase.functions.invoke('initiate-stk-push', {
+        body: {
+          phone: m.profile?.phone,
+          amount: m.arrearsAmount,
+          userId: user.id,
+          purpose: 'chama_savings',
+          groupId,
+          metadata: {
+            type: 'arrears_clearance',
+            missed_count: m.missedCount
+          }
+        },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      toast({ 
+        title: 'STK Push Sent', 
+        description: `Initiated payment for KES ${m.arrearsAmount.toLocaleString()}` 
+      });
+    } catch (err: any) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    } finally {
+      setPaying(null);
+    }
+  };
 
   const getExpectedPeriods = () => {
     if (!group?.contribution_amount || group.contribution_amount === 0) return [];
@@ -35,7 +88,6 @@ export function ChamaArrears({ groupId, group, members }: Props) {
     const periods: Date[] = [];
     let current = new Date(start);
 
-    // First period starts after the frequency duration has elapsed from creation
     current = new Date(current.getTime() + hours * 60 * 60 * 1000);
 
     while (current <= now) {
@@ -95,9 +147,23 @@ export function ChamaArrears({ groupId, group, members }: Props) {
                     <p className="text-xs text-muted-foreground">{m.profile?.phone}</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="font-bold text-destructive">KES {m.arrearsAmount.toLocaleString()}</p>
-                  <p className="text-[11px] text-muted-foreground">{m.missedCount} missed payment{m.missedCount > 1 ? 's' : ''}</p>
+                <div className="flex items-center gap-4">
+                  <div className="text-right">
+                    <p className="font-bold text-destructive">KES {m.arrearsAmount.toLocaleString()}</p>
+                    <p className="text-[11px] text-muted-foreground">{m.missedCount} missed payment{m.missedCount > 1 ? 's' : ''}</p>
+                  </div>
+                  {m.user_id === user?.id && (
+                    <Button 
+                      size="sm" 
+                      variant="destructive" 
+                      className="h-8 gap-1 text-xs"
+                      onClick={() => handlePayArrears(m)}
+                      disabled={paying === m.user_id}
+                    >
+                      {paying === m.user_id ? <Loader2 size={12} className="animate-spin" /> : <Send size={12} />}
+                      Pay Now
+                    </Button>
+                  )}
                 </div>
               </div>
             </Card>
@@ -107,3 +173,4 @@ export function ChamaArrears({ groupId, group, members }: Props) {
     </div>
   );
 }
+ 
