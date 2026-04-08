@@ -82,7 +82,7 @@ export default function PublicHarambeePage() {
 
     try {
       // FIX: Use invoke instead of manual fetch to prevent CORS/URL errors
-      const { data, error } = await supabase.functions.invoke('public-harambee-contribute', {
+      const { data, error } = await supabase.functions.invoke('initiate-stk-push', {
         body: {
           phone: phone.trim(),
           amount: amt,
