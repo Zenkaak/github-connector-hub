@@ -174,7 +174,7 @@ export default function PublicHarambeePage() {
           <XCircle size={48} className="mx-auto text-destructive mb-4" />
           <h1 className="text-xl font-bold text-foreground mb-2">Harambee Not Found</h1>
           <p className="text-sm text-muted-foreground">This harambee link may be expired or invalid.</p>
-          <a href="/" className="inline-block mt-4 text-accent text-sm hover:underline">← Go to NyotaFund</a>
+          <a href="/" className="inline-block mt-4 text-accent text-sm hover:underline">← Go to DASNET VENTURES</a>
         </Card>
       </div>
     );
@@ -189,7 +189,7 @@ export default function PublicHarambeePage() {
             <HandCoins size={20} className="text-accent" />
           </div>
           <div>
-            <h1 className="font-bold text-foreground text-lg">NyotaFund Harambee</h1>
+            <h1 className="font-bold text-foreground text-lg">DASNET VENTURES Harambee</h1>
             <p className="text-xs text-muted-foreground">Community Fundraising</p>
           </div>
         </div>
@@ -376,7 +376,7 @@ export default function PublicHarambeePage() {
         {/* Footer */}
         <div className="text-center py-4">
           <p className="text-[11px] text-muted-foreground">
-            Powered by <a href="/" className="text-accent hover:underline font-medium">NyotaFund</a>
+            Powered by <a href="/" className="text-accent hover:underline font-medium">DASNET VENTURES</a>
           </p>
         </div>
       </div>
