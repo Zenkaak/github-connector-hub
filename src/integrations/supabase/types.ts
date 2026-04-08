@@ -111,61 +111,202 @@ export type Database = {
       }
       chama_groups: {
         Row: {
+          allow_early_withdrawal: boolean | null
+          allow_partial_contributions: boolean | null
+          annual_savings_target: number | null
+          auto_remove_after_missed: number | null
+          chairperson_can_remove_members: boolean | null
           contribution_amount: number
           contribution_frequency: string
+          contribution_rollover_enabled: boolean | null
           created_at: string
           created_by: string | null
           description: string | null
+          dissolution_policy: string | null
+          dividend_distribution_frequency: string | null
+          early_withdrawal_penalty: number | null
+          emergency_fund_enabled: boolean | null
+          emergency_fund_percentage: number | null
+          grace_period_days: number | null
+          group_registration_number: string | null
+          harambee_enabled: boolean | null
           id: string
+          investment_enabled: boolean | null
+          investment_types: string | null
           is_public: boolean
           joining_fee: number | null
           late_contribution_penalty: number | null
+          late_penalty_amount: number | null
+          late_penalty_enabled: boolean | null
+          late_penalty_type: string | null
+          loan_enabled: boolean | null
+          loan_insurance_percentage: number | null
+          loan_interest_rate: number | null
+          loan_max_amount: number | null
+          loan_max_duration_months: number | null
+          loan_processing_fee: number | null
+          lock_period_months: number | null
+          max_loan_multiplier: number | null
           max_members: number | null
+          max_withdrawal_per_month: number | null
           meeting_absence_penalty: number | null
           meeting_day: string | null
+          meeting_frequency: string | null
+          merry_go_round_enabled: boolean | null
+          min_balance_required: number | null
+          min_contribution_amount: number | null
+          min_savings_before_loan: number | null
           name: string
+          new_member_probation_months: number | null
+          notification_meeting_reminder: boolean | null
+          notification_savings_reminder: boolean | null
           order_number: string | null
           profile_image_url: string | null
+          profit_sharing_method: string | null
+          quorum_percentage: number | null
+          refund_percentage: number | null
+          refund_policy: string | null
+          require_backdated_savings: boolean | null
+          require_guarantor_for_loans: boolean | null
+          share_transfer_allowed: boolean | null
+          special_contribution_enabled: boolean | null
           terms: string | null
           terms_updated_at: string | null
+          voting_required_for: string | null
+          welfare_fund_amount: number | null
+          welfare_fund_enabled: boolean | null
         }
         Insert: {
+          allow_early_withdrawal?: boolean | null
+          allow_partial_contributions?: boolean | null
+          annual_savings_target?: number | null
+          auto_remove_after_missed?: number | null
+          chairperson_can_remove_members?: boolean | null
           contribution_amount?: number
           contribution_frequency?: string
+          contribution_rollover_enabled?: boolean | null
           created_at?: string
           created_by?: string | null
           description?: string | null
+          dissolution_policy?: string | null
+          dividend_distribution_frequency?: string | null
+          early_withdrawal_penalty?: number | null
+          emergency_fund_enabled?: boolean | null
+          emergency_fund_percentage?: number | null
+          grace_period_days?: number | null
+          group_registration_number?: string | null
+          harambee_enabled?: boolean | null
           id?: string
+          investment_enabled?: boolean | null
+          investment_types?: string | null
           is_public?: boolean
           joining_fee?: number | null
           late_contribution_penalty?: number | null
+          late_penalty_amount?: number | null
+          late_penalty_enabled?: boolean | null
+          late_penalty_type?: string | null
+          loan_enabled?: boolean | null
+          loan_insurance_percentage?: number | null
+          loan_interest_rate?: number | null
+          loan_max_amount?: number | null
+          loan_max_duration_months?: number | null
+          loan_processing_fee?: number | null
+          lock_period_months?: number | null
+          max_loan_multiplier?: number | null
           max_members?: number | null
+          max_withdrawal_per_month?: number | null
           meeting_absence_penalty?: number | null
           meeting_day?: string | null
+          meeting_frequency?: string | null
+          merry_go_round_enabled?: boolean | null
+          min_balance_required?: number | null
+          min_contribution_amount?: number | null
+          min_savings_before_loan?: number | null
           name: string
+          new_member_probation_months?: number | null
+          notification_meeting_reminder?: boolean | null
+          notification_savings_reminder?: boolean | null
           order_number?: string | null
           profile_image_url?: string | null
+          profit_sharing_method?: string | null
+          quorum_percentage?: number | null
+          refund_percentage?: number | null
+          refund_policy?: string | null
+          require_backdated_savings?: boolean | null
+          require_guarantor_for_loans?: boolean | null
+          share_transfer_allowed?: boolean | null
+          special_contribution_enabled?: boolean | null
           terms?: string | null
           terms_updated_at?: string | null
+          voting_required_for?: string | null
+          welfare_fund_amount?: number | null
+          welfare_fund_enabled?: boolean | null
         }
         Update: {
+          allow_early_withdrawal?: boolean | null
+          allow_partial_contributions?: boolean | null
+          annual_savings_target?: number | null
+          auto_remove_after_missed?: number | null
+          chairperson_can_remove_members?: boolean | null
           contribution_amount?: number
           contribution_frequency?: string
+          contribution_rollover_enabled?: boolean | null
           created_at?: string
           created_by?: string | null
           description?: string | null
+          dissolution_policy?: string | null
+          dividend_distribution_frequency?: string | null
+          early_withdrawal_penalty?: number | null
+          emergency_fund_enabled?: boolean | null
+          emergency_fund_percentage?: number | null
+          grace_period_days?: number | null
+          group_registration_number?: string | null
+          harambee_enabled?: boolean | null
           id?: string
+          investment_enabled?: boolean | null
+          investment_types?: string | null
           is_public?: boolean
           joining_fee?: number | null
           late_contribution_penalty?: number | null
+          late_penalty_amount?: number | null
+          late_penalty_enabled?: boolean | null
+          late_penalty_type?: string | null
+          loan_enabled?: boolean | null
+          loan_insurance_percentage?: number | null
+          loan_interest_rate?: number | null
+          loan_max_amount?: number | null
+          loan_max_duration_months?: number | null
+          loan_processing_fee?: number | null
+          lock_period_months?: number | null
+          max_loan_multiplier?: number | null
           max_members?: number | null
+          max_withdrawal_per_month?: number | null
           meeting_absence_penalty?: number | null
           meeting_day?: string | null
+          meeting_frequency?: string | null
+          merry_go_round_enabled?: boolean | null
+          min_balance_required?: number | null
+          min_contribution_amount?: number | null
+          min_savings_before_loan?: number | null
           name?: string
+          new_member_probation_months?: number | null
+          notification_meeting_reminder?: boolean | null
+          notification_savings_reminder?: boolean | null
           order_number?: string | null
           profile_image_url?: string | null
+          profit_sharing_method?: string | null
+          quorum_percentage?: number | null
+          refund_percentage?: number | null
+          refund_policy?: string | null
+          require_backdated_savings?: boolean | null
+          require_guarantor_for_loans?: boolean | null
+          share_transfer_allowed?: boolean | null
+          special_contribution_enabled?: boolean | null
           terms?: string | null
           terms_updated_at?: string | null
+          voting_required_for?: string | null
+          welfare_fund_amount?: number | null
+          welfare_fund_enabled?: boolean | null
         }
         Relationships: []
       }
@@ -200,6 +341,13 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "chama_harambee_contributions_harambee_id_fkey"
+            columns: ["harambee_id"]
+            isOneToOne: false
+            referencedRelation: "chama_harambees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_harambee"
             columns: ["harambee_id"]
             isOneToOne: false
             referencedRelation: "chama_harambees"
@@ -271,7 +419,10 @@ export type Database = {
       }
       chama_join_requests: {
         Row: {
+          chairperson_decision: string | null
           created_at: string
+          decided_by: string | null
+          decision_date: string | null
           group_id: string
           id: string
           reviewed_by: string | null
@@ -279,7 +430,10 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          chairperson_decision?: string | null
           created_at?: string
+          decided_by?: string | null
+          decision_date?: string | null
           group_id: string
           id?: string
           reviewed_by?: string | null
@@ -287,7 +441,10 @@ export type Database = {
           user_id: string
         }
         Update: {
+          chairperson_decision?: string | null
           created_at?: string
+          decided_by?: string | null
+          decision_date?: string | null
           group_id?: string
           id?: string
           reviewed_by?: string | null
@@ -378,40 +535,79 @@ export type Database = {
         Row: {
           amount: number
           approved_by: string | null
+          borrower_id: string | null
+          chairperson_decision: string | null
           created_at: string
+          decision_date: string | null
+          disbursed_at: string | null
           due_date: string | null
+          duration_months: number | null
           group_id: string
           id: string
+          interest_paid: number | null
           interest_rate: number
+          last_payment_date: string | null
+          loan_type: string | null
+          outstanding_balance: number | null
+          principal_paid: number | null
           reason: string | null
+          reject_reason: string | null
+          rejection_reason: string | null
           repaid_amount: number
           status: string
+          total_repayment: number | null
           user_id: string
         }
         Insert: {
           amount: number
           approved_by?: string | null
+          borrower_id?: string | null
+          chairperson_decision?: string | null
           created_at?: string
+          decision_date?: string | null
+          disbursed_at?: string | null
           due_date?: string | null
+          duration_months?: number | null
           group_id: string
           id?: string
+          interest_paid?: number | null
           interest_rate?: number
+          last_payment_date?: string | null
+          loan_type?: string | null
+          outstanding_balance?: number | null
+          principal_paid?: number | null
           reason?: string | null
+          reject_reason?: string | null
+          rejection_reason?: string | null
           repaid_amount?: number
           status?: string
-          user_id: string
+          total_repayment?: number | null
+          user_id?: string
         }
         Update: {
           amount?: number
           approved_by?: string | null
+          borrower_id?: string | null
+          chairperson_decision?: string | null
           created_at?: string
+          decision_date?: string | null
+          disbursed_at?: string | null
           due_date?: string | null
+          duration_months?: number | null
           group_id?: string
           id?: string
+          interest_paid?: number | null
           interest_rate?: number
+          last_payment_date?: string | null
+          loan_type?: string | null
+          outstanding_balance?: number | null
+          principal_paid?: number | null
           reason?: string | null
+          reject_reason?: string | null
+          rejection_reason?: string | null
           repaid_amount?: number
           status?: string
+          total_repayment?: number | null
           user_id?: string
         }
         Relationships: [
@@ -551,6 +747,7 @@ export type Database = {
           group_id: string
           id: string
           is_active: boolean
+          joined_at: string | null
           role: string
           user_id: string
         }
@@ -560,6 +757,7 @@ export type Database = {
           group_id: string
           id?: string
           is_active?: boolean
+          joined_at?: string | null
           role?: string
           user_id: string
         }
@@ -569,6 +767,7 @@ export type Database = {
           group_id?: string
           id?: string
           is_active?: boolean
+          joined_at?: string | null
           role?: string
           user_id?: string
         }
@@ -1254,6 +1453,7 @@ export type Database = {
           id: string
           id_number: string
           is_active: boolean
+          is_admin: boolean | null
           is_verified: boolean
           phone: string
           sub_county: string
@@ -1271,6 +1471,7 @@ export type Database = {
           id?: string
           id_number?: string
           is_active?: boolean
+          is_admin?: boolean | null
           is_verified?: boolean
           phone?: string
           sub_county?: string
@@ -1288,6 +1489,7 @@ export type Database = {
           id?: string
           id_number?: string
           is_active?: boolean
+          is_admin?: boolean | null
           is_verified?: boolean
           phone?: string
           sub_county?: string
@@ -1342,8 +1544,11 @@ export type Database = {
           amount: number
           checkout_request_id: string | null
           created_at: string
+          disbursement_id: string | null
           group_id: string | null
+          harambee_id: string | null
           id: string
+          loan_id: string | null
           merchant_request_id: string | null
           mpesa_receipt: string | null
           phone: string
@@ -1360,8 +1565,11 @@ export type Database = {
           amount: number
           checkout_request_id?: string | null
           created_at?: string
+          disbursement_id?: string | null
           group_id?: string | null
+          harambee_id?: string | null
           id?: string
+          loan_id?: string | null
           merchant_request_id?: string | null
           mpesa_receipt?: string | null
           phone: string
@@ -1378,8 +1586,11 @@ export type Database = {
           amount?: number
           checkout_request_id?: string | null
           created_at?: string
+          disbursement_id?: string | null
           group_id?: string | null
+          harambee_id?: string | null
           id?: string
+          loan_id?: string | null
           merchant_request_id?: string | null
           mpesa_receipt?: string | null
           phone?: string
@@ -1659,6 +1870,10 @@ export type Database = {
       get_active_chama_member_count: {
         Args: { _group_id: string }
         Returns: number
+      }
+      handle_join_request: {
+        Args: { chairperson_id: string; decision: string; request_id: string }
+        Returns: undefined
       }
       has_role: {
         Args: {

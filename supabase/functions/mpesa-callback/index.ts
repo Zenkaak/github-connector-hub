@@ -205,7 +205,7 @@ Deno.serve(async (req) => {
       // WALLET / DEPOSITS
       // -------------------------
       if (
-        ["activation", "wallet_deposit", "chama_joining_fee"].includes(purpose)
+        ["activation", "wallet_deposit"].includes(purpose)
       ) {
         const { data: wallet } = await supabase
           .from("wallets")
@@ -228,6 +228,47 @@ Deno.serve(async (req) => {
           amount: txn.amount,
           description: `M-Pesa Deposit: ${mpesaReceipt || ""}`,
           reference_id: txn.reference,
+        });
+      }
+
+      // -------------------------
+      // CHAMA JOINING FEE
+      // -------------------------
+      if (purpose === "chama_joining_fee" || purpose === "chama_join") {
+        // Record joining fee
+        if (txn.group_id) {
+          await supabase.from("chama_joining_fees").insert({
+            group_id: txn.group_id,
+            user_id: txn.user_id,
+            amount: txn.amount,
+          });
+
+          // Auto-add member to group
+          await supabase.from("chama_members").insert({
+            group_id: txn.group_id,
+            user_id: txn.user_id,
+            role: "member",
+          });
+
+          // Update join request status
+          await supabase
+            .from("chama_join_requests")
+            .update({ status: "completed" })
+            .eq("group_id", txn.group_id)
+            .eq("user_id", txn.user_id);
+        }
+      }
+
+      // -------------------------
+      // CHAMA SAVINGS
+      // -------------------------
+      if (purpose === "chama_savings" && txn.group_id) {
+        await supabase.from("chama_savings").insert({
+          group_id: txn.group_id,
+          user_id: txn.user_id,
+          amount: txn.amount,
+          stk_reference: txn.reference,
+          month: new Date().toISOString().slice(0, 7),
         });
       }
 

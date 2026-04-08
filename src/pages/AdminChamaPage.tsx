@@ -415,7 +415,7 @@ export default function AdminChamaPage() {
                       <div className="flex gap-1">
                         <Button size="sm" className="text-xs h-7" onClick={async () => {
                           try {
-                            await supabase.from('chama_leave_requests').update({ admin_status: 'approved', status: 'completed' }).eq('id', lr.id);
+                            await supabase.from('chama_leave_requests').update({ status: 'completed' } as any).eq('id', lr.id);
                             await supabase.from('chama_members').update({ is_active: false } as any).eq('group_id', lr.group_id).eq('user_id', lr.user_id);
                             await supabase.from('notifications').insert({ user_id: lr.user_id, title: 'Leave Refund Approved ✅', message: `Your refund of KES ${(lr.refund_amount || 0).toLocaleString()} has been approved and will be processed.` });
                             await supabase.from('audit_logs').insert({ admin_id: user?.id, action: 'chama_leave_refund_approved', details: { group: group?.name, member: getName(lr.user_id), amount: lr.refund_amount } });

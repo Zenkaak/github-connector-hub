@@ -248,7 +248,7 @@ export function ChamaSettings({ groupId, group, members, onRefreshGroup }: Props
         min_balance_required: parseInt(minBalanceRequired) || 0,
         late_contribution_penalty: parseInt(penaltyAmount) || 0,
         terms: group?.terms || null,
-      }).eq('id', groupId);
+      } as any).eq('id', groupId);
 
       if (error) throw error;
 

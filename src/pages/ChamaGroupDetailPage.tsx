@@ -36,6 +36,7 @@ interface Member {
   id: string;
   user_id: string;
   role: string;
+  joined_at?: string;
   created_at: string;
   is_active?: boolean;
   profile?: { full_name: string; phone: string; email: string; county?: string; sub_county?: string; ward?: string };

@@ -18,7 +18,7 @@ interface Props {
   members: Array<{ 
     user_id: string; 
     role: string; 
-    joined_at: string; 
+    joined_at?: string; 
     profile?: { full_name: string } 
   }>;
   myRole: string;
@@ -64,7 +64,7 @@ export function ChamaLoans({ groupId, group, members, myRole }: Props) {
       if (loanData) {
         setLoans(loanData);
         const myActive = loanData.find(l => 
-          l.borrower_id === user.id && ['pending', 'approved', 'active', 'disbursed'].includes(l.status)
+          ((l as any).borrower_id === user.id || l.user_id === user.id) && ['pending', 'approved', 'active', 'disbursed'].includes(l.status)
         );
         setActiveLoan(myActive);
       }
@@ -85,7 +85,7 @@ export function ChamaLoans({ groupId, group, members, myRole }: Props) {
         .select('id')
         .eq('user_id', user.id)
         .eq('group_id', groupId)
-        .eq('status', 'unpaid')
+        .eq('is_paid', false)
         .limit(1);
       setHasArrears(!!penaltyData?.length);
 
@@ -163,7 +163,7 @@ export function ChamaLoans({ groupId, group, members, myRole }: Props) {
         status: decision,
         reject_reason: reason || null,
         disbursed_at: decision === 'approved' ? new Date().toISOString() : null
-      }).eq('id', loanId);
+      } as any).eq('id', loanId);
       
       if (error) throw error;
       toast({ title: `Loan ${decision}!` });
@@ -238,7 +238,7 @@ export function ChamaLoans({ groupId, group, members, myRole }: Props) {
               <div key={loan.id} className="p-4 hover:bg-slate-50 transition-colors">
                 <div className="flex justify-between items-start mb-3">
                   <div>
-                    <p className="text-sm font-black text-slate-900">{getMemberName(loan.borrower_id)}</p>
+                    <p className="text-sm font-black text-slate-900">{getMemberName((loan as any).borrower_id || loan.user_id)}</p>
                     <p className="text-[10px] text-slate-500 font-bold">{format(new Date(loan.created_at), 'PPP')}</p>
                   </div>
                   <div className={`text-[10px] px-3 py-1 rounded-full font-black uppercase shadow-sm ${

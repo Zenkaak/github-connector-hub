@@ -154,10 +154,10 @@ export default function PublicHarambeePage() {
   };
 
   const progress = harambee?.target_amount > 0
-    ? Math.min(100, ((harambee?.collected_amount || 0) / harambee.target_amount) * 100)
+    ? Math.min(100, ((harambee?.raised_amount || 0) / harambee.target_amount) * 100)
     : 0;
 
-  const images: string[] = (harambee as any)?.images || [];
+  const images: string[] = (harambee as any)?.image_urls || [];
 
   if (loading) {
     return (
@@ -174,7 +174,7 @@ export default function PublicHarambeePage() {
           <XCircle size={48} className="mx-auto text-destructive mb-4" />
           <h1 className="text-xl font-bold text-foreground mb-2">Harambee Not Found</h1>
           <p className="text-sm text-muted-foreground">This harambee link may be expired or invalid.</p>
-          <a href="/" className="inline-block mt-4 text-accent text-sm hover:underline">← Go to NyotaFund</a>
+          <a href="/" className="inline-block mt-4 text-accent text-sm hover:underline">← Go to DASNET VENTURES</a>
         </Card>
       </div>
     );
@@ -189,7 +189,7 @@ export default function PublicHarambeePage() {
             <HandCoins size={20} className="text-accent" />
           </div>
           <div>
-            <h1 className="font-bold text-foreground text-lg">NyotaFund Harambee</h1>
+            <h1 className="font-bold text-foreground text-lg">DASNET VENTURES Harambee</h1>
             <p className="text-xs text-muted-foreground">Community Fundraising</p>
           </div>
         </div>
@@ -226,7 +226,7 @@ export default function PublicHarambeePage() {
             <h2 className="text-xl font-bold text-foreground mt-2">
               Harambee for {harambee.beneficiary_name}
             </h2>
-            <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{harambee.reason}</p>
+            <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{harambee.description}</p>
           </div>
 
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
@@ -247,7 +247,7 @@ export default function PublicHarambeePage() {
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Collected</span>
               <span className="font-bold text-foreground">
-                KES {harambee.collected_amount?.toLocaleString()} / {harambee.target_amount?.toLocaleString()}
+                KES {(harambee.raised_amount || 0).toLocaleString()} / {harambee.target_amount?.toLocaleString()}
               </span>
             </div>
             <Progress value={progress} className="h-3" />
@@ -376,7 +376,7 @@ export default function PublicHarambeePage() {
         {/* Footer */}
         <div className="text-center py-4">
           <p className="text-[11px] text-muted-foreground">
-            Powered by <a href="/" className="text-accent hover:underline font-medium">NyotaFund</a>
+            Powered by <a href="/" className="text-accent hover:underline font-medium">DASNET VENTURES</a>
           </p>
         </div>
       </div>

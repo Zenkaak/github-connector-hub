@@ -81,7 +81,7 @@ export function MoneyRequestsSection({ walletBalance, onRefresh }: MoneyRequests
     try {
       const { error } = await supabase
         .from('money_requests')
-        .update({ status: 'declined', updated_at: new Date().toISOString() })
+        .update({ status: 'declined' } as any)
         .eq('id', req.id);
       if (error) throw error;
 
@@ -135,7 +135,7 @@ export function MoneyRequestsSection({ walletBalance, onRefresh }: MoneyRequests
       // Update request status
       await supabase
         .from('money_requests')
-        .update({ status: 'paid', updated_at: new Date().toISOString() })
+        .update({ status: 'paid' } as any)
         .eq('id', payDialog.id);
 
       // Notifications
