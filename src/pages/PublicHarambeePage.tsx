@@ -383,8 +383,7 @@ export default function PublicHarambeePage() {
         </div>  
       </Card>  
     )}  
-
-    {/* Footer */}  
+{/* Footer */}  
     <div className="text-center py-4">  
       <p className="text-[11px] text-muted-foreground">  
         Powered by <a href="/" className="text-accent hover:underline font-medium">DASNET VENTURES</a>  
