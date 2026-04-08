@@ -238,7 +238,7 @@ export function ChamaLoans({ groupId, group, members, myRole }: Props) {
               <div key={loan.id} className="p-4 hover:bg-slate-50 transition-colors">
                 <div className="flex justify-between items-start mb-3">
                   <div>
-                    <p className="text-sm font-black text-slate-900">{getMemberName(loan.borrower_id)}</p>
+                    <p className="text-sm font-black text-slate-900">{getMemberName((loan as any).borrower_id || loan.user_id)}</p>
                     <p className="text-[10px] text-slate-500 font-bold">{format(new Date(loan.created_at), 'PPP')}</p>
                   </div>
                   <div className={`text-[10px] px-3 py-1 rounded-full font-black uppercase shadow-sm ${
