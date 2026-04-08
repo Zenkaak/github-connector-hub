@@ -81,30 +81,24 @@ export default function PublicHarambeePage() {
     setStatusMessage('Sending payment request to your phone...');
 
     try {
-      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/public-harambee-contribute`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            phone: phone.trim(),
-            amount: amt,
-            orderNumber,
-            contributorName: name.trim() || undefined,
-          }),
-        }
-      );
+      // FIX: Use invoke instead of manual fetch to prevent CORS/URL errors
+      const { data, error } = await supabase.functions.invoke('public-harambee-contribute', {
+        body: {
+          phone: phone.trim(),
+          amount: amt,
+          orderNumber,
+          contributorName: name.trim() || undefined,
+        },
+      });
 
-      const data = await response.json();
-      if (data.error) throw new Error(data.error);
+      if (error) throw error;
 
       referenceRef.current = data.reference;
       setStatusMessage('Check your phone for the M-Pesa prompt. Enter your PIN to complete.');
       startPolling(data.reference);
     } catch (error: any) {
       setPaymentStatus('failed');
-      setStatusMessage(error.message);
+      setStatusMessage(error.message || 'Could not initiate payment');
       setContributing(false);
     }
   };
@@ -112,7 +106,6 @@ export default function PublicHarambeePage() {
   const startPolling = (reference: string) => {
     let attempts = 0;
     const maxAttempts = 60;
-    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
 
     pollRef.current = setInterval(async () => {
       attempts++;
@@ -125,15 +118,12 @@ export default function PublicHarambeePage() {
       }
 
       try {
-        const res = await fetch(
-          `https://${projectId}.supabase.co/functions/v1/check-stk-status`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ reference }),
-          }
-        );
-        const data = await res.json();
+        // FIX: Use invoke for status check as well
+        const { data, error } = await supabase.functions.invoke('check-stk-status', {
+          body: { reference },
+        });
+
+        if (error) throw error;
 
         if (data.status === 'success') {
           clearInterval(pollRef.current!);
@@ -148,7 +138,7 @@ export default function PublicHarambeePage() {
           setContributing(false);
         }
       } catch {
-        // Keep polling
+        // Keep polling on minor network glitches
       }
     }, 3000);
   };
@@ -383,3 +373,4 @@ export default function PublicHarambeePage() {
     </div>
   );
 }
+ 
