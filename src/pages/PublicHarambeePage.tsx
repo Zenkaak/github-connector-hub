@@ -154,10 +154,10 @@ export default function PublicHarambeePage() {
   };
 
   const progress = harambee?.target_amount > 0
-    ? Math.min(100, ((harambee?.collected_amount || 0) / harambee.target_amount) * 100)
+    ? Math.min(100, ((harambee?.raised_amount || 0) / harambee.target_amount) * 100)
     : 0;
 
-  const images: string[] = (harambee as any)?.images || [];
+  const images: string[] = (harambee as any)?.image_urls || [];
 
   if (loading) {
     return (
@@ -226,7 +226,7 @@ export default function PublicHarambeePage() {
             <h2 className="text-xl font-bold text-foreground mt-2">
               Harambee for {harambee.beneficiary_name}
             </h2>
-            <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{harambee.reason}</p>
+            <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{harambee.description}</p>
           </div>
 
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
@@ -247,7 +247,7 @@ export default function PublicHarambeePage() {
             <div className="flex justify-between text-sm">
               <span className="text-muted-foreground">Collected</span>
               <span className="font-bold text-foreground">
-                KES {harambee.collected_amount?.toLocaleString()} / {harambee.target_amount?.toLocaleString()}
+                KES {(harambee.raised_amount || 0).toLocaleString()} / {harambee.target_amount?.toLocaleString()}
               </span>
             </div>
             <Progress value={progress} className="h-3" />
