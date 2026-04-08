@@ -50,7 +50,19 @@ export function ChamaPenalties({ groupId, group, members, myRole }: Props) {
     setLoading(false);
   };
 
-  useEffect(() => { fetchPenalties(); }, [groupId]);
+  useEffect(() => { 
+    fetchPenalties(); 
+    
+    const channel = supabase
+      .channel('penalty-updates')
+      .on('postgres_changes', 
+        { event: '*', schema: 'public', table: 'chama_penalties', filter: `group_id=eq.${groupId}` }, 
+        () => fetchPenalties()
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [groupId]);
 
   const handleEnforcePenalties = async () => {
     if (!group.late_penalty_enabled || !group.late_penalty_amount) {
@@ -127,7 +139,7 @@ export function ChamaPenalties({ groupId, group, members, myRole }: Props) {
 
   const handleMarkPaid = async (penaltyId: string) => {
     try {
-      await supabase.from('chama_penalties').update({ status: 'paid' } as any).eq('id', penaltyId);
+      await supabase.from('chama_penalties').update({ is_paid: true }).eq('id', penaltyId);
       toast({ title: 'Penalty marked as paid' });
       fetchPenalties();
     } catch (err: any) {
@@ -193,7 +205,6 @@ export function ChamaPenalties({ groupId, group, members, myRole }: Props) {
         )}
       </div>
 
-      {/* My unpaid penalties alert */}
       {myUnpaid.length > 0 && (
         <Card className="p-4 border-destructive/30 bg-destructive/5">
           <div className="flex items-center justify-between">
@@ -221,7 +232,6 @@ export function ChamaPenalties({ groupId, group, members, myRole }: Props) {
         </Card>
       ) : (
         <div className="space-y-2">
-          {/* Leaders see all penalties, members see only theirs */}
           {(isLeader ? penalties : myPenalties).map(p => (
             <Card key={p.id} className={`p-4 ${!p.is_paid ? 'border-destructive/20' : ''}`}>
               <div className="flex items-center justify-between">
@@ -240,7 +250,6 @@ export function ChamaPenalties({ groupId, group, members, myRole }: Props) {
                   <span className={`text-sm font-bold ${p.is_paid ? 'text-emerald-500' : 'text-destructive'}`}>
                     KES {p.amount.toLocaleString()}
                   </span>
-                  {/* Pay Now button for ANY member with unpaid penalty (including leaders) */}
                   {!p.is_paid && p.user_id === user?.id && (
                     <Button size="sm" variant="gold" className="text-xs h-7 gap-1" onClick={() => {
                       const myPhone = members.find(m => m.user_id === user?.id)?.profile?.phone || '';
@@ -262,7 +271,6 @@ export function ChamaPenalties({ groupId, group, members, myRole }: Props) {
         </div>
       )}
 
-      {/* Pay Penalty Dialog */}
       <Dialog open={payDialog.open} onOpenChange={(open) => !open && setPayDialog({ open: false, penalty: null })}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader><DialogTitle>Pay Penalty</DialogTitle></DialogHeader>
