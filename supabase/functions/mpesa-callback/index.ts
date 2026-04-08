@@ -1,18 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
-/**
- * M-PESA CALLBACK EDGE FUNCTION (COMPLETE VERSION)
- * * Logic flow:
- * 1. Receive JSON from Safaricom.
- * 2. Fetch the pending transaction from 'stk_transactions'.
- * 3. On success (ResultCode 0):
- * - Immediately update 'stk_transactions' status and receipt.
- * - Route money to Wallets, Chama Savings, Loans, or Harambees based on 'purpose'.
- * - Send a success notification.
- * 4. On failure:
- * - Update 'stk_transactions' status to 'failed'.
- */
-
 const jsonResponse = (data: any, status = 200) => {
   return new Response(JSON.stringify(data), {
     status,
@@ -25,19 +12,15 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json();
-    console.log("M-Pesa callback received:", JSON.stringify(body));
+    console.log("M-Pesa callback payload:", JSON.stringify(body));
 
     const callback = body?.Body?.stkCallback;
     if (!callback) return jsonResponse({ ResultCode: 0, ResultDesc: "Accepted" });
 
     const { CheckoutRequestID, ResultCode, ResultDesc } = callback;
+    const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
-    const supabase = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
-
-    // 1. Locate the specific transaction using the CheckoutRequestID
+    // 1. Fetch the transaction
     const { data: txn, error: findError } = await supabase
       .from("stk_transactions")
       .select("*, profiles(full_name)")
@@ -45,39 +28,43 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (findError || !txn) {
-      console.error("Transaction not found for ID:", CheckoutRequestID);
+      console.error("CRITICAL: Transaction not found in DB for ID:", CheckoutRequestID);
       return jsonResponse({ ResultCode: 0, ResultDesc: "Accepted" });
     }
 
-    // 2. Prevent re-processing
-    if (txn.status === "success") {
-      return jsonResponse({ ResultCode: 0, ResultDesc: "Accepted" });
-    }
-
+    // 2. Process success
     if (ResultCode === 0) {
       const metadataItems = callback?.CallbackMetadata?.Item || [];
-      const mpesaReceipt = metadataItems.find((i: any) => i.Name === "MpesaReceiptNumber")?.Value || null;
+      const mpesaReceipt = String(metadataItems.find((i: any) => i.Name === "MpesaReceiptNumber")?.Value || "");
       const actualAmount = metadataItems.find((i: any) => i.Name === "Amount")?.Value || txn.amount;
 
-      // --- FIX 1: UPDATE TRANSACTION TABLE IMMEDIATELY ---
+      // --- THE CRITICAL UPDATE BLOCK ---
+      console.log(`Attempting to update status for ${CheckoutRequestID} to Success...`);
       const { error: updateTxError } = await supabase
         .from("stk_transactions")
         .update({
           status: "success",
           result_code: String(ResultCode),
-          result_desc: "Accepted",
-          mpesa_receipt: String(mpesaReceipt), // Ensure string format
+          result_desc: "The service was accepted successfully",
+          mpesa_receipt: mpesaReceipt,
           updated_at: new Date().toISOString(),
         })
         .eq("checkout_request_id", CheckoutRequestID);
 
-      if (updateTxError) console.error("Tx Update Error:", updateTxError.message);
+      if (updateTxError) {
+        // THIS ERROR LOG WILL TELL YOU EXACTLY WHY IT IS STILL "PENDING"
+        console.error("DATABASE REJECTED TRANSACTION UPDATE:", updateTxError.message);
+      } else {
+        console.log("SUCCESS: stk_transactions table updated successfully.");
+      }
 
       const purpose = txn.purpose;
       const userName = txn.profiles?.full_name || "Member";
-      let notificationMsg = `Dear ${userName}, your payment of KES ${actualAmount.toLocaleString()} has been received. Receipt: ${mpesaReceipt}.`;
+      let notificationMsg = `Dear ${userName}, payment of KES ${actualAmount} received. Receipt: ${mpesaReceipt}.`;
 
-      // --- BRANCH: CHAMA SAVINGS & ARREARS ---
+      // --- BUSINESS LOGIC (SAVINGS, WALLET, LOANS, etc.) ---
+      
+      // Chama Savings & Arrears
       if (purpose === "chama_savings" && txn.group_id) {
         const metadata = txn.metadata || {};
         if (metadata.isArrears || metadata.type === 'arrears_clearance') {
@@ -88,11 +75,8 @@ Deno.serve(async (req) => {
             const entryDate = new Date();
             entryDate.setMonth(entryDate.getMonth() - i);
             arrearsEntries.push({
-              group_id: txn.group_id,
-              user_id: txn.user_id,
-              amount: individualAmount,
-              stk_reference: mpesaReceipt || txn.reference,
-              month: entryDate.toISOString().slice(0, 7),
+              group_id: txn.group_id, user_id: txn.user_id, amount: individualAmount,
+              stk_reference: mpesaReceipt, month: entryDate.toISOString().slice(0, 7),
               description: `Arrears Clearance (${i + 1}/${missedCount})`
             });
           }
@@ -100,14 +84,13 @@ Deno.serve(async (req) => {
         } else {
           await supabase.from("chama_savings").insert({
             group_id: txn.group_id, user_id: txn.user_id, amount: actualAmount,
-            stk_reference: mpesaReceipt || txn.reference,
-            month: new Date().toISOString().slice(0, 7),
+            stk_reference: mpesaReceipt, month: new Date().toISOString().slice(0, 7),
             description: "Regular Savings"
           });
         }
       }
 
-      // --- BRANCH: CHAMA PENALTIES ---
+      // Chama Penalty
       if (purpose === "chama_penalty") {
         const penaltyId = txn.penalty_id || txn.metadata?.penaltyId;
         if (penaltyId) {
@@ -117,7 +100,7 @@ Deno.serve(async (req) => {
         }
       }
 
-      // --- BRANCH: HARAMBEE CONTRIBUTIONS ---
+      // Harambee
       if (purpose === "harambee" && txn.harambee_id) {
         const { data: h } = await supabase.from("chama_harambees").select("raised_amount").eq("id", txn.harambee_id).maybeSingle();
         if (h) {
@@ -128,23 +111,19 @@ Deno.serve(async (req) => {
         }
       }
 
-      // --- BRANCH: LOAN REPAYMENT ---
+      // Loan Repayment
       if (purpose === "loan_repayment") {
-        const { data: d } = await supabase.from("loan_disbursements")
-          .select("*").eq("user_id", txn.user_id).eq("status", "active")
-          .order("created_at", { ascending: false }).limit(1).maybeSingle();
+        const { data: d } = await supabase.from("loan_disbursements").select("*").eq("user_id", txn.user_id).eq("status", "active").order("created_at", { ascending: false }).limit(1).maybeSingle();
         if (d) {
           const newBal = Math.max(0, (d.outstanding_balance || 0) - actualAmount);
           const newStatus = newBal <= 0 ? "paid" : "active";
           await supabase.from("loan_disbursements").update({ outstanding_balance: newBal, status: newStatus }).eq("id", d.id);
           if (newStatus === "paid") await supabase.from("loan_applications").update({ status: "paid" }).eq("id", d.loan_id);
-          await supabase.from("loan_repayments").insert({
-            disbursement_id: d.id, user_id: txn.user_id, amount: actualAmount, mpesa_reference: mpesaReceipt, status: 'completed'
-          });
+          await supabase.from("loan_repayments").insert({ disbursement_id: d.id, user_id: txn.user_id, amount: actualAmount, mpesa_reference: mpesaReceipt, status: 'completed' });
         }
       }
 
-      // --- BRANCH: WALLET DEPOSITS ---
+      // Wallet Deposits
       if (["activation", "wallet_deposit"].includes(purpose)) {
         const { data: w } = await supabase.from("wallets").select("id, balance").eq("user_id", txn.user_id).maybeSingle();
         if (w) {
@@ -156,18 +135,16 @@ Deno.serve(async (req) => {
         }
       }
 
-      // --- BRANCH: PERSONAL SAVINGS ---
+      // Personal Savings
       if (purpose === "personal_savings" && txn.savings_id) {
         const { data: ps } = await supabase.from("personal_savings").select("saved_amount").eq("id", txn.savings_id).maybeSingle();
         if (ps) {
           await supabase.from("personal_savings").update({ saved_amount: (ps.saved_amount || 0) + actualAmount }).eq("id", txn.savings_id);
-          await supabase.from("personal_savings_deposits").insert({
-            savings_id: txn.savings_id, user_id: txn.user_id, amount: actualAmount, stk_reference: mpesaReceipt
-          });
+          await supabase.from("personal_savings_deposits").insert({ savings_id: txn.savings_id, user_id: txn.user_id, amount: actualAmount, stk_reference: mpesaReceipt });
         }
       }
 
-      // --- BRANCH: CHAMA JOINING FEES ---
+      // Chama Join
       if (purpose === "chama_joining_fee" || purpose === "chama_join") {
         if (txn.group_id) {
           await supabase.from("chama_joining_fees").insert({ group_id: txn.group_id, user_id: txn.user_id, amount: actualAmount, reference: mpesaReceipt });
@@ -176,33 +153,23 @@ Deno.serve(async (req) => {
         }
       }
 
-      // --- FINAL: SEND SUCCESS NOTIFICATION ---
+      // Notification
       await supabase.from("notifications").insert({
         user_id: txn.user_id, title: "Payment Confirmed ✅", message: notificationMsg,
         type: "payment", metadata: { receipt: mpesaReceipt, amount: actualAmount, purpose }
       });
 
     } else {
-      // HANDLE FAILURE (User cancel, Insufficient funds, etc.)
+      // HANDLE FAILURE
       await supabase.from("stk_transactions")
-        .update({ 
-          status: "failed", 
-          result_code: String(ResultCode), 
-          result_desc: ResultDesc, 
-          updated_at: new Date().toISOString() 
-        })
+        .update({ status: "failed", result_code: String(ResultCode), result_desc: ResultDesc, updated_at: new Date().toISOString() })
         .eq("checkout_request_id", CheckoutRequestID);
-
-      await supabase.from("notifications").insert({
-        user_id: txn.user_id, title: "Payment Failed ❌", type: "payment",
-        message: `Transaction for KES ${txn.amount} failed: ${ResultDesc}.`
-      });
     }
 
     return jsonResponse({ ResultCode: 0, ResultDesc: "Accepted" });
 
-  } catch (error) {
-    console.error("CRITICAL CALLBACK ERROR:", error);
+  } catch (err) {
+    console.error("GLOBAL CALLBACK ERROR:", err);
     return jsonResponse({ ResultCode: 0, ResultDesc: "Accepted" });
   }
 });
