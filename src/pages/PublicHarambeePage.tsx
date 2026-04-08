@@ -70,7 +70,7 @@ setLoading(false);
 };  
   
 const handleContribute = async () => {  
-if (!phone.trim() || !amount || !orderNumber) return;  
+if (!phone.trim() || !amount || !harambee?.id) return;  
 const amt = parseInt(amount);  
 if (!amt || amt < 1) {  
 toast({ title: 'Invalid amount', variant: 'destructive' });  
@@ -82,19 +82,16 @@ setPaymentStatus('pending');
 setStatusMessage('Sending payment request to your phone...');  
   
 try {  
-// FIX: Use invoke instead of manual fetch to prevent CORS/URL errors  
 const { data, error } = await supabase.functions.invoke('initiate-stk-push', {  
   body: {  
     phone: phone.trim(),  
     amount: amt,  
-  
-    // REQUIRED BY EDGE FUNCTION  
     userId: 'public-user',  
     purpose: 'harambee',  
+    // We pass both variations to ensure the Edge Function catches it regardless of naming convention
     harambee_id: harambee.id,  
-  
-    // optional  
-    contributorName: name.trim() || undefined,  
+    harambeeId: harambee.id, 
+    contributorName: name.trim() || 'Anonymous',  
   },  
 });  
   
@@ -126,7 +123,6 @@ return;
 }  
   
 try {  
-// FIX: Use invoke for status check as well  
 const { data, error } = await supabase.functions.invoke('check-stk-status', {  
 body: { reference },  
 });  
@@ -138,7 +134,7 @@ if (data.status === 'success') {
   setPaymentStatus('success');      
   setStatusMessage('Payment received! Thank you for your contribution. 🎉');      
   setContributing(false);      
-  fetchHarambee(); // Refresh data      
+  fetchHarambee();      
 } else if (data.status === 'failed') {      
   clearInterval(pollRef.current!);      
   setPaymentStatus('failed');      
@@ -147,7 +143,7 @@ if (data.status === 'success') {
 }  
   
 } catch {  
-// Keep polling on minor network glitches  
+// Keep polling  
 }  
 }, 3000);  
   
@@ -161,14 +157,12 @@ const images: string[] = (harambee as any)?.image_urls || [];
   
 if (loading) {  
 return (  
-  
 <div className="min-h-screen bg-background flex items-center justify-center">    
 <Loader2 className="animate-spin text-accent" size={32} />    
 </div>    
 );    
 }  if (notFound) {  
 return (  
-  
 <div className="min-h-screen bg-background flex items-center justify-center p-4">    
 <Card className="p-8 text-center max-w-md w-full">    
 <XCircle size={48} className="mx-auto text-destructive mb-4" />    
@@ -179,9 +173,7 @@ return (
 </div>    
 );    
 }  return (  
-  
 <div className="min-h-screen bg-background">    
-{/* Header */}    
 <div className="bg-card border-b border-border">    
 <div className="max-w-lg mx-auto px-4 py-4 flex items-center gap-3">    
 <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">    
@@ -193,7 +185,6 @@ return (
 </div>    
 </div>    
 </div>  <div className="max-w-lg mx-auto px-4 py-6 space-y-5">      
-    {/* Images */}      
     {images.length > 0 && (      
       <div className="grid grid-cols-3 gap-2 rounded-xl overflow-hidden">      
         {images.map((img, i) => (      
@@ -205,7 +196,7 @@ return (
           />      
         ))}      
       </div>      
-    )}    {/* Harambee Details */}      
+    )}    
 <Card className="p-5 space-y-4">      
   <div>      
     <div className="flex items-center gap-2 mb-1">      
@@ -237,7 +228,6 @@ return (
     )}      
   </div>      
   
-  {/* Progress */}      
   <div className="p-4 rounded-xl bg-muted/40 border border-border/40 space-y-2">      
     <div className="flex justify-between text-sm">      
       <span className="text-muted-foreground">Collected</span>      
@@ -257,7 +247,6 @@ return (
   </p>      
 </Card>      
   
-{/* Contribute Form */}      
 {harambee.status === 'active' && paymentStatus !== 'success' && (      
   <Card className="p-5 space-y-4">      
     <h3 className="text-base font-bold text-foreground flex items-center gap-2">      
@@ -315,7 +304,6 @@ return (
   </Card>      
 )}      
   
-{/* Payment Status */}      
 {paymentStatus !== 'idle' && (      
   <Card className={`p-5 text-center space-y-3 ${      
     paymentStatus === 'success' ? 'border-emerald-500/30' :      
@@ -346,7 +334,6 @@ return (
   </Card>      
 )}      
   
-{/* Recent Contributions */}      
 {contributions.length > 0 && (      
   <Card className="p-5">      
     <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-3">      
@@ -368,7 +355,6 @@ return (
   </Card>      
 )}      
   
-{/* Footer */}      
 <div className="text-center py-4">      
   <p className="text-[11px] text-muted-foreground">      
     Powered by <a href="/" className="text-accent hover:underline font-medium">DASNET VENTURES</a>      
@@ -377,4 +363,5 @@ return (
   
   </div>      
 </div>  );  
-      } 
+}
+ 
