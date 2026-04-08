@@ -18,7 +18,7 @@ interface Props {
   members: Array<{ 
     user_id: string; 
     role: string; 
-    joined_at: string; 
+    joined_at?: string; 
     profile?: { full_name: string } 
   }>;
   myRole: string;
