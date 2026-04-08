@@ -71,15 +71,10 @@ Deno.serve(async (req) => {
     console.log("REFERENCE:", reference);
 
     // -------------------------
-    // SANITIZE USER ID (FIX FOR PUBLIC USERS)
-    // -------------------------
-    const finalUserId = (userId && userId !== 'public-user') ? userId : null;
-
-    // -------------------------
     // 1. INSERT FIRST (CRITICAL)
     // -------------------------
     const { error: insertError } = await supabase.from("stk_transactions").insert({
-      user_id: finalUserId,
+      user_id: userId || null,
       phone: formattedPhone,
       amount: numericAmount,
       reference,
@@ -95,7 +90,7 @@ Deno.serve(async (req) => {
 
     if (insertError) {
       console.error("INSERT ERROR:", insertError);
-      throw new Error(`Failed to create transaction record: ${insertError.message}`);
+      throw new Error("Failed to create transaction record");
     }
 
     console.log("DB row created successfully");
@@ -211,5 +206,4 @@ Deno.serve(async (req) => {
       }
     );
   }
-});
- 
+}); 
