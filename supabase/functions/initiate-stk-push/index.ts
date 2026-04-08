@@ -61,12 +61,14 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
     // -------------------------
-    // REFERENCE
+    // REFERENCE & USER ID FIX
     // -------------------------
     const reference = `${purpose.toUpperCase()}_${Date.now()}_${Math.random()
       .toString(36)
       .slice(2, 8)
       .toUpperCase()}`;
+
+    const finalUserId = (userId && userId !== 'public-user') ? userId : null;
 
     console.log("REFERENCE:", reference);
 
@@ -74,7 +76,7 @@ Deno.serve(async (req) => {
     // 1. INSERT FIRST (CRITICAL)
     // -------------------------
     const { error: insertError } = await supabase.from("stk_transactions").insert({
-      user_id: userId || null,
+      user_id: finalUserId,
       phone: formattedPhone,
       amount: numericAmount,
       reference,
@@ -90,7 +92,7 @@ Deno.serve(async (req) => {
 
     if (insertError) {
       console.error("INSERT ERROR:", insertError);
-      throw new Error("Failed to create transaction record");
+      throw new Error(`Failed to create transaction record: ${insertError.message}`);
     }
 
     console.log("DB row created successfully");
@@ -180,6 +182,20 @@ Deno.serve(async (req) => {
     }
 
     // -------------------------
+    // 3. UPDATE ROW WITH CHECKOUT ID (CRITICAL FOR CALLBACK)
+    // -------------------------
+    // Without this, the callback cannot find the row to change 'pending' to 'success'
+    const { error: updateError } = await supabase
+      .from("stk_transactions")
+      .update({ checkout_request_id: stkData.CheckoutRequestID })
+      .eq("reference", reference);
+
+    if (updateError) {
+      console.error("UPDATE ERROR:", updateError);
+      // We don't throw here because STK was already sent, but we log it.
+    }
+
+    // -------------------------
     // SUCCESS RESPONSE
     // -------------------------
     return new Response(
@@ -206,4 +222,5 @@ Deno.serve(async (req) => {
       }
     );
   }
-}); 
+});
+ 
