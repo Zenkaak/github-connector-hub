@@ -39,7 +39,7 @@ export default function PublicHarambeePage() {
       .from('chama_harambees')
       .select('*')
       .eq('order_number', orderNumber)
-      .single();
+      .maybeSingle();
 
     if (error || !data) {
       setNotFound(true);
@@ -54,7 +54,7 @@ export default function PublicHarambeePage() {
       .from('chama_groups')
       .select('name')
       .eq('id', data.group_id)
-      .single();
+      .maybeSingle();
     if (group) setGroupName(group.name);
 
     // Fetch contributions
@@ -129,26 +129,35 @@ export default function PublicHarambeePage() {
           `https://${projectId}.supabase.co/functions/v1/check-stk-status`,
           {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            },
             body: JSON.stringify({ reference }),
           }
         );
+        
+        if (!res.ok && res.status !== 406) {
+           throw new Error('Network response was not ok');
+        }
+
         const data = await res.json();
 
-        if (data.status === 'success') {
+        if (data.status === 'success' || data.status === 'Completed') {
           clearInterval(pollRef.current!);
           setPaymentStatus('success');
           setStatusMessage('Payment received! Thank you for your contribution. 🎉');
           setContributing(false);
           fetchHarambee(); // Refresh data
-        } else if (data.status === 'failed') {
+        } else if (data.status === 'failed' || data.status === 'Cancelled') {
           clearInterval(pollRef.current!);
           setPaymentStatus('failed');
           setStatusMessage(data.message || 'Payment failed. Please try again.');
           setContributing(false);
         }
-      } catch {
-        // Keep polling
+      } catch (err) {
+        console.log('Polling...', err);
+        // Keep polling on errors as record might not be created yet
       }
     }, 3000);
   };
@@ -383,3 +392,4 @@ export default function PublicHarambeePage() {
     </div>
   );
 }
+ 
