@@ -39,14 +39,11 @@ export function ChamaArrears({ groupId, group, members }: Props) {
   useEffect(() => {
     fetchSavings();
     
-    // The Realtime channel ensures that as soon as the Edge Function 
-    // inserts the new savings records upon successful callback, 
-    // fetchSavings() is called and the "Pay Now" button disappears.
     const channel = supabase
       .channel('arrears-updates')
       .on('postgres_changes', 
         { 
-          event: 'INSERT', 
+          event: '*', 
           schema: 'public', 
           table: 'chama_savings', 
           filter: `group_id=eq.${groupId}` 
@@ -72,7 +69,6 @@ export function ChamaArrears({ groupId, group, members }: Props) {
           userId: user.id,
           purpose: 'chama_savings',
           groupId,
-          // metadata informs the Edge Function to backfill missed months
           metadata: {
             type: 'arrears_clearance',
             missed_count: m.missedCount,
@@ -115,18 +111,27 @@ export function ChamaArrears({ groupId, group, members }: Props) {
 
   const expectedPeriods = getExpectedPeriods();
   const expectedCount = expectedPeriods.length;
+  // Contribution amount from group settings, defaulting to 1 to prevent division by zero
+  const contributionAmount = group?.contribution_amount || 1;
 
   const memberArrears = members.map(m => {
     const memberSavings = savings.filter(s => s.user_id === m.user_id);
-    const paidCount = memberSavings.length;
+    
+    // ✅ FIX: Sum actual amount paid instead of counting transaction rows
+    const totalPaidAmount = memberSavings.reduce((sum, s) => sum + s.amount, 0);
+    
+    // ✅ FIX: Determine paid periods by dividing total amount by the contribution requirement
+    const paidCount = Math.floor(totalPaidAmount / contributionAmount);
+    
     const missedCount = Math.max(0, expectedCount - paidCount);
-    const arrearsAmount = missedCount * (group?.contribution_amount || 0);
+    const arrearsAmount = missedCount * contributionAmount;
+
     return {
       ...m,
       paidCount,
       missedCount,
       arrearsAmount,
-      totalPaid: memberSavings.reduce((s, sv) => s + sv.amount, 0),
+      totalPaid: totalPaidAmount,
     };
   }).filter(m => m.missedCount > 0).sort((a, b) => b.arrearsAmount - a.arrearsAmount);
 
@@ -160,13 +165,13 @@ export function ChamaArrears({ groupId, group, members }: Props) {
                   </div>
                   <div>
                     <p className="font-medium text-sm">{m.profile?.full_name || 'Unknown'}</p>
-                    <p className="text-xs text-muted-foreground">{m.profile?.phone}</p>
+                    <p className="text-xs text-muted-foreground">Total Paid: KES {m.totalPaid.toLocaleString()}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
                   <div className="text-right">
                     <p className="font-bold text-destructive">KES {m.arrearsAmount.toLocaleString()}</p>
-                    <p className="text-[11px] text-muted-foreground">{m.missedCount} missed payment{m.missedCount > 1 ? 's' : ''}</p>
+                    <p className="text-[11px] text-muted-foreground">{m.missedCount} missed period{m.missedCount > 1 ? 's' : ''}</p>
                   </div>
                   {m.user_id === user?.id && (
                     <Button 
@@ -189,3 +194,4 @@ export function ChamaArrears({ groupId, group, members }: Props) {
     </div>
   );
 }
+ 
