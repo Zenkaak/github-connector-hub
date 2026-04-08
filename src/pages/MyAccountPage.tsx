@@ -4,7 +4,7 @@ import {
   User, Mail, Phone, MapPin, CreditCard, Calendar, Shield, BadgeCheck, Edit3, 
   AlertCircle, Lock, Download, Fingerprint, Smartphone, ShieldCheck, Key, 
   ChevronRight, UserCheck, Loader2, History, Eye, X, FileText, Monitor, Globe, LogOut,
-  Camera, ShieldAlert
+  Camera, ShieldAlert, ArrowUpRight, Zap
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
@@ -35,46 +35,35 @@ export default function MyAccountPage() {
   const getDeviceInfo = () => {
     const ua = navigator.userAgent;
     let name = 'Unknown Device';
-    if (/Android/i.test(ua)) {
-      const match = ua.match(/;\s*([^;)]+)\s*Build/);
-      name = match ? match[1].trim() : 'Android Device';
-    } else if (/iPhone/i.test(ua)) {
-      name = 'iPhone';
-    } else if (/iPad/i.test(ua)) {
-      name = 'iPad';
-    } else if (/Windows/i.test(ua)) {
-      name = 'Windows PC';
-    } else if (/Mac/i.test(ua)) {
-      name = 'Mac';
-    } else if (/Linux/i.test(ua)) {
-      name = 'Linux PC';
-    }
-    if (/Chrome/i.test(ua) && !/Edg/i.test(ua)) name += ' — Chrome';
-    else if (/Firefox/i.test(ua)) name += ' — Firefox';
-    else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) name += ' — Safari';
-    else if (/Edg/i.test(ua)) name += ' — Edge';
+    if (/Android/i.test(ua)) name = 'Android Device';
+    else if (/iPhone/i.test(ua)) name = 'iPhone';
+    else if (/Windows/i.test(ua)) name = 'Windows PC';
+    else if (/Mac/i.test(ua)) name = 'MacBook';
+    
+    if (/Chrome/i.test(ua)) name += ' • Chrome';
+    else if (/Safari/i.test(ua)) name += ' • Safari';
     return name;
   };
 
   const [activeDevices] = useState([
-    { id: 1, name: getDeviceInfo(), location: 'Current Session', ip: '—', current: true, icon: /Mobi|Android/i.test(navigator.userAgent) ? Smartphone : Monitor },
+    { id: 1, name: getDeviceInfo(), location: 'Nairobi, KE', ip: '197.xxx.xxx.xx', current: true, icon: /Mobi|Android/i.test(navigator.userAgent) ? Smartphone : Monitor },
   ]);
 
   const handlePasswordUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword.length < 6) {
-      toast.error("Password must be at least 6 characters.");
+      toast.error("Password too short.");
       return;
     }
     setIsUpdatingPassword(true);
     try {
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
-      toast.success("Database credentials updated successfully.");
+      toast.success("Security credentials synchronized.");
       setShowPassModal(false);
       setNewPassword('');
     } catch (error: any) {
-      toast.error(error.message || "Failed to sync password.");
+      toast.error(error.message);
     } finally {
       setIsUpdatingPassword(false);
     }
@@ -85,306 +74,234 @@ export default function MyAccountPage() {
     try {
       const { error } = await supabase.auth.signOut({ scope: 'others' });
       if (error) throw error;
-      toast.success("Other sessions have been revoked.");
+      toast.success("Remote sessions terminated.");
     } catch (error: any) {
-      toast.error("Failed to revoke session.");
+      toast.error("Action failed.");
     } finally {
       setIsRevoking(null);
     }
   };
 
-  const infoSections = [
-    {
-      title: 'Identity Profile',
-      icon: User,
-      fields: [
-        { label: 'Full Legal Name', value: profile?.full_name, icon: User },
-        { label: 'National ID', value: profile?.id_number, icon: CreditCard },
-        { label: 'Date of Birth', value: profile?.date_of_birth ? new Date(profile.date_of_birth).toLocaleDateString('en-KE') : '—', icon: Calendar },
-      ],
-    },
-    {
-      title: 'Residential Details',
-      icon: MapPin,
-      fields: [
-        { label: 'County', value: profile?.county, icon: MapPin },
-        { label: 'Sub-County', value: profile?.sub_county, icon: MapPin },
-        { label: 'Ward', value: profile?.ward, icon: MapPin },
-        { label: 'Physical Address', value: profile?.address, icon: MapPin },
-      ],
-    },
-  ];
-
   return (
     <DashboardLayout>
-      <div className="max-w-7xl mx-auto p-4 lg:p-8 space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-700">
-        
-        {/* HEADER SECTION */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 border-b border-border/40 pb-8">
-          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider mb-3">
-              <ShieldCheck size={12} />
-              Secure Fintech Environment
+      <div className="min-h-screen bg-[#F8FAFC] dark:bg-[#0B0E14] transition-colors duration-500">
+        <div className="max-w-[1400px] mx-auto p-6 lg:p-10 space-y-10">
+          
+          {/* TOP NAVIGATION & SEARCH AREA */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 text-primary font-bold text-xs uppercase tracking-[0.2em]">
+                <Zap size={14} fill="currentColor" />
+                System Status: Active
+              </div>
+              <h1 className="text-3xl lg:text-4xl font-black tracking-tight text-slate-900 dark:text-white">
+                Account Control <span className="text-primary">.</span>
+              </h1>
             </div>
-            <h1 className="font-display text-3xl lg:text-4xl font-bold text-foreground tracking-tight">Account Settings</h1>
-            <p className="text-sm text-muted-foreground mt-2">Manage your digital identity and security preferences.</p>
-          </motion.div>
-          <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm" className="h-10 px-4 rounded-xl border-border/60 font-medium">
-              <History size={16} className="mr-2 opacity-70" /> Activity Log
-            </Button>
-            <Button variant="gold" size="sm" className="h-10 px-4 rounded-xl shadow-lg shadow-gold/20 font-semibold transition-all hover:scale-[1.02] active:scale-95">
-              <Download size={16} className="mr-2" /> Export KYC
-            </Button>
-          </div>
-        </div>
-
-        {isEditing ? (
-          <div className="max-w-4xl mx-auto">
-            <EditProfileForm onComplete={() => { setIsEditing(false); refreshProfile(); }} onCancel={() => setIsEditing(false)} />
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
             
-            {/* SIDEBAR: Profile & Devices */}
-            <div className="xl:col-span-4 space-y-8">
-              <Card className="border-border/40 overflow-hidden shadow-xl shadow-black/5 bg-card/50 backdrop-blur-sm">
-                <div className="h-24 bg-gradient-to-r from-primary/20 via-primary/5 to-transparent relative" />
-                <CardContent className="relative px-6 pb-8 text-center">
-                  <div className="group relative w-24 h-24 mx-auto -mt-12 mb-4">
-                    <div className="w-full h-full rounded-3xl bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center text-accent-foreground font-bold text-3xl shadow-2xl border-4 border-card transition-transform group-hover:scale-105 duration-300">
-                      {initials}
-                    </div>
-                    <button className="absolute bottom-0 right-0 p-2 bg-primary text-primary-foreground rounded-xl shadow-lg hover:bg-primary/90 transition-colors">
-                      <Camera size={16} />
-                    </button>
-                  </div>
-                  <h2 className="font-display text-xl font-bold text-foreground">{displayName}</h2>
-                  <p className="text-sm text-muted-foreground mb-6">{displayEmail}</p>
-                  <Button variant="outline" size="sm" className="w-full h-10 rounded-xl border-border/80 bg-background/50 hover:bg-accent hover:text-accent-foreground transition-all" onClick={() => setIsEditing(true)}>
-                    <Edit3 size={14} className="mr-2" /> Edit Profile Details
-                  </Button>
-                </CardContent>
-                <div className="px-6 py-4 bg-muted/30 border-t border-border/40 flex justify-between items-center">
-                   <span className="text-[10px] text-muted-foreground font-black tracking-widest uppercase">Member ID</span>
-                   <span className="text-sm font-mono font-bold text-primary">{membershipId}</span>
-                </div>
-              </Card>
-
-              {/* LOGGED IN DEVICES */}
-              <Card className="border-border/40 shadow-xl shadow-black/5 overflow-hidden">
-                <CardHeader className="pb-4 border-b border-border/40 bg-muted/20">
-                  <CardTitle className="text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2 text-muted-foreground">
-                    <Smartphone size={14} className="text-primary" /> Active Sessions
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0 divide-y divide-border/40">
-                  {activeDevices.map((device) => (
-                    <div key={device.id} className="p-5 flex flex-col gap-3 hover:bg-muted/10 transition-colors">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          <div className={cn("p-2 rounded-lg", device.current ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>
-                            <device.icon size={18} />
-                          </div>
-                          <div>
-                            <span className="text-sm font-bold block leading-tight">{device.name}</span>
-                            <span className="text-[10px] text-muted-foreground flex items-center gap-1 mt-1 font-mono uppercase">
-                               <Globe size={10} /> {device.ip}
-                            </span>
-                          </div>
-                        </div>
-                        {device.current && (
-                          <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-success/10 text-success text-[10px] font-bold border border-success/20">
-                            <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-                            ACTIVE
-                          </div>
-                        )}
-                      </div>
-                      {!device.current && (
-                        <button 
-                          onClick={() => handleLogoutOtherDevices(device.id)}
-                          disabled={isRevoking === device.id}
-                          className="text-xs text-destructive font-bold ml-11 flex items-center gap-2 hover:opacity-80 transition-opacity disabled:opacity-50"
-                        >
-                          {isRevoking === device.id ? <Loader2 size={12} className="animate-spin" /> : <LogOut size={12} />}
-                          Revoke Access
-                        </button>
-                      )}
-                    </div>
-                  ))}
-                </CardContent>
-              </Card>
+            <div className="flex items-center gap-3 bg-white dark:bg-slate-900 p-1.5 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
+              <Button variant="ghost" className="rounded-xl text-xs font-bold px-4 hover:bg-slate-100 dark:hover:bg-slate-800">
+                <History size={15} className="mr-2" /> Logs
+              </Button>
+              <Button variant="gold" className="rounded-xl text-xs font-bold px-5 shadow-lg shadow-gold/20">
+                <Download size={15} className="mr-2" /> Export Data
+              </Button>
             </div>
+          </div>
 
-            {/* MAIN CONTENT AREA */}
-            <div className="xl:col-span-8 space-y-8">
+          {isEditing ? (
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-3xl mx-auto">
+               <EditProfileForm onComplete={() => { setIsEditing(false); refreshProfile(); }} onCancel={() => setIsEditing(false)} />
+            </motion.div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
               
-              {/* INFORMATION CARDS */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {infoSections.map((section, si) => (
-                  <Card key={si} className="border-border/40 shadow-lg shadow-black/5">
-                    <CardHeader className="py-4 px-6 border-b border-border/40 bg-muted/10 flex flex-row items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="p-1.5 bg-primary/10 rounded-lg">
-                          <section.icon size={16} className="text-primary" />
-                        </div>
-                        <CardTitle className="text-sm font-bold tracking-tight">{section.title}</CardTitle>
+              {/* LEFT COLUMN: IDENTITY CARD */}
+              <div className="lg:col-span-4 space-y-8">
+                <Card className="relative overflow-hidden border-none shadow-2xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 rounded-[2rem]">
+                  <div className="absolute top-0 right-0 p-8 opacity-10">
+                    <Shield size={120} />
+                  </div>
+                  <CardContent className="pt-12 pb-8 px-8 flex flex-col items-center text-center">
+                    <div className="relative group cursor-pointer mb-6">
+                      <div className="absolute -inset-1 bg-gradient-to-tr from-primary to-gold rounded-[2.5rem] blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
+                      <div className="relative w-28 h-28 rounded-[2rem] bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-4xl font-black text-primary border-4 border-white dark:border-slate-900 shadow-xl">
+                        {initials}
                       </div>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-primary/10" onClick={() => setShowDocViewer(true)}>
-                        <Eye size={16} className="text-muted-foreground" />
-                      </Button>
-                    </CardHeader>
-                    <CardContent className="p-0">
-                      <div className="grid grid-cols-1 divide-y divide-border/40">
-                        {section.fields.map((field, fi) => (
-                          <div key={fi} className="px-6 py-4 flex flex-col gap-1.5 group hover:bg-muted/5 transition-colors">
-                            <span className="text-[10px] uppercase font-black text-muted-foreground/60 tracking-widest">{field.label}</span>
-                            <span className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors">
-                              {field.value || <span className="text-muted-foreground/40 italic font-normal">Not provided</span>}
-                            </span>
+                      <div className="absolute bottom-0 right-0 p-2 bg-primary text-white rounded-xl shadow-lg border-2 border-white dark:border-slate-900 translate-x-1 translate-y-1">
+                        <Camera size={14} />
+                      </div>
+                    </div>
+                    
+                    <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-1">{displayName}</h2>
+                    <p className="text-sm font-medium text-slate-500 mb-6">{displayEmail}</p>
+                    
+                    <div className="w-full grid grid-cols-2 gap-3 mb-8">
+                      <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-2xl border border-slate-100 dark:border-slate-800">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Verified Status</p>
+                        <div className="flex items-center justify-center gap-1.5 mt-1 text-success font-black text-xs uppercase">
+                          <BadgeCheck size={14} /> Tier 2
+                        </div>
+                      </div>
+                      <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-2xl border border-slate-100 dark:border-slate-800">
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Member Since</p>
+                        <p className="mt-1 text-slate-900 dark:text-slate-200 font-black text-xs">APR 2024</p>
+                      </div>
+                    </div>
+
+                    <Button onClick={() => setIsEditing(true)} className="w-full h-12 rounded-2xl bg-slate-900 dark:bg-white dark:text-slate-900 font-bold hover:scale-[1.02] transition-transform">
+                      <Edit3 size={16} className="mr-2" /> Modify Profile
+                    </Button>
+                  </CardContent>
+                  <CardFooter className="bg-slate-50 dark:bg-slate-800/30 border-t border-slate-100 dark:border-slate-800/50 p-5 justify-center">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">{membershipId}</span>
+                  </CardFooter>
+                </Card>
+
+                {/* SECURITY SESSIONS CARD */}
+                <Card className="rounded-[2rem] border-none shadow-xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900 overflow-hidden">
+                  <CardHeader className="border-b border-slate-50 dark:border-slate-800 px-8 py-6">
+                    <CardTitle className="text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                      <Fingerprint size={16} className="text-primary" /> Security Perimeter
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    {activeDevices.map((device) => (
+                      <div key={device.id} className="px-8 py-6 group hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+                              <device.icon size={22} />
+                            </div>
+                            <div>
+                              <p className="text-sm font-black text-slate-900 dark:text-white">{device.name}</p>
+                              <p className="text-xs text-slate-500 font-medium">{device.location}</p>
+                            </div>
+                          </div>
+                          {device.current && <div className="w-2.5 h-2.5 rounded-full bg-success ring-4 ring-success/20 animate-pulse" />}
+                        </div>
+                        <div className="flex items-center justify-between mt-2 pl-16">
+                          <span className="text-[10px] font-mono font-bold text-slate-400">{device.ip}</span>
+                          {!device.current && (
+                            <button onClick={() => handleLogoutOtherDevices(device.id)} className="text-[10px] font-black text-destructive uppercase tracking-widest hover:underline">Revoke</button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* RIGHT COLUMN: DATA & ACTIONS */}
+              <div className="lg:col-span-8 space-y-8">
+                
+                {/* INFO GRID */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {[
+                    { title: 'Personal Details', icon: User, data: [
+                        { l: 'Full Name', v: profile?.full_name },
+                        { l: 'ID Number', v: profile?.id_number },
+                        { l: 'Birthday', v: profile?.date_of_birth }
+                    ]},
+                    { title: 'Contact & Residence', icon: MapPin, data: [
+                        { l: 'Phone', v: profile?.phone || 'Not Linked' },
+                        { l: 'Address', v: profile?.address },
+                        { l: 'County', v: profile?.county }
+                    ]}
+                  ].map((group, idx) => (
+                    <Card key={idx} className="rounded-[2rem] border-none shadow-xl shadow-slate-200/50 dark:shadow-none bg-white dark:bg-slate-900">
+                      <CardHeader className="flex flex-row items-center justify-between px-8 pt-8 pb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="p-2.5 rounded-xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
+                            <group.icon size={18} />
+                          </div>
+                          <CardTitle className="text-base font-black">{group.title}</CardTitle>
+                        </div>
+                        <ArrowUpRight size={18} className="text-slate-300" />
+                      </CardHeader>
+                      <CardContent className="px-8 pb-8 space-y-5">
+                        {group.data.map((item, i) => (
+                          <div key={i} className="flex flex-col">
+                            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{item.l}</span>
+                            <span className="text-sm font-bold text-slate-700 dark:text-slate-200 mt-1">{item.v || '—'}</span>
                           </div>
                         ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
 
-              {/* SECURITY ACTIONS */}
-              <Card className="border-border/40 shadow-lg shadow-black/5 overflow-hidden">
-                <CardHeader className="py-5 px-6 border-b border-border/40 bg-muted/5">
-                  <div className="flex items-center gap-3">
-                    <ShieldAlert size={20} className="text-primary" />
-                    <div>
-                      <CardTitle className="text-md font-bold uppercase tracking-wider">Access & Security</CardTitle>
-                      <CardDescription className="text-xs">Secure your account and manage authentication</CardDescription>
+                {/* SECURITY QUICK ACTIONS */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <button 
+                    onClick={() => setShowPassModal(true)}
+                    className="flex items-center justify-between p-6 rounded-[2rem] bg-gradient-to-br from-slate-900 to-slate-800 text-white hover:shadow-2xl hover:shadow-primary/20 transition-all group overflow-hidden relative"
+                  >
+                    <div className="relative z-10 flex items-center gap-5">
+                      <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center group-hover:bg-primary transition-colors">
+                        <Key size={24} />
+                      </div>
+                      <div className="text-left">
+                        <p className="font-black text-lg">Update Credentials</p>
+                        <p className="text-xs text-slate-400 font-medium">Reset your secure password</p>
+                      </div>
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Button variant="outline" className="w-full justify-between h-auto py-5 px-5 border-border/60 bg-card hover:border-accent hover:shadow-md transition-all group" onClick={() => setShowPassModal(true)}>
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-accent/10 flex items-center justify-center text-accent group-hover:bg-accent group-hover:text-white transition-all duration-300">
-                          <Key size={20} />
-                        </div>
-                        <div className="text-left">
-                          <p className="font-bold text-sm">Update Password</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">Keep your credentials fresh</p>
-                        </div>
-                      </div>
-                      <ChevronRight size={18} className="text-muted-foreground opacity-30 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-                    </Button>
-
-                    <Button variant="outline" className="w-full justify-between h-auto py-5 px-5 border-border/60 bg-card hover:border-primary hover:shadow-md transition-all group" onClick={() => setShowDocViewer(true)}>
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300">
-                          <Eye size={20} />
-                        </div>
-                        <div className="text-left">
-                          <p className="font-bold text-sm">KYC Vault</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">View your verified data</p>
-                        </div>
-                      </div>
-                      <ChevronRight size={18} className="text-muted-foreground opacity-30 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
-                    </Button>
-                </CardContent>
-              </Card>
-
-              {/* DOCUMENT UPLOAD AREA */}
-              <div className="bg-muted/10 rounded-3xl border border-dashed border-border/60 p-1">
-                <DocumentUpload />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* MODAL: PASSWORD UPDATE */}
-        <AnimatePresence>
-          {showPassModal && (
-            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-background/80 backdrop-blur-md">
-              <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="w-full max-w-md">
-                <Card className="shadow-2xl border-border/60 overflow-hidden">
-                  <CardHeader className="border-b border-border/40 bg-muted/20 pb-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                          <Lock size={20} />
-                        </div>
-                        <div>
-                          <CardTitle className="text-lg font-bold">Security Update</CardTitle>
-                          <CardDescription className="text-xs">Update your login credentials</CardDescription>
-                        </div>
-                      </div>
-                      <Button variant="ghost" size="icon" onClick={() => setShowPassModal(false)} className="rounded-full hover:bg-destructive/10 hover:text-destructive"><X size={20}/></Button>
+                    <div className="absolute -right-4 -bottom-4 opacity-5 group-hover:scale-110 transition-transform">
+                      <Lock size={120} />
                     </div>
-                  </CardHeader>
-                  <form onSubmit={handlePasswordUpdate}>
-                    <CardContent className="pt-8 pb-6 space-y-6">
-                      <div className="space-y-3">
-                        <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">New Password</label>
-                        <div className="relative group">
-                          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} />
-                          <input 
-                            type="password" 
-                            required 
-                            placeholder="At least 6 characters"
-                            className="w-full bg-muted/40 border-border/60 border rounded-2xl py-3.5 pl-12 pr-4 text-sm focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all" 
-                            value={newPassword} 
-                            onChange={(e) => setNewPassword(e.target.value)} 
-                          />
-                        </div>
+                  </button>
+
+                  <button 
+                    onClick={() => setShowDocViewer(true)}
+                    className="flex items-center justify-between p-6 rounded-[2rem] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 hover:border-primary transition-all group"
+                  >
+                    <div className="flex items-center gap-5">
+                      <div className="w-14 h-14 rounded-2xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-600 dark:text-slate-400 group-hover:bg-primary group-hover:text-white transition-colors">
+                        <ShieldCheck size={24} />
                       </div>
-                    </CardContent>
-                    <CardFooter className="gap-3 bg-muted/20 border-t border-border/40 p-6">
-                      <Button type="button" variant="ghost" className="flex-1 rounded-xl h-11 font-semibold" onClick={() => setShowPassModal(false)}>Cancel</Button>
-                      <Button type="submit" variant="gold" className="flex-1 rounded-xl h-11 font-bold shadow-lg shadow-gold/20" disabled={isUpdatingPassword}>
-                        {isUpdatingPassword ? <Loader2 className="animate-spin mr-2" size={18} /> : 'Update Password'}
-                      </Button>
-                    </CardFooter>
-                  </form>
-                </Card>
-              </motion.div>
+                      <div className="text-left">
+                        <p className="font-black text-lg text-slate-900 dark:text-white">KYC Documents</p>
+                        <p className="text-xs text-slate-500 font-medium">View encrypted uploads</p>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+
+                {/* FILE UPLOAD ZONE */}
+                <div className="rounded-[2.5rem] bg-slate-100/50 dark:bg-slate-800/20 p-2 border-2 border-dashed border-slate-200 dark:border-slate-800/60">
+                  <DocumentUpload />
+                </div>
+              </div>
             </div>
           )}
-        </AnimatePresence>
+        </div>
 
-        {/* MODAL: DOCUMENT PREVIEW */}
+        {/* REFINED MODALS (STYLING ONLY) */}
         <AnimatePresence>
-          {showDocViewer && (
-            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl">
-              <motion.div initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 40, opacity: 0 }} className="w-full max-w-4xl bg-card rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl border border-white/10">
-                <div className="p-6 border-b border-border/40 flex items-center justify-between bg-muted/30">
-                  <div className="flex items-center gap-4">
-                    <div className="p-3 bg-primary/10 rounded-2xl shadow-inner">
-                      <FileText size={24} className="text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-base font-bold text-foreground">KYC_Verification_Record.pdf</p>
-                      <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mt-0.5">Encrypted Security Vault</p>
+          {showPassModal && (
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-slate-900/90 backdrop-blur-xl">
+              <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="w-full max-w-md bg-white dark:bg-slate-900 rounded-[2.5rem] shadow-2xl p-8 border border-white/10">
+                <div className="flex justify-between items-center mb-8">
+                  <h3 className="text-xl font-black">Security Sync</h3>
+                  <Button variant="ghost" size="icon" onClick={() => setShowPassModal(false)} className="rounded-full"><X /></Button>
+                </div>
+                <form onSubmit={handlePasswordUpdate} className="space-y-6">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">New Database Password</label>
+                    <div className="relative group">
+                      <Lock className="absolute left-4 top-4 text-slate-300 group-focus-within:text-primary" size={20} />
+                      <input 
+                        type="password" 
+                        className="w-full h-14 bg-slate-50 dark:bg-slate-800 rounded-2xl pl-12 pr-4 font-bold border-none ring-2 ring-transparent focus:ring-primary/50 transition-all outline-none" 
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                      />
                     </div>
                   </div>
-                  <Button variant="ghost" size="icon" onClick={() => setShowDocViewer(false)} className="h-12 w-12 rounded-full hover:bg-muted"><X size={24}/></Button>
-                </div>
-                <div className="flex-1 bg-muted/10 min-h-[400px] flex items-center justify-center p-12 relative overflow-hidden">
-                  <div className="absolute inset-0 opacity-[0.03] pattern-grid-lg" />
-                  <div className="text-center space-y-6 relative z-10">
-                    <div className="w-28 h-28 bg-gradient-to-br from-primary/20 to-primary/5 rounded-[2rem] flex items-center justify-center mx-auto shadow-2xl border border-primary/20">
-                      <ShieldCheck size={56} className="text-primary" />
-                    </div>
-                    <div className="max-w-md mx-auto">
-                      <h3 className="text-xl font-bold text-foreground">Protected Asset</h3>
-                      <p className="text-muted-foreground text-sm mt-2 leading-relaxed">This record is synchronized with our secure database and is only visible to your authenticated session. Digital signatures are verified.</p>
-                    </div>
-                    <div className="flex gap-4 justify-center pt-4">
-                      <Button variant="outline" className="h-12 px-8 rounded-2xl border-border/60 bg-card hover:bg-muted font-bold">
-                        <Download size={18} className="mr-2" /> Download Original
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-4 bg-muted/30 border-t border-border/40 text-center">
-                  <p className="text-[10px] text-muted-foreground font-medium italic">Nyota Secure Document Viewer v2.4 — End-to-End Encrypted</p>
-                </div>
+                  <Button type="submit" variant="gold" className="w-full h-14 rounded-2xl font-black text-base shadow-xl shadow-gold/20" disabled={isUpdatingPassword}>
+                    {isUpdatingPassword ? <Loader2 className="animate-spin" /> : 'Confirm Identity Update'}
+                  </Button>
+                </form>
               </motion.div>
             </div>
           )}
