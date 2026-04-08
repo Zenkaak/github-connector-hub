@@ -46,30 +46,51 @@ Deno.serve(async (req) => {
     // 2. Stop if already processed
     if (txn.status === "success") return jsonResponse({ ResultCode: 0, ResultDesc: "Accepted" });
 
+    // --- REPLACED UPDATE BLOCK START (FIX-3 2026-04-08) ---
+    console.log("MPESA CALLBACK VERSION FIX-3 2026-04-08");
+
     if (ResultCode === 0) {
       const metadataItems = callback?.CallbackMetadata?.Item || [];
-      const mpesaReceipt = String(metadataItems.find((i: any) => i.Name === "MpesaReceiptNumber")?.Value || "");
-      const actualAmount = metadataItems.find((i: any) => i.Name === "Amount")?.Value || txn.amount;
+      const mpesaReceipt = String(
+        metadataItems.find((i: any) => i.Name === "MpesaReceiptNumber")?.Value || ""
+      );
+      const actualAmount =
+        metadataItems.find((i: any) => i.Name === "Amount")?.Value || txn.amount;
 
-      // --- CRITICAL: UPDATE THE TRANSACTION STATUS TO SUCCESS IMMEDIATELY ---
-      const { error: updateTxError } = await supabase
+      const now = new Date().toISOString();
+
+      const { data: updatedTxn, error: updateTxError } = await supabase
         .from("stk_transactions")
         .update({
           status: "success",
           result_code: String(ResultCode),
           result_desc: "The service was accepted successfully",
           mpesa_receipt: mpesaReceipt,
-          updated_at: new Date().toISOString(),
+          paid_at: now,
+          callback_result: JSON.stringify(callback),
+          updated_at: now,
         })
-        .eq("checkout_request_id", CheckoutRequestID);
+        .eq("id", txn.id)
+        .select("id, status, mpesa_receipt, result_code, updated_at")
+        .single();
 
-      if (updateTxError) console.error("Database Update Failed:", updateTxError.message);
+      if (updateTxError) {
+        console.error(
+          "STK STATUS UPDATE FAILED:",
+          JSON.stringify(updateTxError, null, 2)
+        );
+        return jsonResponse({ ResultCode: 0, ResultDesc: "Accepted" });
+      }
+
+      console.log("STK STATUS UPDATED:", JSON.stringify(updatedTxn));
 
       const purpose = txn.purpose;
       const userName = txn.profiles?.full_name || "Member";
-      let notificationMsg = `Dear ${userName}, payment of KES ${actualAmount.toLocaleString()} received. Receipt: ${mpesaReceipt}.`;
+      const notificationMsg = `Dear ${userName}, payment of KES ${Number(actualAmount).toLocaleString()} received. Receipt: ${mpesaReceipt}.`;
 
-      // --- CHAMA SAVINGS & ARREARS LOGIC ---
+      // --- START OF SHARED UTILITY LOGIC ---
+
+      // CHAMA SAVINGS & ARREARS LOGIC
       if (purpose === "chama_savings" && txn.group_id) {
         const metadata = txn.metadata || {};
         if (metadata.isArrears || metadata.type === 'arrears_clearance') {
@@ -101,7 +122,7 @@ Deno.serve(async (req) => {
         }
       }
 
-      // --- CHAMA PENALTY LOGIC ---
+      // CHAMA PENALTY LOGIC
       if (purpose === "chama_penalty") {
         const penaltyId = txn.penalty_id || txn.metadata?.penaltyId;
         if (penaltyId) {
@@ -111,7 +132,7 @@ Deno.serve(async (req) => {
         }
       }
 
-      // --- HARAMBEE LOGIC ---
+      // HARAMBEE LOGIC
       if (purpose === "harambee" && txn.harambee_id) {
         const { data: h } = await supabase.from("chama_harambees").select("raised_amount").eq("id", txn.harambee_id).maybeSingle();
         if (h) {
@@ -122,7 +143,7 @@ Deno.serve(async (req) => {
         }
       }
 
-      // --- LOAN REPAYMENT LOGIC ---
+      // LOAN REPAYMENT LOGIC
       if (purpose === "loan_repayment") {
         const { data: d } = await supabase.from("loan_disbursements")
           .select("*").eq("user_id", txn.user_id).eq("status", "active")
@@ -138,19 +159,33 @@ Deno.serve(async (req) => {
         }
       }
 
-      // --- WALLET / ACTIVATION LOGIC ---
+      // WALLET / ACTIVATION LOGIC
       if (["activation", "wallet_deposit"].includes(purpose)) {
-        const { data: w } = await supabase.from("wallets").select("id, balance").eq("user_id", txn.user_id).maybeSingle();
+        const { data: w } = await supabase
+          .from("wallets")
+          .select("id, balance")
+          .eq("user_id", txn.user_id)
+          .maybeSingle();
+
         if (w) {
-          await supabase.from("wallets").update({ balance: (w.balance || 0) + actualAmount }).eq("id", w.id);
+          await supabase
+            .from("wallets")
+            .update({ balance: Number(w.balance || 0) + Number(actualAmount) })
+            .eq("id", w.id);
+
           await supabase.from("wallet_transactions").insert({
-            wallet_id: w.id, user_id: txn.user_id, type: "deposit", amount: actualAmount, 
-            description: `M-Pesa Deposit: ${mpesaReceipt}`, reference_id: mpesaReceipt, status: "completed"
+            wallet_id: w.id,
+            user_id: txn.user_id,
+            type: "deposit",
+            amount: actualAmount,
+            description: `M-Pesa Deposit: ${mpesaReceipt}`,
+            reference_id: mpesaReceipt,
+            status: "completed",
           });
         }
       }
 
-      // --- PERSONAL SAVINGS LOGIC ---
+      // PERSONAL SAVINGS LOGIC
       if (purpose === "personal_savings" && txn.savings_id) {
         const { data: ps } = await supabase.from("personal_savings").select("saved_amount").eq("id", txn.savings_id).maybeSingle();
         if (ps) {
@@ -161,7 +196,7 @@ Deno.serve(async (req) => {
         }
       }
 
-      // --- CHAMA JOINING LOGIC ---
+      // CHAMA JOINING LOGIC
       if (purpose === "chama_joining_fee" || purpose === "chama_join") {
         if (txn.group_id) {
           await supabase.from("chama_joining_fees").insert({ group_id: txn.group_id, user_id: txn.user_id, amount: actualAmount, reference: mpesaReceipt });
@@ -170,13 +205,13 @@ Deno.serve(async (req) => {
         }
       }
 
-      // --- SEND NOTIFICATION ---
+      // NOTIFICATION LOGIC
       await supabase.from("notifications").insert({
         user_id: txn.user_id,
         title: "Payment Confirmed ✅",
         message: notificationMsg,
         type: "payment",
-        metadata: { receipt: mpesaReceipt, amount: actualAmount, purpose }
+        metadata: { receipt: mpesaReceipt, amount: actualAmount, purpose },
       });
 
     } else {
@@ -190,6 +225,7 @@ Deno.serve(async (req) => {
         })
         .eq("checkout_request_id", CheckoutRequestID);
     }
+    // --- REPLACED UPDATE BLOCK END ---
 
     return jsonResponse({ ResultCode: 0, ResultDesc: "Accepted" });
 
