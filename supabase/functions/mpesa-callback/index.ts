@@ -97,14 +97,18 @@ Deno.serve(async (req) => {
       const phoneNumber = metadataItems.find((i: any) => i.Name === "PhoneNumber")?.Value || null;
       const transDate = metadataItems.find((i: any) => i.Name === "TransactionDate")?.Value || null;
 
-      // Update the primary transaction record
-      await supabase.from("stk_transactions").update({
+      // FIX: MUST AWAIT this update or the function kills the process before writing to DB
+      const { error: updateTxError } = await supabase.from("stk_transactions").update({
         status: "success",
         result_code: String(ResultCode),
         result_desc: ResultDesc,
         mpesa_receipt: mpesaReceipt,
         updated_at: new Date().toISOString(),
       }).eq("id", txn.id);
+
+      if (updateTxError) {
+        console.error("Error updating stk_transactions table:", updateTxError.message);
+      }
 
       const purpose = txn.purpose;
       const userName = txn.profiles?.full_name || "Member";
@@ -120,14 +124,12 @@ Deno.serve(async (req) => {
         if (isArrears) {
           notificationMsg = `Dear ${userName}, you have successfully cleared your arrears of KES ${actualAmount.toLocaleString()}. Your account is now up to date. Receipt: ${mpesaReceipt}.`;
           
-          // Automation: Backfill missed months so the "Pay Now" button disappears correctly
           const missedCount = metadata.missed_count || 1; 
           const individualAmount = actualAmount / missedCount;
           const arrearsEntries = [];
           
           for (let i = 0; i < missedCount; i++) {
             const entryDate = new Date();
-            // Offset the month string back for each missed payment to maintain history
             entryDate.setMonth(entryDate.getMonth() - i);
             arrearsEntries.push({
               group_id: txn.group_id,
@@ -159,7 +161,6 @@ Deno.serve(async (req) => {
         if (penaltyId) {
           await supabase.from("chama_penalties").update({ is_paid: true }).eq("id", penaltyId);
         } else {
-          // Fallback logic to clear oldest unpaid penalty if ID is missing
           await supabase.rpc('mark_oldest_penalty_paid', { 
             p_user_id: txn.user_id, 
             p_group_id: txn.group_id 
@@ -187,7 +188,6 @@ Deno.serve(async (req) => {
       if (purpose === "loan_repayment") {
         notificationMsg = `Dear ${userName}, your loan repayment of KES ${actualAmount.toLocaleString()} has been processed. Thank you for making your payment on time. Receipt: ${mpesaReceipt}.`;
         
-        // Find the active disbursement
         const { data: disb } = await supabase.from("loan_disbursements")
           .select("*")
           .eq(txn.disbursement_id ? "id" : "user_id", txn.disbursement_id || txn.user_id)
@@ -204,12 +204,10 @@ Deno.serve(async (req) => {
             .update({ outstanding_balance: newBalance, status: newStatus })
             .eq("id", disb.id);
             
-          // If fully paid, update the original application status
           if (newStatus === "paid") {
             await supabase.from("loan_applications").update({ status: "paid" }).eq("id", disb.loan_id);
           }
 
-          // Log the payment in loan_repayments table
           await supabase.from("loan_repayments").insert({
             disbursement_id: disb.id,
             user_id: txn.user_id,
@@ -272,7 +270,6 @@ Deno.serve(async (req) => {
         notificationMsg = `Dear ${userName}, your joining fee of KES ${actualAmount.toLocaleString()} has been received. Welcome to the group! Receipt: ${mpesaReceipt}.`;
         
         if (txn.group_id) {
-          // Record the fee
           await supabase.from("chama_joining_fees").insert({ 
             group_id: txn.group_id, 
             user_id: txn.user_id, 
@@ -280,14 +277,12 @@ Deno.serve(async (req) => {
             reference: mpesaReceipt
           });
           
-          // Add to members table
           await supabase.from("chama_members").insert({ 
             group_id: txn.group_id, 
             user_id: txn.user_id, 
             role: "member" 
           });
           
-          // Finalize any pending join requests
           await supabase.from("chama_join_requests")
             .update({ status: "completed" })
             .eq("group_id", txn.group_id)
@@ -312,7 +307,7 @@ Deno.serve(async (req) => {
 
     } else {
       // ---------------------------------------------------------
-      // 7. PROCESS FAILED PAYMENT (User cancelled or timeout)
+      // 7. PROCESS FAILED PAYMENT
       // ---------------------------------------------------------
       await supabase.from("stk_transactions").update({
         status: "failed",
@@ -324,7 +319,7 @@ Deno.serve(async (req) => {
       await supabase.from("notifications").insert({
         user_id: txn.user_id,
         title: "Payment Failed ❌",
-        message: `Dear ${txn.profiles?.full_name || "Member"}, your transaction of KES ${txn.amount.toLocaleString()} was unsuccessful: ${ResultDesc}. Please try again.`,
+        message: `Dear ${txn.profiles?.full_name || "Member"}, your transaction of KES ${txn.amount.toLocaleString()} was unsuccessful: ${ResultDesc}.`,
         type: "payment",
       });
     }
@@ -335,8 +330,7 @@ Deno.serve(async (req) => {
     return jsonResponse({ ResultCode: 0, ResultDesc: "Accepted" });
 
   } catch (error) {
-    console.error("CRITICAL SYSTEM ERROR IN EDGE FUNCTION:", error);
-    // We still return 200 to Safaricom to prevent them from retrying an already failed processing attempt
+    console.error("CRITICAL SYSTEM ERROR:", error);
     return jsonResponse({ ResultCode: 0, ResultDesc: "Accepted" });
   }
 });
