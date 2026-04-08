@@ -1544,9 +1544,11 @@ export type Database = {
           amount: number
           checkout_request_id: string | null
           created_at: string
+          disbursement_id: string | null
           group_id: string | null
           harambee_id: string | null
           id: string
+          loan_id: string | null
           merchant_request_id: string | null
           mpesa_receipt: string | null
           phone: string
@@ -1563,9 +1565,11 @@ export type Database = {
           amount: number
           checkout_request_id?: string | null
           created_at?: string
+          disbursement_id?: string | null
           group_id?: string | null
           harambee_id?: string | null
           id?: string
+          loan_id?: string | null
           merchant_request_id?: string | null
           mpesa_receipt?: string | null
           phone: string
@@ -1582,9 +1586,11 @@ export type Database = {
           amount?: number
           checkout_request_id?: string | null
           created_at?: string
+          disbursement_id?: string | null
           group_id?: string | null
           harambee_id?: string | null
           id?: string
+          loan_id?: string | null
           merchant_request_id?: string | null
           mpesa_receipt?: string | null
           phone?: string
