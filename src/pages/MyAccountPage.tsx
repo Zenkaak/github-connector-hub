@@ -32,7 +32,6 @@ export default function MyAccountPage() {
   const membershipId = profile?.id ? `NYOTA-${profile.id.slice(0, 8).toUpperCase()}` : 'NYOTA-PENDING';
   const initials = displayName?.split(' ').filter(Boolean).map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'U';
 
-  // Detect current device from browser user agent
   const getDeviceInfo = () => {
     const ua = navigator.userAgent;
     let name = 'Unknown Device';
@@ -50,7 +49,6 @@ export default function MyAccountPage() {
     } else if (/Linux/i.test(ua)) {
       name = 'Linux PC';
     }
-    // Append browser
     if (/Chrome/i.test(ua) && !/Edg/i.test(ua)) name += ' — Chrome';
     else if (/Firefox/i.test(ua)) name += ' — Firefox';
     else if (/Safari/i.test(ua) && !/Chrome/i.test(ua)) name += ' — Safari';
@@ -62,7 +60,6 @@ export default function MyAccountPage() {
     { id: 1, name: getDeviceInfo(), location: 'Current Session', ip: '—', current: true, icon: /Mobi|Android/i.test(navigator.userAgent) ? Smartphone : Monitor },
   ]);
 
-  // DATABASE SYNC: Update Password
   const handlePasswordUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newPassword.length < 6) {
@@ -83,7 +80,6 @@ export default function MyAccountPage() {
     }
   };
 
-  // DATABASE SYNC: Revoke Other Sessions
   const handleLogoutOtherDevices = async (deviceId: number) => {
     setIsRevoking(deviceId);
     try {
@@ -121,86 +117,97 @@ export default function MyAccountPage() {
 
   return (
     <DashboardLayout>
-      <div className="p-4 lg:p-8 space-y-6 lg:space-y-8 w-full animate-in fade-in duration-500">
+      <div className="max-w-7xl mx-auto p-4 lg:p-8 space-y-8 animate-in fade-in slide-in-from-bottom-2 duration-700">
         
         {/* HEADER SECTION */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 border-b border-border/40 pb-8">
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-            <h1 className="font-display text-2xl lg:text-3xl font-bold text-foreground tracking-tight">Account Settings</h1>
-            <p className="text-xs lg:text-sm text-muted-foreground mt-1 flex items-center gap-2">
-              <ShieldCheck size={14} className="text-primary" />
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold uppercase tracking-wider mb-3">
+              <ShieldCheck size={12} />
               Secure Fintech Environment
-            </p>
+            </div>
+            <h1 className="font-display text-3xl lg:text-4xl font-bold text-foreground tracking-tight">Account Settings</h1>
+            <p className="text-sm text-muted-foreground mt-2">Manage your digital identity and security preferences.</p>
           </motion.div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="flex-1 sm:flex-none h-9 text-xs">
-              <History size={14} className="mr-2 hidden xs:block" /> Activity Log
+          <div className="flex items-center gap-3">
+            <Button variant="outline" size="sm" className="h-10 px-4 rounded-xl border-border/60 font-medium">
+              <History size={16} className="mr-2 opacity-70" /> Activity Log
             </Button>
-            <Button variant="gold" size="sm" className="flex-1 sm:flex-none h-9 text-xs shadow-gold-sm">
-              <Download size={14} className="mr-2 hidden xs:block" /> Export KYC
+            <Button variant="gold" size="sm" className="h-10 px-4 rounded-xl shadow-lg shadow-gold/20 font-semibold transition-all hover:scale-[1.02] active:scale-95">
+              <Download size={16} className="mr-2" /> Export KYC
             </Button>
           </div>
         </div>
 
         {isEditing ? (
-          <EditProfileForm onComplete={() => { setIsEditing(false); refreshProfile(); }} onCancel={() => setIsEditing(false)} />
+          <div className="max-w-4xl mx-auto">
+            <EditProfileForm onComplete={() => { setIsEditing(false); refreshProfile(); }} onCancel={() => setIsEditing(false)} />
+          </div>
         ) : (
-          <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 lg:gap-8">
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-8">
             
             {/* SIDEBAR: Profile & Devices */}
-            <div className="xl:col-span-1 space-y-6">
-              <Card className="border-border/50 overflow-hidden shadow-sm">
-                <div className="h-20 bg-primary/10 relative" />
-                <CardContent className="relative px-6 pb-6 text-center">
-                  <div className="group relative w-20 h-20 mx-auto -mt-10 mb-3">
-                    <div className="w-full h-full rounded-2xl bg-accent flex items-center justify-center text-accent-foreground font-bold text-2xl shadow-lg border-4 border-card">
+            <div className="xl:col-span-4 space-y-8">
+              <Card className="border-border/40 overflow-hidden shadow-xl shadow-black/5 bg-card/50 backdrop-blur-sm">
+                <div className="h-24 bg-gradient-to-r from-primary/20 via-primary/5 to-transparent relative" />
+                <CardContent className="relative px-6 pb-8 text-center">
+                  <div className="group relative w-24 h-24 mx-auto -mt-12 mb-4">
+                    <div className="w-full h-full rounded-3xl bg-gradient-to-br from-accent to-accent/80 flex items-center justify-center text-accent-foreground font-bold text-3xl shadow-2xl border-4 border-card transition-transform group-hover:scale-105 duration-300">
                       {initials}
                     </div>
-                    <div className="absolute inset-0 bg-black/40 rounded-2xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
-                      <Camera size={20} className="text-white" />
-                    </div>
+                    <button className="absolute bottom-0 right-0 p-2 bg-primary text-primary-foreground rounded-xl shadow-lg hover:bg-primary/90 transition-colors">
+                      <Camera size={16} />
+                    </button>
                   </div>
-                  <h2 className="font-display text-lg font-bold truncate">{displayName}</h2>
-                  <p className="text-xs text-muted-foreground mb-4 truncate">{displayEmail}</p>
-                  <Button variant="outline" size="sm" className="w-full text-[11px] h-8" onClick={() => setIsEditing(true)}>
-                    <Edit3 size={12} className="mr-1.5" /> Edit Profile
+                  <h2 className="font-display text-xl font-bold text-foreground">{displayName}</h2>
+                  <p className="text-sm text-muted-foreground mb-6">{displayEmail}</p>
+                  <Button variant="outline" size="sm" className="w-full h-10 rounded-xl border-border/80 bg-background/50 hover:bg-accent hover:text-accent-foreground transition-all" onClick={() => setIsEditing(true)}>
+                    <Edit3 size={14} className="mr-2" /> Edit Profile Details
                   </Button>
                 </CardContent>
-                <div className="px-6 py-3 bg-muted/20 border-t border-border/50 flex justify-between items-center text-[10px] font-bold">
-                   <span className="text-muted-foreground tracking-wider">MEMBER ID</span>
-                   <span className="text-primary font-mono">{membershipId}</span>
+                <div className="px-6 py-4 bg-muted/30 border-t border-border/40 flex justify-between items-center">
+                   <span className="text-[10px] text-muted-foreground font-black tracking-widest uppercase">Member ID</span>
+                   <span className="text-sm font-mono font-bold text-primary">{membershipId}</span>
                 </div>
               </Card>
 
               {/* LOGGED IN DEVICES */}
-              <Card className="border-border/50 shadow-sm overflow-hidden">
-                <CardHeader className="pb-3 bg-muted/10 border-b border-border/5">
-                  <CardTitle className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
-                    <Smartphone size={12} className="text-primary" /> Active Sessions
+              <Card className="border-border/40 shadow-xl shadow-black/5 overflow-hidden">
+                <CardHeader className="pb-4 border-b border-border/40 bg-muted/20">
+                  <CardTitle className="text-xs font-black uppercase tracking-[0.2em] flex items-center gap-2 text-muted-foreground">
+                    <Smartphone size={14} className="text-primary" /> Active Sessions
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="p-0 divide-y divide-border/5">
+                <CardContent className="p-0 divide-y divide-border/40">
                   {activeDevices.map((device) => (
-                    <div key={device.id} className="p-4 flex flex-col gap-2 hover:bg-muted/5 transition-colors">
+                    <div key={device.id} className="p-5 flex flex-col gap-3 hover:bg-muted/10 transition-colors">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <device.icon size={14} className={device.current ? "text-primary" : "text-muted-foreground"} />
-                          <span className="text-xs font-bold">{device.name}</span>
+                        <div className="flex items-center gap-3">
+                          <div className={cn("p-2 rounded-lg", device.current ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground")}>
+                            <device.icon size={18} />
+                          </div>
+                          <div>
+                            <span className="text-sm font-bold block leading-tight">{device.name}</span>
+                            <span className="text-[10px] text-muted-foreground flex items-center gap-1 mt-1 font-mono uppercase">
+                               <Globe size={10} /> {device.ip}
+                            </span>
+                          </div>
                         </div>
-                        {device.current && <span className="text-[9px] bg-success/10 text-success px-2 py-0.5 rounded-full font-bold">Online</span>}
-                      </div>
-                      <div className="flex flex-col text-[10px] text-muted-foreground ml-6 space-y-0.5">
-                        <span className="flex items-center gap-1 font-mono"><Globe size={10} /> {device.ip}</span>
-                        <span>{device.location}</span>
+                        {device.current && (
+                          <div className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-success/10 text-success text-[10px] font-bold border border-success/20">
+                            <div className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+                            ACTIVE
+                          </div>
+                        )}
                       </div>
                       {!device.current && (
                         <button 
                           onClick={() => handleLogoutOtherDevices(device.id)}
                           disabled={isRevoking === device.id}
-                          className="text-[10px] text-destructive font-bold mt-1 ml-6 flex items-center gap-1 hover:underline disabled:opacity-50"
+                          className="text-xs text-destructive font-bold ml-11 flex items-center gap-2 hover:opacity-80 transition-opacity disabled:opacity-50"
                         >
-                          {isRevoking === device.id ? <Loader2 size={10} className="animate-spin" /> : <LogOut size={10} />}
-                          End Session
+                          {isRevoking === device.id ? <Loader2 size={12} className="animate-spin" /> : <LogOut size={12} />}
+                          Revoke Access
                         </button>
                       )}
                     </div>
@@ -210,27 +217,31 @@ export default function MyAccountPage() {
             </div>
 
             {/* MAIN CONTENT AREA */}
-            <div className="xl:col-span-3 space-y-6">
+            <div className="xl:col-span-8 space-y-8">
               
               {/* INFORMATION CARDS */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {infoSections.map((section, si) => (
-                  <Card key={si} className="border-border/50 shadow-sm">
-                    <CardHeader className="py-3 px-6 border-b border-border/5 bg-muted/5 flex flex-row items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <section.icon size={16} className="text-primary" />
-                        <CardTitle className="text-sm font-bold">{section.title}</CardTitle>
+                  <Card key={si} className="border-border/40 shadow-lg shadow-black/5">
+                    <CardHeader className="py-4 px-6 border-b border-border/40 bg-muted/10 flex flex-row items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="p-1.5 bg-primary/10 rounded-lg">
+                          <section.icon size={16} className="text-primary" />
+                        </div>
+                        <CardTitle className="text-sm font-bold tracking-tight">{section.title}</CardTitle>
                       </div>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 rounded-full hover:bg-primary/10 group" onClick={() => setShowDocViewer(true)}>
-                        <Eye size={14} className="text-muted-foreground group-hover:text-primary transition-colors" />
+                      <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full hover:bg-primary/10" onClick={() => setShowDocViewer(true)}>
+                        <Eye size={16} className="text-muted-foreground" />
                       </Button>
                     </CardHeader>
                     <CardContent className="p-0">
-                      <div className="grid grid-cols-1 divide-y divide-border/5">
+                      <div className="grid grid-cols-1 divide-y divide-border/40">
                         {section.fields.map((field, fi) => (
-                          <div key={fi} className="px-6 py-4 flex flex-col gap-1 hover:bg-muted/5 transition-colors">
-                            <span className="text-[10px] uppercase font-bold text-muted-foreground/70">{field.label}</span>
-                            <span className="text-sm font-semibold truncate">{field.value || '—'}</span>
+                          <div key={fi} className="px-6 py-4 flex flex-col gap-1.5 group hover:bg-muted/5 transition-colors">
+                            <span className="text-[10px] uppercase font-black text-muted-foreground/60 tracking-widest">{field.label}</span>
+                            <span className="text-sm font-semibold text-foreground truncate group-hover:text-primary transition-colors">
+                              {field.value || <span className="text-muted-foreground/40 italic font-normal">Not provided</span>}
+                            </span>
                           </div>
                         ))}
                       </div>
@@ -240,44 +251,49 @@ export default function MyAccountPage() {
               </div>
 
               {/* SECURITY ACTIONS */}
-              <Card className="border-border/50 shadow-sm">
-                <CardHeader className="py-4 border-b border-border/5 bg-muted/5">
-                  <div className="flex items-center gap-2 text-primary">
-                    <ShieldAlert size={16} />
-                    <CardTitle className="text-sm font-bold uppercase tracking-wider">Access & Privacy</CardTitle>
+              <Card className="border-border/40 shadow-lg shadow-black/5 overflow-hidden">
+                <CardHeader className="py-5 px-6 border-b border-border/40 bg-muted/5">
+                  <div className="flex items-center gap-3">
+                    <ShieldAlert size={20} className="text-primary" />
+                    <div>
+                      <CardTitle className="text-md font-bold uppercase tracking-wider">Access & Security</CardTitle>
+                      <CardDescription className="text-xs">Secure your account and manage authentication</CardDescription>
+                    </div>
                   </div>
                 </CardHeader>
-                <CardContent className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
-                    <Button variant="outline" className="w-full justify-between text-xs h-16 px-4 border-border/50 group hover:border-accent/50" onClick={() => setShowPassModal(true)}>
+                <CardContent className="p-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Button variant="outline" className="w-full justify-between h-auto py-5 px-5 border-border/60 bg-card hover:border-accent hover:shadow-md transition-all group" onClick={() => setShowPassModal(true)}>
                       <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center text-accent group-hover:bg-accent group-hover:text-white transition-colors">
-                          <Key size={18} />
+                        <div className="w-12 h-12 rounded-2xl bg-accent/10 flex items-center justify-center text-accent group-hover:bg-accent group-hover:text-white transition-all duration-300">
+                          <Key size={20} />
                         </div>
                         <div className="text-left">
                           <p className="font-bold text-sm">Update Password</p>
-                          <p className="text-[10px] text-muted-foreground">Modify login credentials</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">Keep your credentials fresh</p>
                         </div>
                       </div>
-                      <ChevronRight size={16} className="text-muted-foreground opacity-50 group-hover:opacity-100" />
+                      <ChevronRight size={18} className="text-muted-foreground opacity-30 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                     </Button>
 
-                    <Button variant="outline" className="w-full justify-between text-xs h-16 px-4 border-border/50 group hover:border-primary/50" onClick={() => setShowDocViewer(true)}>
+                    <Button variant="outline" className="w-full justify-between h-auto py-5 px-5 border-border/60 bg-card hover:border-primary hover:shadow-md transition-all group" onClick={() => setShowDocViewer(true)}>
                       <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
-                          <Eye size={18} />
+                        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-all duration-300">
+                          <Eye size={20} />
                         </div>
                         <div className="text-left">
-                          <p className="font-bold text-sm">KYC Documents</p>
-                          <p className="text-[10px] text-muted-foreground">View verified uploads</p>
+                          <p className="font-bold text-sm">KYC Vault</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">View your verified data</p>
                         </div>
                       </div>
-                      <ChevronRight size={16} className="text-muted-foreground opacity-50 group-hover:opacity-100" />
+                      <ChevronRight size={18} className="text-muted-foreground opacity-30 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
                     </Button>
                 </CardContent>
               </Card>
 
               {/* DOCUMENT UPLOAD AREA */}
-              <DocumentUpload />
+              <div className="bg-muted/10 rounded-3xl border border-dashed border-border/60 p-1">
+                <DocumentUpload />
+              </div>
             </div>
           </div>
         )}
@@ -285,37 +301,44 @@ export default function MyAccountPage() {
         {/* MODAL: PASSWORD UPDATE */}
         <AnimatePresence>
           {showPassModal && (
-            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-              <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="w-full max-w-md">
-                <Card className="shadow-2xl border-border">
-                  <CardHeader className="border-b pb-4 flex flex-row items-center justify-between">
-                    <div>
-                      <CardTitle className="text-lg">Security Sync</CardTitle>
-                      <CardDescription className="text-xs">Enter your new database password</CardDescription>
+            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-background/80 backdrop-blur-md">
+              <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="w-full max-w-md">
+                <Card className="shadow-2xl border-border/60 overflow-hidden">
+                  <CardHeader className="border-b border-border/40 bg-muted/20 pb-6">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                          <Lock size={20} />
+                        </div>
+                        <div>
+                          <CardTitle className="text-lg font-bold">Security Update</CardTitle>
+                          <CardDescription className="text-xs">Update your login credentials</CardDescription>
+                        </div>
+                      </div>
+                      <Button variant="ghost" size="icon" onClick={() => setShowPassModal(false)} className="rounded-full hover:bg-destructive/10 hover:text-destructive"><X size={20}/></Button>
                     </div>
-                    <Button variant="ghost" size="icon" onClick={() => setShowPassModal(false)} className="rounded-full"><X size={18}/></Button>
                   </CardHeader>
                   <form onSubmit={handlePasswordUpdate}>
-                    <CardContent className="pt-6 space-y-4">
-                      <div className="space-y-2">
-                        <label className="text-xs font-bold uppercase text-muted-foreground tracking-widest">New Password</label>
-                        <div className="relative">
-                          <Lock className="absolute left-3 top-2.5 text-muted-foreground" size={16} />
+                    <CardContent className="pt-8 pb-6 space-y-6">
+                      <div className="space-y-3">
+                        <label className="text-[10px] font-black uppercase text-muted-foreground tracking-widest ml-1">New Password</label>
+                        <div className="relative group">
+                          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors" size={18} />
                           <input 
                             type="password" 
                             required 
-                            placeholder="Min. 6 characters"
-                            className="w-full bg-muted/50 border rounded-lg py-2.5 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all" 
+                            placeholder="At least 6 characters"
+                            className="w-full bg-muted/40 border-border/60 border rounded-2xl py-3.5 pl-12 pr-4 text-sm focus:ring-4 focus:ring-primary/10 focus:border-primary outline-none transition-all" 
                             value={newPassword} 
                             onChange={(e) => setNewPassword(e.target.value)} 
                           />
                         </div>
                       </div>
                     </CardContent>
-                    <CardFooter className="gap-3 pt-2">
-                      <Button type="button" variant="ghost" className="flex-1" onClick={() => setShowPassModal(false)}>Cancel</Button>
-                      <Button type="submit" variant="gold" className="flex-1" disabled={isUpdatingPassword}>
-                        {isUpdatingPassword ? <Loader2 className="animate-spin" size={14} /> : 'Update Now'}
+                    <CardFooter className="gap-3 bg-muted/20 border-t border-border/40 p-6">
+                      <Button type="button" variant="ghost" className="flex-1 rounded-xl h-11 font-semibold" onClick={() => setShowPassModal(false)}>Cancel</Button>
+                      <Button type="submit" variant="gold" className="flex-1 rounded-xl h-11 font-bold shadow-lg shadow-gold/20" disabled={isUpdatingPassword}>
+                        {isUpdatingPassword ? <Loader2 className="animate-spin mr-2" size={18} /> : 'Update Password'}
                       </Button>
                     </CardFooter>
                   </form>
@@ -328,37 +351,39 @@ export default function MyAccountPage() {
         {/* MODAL: DOCUMENT PREVIEW */}
         <AnimatePresence>
           {showDocViewer && (
-            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-              <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 20, opacity: 0 }} className="w-full max-w-3xl aspect-[4/3] bg-card rounded-2xl overflow-hidden flex flex-col shadow-2xl border border-white/10">
-                <div className="p-4 border-b flex items-center justify-between bg-muted/20">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 bg-primary/10 rounded-lg">
-                      <FileText size={18} className="text-primary" />
+            <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl">
+              <motion.div initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 40, opacity: 0 }} className="w-full max-w-4xl bg-card rounded-[2.5rem] overflow-hidden flex flex-col shadow-2xl border border-white/10">
+                <div className="p-6 border-b border-border/40 flex items-center justify-between bg-muted/30">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-primary/10 rounded-2xl shadow-inner">
+                      <FileText size={24} className="text-primary" />
                     </div>
                     <div>
-                      <p className="text-sm font-bold">KYC_Verification_Record.pdf</p>
-                      <p className="text-[10px] text-muted-foreground uppercase tracking-widest">Secured by Nyota Foundation</p>
+                      <p className="text-base font-bold text-foreground">KYC_Verification_Record.pdf</p>
+                      <p className="text-[10px] text-muted-foreground font-black uppercase tracking-[0.2em] mt-0.5">Encrypted Security Vault</p>
                     </div>
                   </div>
-                  <Button variant="ghost" size="icon" onClick={() => setShowDocViewer(false)} className="rounded-full hover:bg-muted"><X size={20}/></Button>
+                  <Button variant="ghost" size="icon" onClick={() => setShowDocViewer(false)} className="h-12 w-12 rounded-full hover:bg-muted"><X size={24}/></Button>
                 </div>
-                <div className="flex-1 bg-muted/10 flex items-center justify-center p-8 relative overflow-hidden">
-                   {/* Decorative background for the empty viewer */}
-                  <div className="absolute inset-0 opacity-5 pattern-grid-lg" />
-                  <div className="text-center space-y-4 relative z-10">
-                    <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto shadow-inner">
-                      <ShieldCheck size={48} className="text-primary" />
+                <div className="flex-1 bg-muted/10 min-h-[400px] flex items-center justify-center p-12 relative overflow-hidden">
+                  <div className="absolute inset-0 opacity-[0.03] pattern-grid-lg" />
+                  <div className="text-center space-y-6 relative z-10">
+                    <div className="w-28 h-28 bg-gradient-to-br from-primary/20 to-primary/5 rounded-[2rem] flex items-center justify-center mx-auto shadow-2xl border border-primary/20">
+                      <ShieldCheck size={56} className="text-primary" />
                     </div>
-                    <div className="max-w-xs mx-auto">
-                      <p className="text-foreground font-bold">Document Fully Encrypted</p>
-                      <p className="text-muted-foreground text-xs mt-1">This record is synchronized with our secure database and is only visible to you.</p>
+                    <div className="max-w-md mx-auto">
+                      <h3 className="text-xl font-bold text-foreground">Protected Asset</h3>
+                      <p className="text-muted-foreground text-sm mt-2 leading-relaxed">This record is synchronized with our secure database and is only visible to your authenticated session. Digital signatures are verified.</p>
                     </div>
-                    <div className="flex gap-2 justify-center">
-                      <Button variant="outline" size="sm" className="h-9 text-xs">
-                        <Download size={14} className="mr-2" /> Download
+                    <div className="flex gap-4 justify-center pt-4">
+                      <Button variant="outline" className="h-12 px-8 rounded-2xl border-border/60 bg-card hover:bg-muted font-bold">
+                        <Download size={18} className="mr-2" /> Download Original
                       </Button>
                     </div>
                   </div>
+                </div>
+                <div className="p-4 bg-muted/30 border-t border-border/40 text-center">
+                  <p className="text-[10px] text-muted-foreground font-medium italic">Nyota Secure Document Viewer v2.4 — End-to-End Encrypted</p>
                 </div>
               </motion.div>
             </div>
