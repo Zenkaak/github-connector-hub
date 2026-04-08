@@ -92,6 +92,25 @@ Deno.serve(async (req) => {
       const purpose = txn.purpose;
 
       // -------------------------
+      // CHAMA PENALTY
+      // -------------------------
+      if (purpose === "chama_penalty") {
+        const penaltyId = txn.penalty_id || txn.metadata?.penaltyId;
+        if (penaltyId) {
+          await supabase
+            .from("chama_penalties")
+            .update({ is_paid: true })
+            .eq("id", penaltyId);
+        } else {
+          // Fallback: mark the oldest unpaid penalty for this user/group as paid
+          await supabase.rpc('mark_oldest_penalty_paid', { 
+            p_user_id: txn.user_id, 
+            p_group_id: txn.group_id 
+          });
+        }
+      }
+
+      // -------------------------
       // HARAMBEE
       // -------------------------
       if (purpose === "harambee" && txn.harambee_id) {
@@ -317,4 +336,4 @@ function jsonResponse(data: any, status = 200) {
     status,
     headers: { "Content-Type": "application/json" },
   });
-            } 
+}
