@@ -28,7 +28,10 @@ export function ChamaArrears({ groupId, group, members }: Props) {
   const [paying, setPaying] = useState<string | null>(null);
 
   const fetchSavings = async () => {
-    const { data } = await supabase.from('chama_savings').select('*').eq('group_id', groupId);
+    const { data } = await supabase
+      .from('chama_savings')
+      .select('*')
+      .eq('group_id', groupId);
     if (data) setSavings(data);
     setLoading(false);
   };
@@ -36,11 +39,22 @@ export function ChamaArrears({ groupId, group, members }: Props) {
   useEffect(() => {
     fetchSavings();
     
+    // The Realtime channel ensures that as soon as the Edge Function 
+    // inserts the new savings records upon successful callback, 
+    // fetchSavings() is called and the "Pay Now" button disappears.
     const channel = supabase
       .channel('arrears-updates')
       .on('postgres_changes', 
-        { event: '*', schema: 'public', table: 'chama_savings', filter: `group_id=eq.${groupId}` }, 
-        () => fetchSavings()
+        { 
+          event: 'INSERT', 
+          schema: 'public', 
+          table: 'chama_savings', 
+          filter: `group_id=eq.${groupId}` 
+        }, 
+        () => {
+          console.log("New savings detected, refreshing arrears...");
+          fetchSavings();
+        }
       )
       .subscribe();
 
@@ -58,9 +72,11 @@ export function ChamaArrears({ groupId, group, members }: Props) {
           userId: user.id,
           purpose: 'chama_savings',
           groupId,
+          // metadata informs the Edge Function to backfill missed months
           metadata: {
             type: 'arrears_clearance',
-            missed_count: m.missedCount
+            missed_count: m.missedCount,
+            isArrears: true
           }
         },
       });
@@ -70,7 +86,7 @@ export function ChamaArrears({ groupId, group, members }: Props) {
 
       toast({ 
         title: 'STK Push Sent', 
-        description: `Initiated payment for KES ${m.arrearsAmount.toLocaleString()}` 
+        description: `Initiated payment for KES ${m.arrearsAmount.toLocaleString()}. The list will update automatically upon completion.` 
       });
     } catch (err: any) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
@@ -173,4 +189,3 @@ export function ChamaArrears({ groupId, group, members }: Props) {
     </div>
   );
 }
- 
