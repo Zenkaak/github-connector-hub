@@ -7,22 +7,16 @@ const corsHeaders = {
 };
 
 Deno.serve(async (req) => {
-  // -------------------------
-  // HANDLE CORS PRE-FLIGHT
-  // -------------------------
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    // -------------------------
-    // PARSE REQUEST BODY
-    // -------------------------
     const body = await req.json().catch(() => {
       throw new Error("Invalid JSON body");
     });
 
-    console.log("Incoming request:", body);
+    console.log("RAW BODY:", body);
 
     const {
       phone,
@@ -34,19 +28,15 @@ Deno.serve(async (req) => {
       harambee_id,
       loanId,
       disbursementId,
-      contributorName,
     } = body;
 
     // -------------------------
-    // VALIDATION
+    // ✅ VALIDATION
     // -------------------------
-    if (!phone || !amount || !purpose) {
+    if (!phone || !userId || amount === undefined || amount === null) {
       return new Response(
-        JSON.stringify({ error: "Missing required fields" }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        JSON.stringify({ error: "Missing phone, amount, or userId" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -54,15 +44,19 @@ Deno.serve(async (req) => {
     if (isNaN(numericAmount) || numericAmount <= 0) {
       return new Response(
         JSON.stringify({ error: "Invalid amount" }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!purpose) {
+      return new Response(
+        JSON.stringify({ error: "Missing purpose" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     // -------------------------
-    // NORMALIZE PHONE
+    // ✅ PHONE NORMALIZATION
     // -------------------------
     let formattedPhone = phone.replace(/\s/g, "").replace(/\+/g, "");
 
@@ -73,7 +67,7 @@ Deno.serve(async (req) => {
     }
 
     // -------------------------
-    // LOAD ENV VARIABLES
+    // ✅ ENV VARIABLES
     // -------------------------
     const consumerKey = Deno.env.get("MPESA_CONSUMER_KEY");
     const consumerSecret = Deno.env.get("MPESA_CONSUMER_SECRET");
@@ -81,84 +75,34 @@ Deno.serve(async (req) => {
     const passkey = Deno.env.get("MPESA_PASSKEY");
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+    if (!consumerKey || !consumerSecret || !shortcode || !passkey || !supabaseUrl || !serviceRoleKey) {
+      throw new Error("Missing required environment variables");
+    }
+
     const partyB = Deno.env.get("PARTY_B") || shortcode;
 
-    if (
-      !consumerKey ||
-      !consumerSecret ||
-      !shortcode ||
-      !passkey ||
-      !supabaseUrl ||
-      !serviceRoleKey
-    ) {
-      throw new Error("Missing environment variables");
-    }
-
     // -------------------------
-    // INIT SUPABASE CLIENT
-    // -------------------------
-    const supabase = createClient(supabaseUrl, serviceRoleKey);
-
-    // -------------------------
-    // GENERATE UNIQUE REFERENCE
-    // -------------------------
-    const reference = `${purpose.toUpperCase()}_${Date.now()}_${Math.random()
-      .toString(36)
-      .slice(2, 8)
-      .toUpperCase()}`;
-
-    console.log("Generated reference:", reference);
-
-    // -------------------------
-    // INSERT TRANSACTION FIRST
-    // -------------------------
-    const { error: insertError } = await supabase.from("stk_transactions").insert({
-      user_id: userId || null,
-      phone: formattedPhone,
-      amount: numericAmount,
-      reference,
-      status: "pending",
-      purpose,
-      group_id: groupId || null,
-      savings_id: savingsId || null,
-      harambee_id: harambee_id || null,
-      loan_id: loanId || null,
-      disbursement_id: disbursementId || null,
-      contributor_name: contributorName || null,
-    });
-
-    if (insertError) {
-      console.error("Insert error:", insertError);
-      throw new Error("Failed to insert transaction");
-    }
-
-    console.log("Transaction inserted successfully");
-
-    // -------------------------
-    // GET ACCESS TOKEN
+    // ✅ ACCESS TOKEN
     // -------------------------
     const auth = btoa(`${consumerKey}:${consumerSecret}`);
 
     const tokenRes = await fetch(
       "https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
-      {
-        headers: {
-          Authorization: `Basic ${auth}`,
-        },
-      }
+      { headers: { Authorization: `Basic ${auth}` } }
     );
 
     const tokenData = await tokenRes.json();
 
     if (!tokenData.access_token) {
       console.error("Token error:", tokenData);
-      throw new Error("Failed to obtain access token");
+      throw new Error("Failed to get M-Pesa access token");
     }
 
     const accessToken = tokenData.access_token;
 
     // -------------------------
-    // GENERATE TIMESTAMP
+    // ✅ TIMESTAMP + PASSWORD
     // -------------------------
     const now = new Date();
     const timestamp =
@@ -169,18 +113,31 @@ Deno.serve(async (req) => {
       String(now.getMinutes()).padStart(2, "0") +
       String(now.getSeconds()).padStart(2, "0");
 
-    // -------------------------
-    // GENERATE PASSWORD
-    // -------------------------
     const password = btoa(`${shortcode}${passkey}${timestamp}`);
 
     // -------------------------
-    // CALLBACK URL
+    // ✅ REFERENCE PREFIX
     // -------------------------
+    const prefixMap: Record<string, string> = {
+      chama_savings: "CHAMA_",
+      personal_savings: "PSAV_",
+      loan_repayment: "REPAY_",
+      harambee: "HRB_",
+      activation: "ACT_",
+      wallet_deposit: "DEP_",
+      chama_joining_fee: "CJFEE_",
+    };
+
+    const prefix = prefixMap[purpose] || "PAY";
+    const reference = `${prefix}${Date.now()}${Math.random()
+      .toString(36)
+      .slice(2, 6)
+      .toUpperCase()}`;
+
     const callbackUrl = `${supabaseUrl}/functions/v1/mpesa-callback`;
 
     // -------------------------
-    // STK REQUEST PAYLOAD
+    // ✅ STK BODY
     // -------------------------
     const stkBody = {
       BusinessShortCode: shortcode,
@@ -196,10 +153,13 @@ Deno.serve(async (req) => {
       TransactionDesc: purpose,
     };
 
-    console.log("STK request payload:", stkBody);
+    console.log("STK Push request:", {
+      ...stkBody,
+      Password: "[REDACTED]",
+    });
 
     // -------------------------
-    // SEND STK PUSH
+    // ✅ STK REQUEST
     // -------------------------
     const stkRes = await fetch(
       "https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
@@ -214,8 +174,7 @@ Deno.serve(async (req) => {
     );
 
     const stkData = await stkRes.json();
-
-    console.log("STK response:", stkData);
+    console.log("STK Push response:", stkData);
 
     if (stkData.ResponseCode !== "0") {
       return new Response(
@@ -224,43 +183,71 @@ Deno.serve(async (req) => {
           error:
             stkData.errorMessage ||
             stkData.ResponseDescription ||
-            "STK push failed",
+            "STK Push failed",
           details: stkData,
         }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     // -------------------------
-    // SUCCESS RESPONSE
+    // ✅ SUPABASE
     // -------------------------
+    const supabase = createClient(supabaseUrl, serviceRoleKey);
+
+    // Normalize IDs (fix casing + prevent silent nulls)
+    const finalHarambeeId = harambee_id || body?.harambeeId || null;
+    const finalLoanId = loanId || body?.loan_id || null;
+    const finalDisbursementId = disbursementId || body?.disbursement_id || null;
+
+    // Optional: enforce purpose-based requirements
+    if (purpose === "harambee" && !finalHarambeeId) {
+      throw new Error("harambee_id is required for harambee payments");
+    }
+
+    if (purpose === "loan_repayment" && !finalLoanId && !finalDisbursementId) {
+      throw new Error("loan_id or disbursement_id required for loan repayment");
+    }
+
+    const { error: insertError } = await supabase.from("stk_transactions").insert({
+      user_id: userId,
+      phone: formattedPhone,
+      amount: Math.round(numericAmount),
+      reference,
+      checkout_request_id: stkData.CheckoutRequestID,
+      merchant_request_id: stkData.MerchantRequestID,
+      status: "pending",
+      purpose,
+
+      group_id: groupId || null,
+      savings_id: savingsId || null,
+
+      harambee_id: finalHarambeeId,
+      loan_id: finalLoanId,
+      disbursement_id: finalDisbursementId,
+    });
+
+    if (insertError) {
+      console.error("Supabase insert error:", insertError);
+      throw new Error("Failed to save transaction");
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
         reference,
         checkoutRequestId: stkData.CheckoutRequestID,
-        merchantRequestId: stkData.MerchantRequestID,
-        message: "STK push initiated successfully",
+        message: "STK Push sent successfully.",
       }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
+
   } catch (error: any) {
-    console.error("STK initiate error:", error);
+    console.error("STK Push error:", error);
 
     return new Response(
-      JSON.stringify({
-        success: false,
-        error: error.message || "Unknown error",
-      }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      JSON.stringify({ error: error.message }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 }); 
