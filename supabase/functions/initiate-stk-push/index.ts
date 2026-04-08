@@ -28,15 +28,19 @@ Deno.serve(async (req) => {
       harambee_id,
       loanId,
       disbursementId,
+      contributorName,
     } = body;
 
     // -------------------------
-    // ✅ VALIDATION
+    // VALIDATION
     // -------------------------
     if (!phone || !userId || amount === undefined || amount === null) {
       return new Response(
         JSON.stringify({ error: "Missing phone, amount, or userId" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
       );
     }
 
@@ -44,19 +48,25 @@ Deno.serve(async (req) => {
     if (isNaN(numericAmount) || numericAmount <= 0) {
       return new Response(
         JSON.stringify({ error: "Invalid amount" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
       );
     }
 
     if (!purpose) {
       return new Response(
         JSON.stringify({ error: "Missing purpose" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
       );
     }
 
     // -------------------------
-    // ✅ PHONE NORMALIZATION
+    // PHONE NORMALIZATION
     // -------------------------
     let formattedPhone = phone.replace(/\s/g, "").replace(/\+/g, "");
 
@@ -67,7 +77,7 @@ Deno.serve(async (req) => {
     }
 
     // -------------------------
-    // ✅ ENV VARIABLES
+    // ENV VARIABLES
     // -------------------------
     const consumerKey = Deno.env.get("MPESA_CONSUMER_KEY");
     const consumerSecret = Deno.env.get("MPESA_CONSUMER_SECRET");
@@ -76,20 +86,31 @@ Deno.serve(async (req) => {
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
-    if (!consumerKey || !consumerSecret || !shortcode || !passkey || !supabaseUrl || !serviceRoleKey) {
+    if (
+      !consumerKey ||
+      !consumerSecret ||
+      !shortcode ||
+      !passkey ||
+      !supabaseUrl ||
+      !serviceRoleKey
+    ) {
       throw new Error("Missing required environment variables");
     }
 
     const partyB = Deno.env.get("PARTY_B") || shortcode;
 
     // -------------------------
-    // ✅ ACCESS TOKEN
+    // ACCESS TOKEN
     // -------------------------
     const auth = btoa(`${consumerKey}:${consumerSecret}`);
 
     const tokenRes = await fetch(
       "https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
-      { headers: { Authorization: `Basic ${auth}` } }
+      {
+        headers: {
+          Authorization: `Basic ${auth}`,
+        },
+      }
     );
 
     const tokenData = await tokenRes.json();
@@ -102,7 +123,7 @@ Deno.serve(async (req) => {
     const accessToken = tokenData.access_token;
 
     // -------------------------
-    // ✅ TIMESTAMP + PASSWORD
+    // TIMESTAMP + PASSWORD
     // -------------------------
     const now = new Date();
     const timestamp =
@@ -116,7 +137,7 @@ Deno.serve(async (req) => {
     const password = btoa(`${shortcode}${passkey}${timestamp}`);
 
     // -------------------------
-    // ✅ REFERENCE PREFIX
+    // REFERENCE PREFIX
     // -------------------------
     const prefixMap: Record<string, string> = {
       chama_savings: "CHAMA_",
@@ -137,7 +158,7 @@ Deno.serve(async (req) => {
     const callbackUrl = `${supabaseUrl}/functions/v1/mpesa-callback`;
 
     // -------------------------
-    // ✅ STK BODY
+    // STK BODY
     // -------------------------
     const stkBody = {
       BusinessShortCode: shortcode,
@@ -159,7 +180,7 @@ Deno.serve(async (req) => {
     });
 
     // -------------------------
-    // ✅ STK REQUEST
+    // STK REQUEST
     // -------------------------
     const stkRes = await fetch(
       "https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
@@ -174,6 +195,7 @@ Deno.serve(async (req) => {
     );
 
     const stkData = await stkRes.json();
+
     console.log("STK Push response:", stkData);
 
     if (stkData.ResponseCode !== "0") {
@@ -186,21 +208,22 @@ Deno.serve(async (req) => {
             "STK Push failed",
           details: stkData,
         }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
       );
     }
 
     // -------------------------
-    // ✅ SUPABASE
+    // SUPABASE INSERT
     // -------------------------
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // Normalize IDs (fix casing + prevent silent nulls)
     const finalHarambeeId = harambee_id || body?.harambeeId || null;
     const finalLoanId = loanId || body?.loan_id || null;
     const finalDisbursementId = disbursementId || body?.disbursement_id || null;
 
-    // Optional: enforce purpose-based requirements
     if (purpose === "harambee" && !finalHarambeeId) {
       throw new Error("harambee_id is required for harambee payments");
     }
@@ -209,23 +232,27 @@ Deno.serve(async (req) => {
       throw new Error("loan_id or disbursement_id required for loan repayment");
     }
 
-    const { error: insertError } = await supabase.from("stk_transactions").insert({
-      user_id: userId,
-      phone: formattedPhone,
-      amount: Math.round(numericAmount),
-      reference,
-      checkout_request_id: stkData.CheckoutRequestID,
-      merchant_request_id: stkData.MerchantRequestID,
-      status: "pending",
-      purpose,
+    const { error: insertError } = await supabase
+      .from("stk_transactions")
+      .insert({
+        user_id: userId,
+        phone: formattedPhone,
+        amount: Math.round(numericAmount),
+        reference,
+        checkout_request_id: stkData.CheckoutRequestID,
+        merchant_request_id: stkData.MerchantRequestID,
+        status: "pending",
+        purpose,
 
-      group_id: groupId || null,
-      savings_id: savingsId || null,
+        group_id: groupId || null,
+        savings_id: savingsId || null,
 
-      harambee_id: finalHarambeeId,
-      loan_id: finalLoanId,
-      disbursement_id: finalDisbursementId,
-    });
+        harambee_id: finalHarambeeId,
+        loan_id: finalLoanId,
+        disbursement_id: finalDisbursementId,
+
+        contributor_name: contributorName || null,
+      });
 
     if (insertError) {
       console.error("Supabase insert error:", insertError);
@@ -237,17 +264,24 @@ Deno.serve(async (req) => {
         success: true,
         reference,
         checkoutRequestId: stkData.CheckoutRequestID,
+        merchantRequestId: stkData.MerchantRequestID,
         message: "STK Push sent successfully.",
       }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
     );
-
   } catch (error: any) {
     console.error("STK Push error:", error);
 
     return new Response(
-      JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({
+        error: error.message,
+      }),
+      {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      }
     );
   }
 }); 
