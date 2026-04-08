@@ -97,14 +97,14 @@ Deno.serve(async (req) => {
       const phoneNumber = metadataItems.find((i: any) => i.Name === "PhoneNumber")?.Value || null;
       const transDate = metadataItems.find((i: any) => i.Name === "TransactionDate")?.Value || null;
 
-      // FIX: MUST AWAIT this update or the function kills the process before writing to DB
+      // FIX: WE MUST AWAIT THIS UPDATE OR THE FUNCTION KILLS THE PROCESS BEFORE WRITING
       const { error: updateTxError } = await supabase.from("stk_transactions").update({
         status: "success",
         result_code: String(ResultCode),
         result_desc: ResultDesc,
         mpesa_receipt: mpesaReceipt,
         updated_at: new Date().toISOString(),
-      }).eq("id", txn.id);
+      }).eq("checkout_request_id", CheckoutRequestID); // Targeting by CheckoutRequestID is safer than txn.id
 
       if (updateTxError) {
         console.error("Error updating stk_transactions table:", updateTxError.message);
@@ -293,6 +293,7 @@ Deno.serve(async (req) => {
       // ---------------------------------------------------------
       // 6. FINALIZE SUCCESS NOTIFICATION
       // ---------------------------------------------------------
+      // Awaiting this is also important to prevent early termination
       await supabase.from("notifications").insert({
         user_id: txn.user_id,
         title: "Payment Confirmed ✅",
@@ -307,19 +308,19 @@ Deno.serve(async (req) => {
 
     } else {
       // ---------------------------------------------------------
-      // 7. PROCESS FAILED PAYMENT
+      // 7. PROCESS FAILED PAYMENT (User cancelled or timeout)
       // ---------------------------------------------------------
       await supabase.from("stk_transactions").update({
         status: "failed",
         result_code: String(ResultCode),
         result_desc: ResultDesc,
         updated_at: new Date().toISOString(),
-      }).eq("id", txn.id);
+      }).eq("checkout_request_id", CheckoutRequestID);
 
       await supabase.from("notifications").insert({
         user_id: txn.user_id,
         title: "Payment Failed ❌",
-        message: `Dear ${txn.profiles?.full_name || "Member"}, your transaction of KES ${txn.amount.toLocaleString()} was unsuccessful: ${ResultDesc}.`,
+        message: `Dear ${txn.profiles?.full_name || "Member"}, your transaction of KES ${txn.amount.toLocaleString()} was unsuccessful: ${ResultDesc}. Please try again.`,
         type: "payment",
       });
     }
@@ -330,7 +331,8 @@ Deno.serve(async (req) => {
     return jsonResponse({ ResultCode: 0, ResultDesc: "Accepted" });
 
   } catch (error) {
-    console.error("CRITICAL SYSTEM ERROR:", error);
+    console.error("CRITICAL SYSTEM ERROR IN EDGE FUNCTION:", error);
+    // Return 200 so Safaricom doesn't keep retrying a broken function
     return jsonResponse({ ResultCode: 0, ResultDesc: "Accepted" });
   }
 });
