@@ -64,7 +64,7 @@ export function ChamaLoans({ groupId, group, members, myRole }: Props) {
       if (loanData) {
         setLoans(loanData);
         const myActive = loanData.find(l => 
-          l.borrower_id === user.id && ['pending', 'approved', 'active', 'disbursed'].includes(l.status)
+          ((l as any).borrower_id === user.id || l.user_id === user.id) && ['pending', 'approved', 'active', 'disbursed'].includes(l.status)
         );
         setActiveLoan(myActive);
       }
@@ -85,7 +85,7 @@ export function ChamaLoans({ groupId, group, members, myRole }: Props) {
         .select('id')
         .eq('user_id', user.id)
         .eq('group_id', groupId)
-        .eq('status', 'unpaid')
+        .eq('is_paid', false)
         .limit(1);
       setHasArrears(!!penaltyData?.length);
 
@@ -163,7 +163,7 @@ export function ChamaLoans({ groupId, group, members, myRole }: Props) {
         status: decision,
         reject_reason: reason || null,
         disbursed_at: decision === 'approved' ? new Date().toISOString() : null
-      }).eq('id', loanId);
+      } as any).eq('id', loanId);
       
       if (error) throw error;
       toast({ title: `Loan ${decision}!` });

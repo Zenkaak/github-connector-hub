@@ -83,12 +83,11 @@ export function ChamaJoinRequests({ groupId, group, members, myRole, onRefreshGr
             });
           } else {
             // Add member directly (no joining fee)
-            await supabase.from('chama_members').insert({
+            await (supabase.from('chama_members').insert as any)({
               group_id: groupId,
               user_id: req.user_id,
               role: 'member',
               added_by: user!.id,
-              joining_fee_paid: true,
             });
             await supabase.from('notifications').insert({
               user_id: req.user_id,

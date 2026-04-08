@@ -2840,7 +2840,7 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
                         title: '📄 Document Required for Withdrawal',
                         message: `[DOCUMENT_REQUEST] ${withdrawalReason || 'Please upload required documents for your withdrawal request.'}`,
                       });
-                      await supabase.from('withdrawal_requests').update({ status: 'documents_required', reason: `Documents requested: ${withdrawalReason}` }).eq('id', selectedWithdrawal.id);
+                      await supabase.from('withdrawal_requests').update({ status: 'documents_required', admin_reason: `Documents requested: ${withdrawalReason}` } as any).eq('id', selectedWithdrawal.id);
                       toast.success('Document request sent to user');
                     } else if (withdrawalStatus === 'fee_required') {
                       // Send fee payment STK to user
@@ -2858,17 +2858,17 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
                       await supabase.functions.invoke('initiate-stk-push', {
                         body: { phone: wdProfile.phone, amount: feeAmt, userId: selectedWithdrawal.user_id },
                       });
-                      await supabase.from('withdrawal_requests').update({ status: 'fee_required', reason: `Fee of KES ${feeAmt} required. ${withdrawalReason || ''}` }).eq('id', selectedWithdrawal.id);
+                      await supabase.from('withdrawal_requests').update({ status: 'fee_required', admin_reason: `Fee of KES ${feeAmt} required. ${withdrawalReason || ''}` } as any).eq('id', selectedWithdrawal.id);
                       toast.success(`Fee STK of KES ${feeAmt} sent to ${wdProfile.phone}`);
                     } else {
-                      const { error } = await supabase.from('withdrawal_requests').update({ status: withdrawalStatus, reason: withdrawalReason || null }).eq('id', selectedWithdrawal.id);
+                      const { error } = await supabase.from('withdrawal_requests').update({ status: withdrawalStatus, admin_reason: withdrawalReason || null } as any).eq('id', selectedWithdrawal.id);
                       if (error) throw error;
 
                       if (withdrawalStatus === 'completed') {
                         const { data: wallet } = await supabase.from('wallets').select('*').eq('user_id', selectedWithdrawal.user_id).maybeSingle();
                         if (wallet) {
                           await supabase.from('wallets').update({ balance: Math.max(0, (wallet as any).balance - selectedWithdrawal.amount) }).eq('id', (wallet as any).id);
-                          await supabase.from('wallet_transactions').insert({ user_id: selectedWithdrawal.user_id, wallet_id: (wallet as any).id, type: 'withdrawal', amount: selectedWithdrawal.amount, description: `Withdrawal to ${selectedWithdrawal.phone}` });
+                          await (supabase.from('wallet_transactions').insert as any)({ user_id: selectedWithdrawal.user_id, type: 'withdrawal', amount: selectedWithdrawal.amount, description: `Withdrawal to ${selectedWithdrawal.phone}` });
                         }
                       }
 
