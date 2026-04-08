@@ -18,7 +18,6 @@ export default function PublicHarambeePage() {
   const [notFound, setNotFound] = useState(false);
   const [groupName, setGroupName] = useState('');
 
-  // Contribution form
   const [phone, setPhone] = useState('');
   const [amount, setAmount] = useState('');
   const [name, setName] = useState('');
@@ -35,6 +34,7 @@ export default function PublicHarambeePage() {
 
   const fetchHarambee = async () => {
     if (!orderNumber) return;
+
     const { data, error } = await supabase
       .from('chama_harambees')
       .select('*')
@@ -49,20 +49,20 @@ export default function PublicHarambeePage() {
 
     setHarambee(data);
 
-    // Fetch group name
     const { data: group } = await supabase
       .from('chama_groups')
       .select('name')
       .eq('id', data.group_id)
       .maybeSingle();
+
     if (group) setGroupName(group.name);
 
-    // Fetch contributions
     const { data: contribs } = await supabase
       .from('chama_harambee_contributions')
       .select('*')
       .eq('harambee_id', data.id)
       .order('created_at', { ascending: false });
+
     if (contribs) setContributions(contribs);
 
     setLoading(false);
@@ -70,6 +70,7 @@ export default function PublicHarambeePage() {
 
   const handleContribute = async () => {
     if (!phone.trim() || !amount || !orderNumber) return;
+
     const amt = parseInt(amount);
     if (!amt || amt < 1) {
       toast({ title: 'Invalid amount', variant: 'destructive' });
@@ -82,6 +83,7 @@ export default function PublicHarambeePage() {
 
     try {
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/public-harambee-contribute`,
         {
@@ -96,12 +98,16 @@ export default function PublicHarambeePage() {
         }
       );
 
+      if (!response.ok) throw new Error('Failed to initiate payment');
+
       const data = await response.json();
       if (data.error) throw new Error(data.error);
 
       referenceRef.current = data.reference;
+
       setStatusMessage('Check your phone for the M-Pesa prompt. Enter your PIN to complete.');
       startPolling(data.reference);
+
     } catch (error: any) {
       setPaymentStatus('failed');
       setStatusMessage(error.message);
@@ -116,6 +122,7 @@ export default function PublicHarambeePage() {
 
     pollRef.current = setInterval(async () => {
       attempts++;
+
       if (attempts >= maxAttempts) {
         clearInterval(pollRef.current!);
         setPaymentStatus('failed');
@@ -129,36 +136,46 @@ export default function PublicHarambeePage() {
           `https://${projectId}.supabase.co/functions/v1/check-stk-status`,
           {
             method: 'POST',
-            headers: { 
+            headers: {
               'Content-Type': 'application/json',
               'Accept': 'application/json'
             },
             body: JSON.stringify({ reference }),
           }
         );
-        
-        if (!res.ok && res.status !== 406) {
-           throw new Error('Network response was not ok');
+
+        if (!res.ok) {
+          console.log("Polling HTTP error:", res.status);
+          return;
         }
 
         const data = await res.json();
+
+        if (!data || data.status === 'pending') {
+          return;
+        }
 
         if (data.status === 'success' || data.status === 'Completed') {
           clearInterval(pollRef.current!);
           setPaymentStatus('success');
           setStatusMessage('Payment received! Thank you for your contribution. 🎉');
           setContributing(false);
-          fetchHarambee(); // Refresh data
-        } else if (data.status === 'failed' || data.status === 'Cancelled') {
+          fetchHarambee();
+          return;
+        }
+
+        if (data.status === 'failed' || data.status === 'Cancelled') {
           clearInterval(pollRef.current!);
           setPaymentStatus('failed');
           setStatusMessage(data.message || 'Payment failed. Please try again.');
           setContributing(false);
+          return;
         }
+
       } catch (err) {
-        console.log('Polling...', err);
-        // Keep polling on errors as record might not be created yet
+        console.log('Polling retry...', err);
       }
+
     }, 3000);
   };
 
