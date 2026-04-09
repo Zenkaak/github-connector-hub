@@ -146,7 +146,7 @@ export default function WalletPage() {
   const filteredTransactions = useMemo(() => {
     return transactions.filter(tx => {
       const isIn = tx.type === 'credit' || tx.type === 'deposit';
-      const isOut = tx.type === 'debit' || tx.type === 'withdrawal';
+      const isOut = tx.type === 'debit' || tx.type === 'withdrawal' || tx.type === 'loan_repayment';
       const matchesType = filterType === 'all' || (filterType === 'in' && isIn) || (filterType === 'out' && isOut);
       const matchesSearch = tx.description?.toLowerCase().includes(searchQuery.toLowerCase()) || tx.id.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesType && matchesSearch;
@@ -155,7 +155,7 @@ export default function WalletPage() {
 
   const stats = useMemo(() => {
     const income = transactions.filter(t => t.type === 'credit' || t.type === 'deposit').reduce((a, b) => a + b.amount, 0);
-    const expense = transactions.filter(t => t.type === 'debit' || t.type === 'withdrawal').reduce((a, b) => a + b.amount, 0);
+    const expense = transactions.filter(t => t.type === 'debit' || t.type === 'withdrawal' || t.type === 'loan_repayment').reduce((a, b) => a + b.amount, 0);
     const escrow = withdrawals.filter(w => w.status === 'pending').reduce((a, b) => a + b.amount, 0);
     return { income, expense, escrow };
   }, [transactions, withdrawals]);
