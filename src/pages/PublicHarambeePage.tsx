@@ -126,8 +126,9 @@ export default function PublicHarambeePage() {
     setStatusMessage('Sending payment request to your phone...');
 
     try {
-      // Use direct fetch to the function URL to bypass auth requirements for public users
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      
+      // Using direct fetch to handle the "initiate-stk-push" function for public users
       const response = await fetch(
         `https://${projectId}.supabase.co/functions/v1/initiate-stk-push`,
         {
@@ -139,7 +140,7 @@ export default function PublicHarambeePage() {
             metadata: {
               type: 'harambee_contribution',
               harambee_id: harambee.id,
-              contributor_name: name.trim() || 'Anonymous Contribution',
+              contributor_name: name.trim() || 'Anonymous',
               order_number: orderNumber
             }
           }),
@@ -152,6 +153,7 @@ export default function PublicHarambeePage() {
       if (data.error) throw new Error(data.error);
 
       referenceRef.current = data.reference;
+
       setStatusMessage('Check your phone for the M-Pesa prompt. Enter your PIN to complete.');
       subscribeToTransaction(data.reference);
 
@@ -250,6 +252,7 @@ export default function PublicHarambeePage() {
             )}  
           </div>  
 
+          {/* Progress */}  
           <div className="p-4 rounded-xl bg-muted/40 border border-border/40 space-y-2">  
             <div className="flex justify-between text-sm">  
               <span className="text-muted-foreground">Collected</span>  
@@ -380,6 +383,7 @@ export default function PublicHarambeePage() {
           </Card>  
         )}  
 
+        {/* Footer */}  
         <div className="text-center py-4">  
           <p className="text-[11px] text-muted-foreground">  
             Powered by <a href="/" className="text-accent hover:underline font-medium">DASNET VENTURES</a>  
