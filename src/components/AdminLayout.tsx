@@ -29,14 +29,16 @@ interface AdminLayoutProps {
 }
 
 const adminNavItems = [
-  { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard/admin' },
+  { label: 'Overview', icon: LayoutDashboard, path: '/dashboard/admin' },
   { label: 'Users', icon: Users, path: '/dashboard/admin/users' },
-  { label: 'Loan Applications', icon: FileText, path: '/dashboard/admin/loans' },
-  { label: 'Harambee Requests', icon: Bell, path: '/dashboard/admin/harambee-applications' },
-  { label: 'Transactions', icon: Wallet, path: '/dashboard/admin/transactions' },
+  { label: 'Loans', icon: FileText, path: '/dashboard/admin/loans' },
+  { label: 'Harambee Apps', icon: Bell, path: '/dashboard/admin/harambee-applications' },
+  { label: 'M-Pesa', icon: Wallet, path: '/dashboard/admin/transactions' },
+  { label: 'Transfers', icon: Send, path: '/dashboard/admin/transfers' },
+  { label: 'Savings', icon: PiggyBank, path: '/dashboard/admin/savings' },
   { label: 'Messages', icon: MessageSquare, path: '/dashboard/admin/messages' },
-  { label: 'Withdrawals', icon: Send, path: '/dashboard/admin/withdrawals' },
-  { label: 'Chama Groups', icon: PiggyBank, path: '/dashboard/admin/chama' },
+  { label: 'Withdrawals', icon: Shield, path: '/dashboard/admin/withdrawals' },
+  { label: 'Chama', icon: Users, path: '/dashboard/admin/chama' },
   { label: 'Audit Logs', icon: ClipboardList, path: '/dashboard/admin/audit' },
   { label: 'Settings', icon: Settings, path: '/dashboard/admin/settings' },
 ];
