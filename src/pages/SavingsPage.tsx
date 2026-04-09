@@ -718,6 +718,55 @@ export default function SavingsPage() {
           })()}
         </DialogContent>
       </Dialog>
+
+      {/* Deposit Receipt Dialog */}
+      <Dialog open={!!receiptDeposit} onOpenChange={(open) => { if (!open) setReceiptDeposit(null); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle className="text-center">Deposit Receipt</DialogTitle></DialogHeader>
+          {receiptDeposit && (() => {
+            const s = savings.find(sv => sv.id === receiptDeposit.savings_id);
+            return (
+              <div className="space-y-4">
+                {/* Branded Header */}
+                <div className="text-center py-3 border-b border-dashed border-border/50">
+                  <p className="font-display font-black text-lg tracking-wide text-foreground">DASNET VENTURES</p>
+                  <p className="text-[10px] text-muted-foreground tracking-widest uppercase mt-1">Savings Deposit Confirmation</p>
+                </div>
+
+                {/* Amount */}
+                <div className="text-center py-4">
+                  <p className="text-3xl font-bold font-display text-emerald-400">{formatCurrency(receiptDeposit.amount)}</p>
+                  <span className="inline-block mt-2 text-[11px] font-bold px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400">✓ Confirmed</span>
+                </div>
+
+                {/* Details */}
+                <div className="space-y-2 text-sm">
+                  {[
+                    ['Savings Plan', s?.name || 'Savings'],
+                    ['Plan Type', s?.type === 'lock' ? '🔒 Lock Savings' : '🎯 Target Savings'],
+                    ['Reference', receiptDeposit.stk_reference || '—'],
+                    ['Date', new Date(receiptDeposit.created_at).toLocaleDateString('en-KE', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })],
+                    ['Balance After', s ? formatCurrency(s.saved_amount) : '—'],
+                    ['Target', s ? formatCurrency(s.target_amount) : '—'],
+                  ].map(([label, value]) => (
+                    <div key={label} className="flex justify-between py-1.5 border-b border-dashed border-border/30">
+                      <span className="text-muted-foreground">{label}</span>
+                      <span className="font-semibold text-right max-w-[55%] truncate">{value}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Footer */}
+                <div className="text-center pt-2 border-t border-dashed border-border/50">
+                  <p className="text-[10px] text-muted-foreground">Thank you for saving with Dasnet</p>
+                </div>
+
+                <Button variant="outline" className="w-full" onClick={() => setReceiptDeposit(null)}>Close</Button>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
