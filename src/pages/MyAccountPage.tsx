@@ -6,8 +6,9 @@ import {
   User, Mail, Phone, MapPin, CreditCard, Calendar, Shield, BadgeCheck, Edit3, 
   AlertCircle, Lock, Download, Fingerprint, Smartphone, ShieldCheck, Key, 
   ChevronRight, UserCheck, Loader2, History, Eye, X, FileText, Monitor, Globe, LogOut,
-  Camera, ShieldAlert
+  Camera, ShieldAlert, Wallet, PiggyBank, Landmark, Users, Send, ArrowUpRight, CheckCircle2
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,17 +21,39 @@ import { toast } from 'sonner';
 
 export default function MyAccountPage() {
   const { profile, user, refreshProfile } = useAuth();
+  const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const [showPassModal, setShowPassModal] = useState(false);
   const [showDocViewer, setShowDocViewer] = useState(false);
   const [newPassword, setNewPassword] = useState('');
   const [isRevoking, setIsRevoking] = useState<number | null>(null);
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [savingsCount, setSavingsCount] = useState(0);
+  const [chamaCount, setChamaCount] = useState(0);
+  const [docsCount, setDocsCount] = useState(0);
 
   const displayName = profile?.full_name || user?.user_metadata?.full_name || 'Valued Member';
   const displayEmail = profile?.email || user?.email;
   const membershipId = profile?.id ? `NYOTA-${profile.id.slice(0, 8).toUpperCase()}` : 'NYOTA-PENDING';
   const initials = displayName?.split(' ').filter(Boolean).map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || 'U';
+
+  useEffect(() => {
+    if (!user) return;
+    const fetchAccountData = async () => {
+      const [walletRes, savingsRes, chamaRes, docsRes] = await Promise.all([
+        supabase.from('wallets').select('balance').eq('user_id', user.id).maybeSingle(),
+        supabase.from('personal_savings').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('status', 'active'),
+        supabase.from('chama_members').select('id', { count: 'exact', head: true }).eq('user_id', user.id).eq('is_active', true),
+        supabase.from('user_documents').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+      ]);
+      setWalletBalance(walletRes.data?.balance || 0);
+      setSavingsCount(savingsRes.count || 0);
+      setChamaCount(chamaRes.count || 0);
+      setDocsCount(docsRes.count || 0);
+    };
+    fetchAccountData();
+  }, [user]);
 
   // Detect current device from browser user agent
   const getDeviceInfo = () => {
