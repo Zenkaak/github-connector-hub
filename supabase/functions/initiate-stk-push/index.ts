@@ -18,24 +18,38 @@ Deno.serve(async (req) => {
 
     console.log("RAW BODY:", body);
 
-    const {
-      phone,
-      amount,
-      userId,
-      purpose,
-      groupId,
-      savingsId,
-      harambee_id,
-      loanId,
-      disbursementId,
-    } = body;
+    // Extracting fields while allowing for metadata nesting from the public page
+    const phone = body.phone;
+    const amount = body.amount;
+    const purpose = body.purpose || body.metadata?.type || "harambee";
+    
+    // userId is now optional for harambee
+    const userId = body.userId || body.metadata?.userId || null;
+    
+    const groupId = body.groupId || body.metadata?.group_id || null;
+    const savingsId = body.savingsId || null;
+    
+    // Normalize Harambee ID from multiple possible naming conventions
+    const harambee_id = body.harambee_id || body.harambeeId || body.metadata?.harambee_id || null;
+    
+    const loanId = body.loanId || body.loan_id || body.metadata?.loan_id || null;
+    const disbursementId = body.disbursementId || body.disbursement_id || null;
 
     // -------------------------
-    // ✅ VALIDATION
+    // ✅ VALIDATION (FIXED FOR PUBLIC USERS)
     // -------------------------
-    if (!phone || !userId || amount === undefined || amount === null) {
+    // Removed !userId from this mandatory check
+    if (!phone || amount === undefined || amount === null) {
       return new Response(
-        JSON.stringify({ error: "Missing phone, amount, or userId" }),
+        JSON.stringify({ error: "Missing phone or amount" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Require userId ONLY for non-harambee purposes
+    if (!userId && purpose !== "harambee" && purpose !== "harambee_contribution") {
+      return new Response(
+        JSON.stringify({ error: "User ID is required for this transaction type" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -123,6 +137,7 @@ Deno.serve(async (req) => {
       personal_savings: "PSAV_",
       loan_repayment: "REPAY_",
       harambee: "HRB_",
+      harambee_contribution: "HRB_",
       activation: "ACT_",
       wallet_deposit: "DEP_",
       chama_joining_fee: "CJFEE_",
@@ -195,32 +210,27 @@ Deno.serve(async (req) => {
     // -------------------------
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // Normalize IDs (fix casing + prevent silent nulls)
-    const finalHarambeeId = harambee_id || body?.harambeeId || null;
-    const finalLoanId = loanId || body?.loan_id || null;
-    const finalDisbursementId = disbursementId || body?.disbursement_id || null;
+    // Normalize IDs for the database
+    const finalHarambeeId = harambee_id;
+    const finalLoanId = loanId;
+    const finalDisbursementId = disbursementId;
 
-    // Optional: enforce purpose-based requirements
-    if (purpose === "harambee" && !finalHarambeeId) {
+    if ((purpose === "harambee" || purpose === "harambee_contribution") && !finalHarambeeId) {
       throw new Error("harambee_id is required for harambee payments");
     }
 
-    if (purpose === "loan_repayment" && !finalLoanId && !finalDisbursementId) {
-      throw new Error("loan_id or disbursement_id required for loan repayment");
-    }
-
     const { error: insertError } = await supabase.from("stk_transactions").insert({
-      user_id: userId,
+      user_id: userId, // Will be null for public users
       phone: formattedPhone,
       amount: Math.round(numericAmount),
       reference,
       checkout_request_id: stkData.CheckoutRequestID,
       merchant_request_id: stkData.MerchantRequestID,
       status: "pending",
-      purpose,
+      purpose: purpose === "harambee_contribution" ? "harambee" : purpose,
 
-      group_id: groupId || null,
-      savings_id: savingsId || null,
+      group_id: groupId,
+      savings_id: savingsId,
 
       harambee_id: finalHarambeeId,
       loan_id: finalLoanId,
@@ -229,7 +239,7 @@ Deno.serve(async (req) => {
 
     if (insertError) {
       console.error("Supabase insert error:", insertError);
-      throw new Error("Failed to save transaction");
+      throw new Error("Failed to save transaction: " + insertError.message);
     }
 
     return new Response(
@@ -250,4 +260,4 @@ Deno.serve(async (req) => {
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
-}); 
+});
