@@ -47,13 +47,18 @@ Deno.serve(async (req) => {
     // 🔁 RETRY FETCH (handles race condition)
     // =====================================================
     let txn = null;
+    let userName = "Member";
 
     for (let i = 0; i < 5; i++) {
-      const { data } = await supabase
+      const { data, error } = await supabase
         .from("stk_transactions")
-        .select("*, profiles(full_name)")
+        .select("*")
         .eq("checkout_request_id", CheckoutRequestID)
         .maybeSingle();
+
+      if (error) {
+        console.error("❌ Failed to fetch stk transaction:", JSON.stringify(error));
+      }
 
       if (data) {
         txn = data;
@@ -95,6 +100,20 @@ Deno.serve(async (req) => {
       });
 
       return jsonResponse({ ResultCode: 0, ResultDesc: "Accepted" });
+    }
+
+    if (txn.user_id) {
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("user_id", txn.user_id)
+        .maybeSingle();
+
+      if (profileError) {
+        console.error("❌ Failed to fetch profile for notification:", JSON.stringify(profileError));
+      } else if (profile?.full_name) {
+        userName = profile.full_name;
+      }
     }
 
     // =====================================================
@@ -162,7 +181,7 @@ Deno.serve(async (req) => {
     }
 
     const purpose = txn.purpose;
-    const userName = txn.profiles?.full_name || txn.contributor_name || "Member";
+    userName = userName || txn.contributor_name || "Member";
 
     const notificationMsg = `Dear ${userName}, payment of KES ${Number(
       actualAmount
