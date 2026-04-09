@@ -147,6 +147,7 @@ export default function DashboardPage() {
   const [disbursements, setDisbursements] = useState<any[]>([]);
   const { canInstall, isInstalled, promptInstall } = useInstallPrompt();
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [chamaUpdates, setChamaUpdates] = useState<any[]>([]);
 
   const fetchApplications = async () => {
     try {
@@ -229,6 +230,32 @@ export default function DashboardPage() {
     }
   };
 
+  const fetchChamaUpdates = async () => {
+    try {
+      const { data: memberships } = await supabase
+        .from('chama_members')
+        .select('group_id')
+        .eq('user_id', user?.id)
+        .eq('is_active', true);
+      if (!memberships?.length) return;
+      const groupIds = memberships.map(m => m.group_id);
+
+      const [announcements, meetings, savings] = await Promise.all([
+        supabase.from('chama_announcements').select('id, title, message, created_at, group_id').in('group_id', groupIds).order('created_at', { ascending: false }).limit(5),
+        supabase.from('chama_meetings').select('id, title, meeting_date, status, group_id').in('group_id', groupIds).eq('status', 'scheduled').order('meeting_date', { ascending: true }).limit(3),
+        supabase.from('chama_savings').select('id, amount, created_at, group_id, user_id').in('group_id', groupIds).order('created_at', { ascending: false }).limit(5),
+      ]);
+
+      const updates: any[] = [];
+      (announcements.data || []).forEach(a => updates.push({ ...a, _type: 'announcement' }));
+      (meetings.data || []).forEach(m => updates.push({ ...m, _type: 'meeting', created_at: m.meeting_date }));
+      (savings.data || []).forEach(s => updates.push({ ...s, _type: 'saving' }));
+
+      updates.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      setChamaUpdates(updates.slice(0, 6));
+    } catch (e) { console.error('Error fetching chama updates:', e); }
+  };
+
   useEffect(() => {
     if (user) {
       fetchApplications();
@@ -236,6 +263,7 @@ export default function DashboardPage() {
       fetchWalletBalance();
       fetchChamaGroups();
       fetchDisbursements();
+      fetchChamaUpdates();
 
       // Periodic install toast
       const timer = setTimeout(() => {
@@ -775,7 +803,7 @@ export default function DashboardPage() {
                 </Card>
               </motion.div>
 
-              {/* Chama Messages */}
+              {/* Chama Updates - from real activity data */}
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
                 <Card className="border-border/50 h-full">
                   <CardHeader className="flex-row items-center justify-between pb-3">
@@ -791,12 +819,45 @@ export default function DashboardPage() {
                     </Button>
                   </CardHeader>
                   <CardContent className="space-y-2">
-                    {chamaNotifs.length === 0 ? (
+                    {chamaUpdates.length === 0 ? (
                       <p className="text-sm text-muted-foreground text-center py-4">No chama updates</p>
                     ) : (
-                      chamaNotifs.slice(0, 4).map((notif) =>
-                        renderNotif(notif, <Users size={14} className="text-primary" />, 'bg-primary/10')
-                      )
+                      chamaUpdates.slice(0, 4).map((update) => {
+                        const group = chamaGroups.find(g => g.id === update.group_id);
+                        const groupName = group?.name || 'Chama';
+                        let icon, accentClass, title, message;
+                        if (update._type === 'announcement') {
+                          icon = <Bell size={14} className="text-accent" />;
+                          accentClass = 'bg-accent/10';
+                          title = `📢 ${update.title}`;
+                          message = `${groupName}: ${update.message?.slice(0, 60)}${(update.message?.length || 0) > 60 ? '…' : ''}`;
+                        } else if (update._type === 'meeting') {
+                          icon = <Clock size={14} className="text-primary" />;
+                          accentClass = 'bg-primary/10';
+                          title = `📅 ${update.title}`;
+                          message = `${groupName} · ${new Date(update.created_at).toLocaleDateString('en-KE', { weekday: 'short', month: 'short', day: 'numeric' })}`;
+                        } else {
+                          icon = <PiggyBank size={14} className="text-emerald-500" />;
+                          accentClass = 'bg-emerald-500/10';
+                          title = `💰 Contribution`;
+                          message = `${groupName} · KES ${Number(update.amount).toLocaleString()}`;
+                        }
+                        return (
+                          <div key={update.id} className="p-3 rounded-xl border border-border/40 bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
+                            onClick={() => group && navigate(`/dashboard/chama/${group.id}`)}>
+                            <div className="flex items-start gap-3">
+                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${accentClass}`}>
+                                {icon}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-semibold truncate">{title}</p>
+                                <p className="text-xs text-muted-foreground truncate">{message}</p>
+                                <p className="text-[10px] text-muted-foreground mt-1">{new Date(update.created_at).toLocaleDateString('en-KE', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
                     )}
                   </CardContent>
                 </Card>
