@@ -108,7 +108,8 @@ Deno.serve(async (req) => {
     // ✅ SUCCESS FLOW
     // =====================================================
     if (ResultCode === 0) {
-      await supabase
+      // 🐛 BUG FIX #1: Update by txn.id, check for errors, abort if update fails
+      const { error: updateError } = await supabase
         .from("stk_transactions")
         .update({
           status: "success",
@@ -119,10 +120,18 @@ Deno.serve(async (req) => {
           callback_result: JSON.stringify(callback),
           updated_at: now,
         })
-        .eq("checkout_request_id", CheckoutRequestID);
+        .eq("id", txn.id);
+
+      if (updateError) {
+        console.error("❌ CRITICAL: stk_transactions update FAILED:", updateError);
+        // Do NOT proceed to business logic — transaction status is still pending
+        return jsonResponse({ ResultCode: 0, ResultDesc: "Accepted" });
+      }
+
+      console.log("✅ stk_transactions status updated to success for:", txn.id);
 
       const purpose = txn.purpose;
-      const userName = txn.profiles?.full_name || "Member";
+      const userName = txn.profiles?.full_name || txn.contributor_name || "Member";
 
       const notificationMsg = `Dear ${userName}, payment of KES ${Number(
         actualAmount
@@ -203,12 +212,28 @@ Deno.serve(async (req) => {
             })
             .eq("id", txn.harambee_id);
 
-          await supabase.from("chama_harambee_contributions").insert({
+          // 🐛 BUG FIX #3: Handle null user_id for public contributors + include contributor_name
+          const contributionRecord: Record<string, any> = {
             harambee_id: txn.harambee_id,
-            user_id: txn.user_id,
             amount: actualAmount,
             stk_reference: mpesaReceipt,
-          });
+          };
+
+          if (txn.user_id) {
+            contributionRecord.user_id = txn.user_id;
+          }
+
+          if (txn.contributor_name) {
+            contributionRecord.contributor_name = txn.contributor_name;
+          }
+
+          const { error: contribError } = await supabase
+            .from("chama_harambee_contributions")
+            .insert(contributionRecord);
+
+          if (contribError) {
+            console.error("❌ Harambee contribution insert failed:", contribError);
+          }
         }
       }
 
@@ -334,20 +359,23 @@ Deno.serve(async (req) => {
       }
 
       // ---------------- NOTIFICATION ----------------
-      await supabase.from("notifications").insert({
-        user_id: txn.user_id,
-        title: "Payment Confirmed ✅",
-        message: notificationMsg,
-        type: "payment",
-        metadata: {
-          receipt: mpesaReceipt,
-          amount: actualAmount,
-          purpose,
-        },
-      });
+      // Only send notification if user_id exists (skip for public contributors)
+      if (txn.user_id) {
+        await supabase.from("notifications").insert({
+          user_id: txn.user_id,
+          title: "Payment Confirmed ✅",
+          message: notificationMsg,
+          type: "payment",
+          metadata: {
+            receipt: mpesaReceipt,
+            amount: actualAmount,
+            purpose,
+          },
+        });
+      }
     } else {
       // =====================================================
-      // ❌ FAILURE FLOW
+      // ❌ FAILURE FLOW — also update by txn.id
       // =====================================================
       await supabase
         .from("stk_transactions")
@@ -357,7 +385,7 @@ Deno.serve(async (req) => {
           result_desc: ResultDesc,
           updated_at: now,
         })
-        .eq("checkout_request_id", CheckoutRequestID);
+        .eq("id", txn.id);
     }
 
     return jsonResponse({ ResultCode: 0, ResultDesc: "Accepted" });
