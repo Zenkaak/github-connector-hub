@@ -3089,32 +3089,13 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
                 if (!selectedSavingsWd || !savingsWdStatus) return;
                 setSavingsWdLoading(true);
                 try {
-                  const savingsPlan = personalSavings.find((s: any) => s.id === selectedSavingsWd.savings_id);
-                  await supabase.from('savings_withdrawal_requests').update({ status: savingsWdStatus, admin_reason: savingsWdReason || null }).eq('id', selectedSavingsWd.id);
-
-                  if (savingsWdStatus === 'approved' && savingsPlan) {
-                    // Calculate payout after penalty
-                    const penalty = (selectedSavingsWd.penalty_percentage || 20) / 100;
-                    const payout = Math.round(savingsPlan.saved_amount * (1 - penalty));
-
-                    // Credit user wallet with payout
-                    const { data: wallet } = await supabase.from('wallets').select('balance').eq('user_id', selectedSavingsWd.user_id).single();
-                    if (wallet) {
-                      await supabase.from('wallets').update({ balance: (wallet.balance || 0) + payout }).eq('user_id', selectedSavingsWd.user_id);
-                    }
-                    await supabase.from('wallet_transactions').insert({
-                      user_id: selectedSavingsWd.user_id,
-                      type: 'credit',
-                      amount: payout,
-                      description: `Savings withdrawal from "${savingsPlan.name}" (${selectedSavingsWd.penalty_percentage || 20}% penalty applied)`,
-                    });
-
-                    // Close the savings plan
-                    await supabase.from('personal_savings').update({ saved_amount: 0, status: 'withdrawn' }).eq('id', selectedSavingsWd.savings_id);
-                  }
-
-                  await supabase.from('notifications').insert({ user_id: selectedSavingsWd.user_id, title: `Savings Withdrawal ${savingsWdStatus === 'approved' ? 'Approved' : 'Rejected'}`, message: savingsWdStatus === 'approved' && savingsPlan ? `Your savings withdrawal from "${savingsPlan.name}" has been approved. KES ${Math.round(savingsPlan.saved_amount * (1 - (selectedSavingsWd.penalty_percentage || 20) / 100)).toLocaleString()} has been credited to your wallet after ${selectedSavingsWd.penalty_percentage || 20}% penalty.` : `Your savings withdrawal has been rejected.${savingsWdReason ? ' Note: ' + savingsWdReason : ''}` });
-                  await supabase.from('audit_logs').insert({ admin_id: user?.id, user_id: selectedSavingsWd.user_id, action: `savings_withdrawal_${savingsWdStatus}`, details: { reason: savingsWdReason, savings_name: savingsPlan?.name } });
+                  const { error } = await supabase.rpc('handle_savings_withdrawal_decision', {
+                    _request_id: selectedSavingsWd.id,
+                    _admin_id: user?.id,
+                    _decision: savingsWdStatus,
+                    _admin_reason: savingsWdReason || null,
+                  });
+                  if (error) throw error;
                   toast.success(`Savings withdrawal ${savingsWdStatus}`);
                   setSelectedSavingsWd(null);
                   fetchData();

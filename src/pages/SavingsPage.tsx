@@ -236,30 +236,28 @@ export default function SavingsPage() {
       toast.error('Please provide a reason');
       return;
     }
-    // Check if there's already a pending request
     const existing = withdrawalRequests.find(
       w => w.savings_id === selectedSavings.id && w.status === 'pending'
     );
     if (existing) { toast.error('You already have a pending withdrawal request'); return; }
 
     setSubmitting(true);
-    const { error } = await supabase.from('savings_withdrawal_requests').insert({
-      savings_id: selectedSavings.id,
-      user_id: user!.id,
-      reason: withdrawReason,
-      penalty_percentage: 20,
+    const { error } = await supabase.rpc('request_savings_withdrawal', {
+      _savings_id: selectedSavings.id,
+      _user_id: user!.id,
+      _reason: withdrawReason,
+      _penalty_percentage: 20,
     });
 
-    if (error) { toast.error('Failed to submit request'); setSubmitting(false); return; }
+    if (error) { toast.error(error.message || 'Failed to submit request'); setSubmitting(false); return; }
 
-    // Notify admin
     await supabase.from('notifications').insert({
       user_id: user!.id,
       title: 'Savings Withdrawal Request Submitted',
-      message: `Your request to withdraw from "${selectedSavings.name}" (${formatCurrency(selectedSavings.saved_amount)}) has been submitted for review. Note: Early withdrawal may incur a 20% penalty.`,
+      message: `Your savings of ${formatCurrency(selectedSavings.saved_amount)} from "${selectedSavings.name}" has been debited and submitted for review. If rejected, funds will be restored. Early withdrawal incurs a 20% penalty.`,
     });
 
-    toast.success('Withdrawal request submitted for admin review');
+    toast.success('Savings debited. Request submitted for admin review.');
     setWithdrawOpen(false);
     setWithdrawReason('');
     setSubmitting(false);

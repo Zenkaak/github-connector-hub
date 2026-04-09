@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import { motion } from 'framer-motion';
 import {
   ArrowRight,
@@ -28,10 +29,13 @@ import {
   FileText,
   MessageSquare,
   Smartphone,
+  Heart,
+  Target,
 } from 'lucide-react';
 
 import { Logo } from '@/components/Logo';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { useInstallPrompt } from '@/hooks/useInstallPrompt';
 
 const fadeUp = {
@@ -81,6 +85,21 @@ const faqs = [
 export default function Index() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const { canInstall, isInstalled, promptInstall } = useInstallPrompt();
+  const [activeHarambees, setActiveHarambees] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchHarambees = async () => {
+      const { data } = await supabase
+        .from('chama_harambees')
+        .select('id, title, description, target_amount, raised_amount, deadline, order_number, status, is_public, group_id, image_urls')
+        .eq('status', 'active')
+        .eq('is_public', true)
+        .order('created_at', { ascending: false })
+        .limit(10);
+      setActiveHarambees(data || []);
+    };
+    fetchHarambees();
+  }, []);
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[hsl(213,72%,8%)]">
@@ -339,6 +358,86 @@ export default function Index() {
           </div>
         </div>
       </section>
+
+      {/* ───── ACTIVE HARAMBEES ───── */}
+      {activeHarambees.length > 0 && (
+        <section className="py-24 md:py-28 px-4 bg-[hsl(213,72%,10%)] relative overflow-hidden">
+          <div className="container max-w-6xl">
+            <motion.div 
+              className="text-center mb-12" 
+              initial={{ opacity: 0, y: 20 }} 
+              whileInView={{ opacity: 1, y: 0 }} 
+              viewport={{ once: true }}
+            >
+              <span className="inline-block text-[11px] font-bold uppercase tracking-[0.2em] px-3.5 py-1.5 rounded-full bg-accent/10 text-accent mb-4">
+                Community Fundraising
+              </span>
+              <h2 className="font-display text-3xl md:text-4xl font-bold mb-4 text-white">Active Harambees</h2>
+              <p className="text-white/35 max-w-xl mx-auto">Support community causes. Every contribution makes a difference.</p>
+            </motion.div>
+
+            <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar snap-x snap-mandatory">
+              {activeHarambees.map((h, i) => {
+                const progress = h.target_amount > 0 ? Math.min(100, Math.round((h.raised_amount / h.target_amount) * 100)) : 0;
+                const daysLeft = h.deadline ? Math.max(0, Math.ceil((new Date(h.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : null;
+
+                return (
+                  <motion.div
+                    key={h.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: i * 0.08 }}
+                    className="min-w-[280px] max-w-[320px] snap-start shrink-0"
+                  >
+                    <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:border-accent/20 transition-all duration-300 overflow-hidden flex flex-col h-full">
+                      <div className="p-5 flex-1 space-y-4">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
+                            <Heart size={18} className="text-accent" />
+                          </div>
+                          {daysLeft !== null && (
+                            <span className="text-[10px] font-bold text-white/40 bg-white/[0.06] px-2 py-1 rounded-full">
+                              {daysLeft > 0 ? `${daysLeft}d left` : 'Ended'}
+                            </span>
+                          )}
+                        </div>
+
+                        <div>
+                          <h3 className="font-display font-bold text-base text-white line-clamp-1">{h.title}</h3>
+                          {h.description && (
+                            <p className="text-sm text-white/30 mt-1 line-clamp-2">{h.description}</p>
+                          )}
+                        </div>
+
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-[11px]">
+                            <span className="text-white/40">Raised</span>
+                            <span className="font-bold text-accent">{progress}%</span>
+                          </div>
+                          <Progress value={progress} className="h-2" />
+                          <div className="flex justify-between text-[11px]">
+                            <span className="text-white/50 font-semibold">KES {(h.raised_amount || 0).toLocaleString()}</span>
+                            <span className="text-white/30">of KES {(h.target_amount || 0).toLocaleString()}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="px-5 py-3 bg-white/[0.02] border-t border-white/[0.06]">
+                        <Link to={`/harambee/${h.order_number}`}>
+                          <Button variant="gold" size="sm" className="w-full shadow-gold text-xs">
+                            <Heart size={14} /> Contribute Now
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ───── LOANS ───── */}
       <section id="loans" className="py-24 md:py-28 px-4 bg-[hsl(213,72%,10%)]">
