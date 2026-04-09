@@ -167,8 +167,14 @@ export default function AuthPage() {
         throw error;
       }
       if (authData.user) {
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', authData.user.id)
+          .eq('role', 'admin')
+          .maybeSingle();
         toast.success('Welcome back!');
-        navigate(from, { replace: true });
+        navigate(roleData ? '/dashboard/admin' : from, { replace: true });
       }
     } catch (e: any) {
       console.error('Fingerprint login failed:', e);
