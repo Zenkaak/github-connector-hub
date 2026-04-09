@@ -136,7 +136,7 @@ export default function WalletPage() {
   }, [transactions, filterType, searchQuery]);
 
   const stats = useMemo(() => {
-    const income = transactions.filter(t => t.type === 'credit').reduce((a, b) => a + b.amount, 0);
+    const income = transactions.filter(t => t.type === 'credit' || t.type === 'deposit').reduce((a, b) => a + b.amount, 0);
     const expense = transactions.filter(t => t.type === 'debit' || t.type === 'withdrawal').reduce((a, b) => a + b.amount, 0);
     const escrow = withdrawals.filter(w => w.status === 'pending').reduce((a, b) => a + b.amount, 0);
     return { income, expense, escrow };
