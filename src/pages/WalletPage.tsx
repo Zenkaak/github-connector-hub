@@ -621,6 +621,9 @@ export default function WalletPage() {
                       <Button variant="outline" size="sm" onClick={exportStatement} className="h-7 rounded-lg text-[10px] gap-1 font-semibold px-2.5">
                         <Download size={11} /> CSV
                       </Button>
+                      <Button variant="outline" size="sm" onClick={() => setStatementPeriod(-1)} className="h-7 rounded-lg text-[10px] gap-1 font-semibold px-2.5 text-accent border-accent/30">
+                        <FileText size={11} /> Statement
+                      </Button>
                     </div>
                   </div>
 
