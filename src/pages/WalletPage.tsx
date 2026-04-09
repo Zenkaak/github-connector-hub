@@ -386,13 +386,13 @@ export default function WalletPage() {
   };
 
   const handleDeposit = async () => {
-    if (!depositAmount || !depositPhone) return;
+    if (!depositAmount || !registeredPhone) return;
     setActionLoading(true);
     setDepositStatus('pending');
     setDepositStatusMessage('Sending M-Pesa prompt to your phone...');
     try {
       const { data, error } = await supabase.functions.invoke('initiate-stk-push', {
-        body: { phone: depositPhone.trim(), amount: Number(depositAmount), userId: user!.id, purpose: 'wallet_deposit' },
+        body: { phone: registeredPhone.trim(), amount: Number(depositAmount), userId: user!.id, purpose: 'wallet_deposit' },
       });
       if (error) throw error;
       const reference = data?.reference;
@@ -415,7 +415,6 @@ export default function WalletPage() {
     setDepositStatus('idle');
     setDepositStatusMessage('');
     setDepositAmount('');
-    setDepositPhone('');
     if (depositPollingRef.current) clearInterval(depositPollingRef.current);
     if (depositChannelRef.current) supabase.removeChannel(depositChannelRef.current);
   };
