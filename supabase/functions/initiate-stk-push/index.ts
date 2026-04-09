@@ -175,6 +175,7 @@ Deno.serve(async (req) => {
       harambee_id: harambee_id,
       loan_id: loanId,
       disbursement_id: disbursementId,
+      metadata: body.metadata || {}
     });
 
     if (insertError) {
