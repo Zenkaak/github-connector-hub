@@ -35,6 +35,7 @@ import {
 
 import { Logo } from '@/components/Logo';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 import { useInstallPrompt } from '@/hooks/useInstallPrompt';
 
 const fadeUp = {
