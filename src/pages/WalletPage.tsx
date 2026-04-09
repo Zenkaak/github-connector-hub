@@ -102,14 +102,29 @@ export default function WalletPage() {
   const fetchWalletData = async () => {
     if (!user) return;
     try {
-      const [w, t, wd, tr] = await Promise.all([
+      const [w, t, wd, tr, loanRepayments] = await Promise.all([
         supabase.from('wallets').select('*').eq('user_id', user.id).maybeSingle(),
         supabase.from('wallet_transactions').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
         supabase.from('withdrawal_requests').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
-        supabase.from('wallet_transfers').select('*').or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`).order('created_at', { ascending: false })
+        supabase.from('wallet_transfers').select('*').or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`).order('created_at', { ascending: false }),
+        supabase.from('stk_transactions').select('id, amount, mpesa_receipt, status, created_at, reference, purpose').eq('user_id', user.id).eq('purpose', 'loan_repayment').eq('status', 'success').order('created_at', { ascending: false })
       ]);
       if (w.data) setWallet(w.data);
-      if (t.data) setTransactions(t.data as any);
+      
+      // Merge loan repayments as virtual "out" transactions
+      const walletTxs = (t.data || []) as WalletTransaction[];
+      const repaymentTxs: WalletTransaction[] = (loanRepayments.data || []).map((r: any) => ({
+        id: r.id,
+        type: 'loan_repayment',
+        amount: r.amount,
+        description: `Loan Repayment: ${r.mpesa_receipt || r.reference}`,
+        reference_id: r.mpesa_receipt || r.reference,
+        created_at: r.created_at,
+        status: 'completed',
+      }));
+      const allTxs = [...walletTxs, ...repaymentTxs].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      setTransactions(allTxs);
+      
       if (wd.data) setWithdrawals(wd.data as any);
       if (tr.data) setTransfers(tr.data as any);
     } catch {
@@ -131,7 +146,7 @@ export default function WalletPage() {
   const filteredTransactions = useMemo(() => {
     return transactions.filter(tx => {
       const isIn = tx.type === 'credit' || tx.type === 'deposit';
-      const isOut = tx.type === 'debit' || tx.type === 'withdrawal';
+      const isOut = tx.type === 'debit' || tx.type === 'withdrawal' || tx.type === 'loan_repayment';
       const matchesType = filterType === 'all' || (filterType === 'in' && isIn) || (filterType === 'out' && isOut);
       const matchesSearch = tx.description?.toLowerCase().includes(searchQuery.toLowerCase()) || tx.id.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesType && matchesSearch;
@@ -140,7 +155,7 @@ export default function WalletPage() {
 
   const stats = useMemo(() => {
     const income = transactions.filter(t => t.type === 'credit' || t.type === 'deposit').reduce((a, b) => a + b.amount, 0);
-    const expense = transactions.filter(t => t.type === 'debit' || t.type === 'withdrawal').reduce((a, b) => a + b.amount, 0);
+    const expense = transactions.filter(t => t.type === 'debit' || t.type === 'withdrawal' || t.type === 'loan_repayment').reduce((a, b) => a + b.amount, 0);
     const escrow = withdrawals.filter(w => w.status === 'pending').reduce((a, b) => a + b.amount, 0);
     return { income, expense, escrow };
   }, [transactions, withdrawals]);
@@ -424,6 +439,7 @@ export default function WalletPage() {
   const getTransactionLabel = (tx: WalletTransaction) => {
     const desc = tx.description?.toLowerCase() || '';
     if (tx.type === 'deposit') return 'M-Pesa Deposit';
+    if (tx.type === 'loan_repayment') return 'Loan Repayment';
     if (tx.type === 'credit') {
       if (desc.includes('transfer from')) return 'Received Funds';
       if (desc.includes('loan')) return 'Loan Disbursement';
@@ -440,6 +456,7 @@ export default function WalletPage() {
   const getTransactionIcon = (tx: WalletTransaction) => {
     const desc = tx.description?.toLowerCase() || '';
     if (tx.type === 'deposit') return ArrowDownLeft;
+    if (tx.type === 'loan_repayment') return Banknote;
     if (tx.type === 'credit') {
       if (desc.includes('transfer from')) return HandCoins;
       if (desc.includes('loan')) return Banknote;
