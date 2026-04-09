@@ -807,76 +807,72 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
     );
   }
 
+  const sectionTitles: Record<string, { title: string; desc: string }> = {
+    users: { title: 'User Management', desc: 'Search, view, and manage all registered users' },
+    loans: { title: 'Loan Applications', desc: 'Review and process loan requests' },
+    transactions: { title: 'M-Pesa Transactions', desc: 'All STK push payment records' },
+    transfers: { title: 'Wallet Transfers', desc: 'Peer-to-peer wallet transfers and money requests' },
+    savings: { title: 'Personal Savings', desc: 'User savings plans and withdrawal requests' },
+    messages: { title: 'Support Messages', desc: 'User support conversations' },
+    audit: { title: 'Audit Logs', desc: 'System activity and admin action logs' },
+    withdrawals: { title: 'Withdrawal Requests', desc: 'Process user and chama withdrawals' },
+    chama: { title: 'Chama Groups', desc: 'Manage groups, loans, and leave requests' },
+    reports: { title: 'Transaction Reports', desc: 'Flagged transaction reports from users' },
+    removals: { title: 'Member Removals', desc: 'Chama member removal requests' },
+    harambees: { title: 'Harambee Campaigns', desc: 'All harambee fundraising campaigns' },
+    notifications: { title: 'Notifications', desc: 'System notifications and bulk messaging' },
+    settings: { title: 'Platform Settings', desc: 'Configure platform features and limits' },
+  };
+
+  const currentSection = sectionTitles[defaultTab] || sectionTitles.users;
+
   return (
     <AdminLayout>
       <div className="p-4 lg:p-8 space-y-5 max-w-[1200px] mx-auto">
-        {/* Header */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+        {/* Section Header */}
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} key={defaultTab}>
           <div className="flex items-center gap-2 mb-1">
-            <Shield size={20} className="text-accent" />
-            <h1 className="font-display text-xl lg:text-2xl font-bold text-foreground">Admin Dashboard</h1>
+            <Shield size={18} className="text-accent" />
+            <h1 className="font-display text-lg sm:text-xl lg:text-2xl font-bold text-foreground">{currentSection.title}</h1>
           </div>
-          <p className="text-xs lg:text-sm text-muted-foreground">Full control over users, loans, transactions, and communications</p>
+          <p className="text-xs lg:text-sm text-muted-foreground">{currentSection.desc}</p>
         </motion.div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 lg:gap-3">
-          {[
-            { label: 'Total Users', value: stats.totalUsers, icon: Users, color: 'text-emerald-400', bg: 'bg-emerald-500/15' },
-            { label: 'Active Users', value: stats.activeUsers, icon: CheckCircle, color: 'text-emerald-400', bg: 'bg-emerald-500/15' },
-            { label: 'Pending Loans', value: stats.pending, icon: Clock, color: 'text-accent', bg: 'bg-accent/15' },
-            { label: 'M-Pesa Revenue', value: formatCurrency(stats.totalRevenue), icon: Wallet, color: 'text-emerald-400', bg: 'bg-emerald-500/15' },
-            { label: 'Chama Groups', value: stats.chamaGroups, icon: Crown, color: 'text-accent', bg: 'bg-accent/15' },
-            { label: 'Chama Savings', value: formatCurrency(stats.chamaSavings), icon: PiggyBank, color: 'text-accent', bg: 'bg-accent/15' },
-            { label: 'Platform Fees', value: formatCurrency(stats.platformFees), icon: DollarSign, color: 'text-emerald-400', bg: 'bg-emerald-500/15' },
-            { label: 'Personal Savings', value: formatCurrency(stats.personalSavings), icon: Landmark, color: 'text-accent', bg: 'bg-accent/15' },
-          ].map((stat, i) => (
-            <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 * i }}>
-              <Card className="border-border/50 hover:border-accent/20 transition-colors">
-                <CardContent className="p-3 lg:p-5">
-                  <div className={`w-8 h-8 lg:w-10 lg:h-10 rounded-xl ${stat.bg} flex items-center justify-center mb-2 lg:mb-3`}>
-                    <stat.icon className={stat.color} size={18} />
-                  </div>
-                  <p className="text-lg lg:text-2xl font-bold font-display text-foreground">{stat.value}</p>
-                  <p className="text-[10px] lg:text-xs text-muted-foreground mt-0.5">{stat.label}</p>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Tabs */}
-        <Tabs value={defaultTab} onValueChange={handleTabChange} className="space-y-4">
-          <div className="overflow-x-auto no-scrollbar">
-            <TabsList className="inline-flex w-auto h-auto p-1 gap-1 flex-wrap">
-              {([
-                { value: 'users', icon: Users, label: 'Users' },
-                { value: 'loans', icon: FileText, label: 'Loans' },
-                { value: 'transactions', icon: Wallet, label: 'M-Pesa' },
-                { value: 'transfers', icon: Send, label: 'Transfers' },
-                { value: 'savings', icon: PiggyBank, label: 'Savings' },
-                { value: 'messages', icon: MessageSquare, label: 'Msgs' },
-                { value: 'audit', icon: ClipboardList, label: 'Audit' },
-                { value: 'withdrawals', icon: DollarSign, label: 'W/draw' },
-                { value: 'chama', icon: Crown, label: 'Chama' },
-                { value: 'reports', icon: AlertTriangle, label: 'Reports' },
-                { value: 'removals', icon: Ban, label: 'Removals' },
-                { value: 'harambees', icon: Heart, label: 'Harambee' },
-                { value: 'notifications', icon: Bell, label: 'Notifs' },
-                { value: 'settings', icon: Settings, label: 'Settings' },
-              ] as const).map((tab) => (
-                <TabsTrigger
-                  key={tab.value}
-                  value={tab.value}
-                  title={tab.label}
-                  className="flex flex-col items-center gap-1 text-[11px] py-2 px-3 min-w-[60px]"
-                >
-                  <tab.icon size={22} className="shrink-0" />
-                  <span className="truncate leading-tight">{tab.label}</span>
-                </TabsTrigger>
-              ))}
-            </TabsList>
+        {/* Overview Stats - only on main dashboard */}
+        {defaultTab === 'users' && (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 lg:gap-3">
+            {[
+              { label: 'Total Users', value: stats.totalUsers, icon: Users, color: 'text-emerald-400', bg: 'bg-emerald-500/15' },
+              { label: 'Active Users', value: stats.activeUsers, icon: CheckCircle, color: 'text-emerald-400', bg: 'bg-emerald-500/15' },
+              { label: 'Pending Loans', value: stats.pending, icon: Clock, color: 'text-accent', bg: 'bg-accent/15' },
+              { label: 'M-Pesa Revenue', value: formatCurrency(stats.totalRevenue), icon: Wallet, color: 'text-emerald-400', bg: 'bg-emerald-500/15' },
+              { label: 'Chama Groups', value: stats.chamaGroups, icon: Crown, color: 'text-accent', bg: 'bg-accent/15' },
+              { label: 'Chama Savings', value: formatCurrency(stats.chamaSavings), icon: PiggyBank, color: 'text-accent', bg: 'bg-accent/15' },
+              { label: 'Platform Fees', value: formatCurrency(stats.platformFees), icon: DollarSign, color: 'text-emerald-400', bg: 'bg-emerald-500/15' },
+              { label: 'Personal Savings', value: formatCurrency(stats.personalSavings), icon: Landmark, color: 'text-accent', bg: 'bg-accent/15' },
+            ].map((stat, i) => (
+              <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 * i }}>
+                <Card className="border-border/50 hover:border-accent/20 transition-colors">
+                  <CardContent className="p-3 lg:p-5">
+                    <div className={`w-8 h-8 lg:w-10 lg:h-10 rounded-xl ${stat.bg} flex items-center justify-center mb-2 lg:mb-3`}>
+                      <stat.icon className={stat.color} size={18} />
+                    </div>
+                    <p className="text-base sm:text-lg lg:text-2xl font-bold font-display text-foreground">{stat.value}</p>
+                    <p className="text-[10px] lg:text-xs text-muted-foreground mt-0.5">{stat.label}</p>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
           </div>
+        )}
+
+        {/* Content */}
+        <Tabs value={defaultTab} onValueChange={handleTabChange} className="space-y-4">
+          <TabsList className="hidden">
+            {['users','loans','transactions','transfers','savings','messages','audit','withdrawals','chama','reports','removals','harambees','notifications','settings'].map(v => (
+              <TabsTrigger key={v} value={v}>{v}</TabsTrigger>
+            ))}
+          </TabsList>
 
           {/* ===== USERS TAB ===== */}
           <TabsContent value="users" className="space-y-3">
