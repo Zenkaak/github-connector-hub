@@ -3,11 +3,11 @@ import { LayoutDashboard, Users, FileText, Heart, Settings } from 'lucide-react'
 import { cn } from '@/lib/utils';
 
 const navItems = [
-  { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard/admin' },
+  { label: 'Overview', icon: LayoutDashboard, path: '/dashboard/admin' },
   { label: 'Users', icon: Users, path: '/dashboard/admin/users' },
   { label: 'Loans', icon: FileText, path: '/dashboard/admin/loans' },
   { label: 'Harambee', icon: Heart, path: '/dashboard/admin/harambee-applications' },
-  { label: 'Settings', icon: Settings, path: '/dashboard/admin/settings' },
+  { label: 'More', icon: Settings, path: '/dashboard/admin/settings' },
 ];
 
 export function AdminBottomNav() {
