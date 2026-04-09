@@ -53,7 +53,7 @@ import { usePlatformSettings } from '@/contexts/PlatformSettingsContext';
 import { FeatureDisabled } from '@/components/FeatureDisabled';
 
 interface WalletData { id: string; balance: number; }
-interface WalletTransaction { id: string; type: 'credit' | 'debit' | 'withdrawal'; amount: number; description: string | null; reference_id: string | null; created_at: string; status?: string; }
+interface WalletTransaction { id: string; type: string; amount: number; description: string | null; reference_id: string | null; created_at: string; status?: string; }
 interface WithdrawalRequest { id: string; amount: number; phone: string; status: 'pending' | 'completed' | 'rejected'; admin_reason: string | null; created_at: string; }
 interface Transfer { id: string; sender_id: string; receiver_id: string; amount: number; reason: string | null; sender_name: string | null; receiver_name: string | null; status: string; created_at: string; cancelled_at: string | null; }
 
@@ -127,7 +127,7 @@ export default function WalletPage() {
 
   const filteredTransactions = useMemo(() => {
     return transactions.filter(tx => {
-      const isIn = tx.type === 'credit';
+      const isIn = tx.type === 'credit' || tx.type === 'deposit';
       const isOut = tx.type === 'debit' || tx.type === 'withdrawal';
       const matchesType = filterType === 'all' || (filterType === 'in' && isIn) || (filterType === 'out' && isOut);
       const matchesSearch = tx.description?.toLowerCase().includes(searchQuery.toLowerCase()) || tx.id.toLowerCase().includes(searchQuery.toLowerCase());
@@ -136,7 +136,7 @@ export default function WalletPage() {
   }, [transactions, filterType, searchQuery]);
 
   const stats = useMemo(() => {
-    const income = transactions.filter(t => t.type === 'credit').reduce((a, b) => a + b.amount, 0);
+    const income = transactions.filter(t => t.type === 'credit' || t.type === 'deposit').reduce((a, b) => a + b.amount, 0);
     const expense = transactions.filter(t => t.type === 'debit' || t.type === 'withdrawal').reduce((a, b) => a + b.amount, 0);
     const escrow = withdrawals.filter(w => w.status === 'pending').reduce((a, b) => a + b.amount, 0);
     return { income, expense, escrow };
@@ -265,8 +265,11 @@ export default function WalletPage() {
     if (depositChannelRef.current) supabase.removeChannel(depositChannelRef.current);
   };
 
+  const isIncoming = (tx: WalletTransaction) => tx.type === 'credit' || tx.type === 'deposit';
+
   const getTransactionLabel = (tx: WalletTransaction) => {
     const desc = tx.description?.toLowerCase() || '';
+    if (tx.type === 'deposit') return 'M-Pesa Deposit';
     if (tx.type === 'credit') {
       if (desc.includes('transfer from')) return 'Received Funds';
       if (desc.includes('loan')) return 'Loan Disbursement';
@@ -282,6 +285,7 @@ export default function WalletPage() {
 
   const getTransactionIcon = (tx: WalletTransaction) => {
     const desc = tx.description?.toLowerCase() || '';
+    if (tx.type === 'deposit') return ArrowDownLeft;
     if (tx.type === 'credit') {
       if (desc.includes('transfer from')) return HandCoins;
       if (desc.includes('loan')) return Banknote;
@@ -469,7 +473,7 @@ export default function WalletPage() {
                           <div className="flex items-center gap-3">
                             <div className={cn(
                               "w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105",
-                              tx.type === 'credit' ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"
+                              isIncoming(tx) ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"
                             )}>
                               <TxIcon size={17} />
                             </div>
@@ -483,8 +487,8 @@ export default function WalletPage() {
                             </div>
                           </div>
                           <div className="text-right">
-                            <p className={cn("text-[13px] font-bold tabular-nums", tx.type === 'credit' ? "text-emerald-400" : "text-foreground")}>
-                              {tx.type === 'credit' ? '+' : '-'} {formatCurrency(tx.amount)}
+                            <p className={cn("text-[13px] font-bold tabular-nums", isIncoming(tx) ? "text-emerald-400" : "text-foreground")}>
+                              {isIncoming(tx) ? '+' : '-'} {formatCurrency(tx.amount)}
                             </p>
                           </div>
                         </motion.div>
@@ -739,14 +743,14 @@ export default function WalletPage() {
                   <p className="text-[10px] text-foreground/40 uppercase tracking-[0.15em] mb-2">Transaction Receipt</p>
                   <p className={cn(
                     "text-3xl font-bold tracking-tight",
-                    selectedTx.type === 'credit' ? "text-emerald-400" : "text-foreground"
+                    isIncoming(selectedTx) ? "text-emerald-400" : "text-foreground"
                   )}>
-                    {selectedTx.type === 'credit' ? '+' : '-'} {formatCurrency(selectedTx.amount)}
+                    {isIncoming(selectedTx) ? '+' : '-'} {formatCurrency(selectedTx.amount)}
                   </p>
                   <div className="mt-3">
                     <Badge className={cn(
                       "text-[10px] font-bold px-3 py-0.5",
-                      selectedTx.type === 'credit'
+                      isIncoming(selectedTx)
                         ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
                         : "bg-rose-500/15 text-rose-400 border-rose-500/30"
                     )}>
