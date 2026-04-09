@@ -6,7 +6,8 @@ import {
   User, Mail, Phone, MapPin, CreditCard, Calendar, Shield, BadgeCheck, Edit3, 
   AlertCircle, Lock, Download, Fingerprint, Smartphone, ShieldCheck, Key, 
   ChevronRight, UserCheck, Loader2, History, Eye, X, FileText, Monitor, Globe, LogOut,
-  Camera, ShieldAlert, Wallet, PiggyBank, Landmark, Users, Send, ArrowUpRight, CheckCircle2
+  Camera, ShieldAlert, Wallet, PiggyBank, Landmark, Users, Send, ArrowUpRight, CheckCircle2,
+  Zap, HeartHandshake
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
@@ -234,6 +235,109 @@ export default function MyAccountPage() {
 
             {/* MAIN CONTENT AREA */}
             <div className="xl:col-span-3 space-y-6">
+
+              {/* ACCOUNT SUMMARY CARDS */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {[
+                  { icon: Wallet, label: 'Wallet Balance', value: `KES ${walletBalance.toLocaleString()}`, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
+                  { icon: PiggyBank, label: 'Active Savings', value: `${savingsCount} Plan${savingsCount !== 1 ? 's' : ''}`, color: 'text-accent', bg: 'bg-accent/10' },
+                  { icon: Users, label: 'Chama Groups', value: `${chamaCount} Group${chamaCount !== 1 ? 's' : ''}`, color: 'text-primary', bg: 'bg-primary/10' },
+                  { icon: FileText, label: 'KYC Documents', value: `${docsCount} Uploaded`, color: 'text-amber-400', bg: 'bg-amber-500/10' },
+                ].map((card, i) => (
+                  <Card key={i} className="border-border/50 shadow-sm p-4">
+                    <div className={`w-9 h-9 rounded-xl ${card.bg} flex items-center justify-center mb-3`}>
+                      <card.icon size={16} className={card.color} />
+                    </div>
+                    <p className="text-[10px] uppercase font-bold text-muted-foreground/70 tracking-wider">{card.label}</p>
+                    <p className={`text-lg font-bold mt-0.5 ${card.color}`}>{card.value}</p>
+                  </Card>
+                ))}
+              </div>
+
+              {/* QUICK ACTIONS */}
+              <Card className="border-border/50 shadow-sm">
+                <CardHeader className="py-3 px-6 border-b border-border/5 bg-muted/5">
+                  <CardTitle className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
+                    <Zap size={12} className="text-accent" /> Quick Actions
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-4 grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {[
+                    { icon: ArrowUpRight, label: 'Deposit', desc: 'Top up wallet', onClick: () => navigate('/dashboard/wallet') },
+                    { icon: Send, label: 'Transfer', desc: 'Send money', onClick: () => navigate('/dashboard/wallet') },
+                    { icon: Landmark, label: 'Apply Loan', desc: 'Get financing', onClick: () => navigate('/dashboard/apply') },
+                    { icon: HeartHandshake, label: 'Create Fundraiser', desc: 'Start Harambee', onClick: () => navigate('/dashboard/chama') },
+                  ].map((action, i) => (
+                    <Button key={i} variant="outline" className="h-auto flex-col items-start p-4 text-left border-border/40 group hover:border-accent/40 transition-all" onClick={action.onClick}>
+                      <div className="w-9 h-9 rounded-xl bg-accent/10 flex items-center justify-center mb-2 group-hover:bg-accent group-hover:text-accent-foreground transition-colors">
+                        <action.icon size={16} className="text-accent group-hover:text-accent-foreground" />
+                      </div>
+                      <p className="text-xs font-bold">{action.label}</p>
+                      <p className="text-[10px] text-muted-foreground">{action.desc}</p>
+                    </Button>
+                  ))}
+                </CardContent>
+              </Card>
+
+              {/* ACCOUNT VERIFICATION STATUS */}
+              <Card className="border-border/50 shadow-sm">
+                <CardHeader className="py-3 px-6 border-b border-border/5 bg-muted/5">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
+                      <BadgeCheck size={12} className="text-primary" /> Verification Status
+                    </CardTitle>
+                    <span className={`text-[9px] font-bold uppercase px-2.5 py-1 rounded-full ${
+                      profile?.is_verified ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-400'
+                    }`}>
+                      {profile?.is_verified ? 'Verified' : 'Pending'}
+                    </span>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-4 space-y-3">
+                  {[
+                    { label: 'Profile Completed', done: !!(profile?.full_name && profile?.phone && profile?.id_number) },
+                    { label: 'National ID Uploaded', done: docsCount > 0 },
+                    { label: 'Email Verified', done: !!user?.email_confirmed_at },
+                    { label: 'Admin Approved', done: !!profile?.is_verified },
+                  ].map((step, i) => (
+                    <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-muted/20 border border-border/20">
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${step.done ? 'bg-emerald-500/20' : 'bg-muted/40'}`}>
+                        {step.done ? <CheckCircle2 size={14} className="text-emerald-400" /> : <AlertCircle size={14} className="text-muted-foreground/50" />}
+                      </div>
+                      <span className={`text-xs font-bold ${step.done ? 'text-foreground' : 'text-muted-foreground/60'}`}>{step.label}</span>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+
+              {/* CONTACT INFORMATION */}
+              <Card className="border-border/50 shadow-sm">
+                <CardHeader className="py-3 px-6 border-b border-border/5 bg-muted/5 flex flex-row items-center justify-between">
+                  <CardTitle className="text-[10px] font-bold uppercase tracking-widest flex items-center gap-2">
+                    <Mail size={12} className="text-primary" /> Contact Information
+                  </CardTitle>
+                  <Button variant="ghost" size="sm" className="h-7 text-[10px]" onClick={() => setIsEditing(true)}>
+                    <Edit3 size={10} className="mr-1" /> Edit
+                  </Button>
+                </CardHeader>
+                <CardContent className="p-0 divide-y divide-border/5">
+                  {[
+                    { icon: Mail, label: 'Email Address', value: displayEmail },
+                    { icon: Phone, label: 'Phone Number', value: profile?.phone || '—' },
+                    { icon: MapPin, label: 'Location', value: [profile?.county, profile?.sub_county].filter(Boolean).join(', ') || '—' },
+                  ].map((field, i) => (
+                    <div key={i} className="px-6 py-4 flex items-center gap-4 hover:bg-muted/5 transition-colors">
+                      <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                        <field.icon size={14} className="text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] uppercase font-bold text-muted-foreground/70">{field.label}</p>
+                        <p className="text-sm font-semibold truncate">{field.value}</p>
+                      </div>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
               
               {/* INFORMATION CARDS */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">

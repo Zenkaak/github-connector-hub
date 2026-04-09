@@ -144,8 +144,13 @@ export default function Index() {
                 Open Free Account <ArrowRight size={20} />
               </Button>
             </Link>
-            <Link to="/auth">
+            <Link to="/signup">
               <Button variant="outline" size="xl" className="border-white/10 text-white hover:bg-white/[0.06] backdrop-blur-sm min-w-[160px]">
+                <HeartHandshake size={18} /> Start a Fundraiser
+              </Button>
+            </Link>
+            <Link to="/auth">
+              <Button variant="ghost" size="xl" className="text-white/50 hover:text-white hover:bg-white/[0.06] min-w-[120px]">
                 Sign In
               </Button>
             </Link>
@@ -415,7 +420,7 @@ export default function Index() {
             </div>
 
             <div className="text-center mt-8">
-              <Link to="/explore-chamas">
+              <Link to="/signup">
                 <Button variant="outline" size="lg" className="border-white/10 text-white hover:bg-white/[0.06]">
                   View All Groups <ArrowRight size={16} />
                 </Button>
@@ -434,6 +439,15 @@ export default function Index() {
               <h2 className="font-display text-3xl md:text-4xl font-bold mb-4 text-white">Active Harambees</h2>
               <p className="text-white/35 max-w-xl mx-auto">Support community causes. Every contribution makes a difference.</p>
             </motion.div>
+
+            <div className="text-center mb-8">
+              <Link to="/signup">
+                <Button variant="hero" size="lg" className="shadow-gold-lg gap-2">
+                  <HeartHandshake size={18} /> Start a Fundraiser <ArrowRight size={16} />
+                </Button>
+              </Link>
+              <p className="text-[11px] text-white/25 mt-2">Create a verified Harambee — 3% platform fee on collected funds</p>
+            </div>
 
             <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar snap-x snap-mandatory">
               {activeHarambees.map((h, i) => {
@@ -695,7 +709,7 @@ export default function Index() {
               <h4 className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/20 mb-4">Platform</h4>
               <ul className="space-y-2.5">
                 {[
-                  { label: 'Chama Groups', path: '/explore-chamas' },
+                  { label: 'Chama Groups', path: '/signup' },
                   { label: 'Digital Wallet', path: '/signup' },
                   { label: 'Personal Loans', path: '/loan-products' },
                   { label: 'Harambee', path: '/signup' },

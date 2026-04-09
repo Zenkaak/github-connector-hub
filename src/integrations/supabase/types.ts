@@ -1225,6 +1225,121 @@ export type Database = {
           },
         ]
       }
+      harambee_application_documents: {
+        Row: {
+          application_id: string
+          created_at: string
+          document_type: string
+          file_name: string
+          file_path: string
+          file_size: number | null
+          id: string
+          user_id: string
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+          document_type: string
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          id?: string
+          user_id: string
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+          document_type?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "harambee_application_documents_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "harambee_applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      harambee_applications: {
+        Row: {
+          admin_notes: string | null
+          approved_at: string | null
+          approved_by: string | null
+          beneficiary_name: string
+          beneficiary_phone: string | null
+          beneficiary_relationship: string
+          category: string
+          category_answers: Json
+          created_at: string
+          deadline: string | null
+          description: string
+          harambee_id: string | null
+          id: string
+          is_public: boolean
+          platform_fee_percent: number
+          status: string
+          target_amount: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          beneficiary_name: string
+          beneficiary_phone?: string | null
+          beneficiary_relationship: string
+          category: string
+          category_answers?: Json
+          created_at?: string
+          deadline?: string | null
+          description: string
+          harambee_id?: string | null
+          id?: string
+          is_public?: boolean
+          platform_fee_percent?: number
+          status?: string
+          target_amount?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_notes?: string | null
+          approved_at?: string | null
+          approved_by?: string | null
+          beneficiary_name?: string
+          beneficiary_phone?: string | null
+          beneficiary_relationship?: string
+          category?: string
+          category_answers?: Json
+          created_at?: string
+          deadline?: string | null
+          description?: string
+          harambee_id?: string | null
+          id?: string
+          is_public?: boolean
+          platform_fee_percent?: number
+          status?: string
+          target_amount?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "harambee_applications_harambee_id_fkey"
+            columns: ["harambee_id"]
+            isOneToOne: false
+            referencedRelation: "chama_harambees"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       loan_applications: {
         Row: {
           admin_message: string | null
