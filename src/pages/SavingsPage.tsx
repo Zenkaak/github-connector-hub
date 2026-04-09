@@ -311,7 +311,7 @@ export default function SavingsPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <Card className="p-4">
             <p className="text-xs text-muted-foreground">Total Saved</p>
-            <p className="text-xl font-bold text-primary">{formatCurrency(totalSaved)}</p>
+            <p className="text-xl font-bold text-emerald-400">{formatCurrency(totalSaved)}</p>
           </Card>
           <Card className="p-4">
             <p className="text-xs text-muted-foreground">Total Target</p>
@@ -455,10 +455,16 @@ export default function SavingsPage() {
               {deposits.slice(0, 5).map(d => {
                 const s = savings.find(sv => sv.id === d.savings_id);
                 return (
-                  <div key={d.id} className="flex items-center justify-between p-3 rounded-xl bg-muted/40">
+                  <div
+                    key={d.id}
+                    className="flex items-center justify-between p-3 rounded-xl bg-muted/40 hover:bg-muted/60 cursor-pointer transition-colors"
+                    onClick={() => {
+                      if (s) { setSelectedSavings(s); setDetailOpen(true); }
+                    }}
+                  >
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-success/10 flex items-center justify-center">
-                        <CheckCircle2 size={16} className="text-success" />
+                      <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center">
+                        <CheckCircle2 size={16} className="text-emerald-400" />
                       </div>
                       <div>
                         <p className="font-medium text-sm">{s?.name || 'Savings'} · {formatCurrency(d.amount)}</p>
@@ -467,7 +473,10 @@ export default function SavingsPage() {
                         </p>
                       </div>
                     </div>
-                    <span className="text-[11px] font-medium px-2 py-1 rounded-full bg-success/10 text-success">Confirmed</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[11px] font-medium px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-400">Confirmed</span>
+                      <ArrowRight size={14} className="text-muted-foreground" />
+                    </div>
                   </div>
                 );
               })}
