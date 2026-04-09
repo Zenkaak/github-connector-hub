@@ -820,24 +820,24 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
         </motion.div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 lg:gap-3">
           {[
-            { label: 'Total Users', value: stats.totalUsers, icon: Users, color: 'text-primary', bg: 'bg-primary/10' },
-            { label: 'Active Users', value: stats.activeUsers, icon: CheckCircle, color: 'text-success', bg: 'bg-success/10' },
-            { label: 'Pending Loans', value: stats.pending, icon: Clock, color: 'text-accent', bg: 'bg-accent/10' },
-            { label: 'M-Pesa Revenue', value: formatCurrency(stats.totalRevenue), icon: Wallet, color: 'text-success', bg: 'bg-success/10' },
-            { label: 'Chama Groups', value: stats.chamaGroups, icon: Crown, color: 'text-primary', bg: 'bg-primary/10' },
-            { label: 'Chama Savings', value: formatCurrency(stats.chamaSavings), icon: PiggyBank, color: 'text-accent', bg: 'bg-accent/10' },
-            { label: 'Platform Fees', value: formatCurrency(stats.platformFees), icon: DollarSign, color: 'text-success', bg: 'bg-success/10' },
-            { label: 'Personal Savings', value: formatCurrency(stats.personalSavings), icon: Landmark, color: 'text-primary', bg: 'bg-primary/10' },
+            { label: 'Total Users', value: stats.totalUsers, icon: Users, color: 'text-emerald-400', bg: 'bg-emerald-500/15' },
+            { label: 'Active Users', value: stats.activeUsers, icon: CheckCircle, color: 'text-emerald-400', bg: 'bg-emerald-500/15' },
+            { label: 'Pending Loans', value: stats.pending, icon: Clock, color: 'text-accent', bg: 'bg-accent/15' },
+            { label: 'M-Pesa Revenue', value: formatCurrency(stats.totalRevenue), icon: Wallet, color: 'text-emerald-400', bg: 'bg-emerald-500/15' },
+            { label: 'Chama Groups', value: stats.chamaGroups, icon: Crown, color: 'text-accent', bg: 'bg-accent/15' },
+            { label: 'Chama Savings', value: formatCurrency(stats.chamaSavings), icon: PiggyBank, color: 'text-accent', bg: 'bg-accent/15' },
+            { label: 'Platform Fees', value: formatCurrency(stats.platformFees), icon: DollarSign, color: 'text-emerald-400', bg: 'bg-emerald-500/15' },
+            { label: 'Personal Savings', value: formatCurrency(stats.personalSavings), icon: Landmark, color: 'text-accent', bg: 'bg-accent/15' },
           ].map((stat, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 * i }}>
-              <Card className="border-border/50">
+              <Card className="border-border/50 hover:border-accent/20 transition-colors">
                 <CardContent className="p-3 lg:p-5">
                   <div className={`w-8 h-8 lg:w-10 lg:h-10 rounded-xl ${stat.bg} flex items-center justify-center mb-2 lg:mb-3`}>
                     <stat.icon className={stat.color} size={18} />
                   </div>
-                  <p className="text-lg lg:text-2xl font-bold font-display">{stat.value}</p>
+                  <p className="text-lg lg:text-2xl font-bold font-display text-foreground">{stat.value}</p>
                   <p className="text-[10px] lg:text-xs text-muted-foreground mt-0.5">{stat.label}</p>
                 </CardContent>
               </Card>
