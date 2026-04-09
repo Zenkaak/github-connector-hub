@@ -67,6 +67,7 @@ export default function SavingsPage() {
   const [depositOpen, setDepositOpen] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [selectedSavings, setSelectedSavings] = useState<PersonalSavings | null>(null);
+  const [selectedWithdrawalRequest, setSelectedWithdrawalRequest] = useState<WithdrawalRequest | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [stkPolling, setStkPolling] = useState(false);
@@ -312,7 +313,7 @@ export default function SavingsPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <Card className="p-4">
             <p className="text-xs text-muted-foreground">Total Saved</p>
-            <p className="text-xl font-bold text-emerald-400">{formatCurrency(totalSaved)}</p>
+            <p className="text-xl font-bold text-success">{formatCurrency(totalSaved)}</p>
           </Card>
           <Card className="p-4">
             <p className="text-xs text-muted-foreground">Total Target</p>
@@ -458,12 +459,20 @@ export default function SavingsPage() {
                 return (
                   <div
                     key={d.id}
-                    className="flex items-center justify-between p-3 rounded-xl bg-muted/40 hover:bg-muted/60 cursor-pointer transition-colors"
+                    role="button"
+                    tabIndex={0}
+                    className="flex items-center justify-between p-3 rounded-xl bg-muted/40 hover:bg-muted/60 cursor-pointer transition-colors focus-visible:ring-2 focus-visible:ring-ring"
                     onClick={() => setReceiptDeposit(d)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setReceiptDeposit(d);
+                      }
+                    }}
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                        <CheckCircle2 size={16} className="text-emerald-400" />
+                      <div className="w-9 h-9 rounded-lg bg-success/10 flex items-center justify-center">
+                        <CheckCircle2 size={16} className="text-success" />
                       </div>
                       <div>
                         <p className="font-medium text-sm">{s?.name || 'Savings'} · {formatCurrency(d.amount)}</p>
@@ -473,7 +482,7 @@ export default function SavingsPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-[11px] font-medium px-2 py-1 rounded-full bg-emerald-500/10 text-emerald-400">Confirmed</span>
+                      <span className="text-[11px] font-medium px-2 py-1 rounded-full bg-success/10 text-success">Confirmed</span>
                       <ArrowRight size={14} className="text-muted-foreground" />
                     </div>
                   </div>
@@ -497,16 +506,52 @@ export default function SavingsPage() {
             <CardContent className="space-y-2">
               {withdrawalRequests.map(wr => {
                 const s = savings.find(sv => sv.id === wr.savings_id);
-                const statusColor = wr.status === 'approved' ? 'text-success bg-success/10' : wr.status === 'rejected' ? 'text-destructive bg-destructive/10' : 'text-accent bg-accent/10';
+                const estimatedPayout = s ? Math.max(0, Math.round(s.saved_amount * (1 - wr.penalty_percentage / 100))) : null;
+                const statusColor = wr.status === 'approved'
+                  ? 'text-success bg-success/10'
+                  : wr.status === 'rejected'
+                    ? 'text-destructive bg-destructive/10'
+                    : 'text-accent bg-accent/10';
+
                 return (
-                  <div key={wr.id} className="p-3 rounded-xl bg-muted/40 space-y-1">
-                    <div className="flex items-center justify-between">
-                      <p className="font-medium text-sm">{s?.name || 'Savings'}</p>
-                      <span className={cn('text-[11px] font-medium px-2 py-1 rounded-full capitalize', statusColor)}>{wr.status}</span>
+                  <div
+                    key={wr.id}
+                    role="button"
+                    tabIndex={0}
+                    className="p-3 rounded-xl bg-muted/40 space-y-2 cursor-pointer hover:bg-muted/60 transition-colors focus-visible:ring-2 focus-visible:ring-ring"
+                    onClick={() => setSelectedWithdrawalRequest(wr)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        setSelectedWithdrawalRequest(wr);
+                      }
+                    }}
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="font-medium text-sm">{s?.name || 'Savings'}</p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          {new Date(wr.created_at).toLocaleDateString('en-KE', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className={cn('text-[11px] font-medium px-2 py-1 rounded-full capitalize', statusColor)}>{wr.status}</span>
+                        <ArrowRight size={14} className="text-muted-foreground" />
+                      </div>
                     </div>
-                    <p className="text-xs text-muted-foreground">{wr.reason}</p>
-                    {wr.admin_reason && <p className="text-xs text-destructive">Admin: {wr.admin_reason}</p>}
-                    <p className="text-[10px] text-muted-foreground">{new Date(wr.created_at).toLocaleDateString('en-KE', { month: 'short', day: 'numeric', year: 'numeric' })}</p>
+
+                    <p className="text-xs text-foreground/80 line-clamp-2">{wr.reason || 'No reason provided'}</p>
+
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-muted-foreground">Estimated payout</span>
+                      <span className="font-semibold text-foreground">{estimatedPayout !== null ? formatCurrency(estimatedPayout) : '—'}</span>
+                    </div>
+
+                    {wr.admin_reason && (
+                      <p className="text-xs text-foreground/80">
+                        <span className="text-muted-foreground">Admin:</span> {wr.admin_reason}
+                      </p>
+                    )}
                   </div>
                 );
               })}
@@ -719,6 +764,69 @@ export default function SavingsPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Withdrawal Request Details Dialog */}
+      <Dialog open={!!selectedWithdrawalRequest} onOpenChange={(open) => { if (!open) setSelectedWithdrawalRequest(null); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader><DialogTitle className="text-center">Withdrawal Request</DialogTitle></DialogHeader>
+          {selectedWithdrawalRequest && (() => {
+            const s = savings.find(sv => sv.id === selectedWithdrawalRequest.savings_id);
+            const estimatedPayout = s
+              ? Math.max(0, Math.round(s.saved_amount * (1 - selectedWithdrawalRequest.penalty_percentage / 100)))
+              : null;
+            const statusColor = selectedWithdrawalRequest.status === 'approved'
+              ? 'text-success bg-success/10'
+              : selectedWithdrawalRequest.status === 'rejected'
+                ? 'text-destructive bg-destructive/10'
+                : 'text-accent bg-accent/10';
+
+            return (
+              <div className="space-y-4">
+                <div className="text-center py-3 border-b border-dashed border-border/50">
+                  <p className="font-display font-black text-lg tracking-wide text-foreground">DASNET VENTURES</p>
+                  <p className="text-[10px] text-muted-foreground tracking-widest uppercase mt-1">Savings Withdrawal Request</p>
+                </div>
+
+                <div className="text-center py-3">
+                  <p className="text-sm text-muted-foreground">Status</p>
+                  <span className={cn('inline-block mt-2 text-[11px] font-bold px-3 py-1 rounded-full capitalize', statusColor)}>
+                    {selectedWithdrawalRequest.status}
+                  </span>
+                </div>
+
+                <div className="space-y-2 text-sm">
+                  {[
+                    ['Savings Plan', s?.name || 'Savings'],
+                    ['Current Balance', s ? formatCurrency(s.saved_amount) : '—'],
+                    ['Penalty', `${selectedWithdrawalRequest.penalty_percentage}%`],
+                    ['Estimated Payout', estimatedPayout !== null ? formatCurrency(estimatedPayout) : '—'],
+                    ['Requested On', new Date(selectedWithdrawalRequest.created_at).toLocaleDateString('en-KE', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' })],
+                  ].map(([label, value]) => (
+                    <div key={label} className="flex justify-between py-1.5 border-b border-dashed border-border/30 gap-4">
+                      <span className="text-muted-foreground">{label}</span>
+                      <span className="font-semibold text-right max-w-[55%]">{value}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <Card className="p-3 bg-muted/30 border-border/40">
+                  <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Reason</p>
+                  <p className="text-sm mt-1 text-foreground/90">{selectedWithdrawalRequest.reason || 'No reason provided'}</p>
+                </Card>
+
+                {selectedWithdrawalRequest.admin_reason && (
+                  <Card className="p-3 bg-muted/30 border-border/40">
+                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">Admin Response</p>
+                    <p className="text-sm mt-1 text-foreground/90">{selectedWithdrawalRequest.admin_reason}</p>
+                  </Card>
+                )}
+
+                <Button variant="outline" className="w-full" onClick={() => setSelectedWithdrawalRequest(null)}>Close</Button>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
+
       {/* Deposit Receipt Dialog */}
       <Dialog open={!!receiptDeposit} onOpenChange={(open) => { if (!open) setReceiptDeposit(null); }}>
         <DialogContent className="max-w-sm">
@@ -735,8 +843,8 @@ export default function SavingsPage() {
 
                 {/* Amount */}
                 <div className="text-center py-4">
-                  <p className="text-3xl font-bold font-display text-emerald-400">{formatCurrency(receiptDeposit.amount)}</p>
-                  <span className="inline-block mt-2 text-[11px] font-bold px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400">✓ Confirmed</span>
+                  <p className="text-3xl font-bold font-display text-success">{formatCurrency(receiptDeposit.amount)}</p>
+                  <span className="inline-block mt-2 text-[11px] font-bold px-3 py-1 rounded-full bg-success/10 text-success">✓ Confirmed</span>
                 </div>
 
                 {/* Details */}
