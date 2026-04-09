@@ -743,14 +743,14 @@ export default function WalletPage() {
                   <p className="text-[10px] text-foreground/40 uppercase tracking-[0.15em] mb-2">Transaction Receipt</p>
                   <p className={cn(
                     "text-3xl font-bold tracking-tight",
-                    selectedTx.type === 'credit' ? "text-emerald-400" : "text-foreground"
+                    isIncoming(selectedTx) ? "text-emerald-400" : "text-foreground"
                   )}>
-                    {selectedTx.type === 'credit' ? '+' : '-'} {formatCurrency(selectedTx.amount)}
+                    {isIncoming(selectedTx) ? '+' : '-'} {formatCurrency(selectedTx.amount)}
                   </p>
                   <div className="mt-3">
                     <Badge className={cn(
                       "text-[10px] font-bold px-3 py-0.5",
-                      selectedTx.type === 'credit'
+                      isIncoming(selectedTx)
                         ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
                         : "bg-rose-500/15 text-rose-400 border-rose-500/30"
                     )}>
