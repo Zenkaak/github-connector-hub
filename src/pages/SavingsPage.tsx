@@ -459,9 +459,7 @@ export default function SavingsPage() {
                   <div
                     key={d.id}
                     className="flex items-center justify-between p-3 rounded-xl bg-muted/40 hover:bg-muted/60 cursor-pointer transition-colors"
-                    onClick={() => {
-                      if (s) { setSelectedSavings(s); setDetailOpen(true); }
-                    }}
+                    onClick={() => setReceiptDeposit(d)}
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-lg bg-emerald-500/10 flex items-center justify-center">
