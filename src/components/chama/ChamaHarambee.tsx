@@ -297,7 +297,7 @@ export function ChamaHarambee({ groupId, group, members, myRole }: Props) {
                 <div className="space-y-1">
                   <h4 className="font-black text-foreground text-sm uppercase tracking-tight">{h.beneficiary_name || h.title}</h4>
                   <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{h.description}</p>
-                  <p className="text-[10px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded w-fit">{h.order_number}</p>
+                  <p className="text-[10px] font-black text-accent bg-accent/10 px-2 py-0.5 rounded w-fit">{h.order_number}</p>
                 </div>
                 <span className={cn("text-[10px] font-black uppercase px-2 py-1 rounded-full", h.status === "active" ? "bg-emerald-500/15 text-emerald-400" : "bg-muted text-muted-foreground")}>
                   {h.status}
@@ -310,7 +310,7 @@ export function ChamaHarambee({ groupId, group, members, myRole }: Props) {
                   <span className="text-muted-foreground font-bold">Goal: {formatKES(h.target_amount)}</span>
                 </div>
                 <Progress value={progress} className="h-2" />
-                <p className="text-right text-[10px] mt-1 font-bold text-primary">{Math.round(progress)}% Complete</p>
+                <p className="text-right text-[10px] mt-1 font-bold text-emerald-400">{Math.round(progress)}% Complete</p>
               </div>
 
               <div className="flex gap-2 mt-4">

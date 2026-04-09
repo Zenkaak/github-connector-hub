@@ -303,7 +303,7 @@ export function ChamaSavings({
             <Wallet size={40} />
           </div>
           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Total Fund</p>
-          <p className="text-2xl font-black text-primary">KES {totalSavings.toLocaleString()}</p>
+          <p className="text-2xl font-black text-emerald-400">KES {totalSavings.toLocaleString()}</p>
         </Card>
 
         <Card className="p-4">
@@ -351,7 +351,7 @@ export function ChamaSavings({
                   <div className="flex items-center gap-2">
                     <p className="text-[11px] text-muted-foreground">Total: KES {m.total.toLocaleString()}</p>
                     {m.periodsAhead > 0 && (
-                      <div className="flex items-center gap-1 text-primary text-[10px] font-bold bg-primary/10 px-1.5 py-0.5 rounded">
+                      <div className="flex items-center gap-1 text-emerald-400 text-[10px] font-bold bg-emerald-500/10 px-1.5 py-0.5 rounded">
                         <Clock size={10} />
                         <span>{m.periodsAhead} {freqLabel.split(' ')[0]}s ahead</span>
                       </div>
