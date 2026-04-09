@@ -296,9 +296,9 @@ export function ChamaLoans({ groupId, group, members, myRole }: Props) {
                 className="h-16 text-3xl font-black border-2 focus:border-primary" 
               />
             </div>
-            <div className="bg-slate-900 text-white p-6 rounded-2xl shadow-xl">
+            <div className="bg-[hsl(var(--navy-800))] p-6 rounded-2xl">
               <div className="flex justify-between font-black text-xl">
-                <span className="text-slate-400">Total Due</span>
+                <span className="text-muted-foreground">Total Due</span>
                 <span className="text-emerald-400 font-black">
                   KES {amount ? Math.round(Number(amount) * (1 + interestRate / 100)).toLocaleString() : 0}
                 </span>
