@@ -5,7 +5,9 @@ import { supabase } from '@/integrations/supabase/client';
 const ContributionForm = ({ harambeeId, userId }: { harambeeId: string; userId: string }) => {
   const { online: isOnline } = useConnectivity();
   const [amount, setAmount] = useState("");
+  const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
+  const [statusMessage, setStatusMessage] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -16,26 +18,35 @@ const ContributionForm = ({ harambeeId, userId }: { harambeeId: string; userId: 
       return;
     }
 
+    if (!phone.trim()) {
+      setStatusMessage("Please enter your M-Pesa phone number");
+      return;
+    }
+
     try {
       setLoading(true);
+      setStatusMessage("Sending STK push to your phone...");
 
       const { data, error } = await supabase.functions.invoke("initiate-stk-push", {
         body: {
-          phone: "", // 👉 you should collect this from user
+          phone: phone.trim(),
           amount: Number(amount),
           userId,
           purpose: "harambee",
-          harambee_id: harambeeId, // ✅ THIS FIXES YOUR ISSUE
+          harambee_id: harambeeId,
         },
       });
 
       if (error) {
         console.error("STK Error:", error);
+        setStatusMessage("Failed to send STK push. Try again.");
       } else {
         console.log("STK initiated:", data);
+        setStatusMessage("Check your phone for the M-Pesa prompt. Enter your PIN to complete.");
       }
     } catch (err) {
       console.error("Submit error:", err);
+      setStatusMessage("An error occurred. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -46,6 +57,20 @@ const ContributionForm = ({ harambeeId, userId }: { harambeeId: string; userId: 
       <h3 className="text-lg font-semibold mb-4">Chama Contribution</h3>
 
       <form onSubmit={handleSubmit}>
+        <div className="mb-4">
+          <label className="block text-sm font-semibold text-muted-foreground mb-1">
+            M-Pesa Phone Number
+          </label>
+          <input
+            type="tel"
+            placeholder="e.g. 0712345678"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            className="fintech-input"
+            required
+          />
+        </div>
+
         <div className="mb-4">
           <label className="block text-sm font-semibold text-muted-foreground mb-1">
             Amount (KES)
@@ -59,6 +84,12 @@ const ContributionForm = ({ harambeeId, userId }: { harambeeId: string; userId: 
             required
           />
         </div>
+
+        {statusMessage && (
+          <div className="mb-4 p-3 bg-muted/50 border border-border rounded-xl text-sm text-foreground">
+            {statusMessage}
+          </div>
+        )}
 
         <button
           type="submit"
