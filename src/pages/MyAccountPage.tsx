@@ -6,8 +6,9 @@ import {
   User, Mail, Phone, MapPin, CreditCard, Calendar, Shield, BadgeCheck, Edit3, 
   AlertCircle, Lock, Download, Fingerprint, Smartphone, ShieldCheck, Key, 
   ChevronRight, UserCheck, Loader2, History, Eye, X, FileText, Monitor, Globe, LogOut,
-  Camera, ShieldAlert
+  Camera, ShieldAlert, Wallet, PiggyBank, Landmark, Users, Send, ArrowUpRight, CheckCircle2
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
