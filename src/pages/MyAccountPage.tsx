@@ -266,7 +266,7 @@ export default function MyAccountPage() {
                     { icon: ArrowUpRight, label: 'Deposit', desc: 'Top up wallet', onClick: () => navigate('/dashboard/wallet') },
                     { icon: Send, label: 'Transfer', desc: 'Send money', onClick: () => navigate('/dashboard/wallet') },
                     { icon: Landmark, label: 'Apply Loan', desc: 'Get financing', onClick: () => navigate('/dashboard/apply') },
-                    { icon: HeartHandshake, label: 'Create Fundraiser', desc: 'Start Harambee', onClick: () => navigate('/dashboard/chama') },
+                    { icon: HeartHandshake, label: 'Create Fundraiser', desc: 'Start Harambee', onClick: () => navigate('/dashboard/create-fundraiser') },
                   ].map((action, i) => (
                     <Button key={i} variant="outline" className="h-auto flex-col items-start p-4 text-left border-border/40 group hover:border-accent/40 transition-all" onClick={action.onClick}>
                       <div className="w-9 h-9 rounded-xl bg-accent/10 flex items-center justify-center mb-2 group-hover:bg-accent group-hover:text-accent-foreground transition-colors">
