@@ -230,6 +230,32 @@ export default function DashboardPage() {
     }
   };
 
+  const fetchChamaUpdates = async () => {
+    try {
+      const { data: memberships } = await supabase
+        .from('chama_members')
+        .select('group_id')
+        .eq('user_id', user?.id)
+        .eq('is_active', true);
+      if (!memberships?.length) return;
+      const groupIds = memberships.map(m => m.group_id);
+
+      const [announcements, meetings, savings] = await Promise.all([
+        supabase.from('chama_announcements').select('id, title, message, created_at, group_id').in('group_id', groupIds).order('created_at', { ascending: false }).limit(5),
+        supabase.from('chama_meetings').select('id, title, meeting_date, status, group_id').in('group_id', groupIds).eq('status', 'scheduled').order('meeting_date', { ascending: true }).limit(3),
+        supabase.from('chama_savings').select('id, amount, created_at, group_id, user_id').in('group_id', groupIds).order('created_at', { ascending: false }).limit(5),
+      ]);
+
+      const updates: any[] = [];
+      (announcements.data || []).forEach(a => updates.push({ ...a, _type: 'announcement' }));
+      (meetings.data || []).forEach(m => updates.push({ ...m, _type: 'meeting', created_at: m.meeting_date }));
+      (savings.data || []).forEach(s => updates.push({ ...s, _type: 'saving' }));
+
+      updates.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      setChamaUpdates(updates.slice(0, 6));
+    } catch (e) { console.error('Error fetching chama updates:', e); }
+  };
+
   useEffect(() => {
     if (user) {
       fetchApplications();
@@ -237,6 +263,7 @@ export default function DashboardPage() {
       fetchWalletBalance();
       fetchChamaGroups();
       fetchDisbursements();
+      fetchChamaUpdates();
 
       // Periodic install toast
       const timer = setTimeout(() => {
