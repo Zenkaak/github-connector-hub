@@ -313,7 +313,7 @@ export default function SavingsPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <Card className="p-4">
             <p className="text-xs text-muted-foreground">Total Saved</p>
-            <p className="text-xl font-bold text-emerald-400">{formatCurrency(totalSaved)}</p>
+            <p className="text-xl font-bold text-success">{formatCurrency(totalSaved)}</p>
           </Card>
           <Card className="p-4">
             <p className="text-xs text-muted-foreground">Total Target</p>
