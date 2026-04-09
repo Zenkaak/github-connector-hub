@@ -30,6 +30,8 @@ import { ChamaSupportChat } from '@/components/chama/ChamaSupportChat';
 import { ChamaMeetings } from '@/components/chama/ChamaMeetings';
 import { ChamaReports } from '@/components/chama/ChamaReports';
 import { ChamaPenalties } from '@/components/chama/ChamaPenalties';
+import { ChamaEmergencyFund } from '@/components/chama/ChamaEmergencyFund';
+import { cn } from '@/lib/utils';
 import { cn } from '@/lib/utils';
 
 interface Member {
@@ -396,6 +398,7 @@ export default function ChamaGroupDetailPage() {
                 { value: 'harambee', icon: HandCoins, label: 'Harambee' },
                 { value: 'meetings', icon: CalendarDays, label: 'Meetings' },
                 { value: 'penalties', icon: Shield, label: 'Penalties' },
+                { value: 'emergency', icon: Shield, label: 'Emergency' },
                 { value: 'reports', icon: Download, label: 'Reports' },
                 { value: 'support', icon: HeadphonesIcon, label: 'Support' },
                 ...(isLeader ? [{ value: 'requests', icon: UserCheck, label: 'Requests' }] : []),
