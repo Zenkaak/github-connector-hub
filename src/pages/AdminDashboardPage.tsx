@@ -820,24 +820,24 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
         </motion.div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 lg:gap-3">
           {[
-            { label: 'Total Users', value: stats.totalUsers, icon: Users, color: 'text-primary', bg: 'bg-primary/10' },
-            { label: 'Active Users', value: stats.activeUsers, icon: CheckCircle, color: 'text-success', bg: 'bg-success/10' },
-            { label: 'Pending Loans', value: stats.pending, icon: Clock, color: 'text-accent', bg: 'bg-accent/10' },
-            { label: 'M-Pesa Revenue', value: formatCurrency(stats.totalRevenue), icon: Wallet, color: 'text-success', bg: 'bg-success/10' },
-            { label: 'Chama Groups', value: stats.chamaGroups, icon: Crown, color: 'text-primary', bg: 'bg-primary/10' },
-            { label: 'Chama Savings', value: formatCurrency(stats.chamaSavings), icon: PiggyBank, color: 'text-accent', bg: 'bg-accent/10' },
-            { label: 'Platform Fees', value: formatCurrency(stats.platformFees), icon: DollarSign, color: 'text-success', bg: 'bg-success/10' },
-            { label: 'Personal Savings', value: formatCurrency(stats.personalSavings), icon: Landmark, color: 'text-primary', bg: 'bg-primary/10' },
+            { label: 'Total Users', value: stats.totalUsers, icon: Users, color: 'text-emerald-400', bg: 'bg-emerald-500/15' },
+            { label: 'Active Users', value: stats.activeUsers, icon: CheckCircle, color: 'text-emerald-400', bg: 'bg-emerald-500/15' },
+            { label: 'Pending Loans', value: stats.pending, icon: Clock, color: 'text-accent', bg: 'bg-accent/15' },
+            { label: 'M-Pesa Revenue', value: formatCurrency(stats.totalRevenue), icon: Wallet, color: 'text-emerald-400', bg: 'bg-emerald-500/15' },
+            { label: 'Chama Groups', value: stats.chamaGroups, icon: Crown, color: 'text-accent', bg: 'bg-accent/15' },
+            { label: 'Chama Savings', value: formatCurrency(stats.chamaSavings), icon: PiggyBank, color: 'text-accent', bg: 'bg-accent/15' },
+            { label: 'Platform Fees', value: formatCurrency(stats.platformFees), icon: DollarSign, color: 'text-emerald-400', bg: 'bg-emerald-500/15' },
+            { label: 'Personal Savings', value: formatCurrency(stats.personalSavings), icon: Landmark, color: 'text-accent', bg: 'bg-accent/15' },
           ].map((stat, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 * i }}>
-              <Card className="border-border/50">
+              <Card className="border-border/50 hover:border-accent/20 transition-colors">
                 <CardContent className="p-3 lg:p-5">
                   <div className={`w-8 h-8 lg:w-10 lg:h-10 rounded-xl ${stat.bg} flex items-center justify-center mb-2 lg:mb-3`}>
                     <stat.icon className={stat.color} size={18} />
                   </div>
-                  <p className="text-lg lg:text-2xl font-bold font-display">{stat.value}</p>
+                  <p className="text-lg lg:text-2xl font-bold font-display text-foreground">{stat.value}</p>
                   <p className="text-[10px] lg:text-xs text-muted-foreground mt-0.5">{stat.label}</p>
                 </CardContent>
               </Card>
@@ -915,14 +915,14 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
                           <div className="flex items-center gap-2">
                             <div className={cn(
                               'w-8 h-8 rounded-lg flex items-center justify-center font-bold text-xs shrink-0',
-                              p.is_active ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+                              p.is_active ? 'bg-accent/10 text-accent' : 'bg-muted text-muted-foreground'
                             )}>
                               {p.full_name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()}
                             </div>
                             <div className="min-w-0">
                               <div className="flex items-center gap-1">
                                 <span className="font-medium text-sm truncate">{p.full_name}</span>
-                                {p.is_verified && <BadgeCheck size={12} className="text-primary shrink-0" />}
+                                {p.is_verified && <BadgeCheck size={12} className="text-accent shrink-0" />}
                               </div>
                               <p className="text-[11px] text-muted-foreground truncate">{p.email}</p>
                             </div>
@@ -987,7 +987,7 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
                         <div className="flex flex-col sm:flex-row sm:items-start gap-3">
                           <div className="flex items-center gap-3 flex-1">
                             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                              <CreditCard className="text-primary" size={18} />
+                              <CreditCard className="text-accent" size={18} />
                             </div>
                             <div className="min-w-0">
                               <p className="font-semibold text-sm capitalize">{loan.loan_type.replace('_', ' ')} Loan</p>
@@ -1240,7 +1240,7 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
                             <span className={cn('text-[10px] font-bold px-2 py-1 rounded-full uppercase',
                               wd.status === 'completed' && 'bg-success/10 text-success',
                               wd.status === 'rejected' && 'bg-destructive/10 text-destructive',
-                              wd.status === 'approved' && 'bg-primary/10 text-primary',
+                              wd.status === 'approved' && 'bg-accent/10 text-accent',
                               wd.status === 'pending' && 'bg-accent/10 text-accent',
                             )}>{wd.status}</span>
                             {(wd.status === 'pending' || wd.status === 'approved') && (
@@ -1284,7 +1284,7 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
                           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                             <div className="flex items-center gap-3 flex-1 min-w-0">
                               <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                                <Users size={18} className="text-primary" />
+                                <Users size={18} className="text-accent" />
                               </div>
                               <div className="min-w-0">
                                 <p className="font-semibold text-sm">{g.name}</p>
@@ -1347,7 +1347,7 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
                             <div className="flex items-center gap-2">
                               <span className={cn('text-[10px] font-bold px-2 py-1 rounded-full uppercase',
                                 wd.status === 'approved_by_leaders' && 'bg-blue-500/10 text-blue-500',
-                                wd.status === 'approved' && 'bg-primary/10 text-primary',
+                                wd.status === 'approved' && 'bg-accent/10 text-accent',
                                 wd.status === 'disbursed' && 'bg-success/10 text-success',
                                 wd.status === 'rejected' && 'bg-destructive/10 text-destructive',
                                 wd.status === 'pending_leaders' && 'bg-accent/10 text-accent',
@@ -1462,7 +1462,7 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
                             </div>
                             <span className={cn('text-[10px] font-bold px-2 py-1 rounded-full uppercase shrink-0',
                               loan.status === 'approved' && 'bg-success/10 text-success',
-                              loan.status === 'disbursed' && 'bg-primary/10 text-primary',
+                              loan.status === 'disbursed' && 'bg-accent/10 text-accent',
                               loan.status === 'rejected' && 'bg-destructive/10 text-destructive',
                               loan.status === 'pending' && 'bg-accent/10 text-accent',
                             )}>{loan.status}</span>
@@ -1625,7 +1625,7 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
                       </div>
                       <span className={cn('text-[10px] font-bold px-2 py-1 rounded-full uppercase shrink-0',
                         report.status === 'pending' && 'bg-accent/10 text-accent',
-                        report.status === 'reviewed' && 'bg-primary/10 text-primary',
+                        report.status === 'reviewed' && 'bg-accent/10 text-accent',
                         report.status === 'resolved' && 'bg-success/10 text-success',
                         report.status === 'dismissed' && 'bg-muted text-muted-foreground',
                       )}>{report.status}</span>
@@ -1840,7 +1840,7 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
                         <div className="flex items-center justify-between gap-3">
                           <div className="flex items-center gap-3 min-w-0">
                             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                              <PiggyBank size={14} className="text-primary" />
+                              <PiggyBank size={14} className="text-accent" />
                             </div>
                             <div className="min-w-0">
                               <p className="text-sm font-medium truncate">{getUserName(s.user_id)} — {s.name}</p>
@@ -1852,7 +1852,7 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
                           </div>
                           <span className={cn('text-[10px] font-bold px-2 py-1 rounded-full uppercase',
                             s.status === 'active' && 'bg-success/10 text-success',
-                            s.status === 'matured' && 'bg-primary/10 text-primary',
+                            s.status === 'matured' && 'bg-accent/10 text-accent',
                             s.status === 'withdrawn' && 'bg-muted text-muted-foreground',
                           )}>{s.status}</span>
                         </div>
@@ -1908,7 +1908,7 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
                           </div>
                           <span className={cn('text-[11px] px-2 py-0.5 rounded-full font-medium capitalize',
                             h.status === 'active' && 'bg-success/10 text-success',
-                            h.status === 'completed' && 'bg-primary/10 text-primary',
+                            h.status === 'completed' && 'bg-accent/10 text-accent',
                             h.status === 'cancelled' && 'bg-destructive/10 text-destructive',
                           )}>{h.status}</span>
                         </div>
@@ -2493,7 +2493,7 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">
                     <StatusBadge status={selectedUser.is_active ? 'active' : 'inactive'} />
-                    {selectedUser.is_verified && <span className="text-[10px] font-semibold text-primary bg-primary/10 px-2 py-0.5 rounded-full">Verified</span>}
+                    {selectedUser.is_verified && <span className="text-[10px] font-semibold text-accent bg-accent/10 px-2 py-0.5 rounded-full">Verified</span>}
                   </div>
                 </div>
 
@@ -2620,7 +2620,7 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
                     <div className="space-y-1.5">
                       {userDocs.map((doc) => (
                         <div key={doc.id} className="flex items-center gap-2 p-2 rounded-lg bg-muted/30 border border-border/30">
-                          <FileText size={14} className="text-primary shrink-0" />
+                          <FileText size={14} className="text-accent shrink-0" />
                           <div className="flex-1 min-w-0">
                             <p className="text-xs font-medium capitalize">{doc.document_type.replace(/_/g, ' ')}</p>
                             <p className="text-[10px] text-muted-foreground truncate">{doc.file_name}</p>

@@ -90,7 +90,7 @@ export default function Index() {
           <div className="glass-dark rounded-2xl shadow-lg max-w-6xl mx-auto border border-white/[0.06]">
             <div className="flex items-center justify-between h-[60px] px-5 md:px-6">
               <Logo size="md" variant="white" />
-              <nav className="hidden md:flex items-center gap-7 text-[13px] font-medium text-white/40">
+              <nav className="hidden md:flex items-center gap-7 text-[13px] font-medium text-white/65">
                 <a href="#features" className="hover:text-white/80 transition-colors">Features</a>
                 <a href="#how-it-works" className="hover:text-white/80 transition-colors">How It Works</a>
                 <a href="#wallet" className="hover:text-white/80 transition-colors">Wallet</a>
@@ -134,7 +134,7 @@ export default function Index() {
             <span className="text-white/90">Platform</span>
           </motion.h1>
 
-          <motion.p variants={fadeUp} custom={2} className="text-base sm:text-lg text-white/40 max-w-xl mx-auto mb-10 leading-relaxed">
+          <motion.p variants={fadeUp} custom={2} className="text-base sm:text-lg text-white/65 max-w-xl mx-auto mb-10 leading-relaxed">
             Manage Chama groups, digital wallets, personal loans, and Harambee fundraising — all with seamless M-Pesa integration and bank-grade security.
           </motion.p>
 
@@ -150,7 +150,7 @@ export default function Index() {
               </Button>
             </Link>
             <Link to="/auth">
-              <Button variant="ghost" size="xl" className="text-white/50 hover:text-white hover:bg-white/[0.06] min-w-[120px]">
+              <Button variant="ghost" size="xl" className="text-white/70 hover:text-white hover:bg-white/[0.06] min-w-[120px]">
                 Sign In
               </Button>
             </Link>
@@ -166,7 +166,7 @@ export default function Index() {
               ].map((stat, i) => (
                 <div key={i} className="text-center">
                   <p className="text-xl sm:text-2xl md:text-3xl font-bold text-white font-display">{stat.value}</p>
-                  <p className="text-[10px] text-white/25 mt-1 uppercase tracking-[0.15em] font-semibold">{stat.label}</p>
+                  <p className="text-[10px] text-white/55 mt-1 uppercase tracking-[0.15em] font-semibold">{stat.label}</p>
                 </div>
               ))}
             </div>
@@ -176,7 +176,7 @@ export default function Index() {
                 <Button variant="gold" size="lg" onClick={promptInstall} className="animate-pulse gap-2.5 shadow-gold">
                   <Smartphone size={18} /> Download App
                 </Button>
-                <p className="text-[11px] text-white/30 text-center">Install for a faster, offline-ready experience</p>
+                <p className="text-[11px] text-white/60 text-center">Install for a faster, offline-ready experience</p>
               </motion.div>
             )}
           </motion.div>
@@ -201,7 +201,7 @@ export default function Index() {
                 whileInView={{ opacity: 1 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.05 }}
-                className="flex items-center gap-2 text-white/20 hover:text-white/40 transition-colors"
+                className="flex items-center gap-2 text-white/70 hover:text-white/65 transition-colors"
               >
                 <badge.icon size={16} className="text-accent/40" />
                 <span className="text-[11px] font-bold uppercase tracking-[0.15em]">{badge.label}</span>
@@ -219,7 +219,7 @@ export default function Index() {
               Platform Features
             </span>
             <h2 className="font-display text-3xl md:text-4xl font-bold mb-4 text-white">Everything You Need, One Platform</h2>
-            <p className="text-white/35 max-w-xl mx-auto leading-relaxed">From group savings to personal wallets — a complete digital financial ecosystem.</p>
+            <p className="text-white/60 max-w-xl mx-auto leading-relaxed">From group savings to personal wallets — a complete digital financial ecosystem.</p>
           </motion.div>
 
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
@@ -239,7 +239,7 @@ export default function Index() {
                   <feature.icon className="text-accent" size={22} />
                 </div>
                 <h3 className="font-display font-bold text-base mb-2 text-white">{feature.title}</h3>
-                <p className="text-white/35 text-sm leading-relaxed">{feature.desc}</p>
+                <p className="text-white/60 text-sm leading-relaxed">{feature.desc}</p>
               </motion.div>
             ))}
           </div>
@@ -256,7 +256,7 @@ export default function Index() {
                 Digital Wallet
               </span>
               <h2 className="font-display text-3xl md:text-4xl font-bold mb-4 text-white">Your Money,<br />Your Control</h2>
-              <p className="text-white/35 mb-8 leading-relaxed">
+              <p className="text-white/60 mb-8 leading-relaxed">
                 A full-featured digital wallet powered by M-Pesa. Deposit, transfer to other members, request payments, and track every shilling in real-time.
               </p>
               <div className="space-y-4">
@@ -273,7 +273,7 @@ export default function Index() {
                     </div>
                     <div>
                       <h4 className="font-bold text-sm text-white">{item.title}</h4>
-                      <p className="text-xs text-white/30">{item.desc}</p>
+                      <p className="text-xs text-white/60">{item.desc}</p>
                     </div>
                   </motion.div>
                 ))}
@@ -286,7 +286,7 @@ export default function Index() {
               <div className="rounded-3xl p-8 bg-gradient-to-br from-emerald-600/20 via-emerald-500/10 to-transparent border border-emerald-500/20 backdrop-blur-sm">
                 <div className="flex items-center justify-between mb-8">
                   <div>
-                    <p className="text-[10px] uppercase tracking-[0.2em] text-white/30 font-bold">Wallet Balance</p>
+                    <p className="text-[10px] uppercase tracking-[0.2em] text-white/60 font-bold">Wallet Balance</p>
                     <p className="text-3xl font-display font-bold text-white mt-1">KES 24,500</p>
                   </div>
                   <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 flex items-center justify-center">
@@ -301,12 +301,12 @@ export default function Index() {
                   ].map((action, i) => (
                     <div key={i} className="text-center p-3 rounded-xl bg-white/[0.06] border border-white/[0.06]">
                       <action.icon size={18} className="mx-auto text-emerald-400 mb-1" />
-                      <p className="text-[10px] text-white/40 font-bold">{action.label}</p>
+                      <p className="text-[10px] text-white/65 font-bold">{action.label}</p>
                     </div>
                   ))}
                 </div>
                 <div className="mt-6 space-y-2">
-                  <p className="text-[10px] uppercase tracking-[0.2em] text-white/20 font-bold">Recent</p>
+                  <p className="text-[10px] uppercase tracking-[0.2em] text-white/70 font-bold">Recent</p>
                   {[
                     { name: 'Grace W.', type: 'Received', amount: '+1,200', color: 'text-emerald-400' },
                     { name: 'M-Pesa Top Up', type: 'Deposit', amount: '+5,000', color: 'text-emerald-400' },
@@ -315,7 +315,7 @@ export default function Index() {
                     <div key={i} className="flex items-center justify-between py-2 border-b border-white/[0.04] last:border-0">
                       <div>
                         <p className="text-xs text-white/70 font-medium">{tx.name}</p>
-                        <p className="text-[10px] text-white/25">{tx.type}</p>
+                        <p className="text-[10px] text-white/55">{tx.type}</p>
                       </div>
                       <p className={`text-sm font-bold ${tx.color}`}>{tx.amount}</p>
                     </div>
@@ -343,7 +343,7 @@ export default function Index() {
                   <stat.icon size={22} className="text-accent" />
                 </div>
                 <p className="text-2xl md:text-3xl font-bold text-white font-display">{stat.value}</p>
-                <p className="text-[11px] text-white/25 mt-1 uppercase tracking-[0.15em] font-semibold">{stat.label}</p>
+                <p className="text-[11px] text-white/55 mt-1 uppercase tracking-[0.15em] font-semibold">{stat.label}</p>
               </motion.div>
             ))}
           </div>
@@ -356,7 +356,7 @@ export default function Index() {
           <motion.div className="text-center mb-16" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <span className="inline-block text-[11px] font-bold uppercase tracking-[0.2em] px-3.5 py-1.5 rounded-full bg-accent/10 text-accent mb-4">Getting Started</span>
             <h2 className="font-display text-3xl md:text-4xl font-bold mb-4 text-white">Start in 4 Simple Steps</h2>
-            <p className="text-white/35 max-w-lg mx-auto">From sign-up to your first savings deposit in minutes.</p>
+            <p className="text-white/60 max-w-lg mx-auto">From sign-up to your first savings deposit in minutes.</p>
           </motion.div>
 
           <div className="grid gap-8 md:grid-cols-4 relative">
@@ -373,7 +373,7 @@ export default function Index() {
                 </div>
                 <span className="text-[11px] font-bold text-accent uppercase tracking-[0.2em] mb-2 block">Step {item.step}</span>
                 <h3 className="font-display font-bold text-lg mb-2 text-white">{item.title}</h3>
-                <p className="text-white/35 text-sm leading-relaxed max-w-[220px] mx-auto">{item.desc}</p>
+                <p className="text-white/60 text-sm leading-relaxed max-w-[220px] mx-auto">{item.desc}</p>
               </motion.div>
             ))}
           </div>
@@ -387,7 +387,7 @@ export default function Index() {
             <motion.div className="text-center mb-12" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
               <span className="inline-block text-[11px] font-bold uppercase tracking-[0.2em] px-3.5 py-1.5 rounded-full bg-accent/10 text-accent mb-4">Explore</span>
               <h2 className="font-display text-3xl md:text-4xl font-bold mb-4 text-white">Browse Public Chama Groups</h2>
-              <p className="text-white/35 max-w-xl mx-auto">Discover active savings groups and request to join.</p>
+              <p className="text-white/60 max-w-xl mx-auto">Discover active savings groups and request to join.</p>
             </motion.div>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -404,11 +404,11 @@ export default function Index() {
                     )}
                     <div className="flex-1 min-w-0">
                       <h3 className="font-display font-bold text-sm text-white truncate">{chama.name}</h3>
-                      {chama.description && <p className="text-[11px] text-white/25 truncate">{chama.description}</p>}
+                      {chama.description && <p className="text-[11px] text-white/55 truncate">{chama.description}</p>}
                     </div>
                   </div>
                   <div className="flex items-center justify-between text-[11px] pt-3 border-t border-white/[0.06]">
-                    <span className="text-white/30">KES {chama.contribution_amount?.toLocaleString()} / {chama.contribution_frequency}</span>
+                    <span className="text-white/60">KES {chama.contribution_amount?.toLocaleString()} / {chama.contribution_frequency}</span>
                     <Link to="/signup">
                       <span className="text-accent font-bold hover:underline flex items-center gap-1">
                         Join <ArrowRight size={10} />
@@ -437,7 +437,7 @@ export default function Index() {
             <motion.div className="text-center mb-12" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
               <span className="inline-block text-[11px] font-bold uppercase tracking-[0.2em] px-3.5 py-1.5 rounded-full bg-accent/10 text-accent mb-4">Community Fundraising</span>
               <h2 className="font-display text-3xl md:text-4xl font-bold mb-4 text-white">Active Harambees</h2>
-              <p className="text-white/35 max-w-xl mx-auto">Support community causes. Every contribution makes a difference.</p>
+              <p className="text-white/60 max-w-xl mx-auto">Support community causes. Every contribution makes a difference.</p>
             </motion.div>
 
             <div className="text-center mb-8">
@@ -446,7 +446,7 @@ export default function Index() {
                   <HeartHandshake size={18} /> Start a Fundraiser <ArrowRight size={16} />
                 </Button>
               </Link>
-              <p className="text-[11px] text-white/25 mt-2">Create a verified Harambee — 3% platform fee on collected funds</p>
+              <p className="text-[11px] text-white/55 mt-2">Create a verified Harambee — 3% platform fee on collected funds</p>
             </div>
 
             <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar snap-x snap-mandatory">
@@ -463,24 +463,24 @@ export default function Index() {
                             <Heart size={18} className="text-accent" />
                           </div>
                           {daysLeft !== null && (
-                            <span className="text-[10px] font-bold text-white/40 bg-white/[0.06] px-2 py-1 rounded-full">
+                            <span className="text-[10px] font-bold text-white/65 bg-white/[0.06] px-2 py-1 rounded-full">
                               {daysLeft > 0 ? `${daysLeft}d left` : 'Ended'}
                             </span>
                           )}
                         </div>
                         <div>
                           <h3 className="font-display font-bold text-base text-white line-clamp-1">{h.title}</h3>
-                          {h.description && <p className="text-sm text-white/30 mt-1 line-clamp-2">{h.description}</p>}
+                          {h.description && <p className="text-sm text-white/60 mt-1 line-clamp-2">{h.description}</p>}
                         </div>
                         <div className="space-y-2">
                           <div className="flex justify-between text-[11px]">
-                            <span className="text-white/40">Raised</span>
+                            <span className="text-white/65">Raised</span>
                             <span className="font-bold text-accent">{progress}%</span>
                           </div>
                           <Progress value={progress} className="h-2" />
                           <div className="flex justify-between text-[11px]">
-                            <span className="text-white/50 font-semibold">KES {(h.raised_amount || 0).toLocaleString()}</span>
-                            <span className="text-white/30">of KES {(h.target_amount || 0).toLocaleString()}</span>
+                            <span className="text-white/70 font-semibold">KES {(h.raised_amount || 0).toLocaleString()}</span>
+                            <span className="text-white/60">of KES {(h.target_amount || 0).toLocaleString()}</span>
                           </div>
                         </div>
                       </div>
@@ -506,7 +506,7 @@ export default function Index() {
           <motion.div className="text-center mb-16" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <span className="inline-block text-[11px] font-bold uppercase tracking-[0.2em] px-3.5 py-1.5 rounded-full bg-accent/10 text-accent mb-4">Lending</span>
             <h2 className="font-display text-3xl md:text-4xl font-bold mb-4 text-white">Personal & Business Loans</h2>
-            <p className="text-white/35 max-w-xl mx-auto">Access affordable credit for business growth, education, and personal needs.</p>
+            <p className="text-white/60 max-w-xl mx-auto">Access affordable credit for business growth, education, and personal needs.</p>
           </motion.div>
 
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -523,11 +523,11 @@ export default function Index() {
                     <span className="text-xs font-bold text-accent bg-accent/10 px-3 py-1.5 rounded-full">{product.rate} p.a.</span>
                   </div>
                   <h3 className="font-display font-bold text-lg mb-2 text-white">{product.name}</h3>
-                  <p className="text-sm text-white/35 leading-relaxed">{product.desc}</p>
+                  <p className="text-sm text-white/60 leading-relaxed">{product.desc}</p>
                 </div>
                 <div className="px-6 py-4 bg-white/[0.02] border-t border-white/[0.06] flex items-center justify-between">
                   <div>
-                    <p className="text-[11px] text-white/25 uppercase tracking-wider">Up to</p>
+                    <p className="text-[11px] text-white/55 uppercase tracking-wider">Up to</p>
                     <p className="font-display font-bold text-white">{product.max}</p>
                   </div>
                   <Link to="/signup"><Button variant="gold" size="sm" className="shadow-gold">Apply <ArrowRight size={14} /></Button></Link>
@@ -547,7 +547,7 @@ export default function Index() {
                 Security First
               </span>
               <h2 className="font-display text-3xl md:text-4xl font-bold mb-4 text-white">Bank-Grade<br />Security Built In</h2>
-              <p className="text-white/35 mb-6 leading-relaxed">
+              <p className="text-white/60 mb-6 leading-relaxed">
                 Your money and data are protected with multiple layers of security at every level of our platform.
               </p>
             </motion.div>
@@ -565,7 +565,7 @@ export default function Index() {
                   className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
                   <item.icon size={18} className="text-red-400 mb-2" />
                   <h4 className="font-bold text-xs text-white mb-1">{item.title}</h4>
-                  <p className="text-[10px] text-white/25 leading-relaxed">{item.desc}</p>
+                  <p className="text-[10px] text-white/55 leading-relaxed">{item.desc}</p>
                 </motion.div>
               ))}
             </div>
@@ -579,7 +579,7 @@ export default function Index() {
           <motion.div className="text-center mb-16" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <span className="inline-block text-[11px] font-bold uppercase tracking-[0.2em] px-3.5 py-1.5 rounded-full bg-accent/10 text-accent mb-4">Testimonials</span>
             <h2 className="font-display text-3xl md:text-4xl font-bold mb-4 text-white">Trusted by Kenyans</h2>
-            <p className="text-white/35 max-w-lg mx-auto">Hear from groups already managing their savings on Dasnet.</p>
+            <p className="text-white/60 max-w-lg mx-auto">Hear from groups already managing their savings on Dasnet.</p>
           </motion.div>
 
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -593,14 +593,14 @@ export default function Index() {
                 <div className="flex gap-0.5 mb-4">
                   {Array.from({ length: t.rating }).map((_, si) => <Star key={si} size={15} className="text-accent fill-accent" />)}
                 </div>
-                <p className="text-sm text-white/45 leading-relaxed mb-6">&ldquo;{t.text}&rdquo;</p>
+                <p className="text-sm text-white/70 leading-relaxed mb-6">&ldquo;{t.text}&rdquo;</p>
                 <div className="flex items-center gap-3 pt-4 border-t border-white/[0.06]">
                   <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center text-accent-foreground text-xs font-bold">
                     {t.name.split(' ').map(n => n[0]).join('')}
                   </div>
                   <div>
                     <p className="font-semibold text-sm text-white">{t.name}</p>
-                    <p className="text-xs text-white/30">{t.role}</p>
+                    <p className="text-xs text-white/60">{t.role}</p>
                   </div>
                 </div>
               </motion.div>
@@ -615,7 +615,7 @@ export default function Index() {
           <motion.div className="text-center mb-14" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <span className="inline-block text-[11px] font-bold uppercase tracking-[0.2em] px-3.5 py-1.5 rounded-full bg-accent/10 text-accent mb-4">FAQ</span>
             <h2 className="font-display text-3xl md:text-4xl font-bold mb-4 text-white">Common Questions</h2>
-            <p className="text-white/35 max-w-lg mx-auto">Everything you need to know about our digital platform.</p>
+            <p className="text-white/60 max-w-lg mx-auto">Everything you need to know about our digital platform.</p>
           </motion.div>
 
           <div className="space-y-3">
@@ -625,10 +625,10 @@ export default function Index() {
                   className="w-full text-left p-5 rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:border-accent/20 transition-all duration-300 group">
                   <div className="flex items-center justify-between gap-4">
                     <h3 className="font-semibold text-[15px] text-white">{faq.q}</h3>
-                    <ChevronDown size={18} className={`text-white/30 shrink-0 transition-transform duration-300 ${openFaq === i ? 'rotate-180' : ''}`} />
+                    <ChevronDown size={18} className={`text-white/60 shrink-0 transition-transform duration-300 ${openFaq === i ? 'rotate-180' : ''}`} />
                   </div>
                   <motion.div initial={false} animate={{ height: openFaq === i ? 'auto' : 0, opacity: openFaq === i ? 1 : 0 }} transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }} className="overflow-hidden">
-                    <p className="text-sm text-white/35 leading-relaxed mt-3 pr-8">{faq.a}</p>
+                    <p className="text-sm text-white/60 leading-relaxed mt-3 pr-8">{faq.a}</p>
                   </motion.div>
                 </button>
               </motion.div>
@@ -647,13 +647,13 @@ export default function Index() {
                 <Smartphone size={24} className="text-accent" />
               </div>
               <h3 className="font-display text-2xl font-bold text-white mb-2">Download Dasnet App</h3>
-              <p className="text-white/40 max-w-md mx-auto mb-6 text-sm leading-relaxed">
+              <p className="text-white/65 max-w-md mx-auto mb-6 text-sm leading-relaxed">
                 Install our app for a faster experience—offline support and instant notifications directly to your phone.
               </p>
               {canInstall ? (
                 <Button variant="hero" size="lg" onClick={promptInstall} className="shadow-gold-lg"><Smartphone size={18} /> Install App Now</Button>
               ) : (
-                <p className="text-xs text-white/25">Open browser menu → "Add to Home Screen" to install</p>
+                <p className="text-xs text-white/55">Open browser menu → "Add to Home Screen" to install</p>
               )}
             </motion.div>
           </div>
@@ -671,7 +671,7 @@ export default function Index() {
                 <Users size={28} className="text-accent" />
               </div>
               <h2 className="font-display text-3xl md:text-4xl font-bold text-white mb-4">Start Your Financial Journey Today</h2>
-              <p className="text-white/40 max-w-lg mx-auto mb-8 leading-relaxed">
+              <p className="text-white/65 max-w-lg mx-auto mb-8 leading-relaxed">
                 Join Kenyans managing their group savings, personal wallets, and loans digitally with Dasnet Ventures.
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
@@ -693,20 +693,20 @@ export default function Index() {
           <div className="grid gap-10 md:grid-cols-4 mb-12">
             <div className="md:col-span-1">
               <Logo variant="white" size="md" />
-              <p className="text-sm text-white/25 mt-4 leading-relaxed">
+              <p className="text-sm text-white/55 mt-4 leading-relaxed">
                 Kenya's complete digital banking platform — Chama management, wallets, loans, and Harambee fundraising.
               </p>
               <div className="flex items-center gap-2 mt-4">
                 {[Globe, Phone, Mail].map((Icon, i) => (
                   <div key={i} className="w-8 h-8 rounded-lg bg-white/[0.04] flex items-center justify-center hover:bg-white/[0.08] transition-colors cursor-pointer">
-                    <Icon size={14} className="text-white/30" />
+                    <Icon size={14} className="text-white/60" />
                   </div>
                 ))}
               </div>
             </div>
 
             <div>
-              <h4 className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/20 mb-4">Platform</h4>
+              <h4 className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/70 mb-4">Platform</h4>
               <ul className="space-y-2.5">
                 {[
                   { label: 'Chama Groups', path: '/signup' },
@@ -716,14 +716,14 @@ export default function Index() {
                   { label: 'M-Pesa Payments', path: '/signup' },
                 ].map(p => (
                   <li key={p.label}>
-                    <Link to={p.path} className="text-sm text-white/30 hover:text-white/60 transition-colors">{p.label}</Link>
+                    <Link to={p.path} className="text-sm text-white/60 hover:text-white/60 transition-colors">{p.label}</Link>
                   </li>
                 ))}
               </ul>
             </div>
 
             <div>
-              <h4 className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/20 mb-4">Company</h4>
+              <h4 className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/70 mb-4">Company</h4>
               <ul className="space-y-2.5">
                 {[
                   { label: 'About Us', path: '/about' },
@@ -732,22 +732,22 @@ export default function Index() {
                   { label: 'Contact Us', path: '/contact' },
                 ].map(p => (
                   <li key={p.label}>
-                    <Link to={p.path} className="text-sm text-white/30 hover:text-white/60 transition-colors">{p.label}</Link>
+                    <Link to={p.path} className="text-sm text-white/60 hover:text-white/60 transition-colors">{p.label}</Link>
                   </li>
                 ))}
               </ul>
             </div>
 
             <div>
-              <h4 className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/20 mb-4">Contact</h4>
+              <h4 className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/70 mb-4">Contact</h4>
               <ul className="space-y-3">
-                <li className="flex items-center gap-2.5 text-sm text-white/30">
+                <li className="flex items-center gap-2.5 text-sm text-white/60">
                   <Phone size={14} className="text-accent/60" /> +254 725 336 731
                 </li>
-                <li className="flex items-center gap-2.5 text-sm text-white/30">
+                <li className="flex items-center gap-2.5 text-sm text-white/60">
                   <Mail size={14} className="text-accent/60" /> support@dasnet.site
                 </li>
-                <li className="flex items-start gap-2.5 text-sm text-white/30">
+                <li className="flex items-start gap-2.5 text-sm text-white/60">
                   <MapPin size={14} className="text-accent/60 mt-0.5" /> Nairobi, Kenya
                 </li>
               </ul>
@@ -755,8 +755,8 @@ export default function Index() {
           </div>
 
           <div className="pt-8 border-t border-white/[0.04] flex flex-col md:flex-row items-center justify-between gap-4">
-            <p className="text-[11px] text-white/15">© {new Date().getFullYear()} Dasnet Ventures Ltd. All rights reserved.</p>
-            <p className="text-[11px] text-white/10">Chama Management &bull; Digital Wallet &bull; Loans &bull; Harambee</p>
+            <p className="text-[11px] text-white/65">© {new Date().getFullYear()} Dasnet Ventures Ltd. All rights reserved.</p>
+            <p className="text-[11px] text-white/60">Chama Management &bull; Digital Wallet &bull; Loans &bull; Harambee</p>
           </div>
         </div>
       </footer>
