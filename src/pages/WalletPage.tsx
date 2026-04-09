@@ -82,10 +82,10 @@ export default function WalletPage() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const [withdrawAmount, setWithdrawAmount] = useState('');
-  const [withdrawPhone, setWithdrawPhone] = useState('');
   const [depositAmount, setDepositAmount] = useState('');
-  const [depositPhone, setDepositPhone] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
+  const [statementPeriod, setStatementPeriod] = useState<number | null>(null);
+  const [generatingStatement, setGeneratingStatement] = useState(false);
 
   const [depositStatus, setDepositStatus] = useState<'idle' | 'pending' | 'success' | 'failed'>('idle');
   const [depositStatusMessage, setDepositStatusMessage] = useState('');
@@ -146,6 +146,159 @@ export default function WalletPage() {
   }, [transactions, withdrawals]);
 
   const formatCurrency = (amt: number) => new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES' }).format(amt);
+
+  const registeredPhone = (() => {
+    const p = profile?.phone || '';
+    let formatted = p.replace(/\+/g, '').replace(/\s/g, '');
+    if (formatted.startsWith('254')) formatted = '0' + formatted.slice(3);
+    return formatted;
+  })();
+
+  const generatePDFStatement = async (months: number) => {
+    setGeneratingStatement(true);
+    try {
+      const cutoff = new Date();
+      cutoff.setMonth(cutoff.getMonth() - months);
+      const filtered = transactions.filter(t => new Date(t.created_at) >= cutoff);
+      
+      const totalIn = filtered.filter(t => t.type === 'credit' || t.type === 'deposit').reduce((a, b) => a + b.amount, 0);
+      const totalOut = filtered.filter(t => t.type === 'debit' || t.type === 'withdrawal').reduce((a, b) => a + b.amount, 0);
+      
+      const now = new Date();
+      const periodLabel = `${cutoff.toLocaleDateString('en-KE', { dateStyle: 'long' })} — ${now.toLocaleDateString('en-KE', { dateStyle: 'long' })}`;
+      
+      // Build professional HTML statement
+      const html = `
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @page { size: A4; margin: 20mm; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; color: #1a1a2e; font-size: 11px; line-height: 1.5; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #0a1628; padding-bottom: 16px; margin-bottom: 24px; }
+  .brand { font-size: 20px; font-weight: 900; color: #0a1628; letter-spacing: 1px; }
+  .brand-sub { font-size: 8px; color: #d4a853; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; }
+  .stamp { border: 2px solid #d4a853; padding: 6px 14px; border-radius: 4px; text-align: center; }
+  .stamp-text { font-size: 7px; color: #d4a853; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; }
+  .stamp-date { font-size: 9px; color: #0a1628; font-weight: 700; }
+  .title { font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #0a1628; margin-bottom: 4px; }
+  .period { font-size: 10px; color: #666; font-weight: 600; }
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin: 20px 0; }
+  .info-box { background: #f8f9fb; border: 1px solid #e2e6ed; border-radius: 6px; padding: 12px; text-align: center; }
+  .info-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #888; }
+  .info-value { font-size: 16px; font-weight: 900; color: #0a1628; margin-top: 2px; }
+  .info-value.green { color: #059669; }
+  .info-value.red { color: #dc2626; }
+  table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+  thead th { background: #0a1628; color: #fff; font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; padding: 10px 12px; text-align: left; }
+  tbody td { padding: 9px 12px; border-bottom: 1px solid #eef0f4; font-size: 10px; }
+  tbody tr:nth-child(even) { background: #fafbfc; }
+  .type-in { color: #059669; font-weight: 700; }
+  .type-out { color: #dc2626; font-weight: 700; }
+  .amount-in { color: #059669; font-weight: 800; }
+  .amount-out { color: #dc2626; font-weight: 800; }
+  .footer { margin-top: 32px; padding-top: 16px; border-top: 2px solid #e2e6ed; display: flex; justify-content: space-between; align-items: center; }
+  .footer-text { font-size: 8px; color: #999; }
+  .seal { width: 60px; height: 60px; border: 2px solid #d4a853; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-align: center; }
+  .seal-text { font-size: 6px; font-weight: 900; color: #d4a853; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.2; }
+  .user-info { margin-bottom: 20px; }
+  .user-name { font-size: 13px; font-weight: 800; }
+  .user-detail { font-size: 10px; color: #666; }
+</style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <div class="brand">DASNET VENTURES</div>
+      <div class="brand-sub">Financial Technology Solutions</div>
+    </div>
+    <div class="stamp">
+      <div class="stamp-text">Official Statement</div>
+      <div class="stamp-date">${now.toLocaleDateString('en-KE', { dateStyle: 'medium' })}</div>
+    </div>
+  </div>
+
+  <div class="user-info">
+    <div class="user-name">${profile?.full_name || 'Account Holder'}</div>
+    <div class="user-detail">Phone: ${profile?.phone || 'N/A'} &nbsp;|&nbsp; Email: ${profile?.email || 'N/A'}</div>
+    <div class="user-detail">Wallet ID: ${wallet?.id.slice(0, 16).toUpperCase()}</div>
+  </div>
+
+  <div class="title">Wallet Statement — ${months} Month${months > 1 ? 's' : ''}</div>
+  <div class="period">${periodLabel}</div>
+
+  <div class="info-grid">
+    <div class="info-box">
+      <div class="info-label">Total Money In</div>
+      <div class="info-value green">KES ${totalIn.toLocaleString()}</div>
+    </div>
+    <div class="info-box">
+      <div class="info-label">Total Money Out</div>
+      <div class="info-value red">KES ${totalOut.toLocaleString()}</div>
+    </div>
+    <div class="info-box">
+      <div class="info-label">Current Balance</div>
+      <div class="info-value">KES ${(wallet?.balance || 0).toLocaleString()}</div>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Date & Time</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th style="text-align:right">Amount (KES)</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${filtered.length === 0 ? '<tr><td colspan="5" style="text-align:center;padding:24px;color:#999;">No transactions in this period</td></tr>' :
+        filtered.map((t, i) => {
+          const isIn = t.type === 'credit' || t.type === 'deposit';
+          return `<tr>
+            <td>${i + 1}</td>
+            <td>${new Date(t.created_at).toLocaleString('en-KE', { dateStyle: 'medium', timeStyle: 'short' })}</td>
+            <td class="${isIn ? 'type-in' : 'type-out'}">${isIn ? 'IN' : 'OUT'}</td>
+            <td>${t.description || '-'}</td>
+            <td style="text-align:right" class="${isIn ? 'amount-in' : 'amount-out'}">${isIn ? '+' : '-'}${t.amount.toLocaleString()}</td>
+          </tr>`;
+        }).join('')}
+    </tbody>
+  </table>
+
+  <div class="footer">
+    <div>
+      <div class="footer-text">This is a computer-generated statement and does not require a signature.</div>
+      <div class="footer-text">Generated on ${now.toLocaleString('en-KE')} | ${filtered.length} transaction(s)</div>
+      <div class="footer-text" style="margin-top:4px">DASNET VENTURES LTD — Till No. 8448104 — All Rights Reserved</div>
+    </div>
+    <div class="seal">
+      <div class="seal-text">DASNET<br/>VERIFIED<br/>STATEMENT</div>
+    </div>
+  </div>
+</body>
+</html>`;
+
+      // Print to PDF via new window
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(html);
+        printWindow.document.close();
+        setTimeout(() => {
+          printWindow.print();
+        }, 500);
+      }
+      toast.success(`${months}-month statement generated`);
+    } catch (err: any) {
+      toast.error('Failed to generate statement');
+    } finally {
+      setGeneratingStatement(false);
+      setStatementPeriod(null);
+    }
+  };
 
   const exportStatement = () => {
     const headers = ["Date", "ID", "Type", "Amount", "Description"];
