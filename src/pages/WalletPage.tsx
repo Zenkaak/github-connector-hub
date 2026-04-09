@@ -24,7 +24,13 @@ import {
   Activity,
   X,
   CheckCircle2,
-  XCircle
+  XCircle,
+  Receipt,
+  Copy,
+  Calendar,
+  Hash,
+  FileText,
+  Banknote
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -69,7 +75,7 @@ export default function WalletPage() {
   const [requestMoneyOpen, setRequestMoneyOpen] = useState(false);
   const [selectedTx, setSelectedTx] = useState<WalletTransaction | null>(null);
   const [showBalance, setShowBalance] = useState(true);
-  const [filterType, setFilterType] = useState<'all' | 'credit' | 'debit'>('all');
+  const [filterType, setFilterType] = useState<'all' | 'in' | 'out'>('all');
   const [searchQuery, setSearchQuery] = useState('');
 
   const [withdrawAmount, setWithdrawAmount] = useState('');
@@ -78,7 +84,6 @@ export default function WalletPage() {
   const [depositPhone, setDepositPhone] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
 
-  // NEW: Deposit status tracking
   const [depositStatus, setDepositStatus] = useState<'idle' | 'pending' | 'success' | 'failed'>('idle');
   const [depositStatusMessage, setDepositStatusMessage] = useState('');
   const depositPollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -122,7 +127,9 @@ export default function WalletPage() {
 
   const filteredTransactions = useMemo(() => {
     return transactions.filter(tx => {
-      const matchesType = filterType === 'all' || tx.type === filterType;
+      const isIn = tx.type === 'credit';
+      const isOut = tx.type === 'debit' || tx.type === 'withdrawal';
+      const matchesType = filterType === 'all' || (filterType === 'in' && isIn) || (filterType === 'out' && isOut);
       const matchesSearch = tx.description?.toLowerCase().includes(searchQuery.toLowerCase()) || tx.id.toLowerCase().includes(searchQuery.toLowerCase());
       return matchesType && matchesSearch;
     });
@@ -171,10 +178,8 @@ export default function WalletPage() {
     }
   };
 
-  // ========== FIXED: handleDeposit now tracks payment status ==========
   const startDepositPolling = (reference: string) => {
     if (depositPollingRef.current) clearInterval(depositPollingRef.current);
-
     depositPollingRef.current = setInterval(async () => {
       try {
         const { data, error } = await supabase
@@ -182,9 +187,7 @@ export default function WalletPage() {
           .select('status, result_desc')
           .eq('reference', reference)
           .maybeSingle();
-
         if (error || !data) return;
-
         if (data.status === 'success' || data.status === 'Completed') {
           setDepositStatus('success');
           setDepositStatusMessage('Deposit received successfully! Your wallet has been credited. 🎉');
@@ -204,24 +207,13 @@ export default function WalletPage() {
   };
 
   const subscribeToDeposit = (reference: string) => {
-    if (depositChannelRef.current) {
-      supabase.removeChannel(depositChannelRef.current);
-    }
-
+    if (depositChannelRef.current) supabase.removeChannel(depositChannelRef.current);
     depositChannelRef.current = supabase
       .channel(`deposit-status-${reference}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'stk_transactions',
-          filter: `reference=eq.${reference}`,
-        },
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'stk_transactions', filter: `reference=eq.${reference}` },
         (payload) => {
           const row: any = payload.new;
           if (!row) return;
-
           if (row.status === 'success' || row.status === 'Completed') {
             setDepositStatus('success');
             setDepositStatusMessage('Deposit received successfully! Your wallet has been credited. 🎉');
@@ -235,8 +227,7 @@ export default function WalletPage() {
             if (depositPollingRef.current) clearInterval(depositPollingRef.current);
           }
         }
-      )
-      .subscribe();
+      ).subscribe();
   };
 
   const handleDeposit = async () => {
@@ -244,13 +235,11 @@ export default function WalletPage() {
     setActionLoading(true);
     setDepositStatus('pending');
     setDepositStatusMessage('Sending M-Pesa prompt to your phone...');
-
     try {
       const { data, error } = await supabase.functions.invoke('initiate-stk-push', {
         body: { phone: depositPhone.trim(), amount: Number(depositAmount), userId: user!.id, purpose: 'wallet_deposit' },
       });
       if (error) throw error;
-
       const reference = data?.reference;
       if (reference) {
         setDepositStatusMessage('Check your phone for the M-Pesa prompt. Enter your PIN to complete.');
@@ -275,7 +264,39 @@ export default function WalletPage() {
     if (depositPollingRef.current) clearInterval(depositPollingRef.current);
     if (depositChannelRef.current) supabase.removeChannel(depositChannelRef.current);
   };
-  // ========== END FIX ==========
+
+  const getTransactionLabel = (tx: WalletTransaction) => {
+    const desc = tx.description?.toLowerCase() || '';
+    if (tx.type === 'credit') {
+      if (desc.includes('transfer from')) return 'Received Funds';
+      if (desc.includes('loan')) return 'Loan Disbursement';
+      if (desc.includes('refund')) return 'Transfer Refund';
+      if (desc.includes('deposit')) return 'Wallet Deposit';
+      return 'Money In';
+    }
+    if (tx.type === 'withdrawal') return 'Withdrawal';
+    if (desc.includes('transfer to')) return 'Sent Money';
+    if (desc.includes('reversed')) return 'Transfer Reversed';
+    return 'Money Out';
+  };
+
+  const getTransactionIcon = (tx: WalletTransaction) => {
+    const desc = tx.description?.toLowerCase() || '';
+    if (tx.type === 'credit') {
+      if (desc.includes('transfer from')) return HandCoins;
+      if (desc.includes('loan')) return Banknote;
+      if (desc.includes('deposit')) return ArrowDownLeft;
+      return ArrowDownLeft;
+    }
+    if (tx.type === 'withdrawal') return ArrowUpRight;
+    if (desc.includes('transfer to')) return Send;
+    return ArrowUpRight;
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast.success('Copied to clipboard');
+  };
 
   if (walletDisabled) return <DashboardLayout><FeatureDisabled /></DashboardLayout>;
   if (loading) return <DashboardLayout><div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin text-accent" size={28} /></div></DashboardLayout>;
@@ -291,67 +312,80 @@ export default function WalletPage() {
             <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
 
             <CardContent className="p-6 md:p-10 relative z-10">
-              <div className="flex justify-between items-start mb-8">
+              <div className="flex justify-between items-start mb-6">
                 <div>
-                  <p className="text-xs font-semibold text-foreground/50 uppercase tracking-wider mb-1">Available Balance</p>
+                  <p className="text-[10px] font-semibold text-foreground/40 uppercase tracking-[0.2em] mb-1.5">Available Balance</p>
                   <div className="flex items-center gap-3">
-                    <h2 className="text-4xl md:text-6xl font-bold text-foreground tracking-tight">
+                    <h2 className="text-3xl md:text-5xl font-bold text-foreground tracking-tight">
                       {showBalance ? formatCurrency(wallet?.balance || 0) : 'KES ••••••'}
                     </h2>
-                    <button onClick={() => setShowBalance(!showBalance)} className="text-foreground/40 hover:text-foreground transition-colors">
-                      {showBalance ? <EyeOff size={20} /> : <Eye size={20} />}
+                    <button onClick={() => setShowBalance(!showBalance)} className="text-foreground/40 hover:text-foreground transition-colors p-1">
+                      {showBalance ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
                 </div>
-                <div className="w-12 h-12 rounded-2xl bg-accent/10 flex items-center justify-center">
-                  <Wallet size={24} className="text-accent" />
+                <div className="w-12 h-12 rounded-2xl bg-accent/10 flex items-center justify-center border border-accent/20">
+                  <Wallet size={22} className="text-accent" />
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-3">
-                <Button onClick={() => setSendMoneyOpen(true)} variant="gold" className="h-12 px-6 rounded-xl font-semibold gap-2 shadow-[var(--shadow-gold)]">
-                  <Send size={16} /> Send Money
-                </Button>
-                <Button onClick={() => setRequestMoneyOpen(true)} variant="outline" className="h-12 px-6 rounded-xl font-semibold gap-2 border-border/50 text-foreground hover:bg-muted/50">
-                  <HandCoins size={16} /> Request
-                </Button>
-                <Button onClick={() => setWithdrawDialog(true)} variant="outline" className="h-12 px-6 rounded-xl font-semibold gap-2 border-border/50 text-foreground hover:bg-muted/50">
-                  <ArrowUpRight size={16} /> Withdraw
-                </Button>
-                <Button onClick={() => setDepositDialog(true)} variant="outline" className="h-12 px-6 rounded-xl font-semibold gap-2 border-border/50 text-foreground hover:bg-muted/50">
-                  <ArrowDownLeft size={16} /> Deposit
-                </Button>
+              {/* Quick Actions Grid */}
+              <div className="grid grid-cols-4 gap-2">
+                {[
+                  { label: 'Send', icon: Send, action: () => setSendMoneyOpen(true), variant: 'gold' as const },
+                  { label: 'Request', icon: HandCoins, action: () => setRequestMoneyOpen(true) },
+                  { label: 'Withdraw', icon: ArrowUpRight, action: () => setWithdrawDialog(true) },
+                  { label: 'Deposit', icon: ArrowDownLeft, action: () => setDepositDialog(true) },
+                ].map((btn, i) => (
+                  <button
+                    key={i}
+                    onClick={btn.action}
+                    className={cn(
+                      "flex flex-col items-center gap-1.5 py-3 px-2 rounded-xl transition-all",
+                      i === 0
+                        ? "bg-accent/15 hover:bg-accent/25 border border-accent/30"
+                        : "bg-foreground/5 hover:bg-foreground/10 border border-foreground/10"
+                    )}
+                  >
+                    <div className={cn(
+                      "w-9 h-9 rounded-xl flex items-center justify-center",
+                      i === 0 ? "bg-accent/20" : "bg-foreground/10"
+                    )}>
+                      <btn.icon size={16} className={i === 0 ? "text-accent" : "text-foreground/70"} />
+                    </div>
+                    <span className={cn("text-[10px] font-semibold", i === 0 ? "text-accent" : "text-foreground/60")}>{btn.label}</span>
+                  </button>
+                ))}
               </div>
             </CardContent>
 
-            <div className="border-t border-border/20 px-6 md:px-10 py-3 flex items-center justify-between">
-              <div className="flex items-center gap-2 text-foreground/40">
-                <ShieldCheck size={12} />
-                <span className="text-[10px] font-semibold uppercase tracking-wider">Secured</span>
+            <div className="border-t border-foreground/5 px-6 md:px-10 py-2.5 flex items-center justify-between">
+              <div className="flex items-center gap-2 text-foreground/30">
+                <ShieldCheck size={11} />
+                <span className="text-[9px] font-semibold uppercase tracking-[0.15em]">Secured by DASNET</span>
               </div>
-              <span className="text-[10px] font-mono text-foreground/30">{wallet?.id.slice(0, 12).toUpperCase()}</span>
+              <span className="text-[9px] font-mono text-foreground/20">{wallet?.id.slice(0, 12).toUpperCase()}</span>
             </div>
           </Card>
         </motion.div>
 
-        {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+        {/* Stats Strip */}
+        <div className="grid grid-cols-3 gap-3">
           {[
-            { label: 'Pending', val: stats.escrow, icon: Clock, color: 'text-accent', bg: 'bg-accent/10' },
-            { label: 'Total In', val: stats.income, icon: TrendingUp, color: 'text-success', bg: 'bg-success/10' },
-            { label: 'Total Out', val: stats.expense, icon: ArrowUpRight, color: 'text-destructive', bg: 'bg-destructive/10' },
-            { label: 'Transactions', val: transactions.length, icon: Activity, color: 'text-accent', bg: 'bg-accent/10', isRaw: true }
+            { label: 'Total In', val: stats.income, icon: TrendingUp, color: 'text-emerald-400', bg: 'bg-emerald-500/10', border: 'border-emerald-500/20' },
+            { label: 'Total Out', val: stats.expense, icon: ArrowUpRight, color: 'text-rose-400', bg: 'bg-rose-500/10', border: 'border-rose-500/20' },
+            { label: 'Pending', val: stats.escrow, icon: Clock, color: 'text-accent', bg: 'bg-accent/10', border: 'border-accent/20' },
           ].map((m, i) => (
             <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 * i }}>
-              <Card className="border-border/40 bg-card hover:border-accent/30 transition-all">
-                <CardContent className="p-4">
-                  <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center mb-3", m.bg)}>
-                    <m.icon className={m.color} size={18} />
+              <Card className={cn("border bg-card/80 backdrop-blur-sm", m.border)}>
+                <CardContent className="p-3 md:p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className={cn("w-7 h-7 rounded-lg flex items-center justify-center", m.bg)}>
+                      <m.icon className={m.color} size={14} />
+                    </div>
+                    <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{m.label}</p>
                   </div>
-                  <p className="text-lg font-bold text-foreground tracking-tight">
-                    {m.isRaw ? m.val : formatCurrency(m.val)}
-                  </p>
-                  <p className="text-[11px] font-medium text-muted-foreground mt-0.5">{m.label}</p>
+                  <p className="text-base md:text-lg font-bold text-foreground tracking-tight">{formatCurrency(m.val)}</p>
                 </CardContent>
               </Card>
             </motion.div>
@@ -361,83 +395,101 @@ export default function WalletPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Transactions */}
           <div className="lg:col-span-8">
-            <Card className="border-border/40">
-              <CardHeader className="p-5 border-b border-border/30">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div>
-                    <CardTitle className="text-base font-bold flex items-center gap-2">
-                      <History size={18} className="text-accent" /> Transaction History
-                    </CardTitle>
-                    <CardDescription className="text-xs mt-0.5">Your recent wallet activity</CardDescription>
+            <Card className="border-border/40 overflow-hidden">
+              <CardHeader className="p-4 md:p-5 border-b border-border/30 bg-card/50">
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
+                        <History size={16} className="text-accent" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-sm font-bold">Transactions</CardTitle>
+                        <CardDescription className="text-[10px] mt-0">{transactions.length} total</CardDescription>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Button variant="ghost" size="sm" onClick={fetchWalletData} className="h-7 w-7 p-0 rounded-lg text-muted-foreground hover:text-foreground">
+                        <RefreshCw size={13} />
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={exportStatement} className="h-7 rounded-lg text-[10px] gap-1 font-semibold px-2.5">
+                        <Download size={11} /> CSV
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" onClick={exportStatement} className="h-8 rounded-lg text-xs gap-1.5 font-medium">
-                      <Download size={13} /> Export
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={fetchWalletData} className="h-8 rounded-lg text-xs gap-1.5 font-medium text-muted-foreground">
-                      <RefreshCw size={13} /> Refresh
-                    </Button>
-                  </div>
-                </div>
 
-                <div className="mt-4 flex flex-col sm:flex-row gap-3">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={14} />
-                    <Input
-                      placeholder="Search transactions..."
-                      className="pl-9 h-9 bg-muted/40 border-border/30 rounded-lg text-sm"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
+                  <div className="flex flex-col sm:flex-row gap-2.5">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={13} />
+                      <Input
+                        placeholder="Search..."
+                        className="pl-9 h-8 bg-muted/40 border-border/30 rounded-lg text-xs"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                    </div>
+                    <Tabs value={filterType} onValueChange={(v: any) => setFilterType(v)}>
+                      <TabsList className="h-8 bg-muted/50 rounded-lg p-0.5">
+                        <TabsTrigger value="all" className="text-[10px] rounded-md px-3 h-7 data-[state=active]:bg-card font-semibold">All</TabsTrigger>
+                        <TabsTrigger value="in" className="text-[10px] rounded-md px-3 h-7 data-[state=active]:bg-emerald-500/15 data-[state=active]:text-emerald-400 font-semibold">
+                          <ArrowDownLeft size={10} className="mr-1" /> In
+                        </TabsTrigger>
+                        <TabsTrigger value="out" className="text-[10px] rounded-md px-3 h-7 data-[state=active]:bg-rose-500/15 data-[state=active]:text-rose-400 font-semibold">
+                          <ArrowUpRight size={10} className="mr-1" /> Out
+                        </TabsTrigger>
+                      </TabsList>
+                    </Tabs>
                   </div>
-                  <Tabs value={filterType} onValueChange={(v: any) => setFilterType(v)}>
-                    <TabsList className="h-9 bg-muted/50 rounded-lg">
-                      <TabsTrigger value="all" className="text-xs rounded-md px-4 data-[state=active]:bg-card">All</TabsTrigger>
-                      <TabsTrigger value="credit" className="text-xs rounded-md px-4 data-[state=active]:bg-card data-[state=active]:text-success">In</TabsTrigger>
-                      <TabsTrigger value="debit" className="text-xs rounded-md px-4 data-[state=active]:bg-card data-[state=active]:text-destructive">Out</TabsTrigger>
-                    </TabsList>
-                  </Tabs>
                 </div>
               </CardHeader>
 
               <CardContent className="p-0">
                 {filteredTransactions.length === 0 ? (
                   <div className="py-16 flex flex-col items-center">
-                    <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
-                      <Search size={20} className="text-muted-foreground" />
+                    <div className="w-14 h-14 rounded-2xl bg-muted/50 flex items-center justify-center mb-3">
+                      <Receipt size={22} className="text-muted-foreground/40" />
                     </div>
-                    <p className="text-sm font-medium text-muted-foreground">No transactions found</p>
+                    <p className="text-sm font-semibold text-muted-foreground">No transactions found</p>
+                    <p className="text-[10px] text-muted-foreground/60 mt-0.5">Try adjusting your filters</p>
                   </div>
                 ) : (
-                  <div className="divide-y divide-border/20">
-                    {filteredTransactions.map((tx) => (
-                      <div
-                        key={tx.id}
-                        onClick={() => setSelectedTx(tx)}
-                        className="p-4 flex items-center justify-between hover:bg-muted/30 cursor-pointer transition-colors"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className={cn(
-                            "w-10 h-10 rounded-xl flex items-center justify-center",
-                            tx.type === 'credit' ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"
-                          )}>
-                            {tx.type === 'credit' ? <ArrowDownLeft size={18} /> : <ArrowUpRight size={18} />}
+                  <div className="divide-y divide-border/15">
+                    {filteredTransactions.map((tx, idx) => {
+                      const TxIcon = getTransactionIcon(tx);
+                      const label = getTransactionLabel(tx);
+                      return (
+                        <motion.div
+                          key={tx.id}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: idx * 0.02 }}
+                          onClick={() => setSelectedTx(tx)}
+                          className="px-4 py-3.5 flex items-center justify-between hover:bg-muted/20 cursor-pointer transition-all group"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={cn(
+                              "w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105",
+                              tx.type === 'credit' ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"
+                            )}>
+                              <TxIcon size={17} />
+                            </div>
+                            <div>
+                              <p className="text-[13px] font-semibold text-foreground">{label}</p>
+                              <p className="text-[10px] text-muted-foreground mt-0.5">
+                                {tx.description && tx.description !== label ? tx.description : ''}
+                                {tx.description && tx.description !== label ? ' · ' : ''}
+                                {new Date(tx.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                              </p>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-sm font-semibold text-foreground">{tx.description || tx.type.charAt(0).toUpperCase() + tx.type.slice(1)}</p>
-                            <p className="text-[11px] text-muted-foreground">
-                              {new Date(tx.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                          <div className="text-right">
+                            <p className={cn("text-[13px] font-bold tabular-nums", tx.type === 'credit' ? "text-emerald-400" : "text-foreground")}>
+                              {tx.type === 'credit' ? '+' : '-'} {formatCurrency(tx.amount)}
                             </p>
                           </div>
-                        </div>
-                        <div className="text-right">
-                          <p className={cn("text-sm font-bold", tx.type === 'credit' ? "text-success" : "text-foreground")}>
-                            {tx.type === 'credit' ? '+' : '-'} {formatCurrency(tx.amount)}
-                          </p>
-                          <p className="text-[10px] text-muted-foreground font-mono">{tx.id.slice(0, 8)}</p>
-                        </div>
-                      </div>
-                    ))}
+                        </motion.div>
+                      );
+                    })}
                   </div>
                 )}
               </CardContent>
@@ -447,25 +499,30 @@ export default function WalletPage() {
           {/* Side Panel */}
           <div className="lg:col-span-4 space-y-4">
             {/* Quick Info */}
-            <Card className="border-border/40">
-              <CardContent className="p-5 space-y-4">
+            <Card className="border-border/40 overflow-hidden">
+              <div className="bg-gradient-to-br from-accent/5 to-transparent p-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center border border-accent/20">
                     <Globe size={18} className="text-accent" />
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-foreground">DASNET Wallet</p>
-                    <p className="text-[11px] text-muted-foreground">Instant M-Pesa deposits & withdrawals</p>
+                    <p className="text-sm font-bold text-foreground">DASNET Wallet</p>
+                    <p className="text-[10px] text-muted-foreground">M-Pesa powered</p>
                   </div>
                 </div>
-                <div className="space-y-2 text-xs">
+              </div>
+              <CardContent className="p-4 pt-0 mt-3">
+                <div className="space-y-2">
                   {[
                     { icon: ShieldCheck, text: 'Bank-grade security' },
-                    { icon: Smartphone, text: 'M-Pesa integration' },
+                    { icon: Smartphone, text: 'Instant M-Pesa deposits' },
                     { icon: Lock, text: 'Encrypted transactions' },
+                    { icon: Activity, text: 'Real-time tracking' },
                   ].map((f, i) => (
-                    <div key={i} className="flex items-center gap-2 text-muted-foreground">
-                      <f.icon size={12} className="text-accent" />
+                    <div key={i} className="flex items-center gap-2.5 text-xs text-muted-foreground">
+                      <div className="w-5 h-5 rounded-md bg-accent/8 flex items-center justify-center">
+                        <f.icon size={10} className="text-accent" />
+                      </div>
                       <span>{f.text}</span>
                     </div>
                   ))}
@@ -480,15 +537,15 @@ export default function WalletPage() {
                   <Clock size={14} className="text-accent" />
                   <CardTitle className="text-sm font-bold">Pending Withdrawals</CardTitle>
                 </div>
-                <Badge variant="outline" className="text-[10px] font-semibold">
+                <Badge variant="outline" className="text-[10px] font-semibold h-5 min-w-[20px] justify-center">
                   {withdrawals.filter(w => w.status === 'pending').length}
                 </Badge>
               </CardHeader>
               <CardContent className="p-0">
                 {withdrawals.filter(w => w.status === 'pending').length === 0 ? (
-                  <div className="p-8 text-center">
-                    <Clock size={24} className="mx-auto text-muted-foreground/30 mb-2" />
-                    <p className="text-xs text-muted-foreground">No pending withdrawals</p>
+                  <div className="p-6 text-center">
+                    <CheckCircle2 size={20} className="mx-auto text-emerald-500/40 mb-1.5" />
+                    <p className="text-[10px] text-muted-foreground">All clear</p>
                   </div>
                 ) : (
                   <div className="divide-y divide-border/20">
@@ -499,11 +556,11 @@ export default function WalletPage() {
                             <p className="text-base font-bold text-foreground">{formatCurrency(wd.amount)}</p>
                             <div className="flex items-center gap-1.5 mt-0.5">
                               <Smartphone size={10} className="text-muted-foreground" />
-                              <p className="text-[11px] text-muted-foreground">{wd.phone}</p>
+                              <p className="text-[10px] text-muted-foreground">{wd.phone}</p>
                             </div>
                           </div>
-                          <Badge className="bg-accent/10 text-accent border-accent/20 text-[10px] font-semibold">
-                            Under Review
+                          <Badge className="bg-accent/10 text-accent border-accent/20 text-[9px] font-semibold">
+                            Processing
                           </Badge>
                         </div>
                         <div className="w-full bg-border/30 h-1 rounded-full overflow-hidden">
@@ -521,28 +578,36 @@ export default function WalletPage() {
             {/* P2P Transfers */}
             <Card className="border-border/40">
               <CardHeader className="p-4 border-b border-border/30 flex flex-row items-center justify-between">
-                <CardTitle className="text-sm font-bold">Recent Transfers</CardTitle>
-                <Badge variant="outline" className="text-[10px] font-semibold">{transfers.length}</Badge>
+                <div className="flex items-center gap-2">
+                  <Send size={13} className="text-accent" />
+                  <CardTitle className="text-sm font-bold">Recent Transfers</CardTitle>
+                </div>
+                <Badge variant="outline" className="text-[10px] font-semibold h-5 min-w-[20px] justify-center">{transfers.length}</Badge>
               </CardHeader>
-              <CardContent className="p-0 max-h-[320px] overflow-y-auto">
+              <CardContent className="p-0 max-h-[280px] overflow-y-auto">
                 {transfers.length === 0 ? (
-                  <p className="p-8 text-center text-xs text-muted-foreground">No transfers yet</p>
+                  <p className="p-6 text-center text-[10px] text-muted-foreground">No transfers yet</p>
                 ) : (
-                  <div className="divide-y divide-border/20">
+                  <div className="divide-y divide-border/15">
                     {transfers.map((tr) => (
-                      <div key={tr.id} onClick={() => setSelectedTransfer(tr)} className="p-4 flex items-center justify-between hover:bg-muted/30 transition-colors cursor-pointer">
+                      <div key={tr.id} onClick={() => setSelectedTransfer(tr)} className="p-3.5 flex items-center justify-between hover:bg-muted/20 transition-colors cursor-pointer">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-full bg-accent/10 flex items-center justify-center text-accent font-bold text-xs">
+                          <div className={cn(
+                            "w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold",
+                            tr.sender_id === user?.id ? "bg-rose-500/10 text-rose-400" : "bg-emerald-500/10 text-emerald-400"
+                          )}>
                             {(tr.sender_id === user?.id ? tr.receiver_name : tr.sender_name || 'U')?.charAt(0).toUpperCase()}
                           </div>
                           <div>
-                            <p className="text-sm font-semibold text-foreground">
+                            <p className="text-xs font-semibold text-foreground">
                               {tr.sender_id === user?.id ? tr.receiver_name : tr.sender_name}
                             </p>
-                            <p className="text-[10px] text-muted-foreground capitalize">{tr.status}</p>
+                            <p className="text-[9px] text-muted-foreground">
+                              {tr.sender_id === user?.id ? 'Sent' : 'Received'} · {new Date(tr.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+                            </p>
                           </div>
                         </div>
-                        <p className={cn("text-sm font-bold", tr.sender_id === user?.id ? "text-destructive" : "text-success")}>
+                        <p className={cn("text-xs font-bold", tr.sender_id === user?.id ? "text-rose-400" : "text-emerald-400")}>
                           {tr.sender_id === user?.id ? '-' : '+'}{formatCurrency(tr.amount)}
                         </p>
                       </div>
@@ -600,7 +665,7 @@ export default function WalletPage() {
           </DialogContent>
         </Dialog>
 
-        {/* FIXED: Deposit Dialog with status tracking */}
+        {/* Deposit Dialog */}
         <Dialog open={depositDialog} onOpenChange={(open) => { if (!open) resetDepositState(); else setDepositDialog(true); }}>
           <DialogContent className="sm:max-w-md rounded-2xl p-0 overflow-hidden">
             <div className="bg-gradient-to-br from-[hsl(var(--navy-800))] to-[hsl(var(--navy-900))] p-6">
@@ -612,10 +677,12 @@ export default function WalletPage() {
             <div className="p-6 space-y-5">
               {depositStatus === 'success' ? (
                 <div className="text-center py-4 space-y-3">
-                  <CheckCircle2 size={48} className="mx-auto text-emerald-500" />
+                  <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center mx-auto">
+                    <CheckCircle2 size={32} className="text-emerald-500" />
+                  </div>
                   <h3 className="font-bold text-foreground text-lg">Deposit Successful!</h3>
                   <p className="text-sm text-muted-foreground">{depositStatusMessage}</p>
-                  <Button onClick={resetDepositState} className="mt-2">Done</Button>
+                  <Button onClick={resetDepositState} variant="gold" className="mt-2 rounded-xl">Done</Button>
                 </div>
               ) : (
                 <>
@@ -632,13 +699,13 @@ export default function WalletPage() {
 
                   {depositStatus !== 'idle' && (
                     <div className={cn(
-                      "p-3 rounded-lg text-sm flex items-start gap-2",
-                      depositStatus === 'pending' ? "bg-yellow-500/10 text-yellow-600" :
-                      depositStatus === 'failed' ? "bg-destructive/10 text-destructive" : ""
+                      "p-3 rounded-xl text-sm flex items-start gap-2",
+                      depositStatus === 'pending' ? "bg-accent/5 border border-accent/20 text-accent" :
+                      depositStatus === 'failed' ? "bg-destructive/10 border border-destructive/20 text-destructive" : ""
                     )}>
                       {depositStatus === 'pending' && <Loader2 size={16} className="animate-spin mt-0.5" />}
                       {depositStatus === 'failed' && <XCircle size={16} className="mt-0.5" />}
-                      <span>{depositStatusMessage}</span>
+                      <span className="text-xs">{depositStatusMessage}</span>
                     </div>
                   )}
                 </>
@@ -655,30 +722,84 @@ export default function WalletPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Transaction Receipt */}
+        {/* Professional Transaction Receipt */}
         <Dialog open={!!selectedTx} onOpenChange={() => setSelectedTx(null)}>
-          <DialogContent className="sm:max-w-md rounded-2xl p-0 overflow-hidden">
+          <DialogContent className="sm:max-w-md rounded-2xl p-0 overflow-hidden border-border/30">
             {selectedTx && (
               <>
-                <div className="bg-gradient-to-br from-[hsl(var(--navy-800))] to-[hsl(var(--navy-900))] p-8 text-center">
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3">Transaction Receipt</p>
-                  <p className="text-4xl font-bold text-foreground">{formatCurrency(selectedTx.amount)}</p>
-                  <Badge className={cn("mt-3", selectedTx.type === 'credit' ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive")}>
-                    {selectedTx.type.toUpperCase()}
-                  </Badge>
-                </div>
-                <div className="p-6 space-y-4">
-                  {[
-                    { l: 'Transaction ID', v: selectedTx.id.slice(0, 16) },
-                    { l: 'Date', v: new Date(selectedTx.created_at).toLocaleString() },
-                    { l: 'Description', v: selectedTx.description || '-' },
-                    { l: 'Reference', v: selectedTx.reference_id || '-' },
-                  ].map((r, i) => (
-                    <div key={i} className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">{r.l}</span>
-                      <span className="font-semibold text-foreground text-right max-w-[200px] truncate">{r.v}</span>
+                {/* Receipt Header */}
+                <div className="bg-gradient-to-br from-[hsl(var(--navy-800))] via-[hsl(var(--navy-700))] to-[hsl(var(--navy-900))] p-6 pb-8 text-center relative">
+                  <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
+                  <div className="flex items-center justify-center gap-2 mb-4">
+                    <div className="w-6 h-6 rounded-lg bg-accent/20 flex items-center justify-center">
+                      <Wallet size={12} className="text-accent" />
                     </div>
-                  ))}
+                    <span className="text-[10px] font-bold text-accent uppercase tracking-[0.2em]">DASNET VENTURES</span>
+                  </div>
+                  <p className="text-[10px] text-foreground/40 uppercase tracking-[0.15em] mb-2">Transaction Receipt</p>
+                  <p className={cn(
+                    "text-3xl font-bold tracking-tight",
+                    selectedTx.type === 'credit' ? "text-emerald-400" : "text-foreground"
+                  )}>
+                    {selectedTx.type === 'credit' ? '+' : '-'} {formatCurrency(selectedTx.amount)}
+                  </p>
+                  <div className="mt-3">
+                    <Badge className={cn(
+                      "text-[10px] font-bold px-3 py-0.5",
+                      selectedTx.type === 'credit'
+                        ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+                        : "bg-rose-500/15 text-rose-400 border-rose-500/30"
+                    )}>
+                      {getTransactionLabel(selectedTx)}
+                    </Badge>
+                  </div>
+                </div>
+
+                {/* Dotted separator */}
+                <div className="relative -mt-3 px-4">
+                  <div className="flex items-center">
+                    <div className="w-6 h-6 rounded-full bg-background -ml-7" />
+                    <div className="flex-1 border-b-2 border-dashed border-border/30" />
+                    <div className="w-6 h-6 rounded-full bg-background -mr-7" />
+                  </div>
+                </div>
+
+                {/* Receipt Details */}
+                <div className="p-6 space-y-4">
+                  <div className="space-y-3">
+                    {[
+                      { icon: Hash, label: 'Transaction ID', value: selectedTx.id.slice(0, 16).toUpperCase(), copyable: true, fullValue: selectedTx.id },
+                      { icon: Calendar, label: 'Date & Time', value: new Date(selectedTx.created_at).toLocaleString('en-KE', { dateStyle: 'medium', timeStyle: 'short' }) },
+                      { icon: FileText, label: 'Description', value: selectedTx.description || 'No description' },
+                      { icon: Receipt, label: 'Reference', value: selectedTx.reference_id || 'N/A' },
+                      { icon: Activity, label: 'Type', value: selectedTx.type.charAt(0).toUpperCase() + selectedTx.type.slice(1) },
+                    ].map((item, i) => (
+                      <div key={i} className="flex items-start justify-between gap-3 py-2 border-b border-border/10 last:border-0">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-7 h-7 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
+                            <item.icon size={12} className="text-muted-foreground" />
+                          </div>
+                          <span className="text-[11px] text-muted-foreground font-medium">{item.label}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[11px] font-semibold text-foreground text-right max-w-[160px] truncate">{item.value}</span>
+                          {item.copyable && (
+                            <button onClick={() => copyToClipboard(item.fullValue!)} className="text-muted-foreground hover:text-accent transition-colors p-0.5">
+                              <Copy size={10} />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="text-center pt-2">
+                    <p className="text-[9px] text-muted-foreground/50 uppercase tracking-wider">Powered by DASNET VENTURES</p>
+                  </div>
+
+                  <Button variant="outline" className="w-full rounded-xl h-10 text-xs font-semibold" onClick={() => setSelectedTx(null)}>
+                    Close Receipt
+                  </Button>
                 </div>
               </>
             )}
