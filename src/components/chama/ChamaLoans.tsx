@@ -177,9 +177,9 @@ export function ChamaLoans({ groupId, group, members, myRole }: Props) {
 
   if (!loanEnabled) {
     return (
-      <Card className="p-12 text-center border-dashed">
-        <Landmark size={48} className="mx-auto text-slate-300 mb-4" />
-        <h3 className="font-bold text-slate-500 italic">Loan applications are disabled for this group.</h3>
+      <Card className="p-12 text-center border-dashed border-border/40">
+        <Landmark size={48} className="mx-auto text-muted-foreground/30 mb-4" />
+        <h3 className="font-bold text-muted-foreground italic">Loan applications are disabled for this group.</h3>
       </Card>
     );
   }
@@ -190,10 +190,10 @@ export function ChamaLoans({ groupId, group, members, myRole }: Props) {
     <div className="space-y-4">
       {/* Probation Message */}
       {probationStatus.isUnder && (
-        <Alert className="bg-amber-50 border-amber-300 border-2 shadow-sm">
-          <AlertCircle className="h-5 w-5 text-amber-600" />
-          <AlertTitle className="text-amber-950 font-black text-xs uppercase">Probationary Period</AlertTitle>
-          <AlertDescription className="text-amber-900 font-bold">
+        <Alert className="bg-amber-500/10 border-amber-500/30 border-2 shadow-sm">
+          <AlertCircle className="h-5 w-5 text-amber-400" />
+          <AlertTitle className="text-amber-300 font-black text-xs uppercase">Probationary Period</AlertTitle>
+          <AlertDescription className="text-amber-200 font-bold">
             You must be a member for {group.new_member_probation_months} months. Unlocks in <span className="underline decoration-2">{probationStatus.remaining} months</span>.
           </AlertDescription>
         </Alert>
@@ -201,17 +201,17 @@ export function ChamaLoans({ groupId, group, members, myRole }: Props) {
 
       {/* Info Boxes - High Contrast Visibility Fix */}
       <div className="grid grid-cols-3 gap-3">
-        <Card className="p-3 text-center bg-slate-100 border-none shadow-sm">
-          <p className="text-[10px] text-slate-500 font-black uppercase">Max Limit</p>
-          <p className="text-sm font-black text-slate-900">KES {maxAmount.toLocaleString()}</p>
+        <Card className="p-3 text-center border-border/40">
+          <p className="text-[10px] text-muted-foreground font-black uppercase">Max Limit</p>
+          <p className="text-sm font-black text-foreground">KES {maxAmount.toLocaleString()}</p>
         </Card>
-        <Card className="p-3 text-center bg-blue-100 border-none shadow-sm">
-          <p className="text-[10px] text-blue-700 font-black uppercase">Min Needed</p>
-          <p className="text-sm font-black text-blue-900">KES {minSavingsRequired.toLocaleString()}</p>
+        <Card className="p-3 text-center border-border/40">
+          <p className="text-[10px] text-primary font-black uppercase">Min Needed</p>
+          <p className="text-sm font-black text-foreground">KES {minSavingsRequired.toLocaleString()}</p>
         </Card>
-        <Card className="p-3 text-center bg-slate-100 border-none shadow-sm">
-          <p className="text-[10px] text-slate-500 font-black uppercase">Interest</p>
-          <p className="text-sm font-black text-slate-900">{interestRate}%</p>
+        <Card className="p-3 text-center border-border/40">
+          <p className="text-[10px] text-muted-foreground font-black uppercase">Interest</p>
+          <p className="text-sm font-black text-foreground">{interestRate}%</p>
         </Card>
       </div>
 
@@ -224,38 +224,38 @@ export function ChamaLoans({ groupId, group, members, myRole }: Props) {
       </Button>
 
       {/* History Card */}
-      <Card className="overflow-hidden border-slate-200 shadow-sm">
-        <div className="p-4 bg-slate-900 text-white flex items-center gap-2">
-          <Receipt size={18} />
-          <h3 className="font-black text-sm uppercase tracking-tight">Loan Transactions</h3>
+      <Card className="overflow-hidden border-border/40">
+        <div className="p-4 bg-[hsl(var(--navy-800))] flex items-center gap-2">
+          <Receipt size={18} className="text-accent" />
+          <h3 className="font-black text-sm uppercase tracking-tight text-foreground">Loan Transactions</h3>
         </div>
         
-        <div className="divide-y divide-slate-100 bg-white">
+        <div className="divide-y divide-border/20">
           {loans.length === 0 ? (
-            <p className="p-10 text-center text-slate-400 font-medium">No transactions found</p>
+            <p className="p-10 text-center text-muted-foreground font-medium">No transactions found</p>
           ) : (
             loans.map(loan => (
-              <div key={loan.id} className="p-4 hover:bg-slate-50 transition-colors">
+              <div key={loan.id} className="p-4 hover:bg-muted/20 transition-colors">
                 <div className="flex justify-between items-start mb-3">
                   <div>
-                    <p className="text-sm font-black text-slate-900">{getMemberName((loan as any).borrower_id || loan.user_id)}</p>
-                    <p className="text-[10px] text-slate-500 font-bold">{format(new Date(loan.created_at), 'PPP')}</p>
+                    <p className="text-sm font-black text-foreground">{getMemberName((loan as any).borrower_id || loan.user_id)}</p>
+                    <p className="text-[10px] text-muted-foreground font-bold">{format(new Date(loan.created_at), 'PPP')}</p>
                   </div>
-                  <div className={`text-[10px] px-3 py-1 rounded-full font-black uppercase shadow-sm ${
-                    loan.status === 'pending' ? 'bg-amber-100 text-amber-700' : 
-                    loan.status === 'approved' ? 'bg-emerald-100 text-emerald-700' : 
-                    loan.status === 'rejected' ? 'bg-red-100 text-red-700' : 'bg-slate-200 text-slate-600'
+                  <div className={`text-[10px] px-3 py-1 rounded-full font-black uppercase ${
+                    loan.status === 'pending' ? 'bg-amber-500/15 text-amber-400' : 
+                    loan.status === 'approved' ? 'bg-emerald-500/15 text-emerald-400' : 
+                    loan.status === 'rejected' ? 'bg-rose-500/15 text-rose-400' : 'bg-muted text-muted-foreground'
                   }`}>
                     {loan.status}
                   </div>
                 </div>
 
-                <div className="flex justify-between items-center bg-slate-100 p-3 rounded-xl border border-slate-200">
-                   <div className="text-[11px] text-slate-600 font-bold uppercase">
-                     Principal: <span className="text-slate-900 font-black ml-1">KES {loan.amount.toLocaleString()}</span>
+                <div className="flex justify-between items-center bg-muted/30 p-3 rounded-xl border border-border/30">
+                   <div className="text-[11px] text-muted-foreground font-bold uppercase">
+                     Principal: <span className="text-foreground font-black ml-1">KES {loan.amount.toLocaleString()}</span>
                    </div>
-                   <div className="text-[11px] text-blue-700 font-bold uppercase">
-                     Due: <span className="text-blue-950 font-black ml-1 underline">KES {loan.total_repayment.toLocaleString()}</span>
+                   <div className="text-[11px] text-primary font-bold uppercase">
+                     Due: <span className="text-primary font-black ml-1 underline">KES {loan.total_repayment.toLocaleString()}</span>
                    </div>
                 </div>
 
@@ -264,15 +264,15 @@ export function ChamaLoans({ groupId, group, members, myRole }: Props) {
                     <Button size="sm" className="flex-1 bg-emerald-600 hover:bg-emerald-700 font-black" onClick={() => handleDecision(loan.id, 'approved')}>
                       APPROVE
                     </Button>
-                    <Button size="sm" variant="outline" className="flex-1 text-red-600 border-red-200 font-black" onClick={() => setRejectOpen(loan.id)}>
+                    <Button size="sm" variant="outline" className="flex-1 text-rose-400 border-rose-500/30 font-black" onClick={() => setRejectOpen(loan.id)}>
                       REJECT
                     </Button>
                   </div>
                 )}
                 
                 {loan.reject_reason && (
-                  <div className="mt-3 p-3 bg-red-50 text-red-800 text-[11px] rounded-lg border border-red-100 font-medium italic">
-                    <span className="font-black uppercase not-italic mr-1">Rejection Note:</span> {loan.reject_reason}
+                  <div className="mt-3 p-3 bg-rose-500/10 text-rose-300 text-[11px] rounded-lg border border-rose-500/20 font-medium italic">
+                    <span className="font-black uppercase not-italic mr-1 text-rose-400">Rejection Note:</span> {loan.reject_reason}
                   </div>
                 )}
               </div>
@@ -287,7 +287,7 @@ export function ChamaLoans({ groupId, group, members, myRole }: Props) {
           <DialogHeader><DialogTitle className="text-2xl font-black">Borrow Funds</DialogTitle></DialogHeader>
           <div className="space-y-6 pt-4">
             <div className="space-y-2">
-              <Label className="text-[10px] text-slate-500 font-black uppercase">Loan Amount (KES)</Label>
+              <Label className="text-[10px] text-muted-foreground font-black uppercase">Loan Amount (KES)</Label>
               <Input 
                 type="number" 
                 value={amount} 
@@ -296,9 +296,9 @@ export function ChamaLoans({ groupId, group, members, myRole }: Props) {
                 className="h-16 text-3xl font-black border-2 focus:border-primary" 
               />
             </div>
-            <div className="bg-slate-900 text-white p-6 rounded-2xl shadow-xl">
+            <div className="bg-[hsl(var(--navy-800))] p-6 rounded-2xl">
               <div className="flex justify-between font-black text-xl">
-                <span className="text-slate-400">Total Due</span>
+                <span className="text-muted-foreground">Total Due</span>
                 <span className="text-emerald-400 font-black">
                   KES {amount ? Math.round(Number(amount) * (1 + interestRate / 100)).toLocaleString() : 0}
                 </span>

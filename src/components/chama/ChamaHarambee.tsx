@@ -283,39 +283,39 @@ export function ChamaHarambee({ groupId, group, members, myRole }: Props) {
       {loading ? (
         <div className="text-center py-8 text-slate-500 text-sm">Loading harambees...</div>
       ) : harambees.length === 0 ? (
-        <div className="text-center py-12 bg-slate-50 rounded-xl border border-dashed border-slate-200">
-          <HandCoins size={40} className="mx-auto mb-3 text-slate-300" />
-          <p className="font-bold text-slate-600 text-sm">No Harambees Yet</p>
-          <p className="text-xs text-slate-400">Causes requiring fundraising will appear here.</p>
+        <div className="text-center py-12 bg-muted/20 rounded-xl border border-dashed border-border/40">
+          <HandCoins size={40} className="mx-auto mb-3 text-muted-foreground/30" />
+          <p className="font-bold text-muted-foreground text-sm">No Harambees Yet</p>
+          <p className="text-xs text-muted-foreground/60">Causes requiring fundraising will appear here.</p>
         </div>
       ) : (
         harambees.map(h => {
           const progress = getProgress(h.raised_amount, h.target_amount);
           return (
-            <Card key={h.id} className="p-4 border-slate-200 shadow-sm overflow-hidden">
+            <Card key={h.id} className="p-4 border-border/40 overflow-hidden">
               <div className="flex justify-between items-start">
                 <div className="space-y-1">
-                  <h4 className="font-black text-slate-900 text-sm uppercase tracking-tight">{h.beneficiary_name || h.title}</h4>
-                  <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">{h.description}</p>
-                  <p className="text-[10px] font-black text-primary bg-primary/5 px-2 py-0.5 rounded w-fit">{h.order_number}</p>
+                  <h4 className="font-black text-foreground text-sm uppercase tracking-tight">{h.beneficiary_name || h.title}</h4>
+                  <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{h.description}</p>
+                  <p className="text-[10px] font-black text-primary bg-primary/10 px-2 py-0.5 rounded w-fit">{h.order_number}</p>
                 </div>
-                <span className={cn("text-[10px] font-black uppercase px-2 py-1 rounded-full", h.status === "active" ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-500")}>
+                <span className={cn("text-[10px] font-black uppercase px-2 py-1 rounded-full", h.status === "active" ? "bg-emerald-500/15 text-emerald-400" : "bg-muted text-muted-foreground")}>
                   {h.status}
                 </span>
               </div>
 
-              <div className="mt-4 p-3 bg-slate-50 rounded-lg border border-slate-100">
+              <div className="mt-4 p-3 bg-muted/30 rounded-lg border border-border/30">
                 <div className="flex justify-between text-[11px] mb-1.5">
-                  <span className="font-black text-slate-900">Raised: {formatKES(h.raised_amount)}</span>
-                  <span className="text-slate-400 font-bold">Goal: {formatKES(h.target_amount)}</span>
+                  <span className="font-black text-foreground">Raised: {formatKES(h.raised_amount)}</span>
+                  <span className="text-muted-foreground font-bold">Goal: {formatKES(h.target_amount)}</span>
                 </div>
-                <Progress value={progress} className="h-2 bg-slate-200" />
+                <Progress value={progress} className="h-2" />
                 <p className="text-right text-[10px] mt-1 font-bold text-primary">{Math.round(progress)}% Complete</p>
               </div>
 
               <div className="flex gap-2 mt-4">
                 <Button size="sm" variant="outline" className="flex-1 font-bold h-9" onClick={() => handleCopyLink(h)}>
-                  {copiedId === h.id ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
+                  {copiedId === h.id ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} />}
                 </Button>
                 <Button size="sm" variant="outline" className="flex-1 font-bold h-9" onClick={() => handleShare(h)}>
                   <Share2 size={14} />
@@ -324,7 +324,7 @@ export function ChamaHarambee({ groupId, group, members, myRole }: Props) {
                   <Eye size={14} className="mr-1" /> View
                 </Button>
                 {h.status === 'active' && (
-                  <Button size="sm" className="flex-[1.5] font-black h-9 bg-slate-900 text-white" onClick={() => { setSelectedHarambee(h); setContributeOpen(true); }}>
+                  <Button size="sm" className="flex-[1.5] font-black h-9" onClick={() => { setSelectedHarambee(h); setContributeOpen(true); }}>
                     Contribute
                   </Button>
                 )}
@@ -371,33 +371,33 @@ export function ChamaHarambee({ groupId, group, members, myRole }: Props) {
           <DialogHeader><DialogTitle className="font-black uppercase tracking-tight">Harambee Status</DialogTitle></DialogHeader>
           {selectedHarambee && (
             <div className="space-y-5">
-              <div className="bg-slate-900 p-4 rounded-xl text-white">
-                <p className="text-[10px] font-black uppercase opacity-60">Beneficiary</p>
-                <p className="text-lg font-black">{selectedHarambee.beneficiary_name}</p>
+              <div className="bg-[hsl(var(--navy-800))] p-4 rounded-xl">
+                <p className="text-[10px] font-black uppercase text-muted-foreground">Beneficiary</p>
+                <p className="text-lg font-black text-foreground">{selectedHarambee.beneficiary_name}</p>
                 <div className="grid grid-cols-2 gap-4 mt-4">
                   <div>
-                    <p className="text-[9px] font-black opacity-60 uppercase">Raised</p>
+                    <p className="text-[9px] font-black text-muted-foreground uppercase">Raised</p>
                     <p className="text-xl font-black text-emerald-400">{formatKES(selectedHarambee.raised_amount)}</p>
                   </div>
                   <div>
-                    <p className="text-[9px] font-black opacity-60 uppercase">Goal</p>
-                    <p className="text-xl font-black">{formatKES(selectedHarambee.target_amount)}</p>
+                    <p className="text-[9px] font-black text-muted-foreground uppercase">Goal</p>
+                    <p className="text-xl font-black text-foreground">{formatKES(selectedHarambee.target_amount)}</p>
                   </div>
                 </div>
               </div>
 
               <div className="space-y-3">
-                <h4 className="text-[10px] font-black uppercase text-slate-400 flex justify-between">
+                <h4 className="text-[10px] font-black uppercase text-muted-foreground flex justify-between">
                   <span>Recent Contributors</span>
                   <span>{contributions.length} People</span>
                 </h4>
                 <div className="space-y-2 max-h-[200px] overflow-y-auto pr-1">
                   {contributions.length === 0 ? (
-                    <p className="text-xs text-center py-6 text-slate-400 bg-slate-50 rounded-lg border border-dashed italic">No contributions yet. Be the first!</p>
+                    <p className="text-xs text-center py-6 text-muted-foreground bg-muted/20 rounded-lg border border-dashed border-border/40 italic">No contributions yet. Be the first!</p>
                   ) : (
                     contributions.map(c => (
-                      <div key={c.id} className="flex justify-between items-center p-3 rounded-xl bg-slate-50 border border-slate-100">
-                        <span className="text-xs font-bold text-slate-900">{c.contributor_name || 'Member'}</span>
+                      <div key={c.id} className="flex justify-between items-center p-3 rounded-xl bg-muted/30 border border-border/30">
+                        <span className="text-xs font-bold text-foreground">{c.contributor_name || 'Anonymous'}</span>
                         <span className="text-xs font-black text-primary">{formatKES(c.amount)}</span>
                       </div>
                     ))

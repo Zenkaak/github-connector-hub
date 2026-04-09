@@ -82,10 +82,10 @@ export default function WalletPage() {
   const [searchQuery, setSearchQuery] = useState('');
 
   const [withdrawAmount, setWithdrawAmount] = useState('');
-  const [withdrawPhone, setWithdrawPhone] = useState('');
   const [depositAmount, setDepositAmount] = useState('');
-  const [depositPhone, setDepositPhone] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
+  const [statementPeriod, setStatementPeriod] = useState<number | null>(null);
+  const [generatingStatement, setGeneratingStatement] = useState(false);
 
   const [depositStatus, setDepositStatus] = useState<'idle' | 'pending' | 'success' | 'failed'>('idle');
   const [depositStatusMessage, setDepositStatusMessage] = useState('');
@@ -147,6 +147,159 @@ export default function WalletPage() {
 
   const formatCurrency = (amt: number) => new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES' }).format(amt);
 
+  const registeredPhone = (() => {
+    const p = profile?.phone || '';
+    let formatted = p.replace(/\+/g, '').replace(/\s/g, '');
+    if (formatted.startsWith('254')) formatted = '0' + formatted.slice(3);
+    return formatted;
+  })();
+
+  const generatePDFStatement = async (months: number) => {
+    setGeneratingStatement(true);
+    try {
+      const cutoff = new Date();
+      cutoff.setMonth(cutoff.getMonth() - months);
+      const filtered = transactions.filter(t => new Date(t.created_at) >= cutoff);
+      
+      const totalIn = filtered.filter(t => t.type === 'credit' || t.type === 'deposit').reduce((a, b) => a + b.amount, 0);
+      const totalOut = filtered.filter(t => t.type === 'debit' || t.type === 'withdrawal').reduce((a, b) => a + b.amount, 0);
+      
+      const now = new Date();
+      const periodLabel = `${cutoff.toLocaleDateString('en-KE', { dateStyle: 'long' })} — ${now.toLocaleDateString('en-KE', { dateStyle: 'long' })}`;
+      
+      // Build professional HTML statement
+      const html = `
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @page { size: A4; margin: 20mm; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; color: #1a1a2e; font-size: 11px; line-height: 1.5; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 3px solid #0a1628; padding-bottom: 16px; margin-bottom: 24px; }
+  .brand { font-size: 20px; font-weight: 900; color: #0a1628; letter-spacing: 1px; }
+  .brand-sub { font-size: 8px; color: #d4a853; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; }
+  .stamp { border: 2px solid #d4a853; padding: 6px 14px; border-radius: 4px; text-align: center; }
+  .stamp-text { font-size: 7px; color: #d4a853; font-weight: 800; text-transform: uppercase; letter-spacing: 1.5px; }
+  .stamp-date { font-size: 9px; color: #0a1628; font-weight: 700; }
+  .title { font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #0a1628; margin-bottom: 4px; }
+  .period { font-size: 10px; color: #666; font-weight: 600; }
+  .info-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin: 20px 0; }
+  .info-box { background: #f8f9fb; border: 1px solid #e2e6ed; border-radius: 6px; padding: 12px; text-align: center; }
+  .info-label { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: #888; }
+  .info-value { font-size: 16px; font-weight: 900; color: #0a1628; margin-top: 2px; }
+  .info-value.green { color: #059669; }
+  .info-value.red { color: #dc2626; }
+  table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+  thead th { background: #0a1628; color: #fff; font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; padding: 10px 12px; text-align: left; }
+  tbody td { padding: 9px 12px; border-bottom: 1px solid #eef0f4; font-size: 10px; }
+  tbody tr:nth-child(even) { background: #fafbfc; }
+  .type-in { color: #059669; font-weight: 700; }
+  .type-out { color: #dc2626; font-weight: 700; }
+  .amount-in { color: #059669; font-weight: 800; }
+  .amount-out { color: #dc2626; font-weight: 800; }
+  .footer { margin-top: 32px; padding-top: 16px; border-top: 2px solid #e2e6ed; display: flex; justify-content: space-between; align-items: center; }
+  .footer-text { font-size: 8px; color: #999; }
+  .seal { width: 60px; height: 60px; border: 2px solid #d4a853; border-radius: 50%; display: flex; align-items: center; justify-content: center; text-align: center; }
+  .seal-text { font-size: 6px; font-weight: 900; color: #d4a853; text-transform: uppercase; letter-spacing: 0.5px; line-height: 1.2; }
+  .user-info { margin-bottom: 20px; }
+  .user-name { font-size: 13px; font-weight: 800; }
+  .user-detail { font-size: 10px; color: #666; }
+</style>
+</head>
+<body>
+  <div class="header">
+    <div>
+      <div class="brand">DASNET VENTURES</div>
+      <div class="brand-sub">Financial Technology Solutions</div>
+    </div>
+    <div class="stamp">
+      <div class="stamp-text">Official Statement</div>
+      <div class="stamp-date">${now.toLocaleDateString('en-KE', { dateStyle: 'medium' })}</div>
+    </div>
+  </div>
+
+  <div class="user-info">
+    <div class="user-name">${profile?.full_name || 'Account Holder'}</div>
+    <div class="user-detail">Phone: ${profile?.phone || 'N/A'} &nbsp;|&nbsp; Email: ${profile?.email || 'N/A'}</div>
+    <div class="user-detail">Wallet ID: ${wallet?.id.slice(0, 16).toUpperCase()}</div>
+  </div>
+
+  <div class="title">Wallet Statement — ${months} Month${months > 1 ? 's' : ''}</div>
+  <div class="period">${periodLabel}</div>
+
+  <div class="info-grid">
+    <div class="info-box">
+      <div class="info-label">Total Money In</div>
+      <div class="info-value green">KES ${totalIn.toLocaleString()}</div>
+    </div>
+    <div class="info-box">
+      <div class="info-label">Total Money Out</div>
+      <div class="info-value red">KES ${totalOut.toLocaleString()}</div>
+    </div>
+    <div class="info-box">
+      <div class="info-label">Current Balance</div>
+      <div class="info-value">KES ${(wallet?.balance || 0).toLocaleString()}</div>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>Date & Time</th>
+        <th>Type</th>
+        <th>Description</th>
+        <th style="text-align:right">Amount (KES)</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${filtered.length === 0 ? '<tr><td colspan="5" style="text-align:center;padding:24px;color:#999;">No transactions in this period</td></tr>' :
+        filtered.map((t, i) => {
+          const isIn = t.type === 'credit' || t.type === 'deposit';
+          return `<tr>
+            <td>${i + 1}</td>
+            <td>${new Date(t.created_at).toLocaleString('en-KE', { dateStyle: 'medium', timeStyle: 'short' })}</td>
+            <td class="${isIn ? 'type-in' : 'type-out'}">${isIn ? 'IN' : 'OUT'}</td>
+            <td>${t.description || '-'}</td>
+            <td style="text-align:right" class="${isIn ? 'amount-in' : 'amount-out'}">${isIn ? '+' : '-'}${t.amount.toLocaleString()}</td>
+          </tr>`;
+        }).join('')}
+    </tbody>
+  </table>
+
+  <div class="footer">
+    <div>
+      <div class="footer-text">This is a computer-generated statement and does not require a signature.</div>
+      <div class="footer-text">Generated on ${now.toLocaleString('en-KE')} | ${filtered.length} transaction(s)</div>
+      <div class="footer-text" style="margin-top:4px">DASNET VENTURES LTD — Till No. 8448104 — All Rights Reserved</div>
+    </div>
+    <div class="seal">
+      <div class="seal-text">DASNET<br/>VERIFIED<br/>STATEMENT</div>
+    </div>
+  </div>
+</body>
+</html>`;
+
+      // Print to PDF via new window
+      const printWindow = window.open('', '_blank');
+      if (printWindow) {
+        printWindow.document.write(html);
+        printWindow.document.close();
+        setTimeout(() => {
+          printWindow.print();
+        }, 500);
+      }
+      toast.success(`${months}-month statement generated`);
+    } catch (err: any) {
+      toast.error('Failed to generate statement');
+    } finally {
+      setGeneratingStatement(false);
+      setStatementPeriod(null);
+    }
+  };
+
   const exportStatement = () => {
     const headers = ["Date", "ID", "Type", "Amount", "Description"];
     const rows = transactions.map(t => [new Date(t.created_at).toLocaleString(), t.id, t.type, t.amount, t.description]);
@@ -160,19 +313,18 @@ export default function WalletPage() {
   };
 
   const handleWithdraw = async () => {
-    if (!wallet || !withdrawAmount || !withdrawPhone) return;
+    if (!wallet || !withdrawAmount || !registeredPhone) return;
     const amount = Number(withdrawAmount);
     if (amount < 100 || amount > wallet.balance) return toast.error("Invalid amount");
     setActionLoading(true);
     try {
       const { error } = await supabase.rpc('request_withdrawal_secure' as any, {
-        _user_id: user!.id, _amount: amount, _phone: withdrawPhone.trim(),
+        _user_id: user!.id, _amount: amount, _phone: registeredPhone.trim(),
       });
       if (error) throw error;
       toast.success("Withdrawal request submitted");
       setWithdrawDialog(false);
       setWithdrawAmount('');
-      setWithdrawPhone('');
       fetchWalletData();
     } catch (e: any) {
       toast.error(e.message);
@@ -234,13 +386,13 @@ export default function WalletPage() {
   };
 
   const handleDeposit = async () => {
-    if (!depositAmount || !depositPhone) return;
+    if (!depositAmount || !registeredPhone) return;
     setActionLoading(true);
     setDepositStatus('pending');
     setDepositStatusMessage('Sending M-Pesa prompt to your phone...');
     try {
       const { data, error } = await supabase.functions.invoke('initiate-stk-push', {
-        body: { phone: depositPhone.trim(), amount: Number(depositAmount), userId: user!.id, purpose: 'wallet_deposit' },
+        body: { phone: registeredPhone.trim(), amount: Number(depositAmount), userId: user!.id, purpose: 'wallet_deposit' },
       });
       if (error) throw error;
       const reference = data?.reference;
@@ -263,7 +415,6 @@ export default function WalletPage() {
     setDepositStatus('idle');
     setDepositStatusMessage('');
     setDepositAmount('');
-    setDepositPhone('');
     if (depositPollingRef.current) clearInterval(depositPollingRef.current);
     if (depositChannelRef.current) supabase.removeChannel(depositChannelRef.current);
   };
@@ -469,6 +620,9 @@ export default function WalletPage() {
                       </Button>
                       <Button variant="outline" size="sm" onClick={exportStatement} className="h-7 rounded-lg text-[10px] gap-1 font-semibold px-2.5">
                         <Download size={11} /> CSV
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={() => setStatementPeriod(-1)} className="h-7 rounded-lg text-[10px] gap-1 font-semibold px-2.5 text-accent border-accent/30">
+                        <FileText size={11} /> Statement
                       </Button>
                     </div>
                   </div>
@@ -701,11 +855,12 @@ export default function WalletPage() {
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold">M-Pesa Number</Label>
+                  <Label className="text-xs font-semibold">M-Pesa Number (Registered)</Label>
                   <div className="relative">
                     <Smartphone size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    <Input value={withdrawPhone} onChange={(e) => setWithdrawPhone(e.target.value)} placeholder="07XXXXXXXX" className="h-12 rounded-xl pl-10 font-semibold" />
+                    <Input value={registeredPhone} readOnly className="h-12 rounded-xl pl-10 font-semibold bg-muted/50 cursor-not-allowed" />
                   </div>
+                  <p className="text-[10px] text-muted-foreground">Withdrawals are sent to your registered number only.</p>
                 </div>
               </div>
               <div className="flex items-start gap-2 p-3 rounded-lg bg-accent/5 border border-accent/10">
@@ -751,8 +906,9 @@ export default function WalletPage() {
                       <Input type="number" value={depositAmount} onChange={(e) => setDepositAmount(e.target.value)} placeholder="Enter amount" className="h-12 rounded-xl text-lg font-semibold" disabled={depositStatus === 'pending'} />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-semibold">M-Pesa Number</Label>
-                      <Input value={depositPhone} onChange={(e) => setDepositPhone(e.target.value)} placeholder="07XXXXXXXX" className="h-12 rounded-xl font-semibold" disabled={depositStatus === 'pending'} />
+                      <Label className="text-xs font-semibold">M-Pesa Number (Registered)</Label>
+                      <Input value={registeredPhone} readOnly className="h-12 rounded-xl font-semibold bg-muted/50 cursor-not-allowed" />
+                      <p className="text-[10px] text-muted-foreground">Deposits are charged to your registered number.</p>
                     </div>
                   </div>
 
@@ -913,6 +1069,39 @@ export default function WalletPage() {
                 </>
               );
             })()}
+          </DialogContent>
+        </Dialog>
+
+        {/* Statement Period Selector */}
+        <Dialog open={statementPeriod !== null} onOpenChange={(open) => { if (!open) setStatementPeriod(null); }}>
+          <DialogContent className="sm:max-w-sm rounded-2xl p-0 overflow-hidden">
+            <div className="bg-gradient-to-br from-[hsl(var(--navy-800))] to-[hsl(var(--navy-900))] p-6">
+              <DialogTitle className="text-lg font-bold text-foreground flex items-center gap-2">
+                <FileText size={20} /> Download Statement
+              </DialogTitle>
+              <p className="text-xs text-muted-foreground mt-1">Select the period for your professional PDF statement</p>
+            </div>
+            <div className="p-6 space-y-3">
+              {[
+                { months: 3, label: '3 Months' },
+                { months: 6, label: '6 Months' },
+                { months: 12, label: '12 Months' },
+              ].map(opt => (
+                <Button
+                  key={opt.months}
+                  variant="outline"
+                  className="w-full h-14 rounded-xl justify-between text-sm font-bold border-border/40 hover:border-accent/50 hover:bg-accent/5"
+                  onClick={() => generatePDFStatement(opt.months)}
+                  disabled={generatingStatement}
+                >
+                  <span className="flex items-center gap-2">
+                    <Calendar size={16} className="text-accent" />
+                    {opt.label}
+                  </span>
+                  {generatingStatement ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} className="text-muted-foreground" />}
+                </Button>
+              ))}
+            </div>
           </DialogContent>
         </Dialog>
 

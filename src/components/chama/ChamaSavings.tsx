@@ -362,12 +362,12 @@ export function ChamaSavings({
 
               <div className="flex items-center gap-3">
                 {m.hasPaidCurrent ? (
-                  <div className="flex items-center gap-1.5 text-emerald-600 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
+                  <div className="flex items-center gap-1.5 text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
                     <CheckCircle2 size={12} />
                     <span className="text-[10px] font-bold uppercase tracking-tighter">Current</span>
                   </div>
                 ) : (
-                  <div className="flex items-center gap-1.5 text-destructive bg-destructive/5 px-2.5 py-1 rounded-full border border-destructive/10">
+                  <div className="flex items-center gap-1.5 text-destructive bg-destructive/10 px-2.5 py-1 rounded-full border border-destructive/20">
                     <AlertTriangle size={12} />
                     <span className="text-[10px] font-bold uppercase tracking-tighter">Arrears</span>
                   </div>
