@@ -90,6 +90,15 @@ export default function AuthPage() {
 
       if (authError) throw authError;
       if (authData.user) {
+        // Check if user is admin to redirect appropriately
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', authData.user.id)
+          .eq('role', 'admin')
+          .maybeSingle();
+        const userIsAdmin = !!roleData;
+
         toast.success('Welcome back!');
         
         // Keep saved fingerprint password in sync after successful password login
@@ -113,7 +122,12 @@ export default function AuthPage() {
           }
         }
         
-        navigate(from, { replace: true });
+        // Admin goes straight to admin dashboard, never user dashboard
+        if (userIsAdmin) {
+          navigate('/dashboard/admin', { replace: true });
+        } else {
+          navigate(from, { replace: true });
+        }
       }
     } catch (error: any) {
       console.error('Login error:', error);
