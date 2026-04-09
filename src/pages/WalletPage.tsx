@@ -487,8 +487,8 @@ export default function WalletPage() {
                             </div>
                           </div>
                           <div className="text-right">
-                            <p className={cn("text-[13px] font-bold tabular-nums", tx.type === 'credit' ? "text-emerald-400" : "text-foreground")}>
-                              {tx.type === 'credit' ? '+' : '-'} {formatCurrency(tx.amount)}
+                            <p className={cn("text-[13px] font-bold tabular-nums", isIncoming(tx) ? "text-emerald-400" : "text-foreground")}>
+                              {isIncoming(tx) ? '+' : '-'} {formatCurrency(tx.amount)}
                             </p>
                           </div>
                         </motion.div>
