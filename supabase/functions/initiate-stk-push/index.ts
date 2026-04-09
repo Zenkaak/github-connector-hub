@@ -16,7 +16,7 @@ Deno.serve(async (req) => {
       throw new Error("Invalid JSON body");
     });
 
-    console.log("RAW BODY RECEIVED:", body);
+    console.log("RAW BODY:", body);
 
     const phone = body.phone;
     const amount = body.amount;
@@ -29,15 +29,19 @@ Deno.serve(async (req) => {
     const disbursementId = body.disbursementId || body.disbursement_id || null;
     const contributorName = body.contributor_name || body.metadata?.contributor_name || null;
 
+    // Validate phone and amount are present
     if (!phone || amount === undefined || amount === null) {
+      console.error("Validation failed - phone:", phone, "amount:", amount);
       return new Response(
         JSON.stringify({ error: "Missing phone or amount" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
+    // For harambee contributions, userId is optional (public contributors allowed)
     const isHarambee = purpose === "harambee" || purpose === "harambee_contribution";
     if (!userId && !isHarambee) {
+      console.error("Validation failed - userId required for purpose:", purpose);
       return new Response(
         JSON.stringify({ error: "User ID is required for this transaction type" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -100,6 +104,7 @@ Deno.serve(async (req) => {
       harambee_contribution: "HRB_",
       activation: "ACT_",
       wallet_deposit: "DEP_",
+      chama_penalty: "PEN_",
     };
     const prefix = prefixMap[purpose] || "PAY";
     const reference = `${prefix}${Date.now()}${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
@@ -117,6 +122,8 @@ Deno.serve(async (req) => {
       AccountReference: reference,
       TransactionDesc: purpose,
     };
+
+    console.log("Sending STK Push for purpose:", purpose, "isHarambee:", isHarambee, "userId:", userId);
 
     const stkRes = await fetch(
       "https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
@@ -160,10 +167,12 @@ Deno.serve(async (req) => {
       metadata: body.metadata || {},
     };
 
+    // userId is optional for harambee (public contributors)
     if (userId) {
       insertData.user_id = userId;
     }
 
+    // Store contributor name for public harambee contributions
     if (contributorName) {
       insertData.contributor_name = contributorName;
     }
@@ -172,10 +181,12 @@ Deno.serve(async (req) => {
       insertData.savings_id = savingsId;
     }
 
+    console.log("Inserting stk_transaction:", JSON.stringify(insertData));
+
     const { error: insertError } = await supabase.from("stk_transactions").insert(insertData);
 
     if (insertError) {
-      console.error("Supabase insert error:", insertError);
+      console.error("Supabase insert error:", JSON.stringify(insertError));
       throw new Error("Failed to save transaction: " + insertError.message);
     }
 
