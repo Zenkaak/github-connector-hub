@@ -7,7 +7,6 @@ const corsHeaders = {
 };
 
 Deno.serve(async (req) => {
-  // 1. Handle CORS Preflight
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -19,24 +18,17 @@ Deno.serve(async (req) => {
 
     console.log("RAW BODY RECEIVED:", body);
 
-    // 2. Extract Data (Supporting direct props and nested metadata)
     const phone = body.phone;
     const amount = body.amount;
     const purpose = body.purpose || body.metadata?.type || "harambee";
-    
-    // userId is optional for Harambee (Public users)
     const userId = body.userId || body.metadata?.userId || null;
-    
     const groupId = body.groupId || body.metadata?.group_id || null;
     const savingsId = body.savingsId || null;
-    
-    // Support various naming conventions for Harambee ID
     const harambee_id = body.harambee_id || body.harambeeId || body.metadata?.harambee_id || null;
-    
     const loanId = body.loanId || body.loan_id || body.metadata?.loan_id || null;
     const disbursementId = body.disbursementId || body.disbursement_id || null;
+    const contributorName = body.contributor_name || body.metadata?.contributor_name || null;
 
-    // 3. Validation Logic (FIXED: userId is no longer mandatory for Harambee)
     if (!phone || amount === undefined || amount === null) {
       return new Response(
         JSON.stringify({ error: "Missing phone or amount" }),
@@ -44,7 +36,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Require userId ONLY for non-harambee purposes
     const isHarambee = purpose === "harambee" || purpose === "harambee_contribution";
     if (!userId && !isHarambee) {
       return new Response(
@@ -61,7 +52,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 4. Phone Normalization (254...)
     let formattedPhone = phone.replace(/\s/g, "").replace(/\+/g, "");
     if (formattedPhone.startsWith("0")) {
       formattedPhone = "254" + formattedPhone.slice(1);
@@ -69,7 +59,6 @@ Deno.serve(async (req) => {
       formattedPhone = "254" + formattedPhone;
     }
 
-    // 5. Environment Variables
     const consumerKey = Deno.env.get("MPESA_CONSUMER_KEY");
     const consumerSecret = Deno.env.get("MPESA_CONSUMER_SECRET");
     const shortcode = Deno.env.get("MPESA_SHORTCODE");
@@ -83,7 +72,6 @@ Deno.serve(async (req) => {
 
     const partyB = Deno.env.get("PARTY_B") || shortcode;
 
-    // 6. Generate M-Pesa Access Token
     const auth = btoa(`${consumerKey}:${consumerSecret}`);
     const tokenRes = await fetch(
       "https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
@@ -93,7 +81,6 @@ Deno.serve(async (req) => {
     if (!tokenData.access_token) throw new Error("Failed to get M-Pesa access token");
     const accessToken = tokenData.access_token;
 
-    // 7. Security Timestamp and Password
     const now = new Date();
     const timestamp =
       now.getFullYear().toString() +
@@ -105,7 +92,6 @@ Deno.serve(async (req) => {
 
     const password = btoa(`${shortcode}${passkey}${timestamp}`);
 
-    // 8. Generate Unique Reference
     const prefixMap: Record<string, string> = {
       chama_savings: "CHAMA_",
       personal_savings: "PSAV_",
@@ -118,7 +104,6 @@ Deno.serve(async (req) => {
     const prefix = prefixMap[purpose] || "PAY";
     const reference = `${prefix}${Date.now()}${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
 
-    // 9. Call M-Pesa STK Push API
     const stkBody = {
       BusinessShortCode: shortcode,
       Password: password,
@@ -154,16 +139,13 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 10. Save Transaction to Database
     const supabase = createClient(supabaseUrl, serviceRoleKey);
-    
-    // Safety check for harambee_id
+
     if (isHarambee && !harambee_id) {
       throw new Error("harambee_id is required for contributions");
     }
 
-    const { error: insertError } = await supabase.from("stk_transactions").insert({
-      user_id: userId,
+    const insertData: Record<string, any> = {
       phone: formattedPhone,
       amount: Math.round(numericAmount),
       reference,
@@ -175,8 +157,22 @@ Deno.serve(async (req) => {
       harambee_id: harambee_id,
       loan_id: loanId,
       disbursement_id: disbursementId,
-      metadata: body.metadata || {}
-    });
+      metadata: body.metadata || {},
+    };
+
+    if (userId) {
+      insertData.user_id = userId;
+    }
+
+    if (contributorName) {
+      insertData.contributor_name = contributorName;
+    }
+
+    if (savingsId) {
+      insertData.savings_id = savingsId;
+    }
+
+    const { error: insertError } = await supabase.from("stk_transactions").insert(insertData);
 
     if (insertError) {
       console.error("Supabase insert error:", insertError);
