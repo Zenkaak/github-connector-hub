@@ -129,10 +129,9 @@ Deno.serve(async (req) => {
     // =====================================================
     // ✅ SUCCESS FLOW
     // =====================================================
-    console.log("📝 Updating stk_transactions to success for id:", txn.id, "checkout:", CheckoutRequestID);
+    console.log("📝 Updating stk_transactions to success for id:", txn.id);
 
-    // Primary update by ID
-    const { error: updateError, data: updateData } = await supabase
+    const { error: updateError } = await supabase
       .from("stk_transactions")
       .update({
         status: "success",
@@ -143,15 +142,12 @@ Deno.serve(async (req) => {
         callback_result: JSON.stringify(callback),
         updated_at: now,
       })
-      .eq("id", txn.id)
-      .select("id, status")
-      .maybeSingle();
+      .eq("id", txn.id);
 
     if (updateError) {
-      console.error("❌ CRITICAL: Primary update by id FAILED:", JSON.stringify(updateError));
-
-      // Fallback: try updating by checkout_request_id
-      const { error: fallbackError } = await supabase
+      console.error("❌ Primary update failed:", JSON.stringify(updateError));
+      // Fallback by checkout_request_id
+      await supabase
         .from("stk_transactions")
         .update({
           status: "success",
@@ -163,37 +159,6 @@ Deno.serve(async (req) => {
           updated_at: now,
         })
         .eq("checkout_request_id", CheckoutRequestID);
-
-      if (fallbackError) {
-        console.error("❌ CRITICAL: Fallback update by checkout_request_id ALSO FAILED:", JSON.stringify(fallbackError));
-        return jsonResponse({ ResultCode: 0, ResultDesc: "Accepted" });
-      } else {
-        console.log("✅ Fallback update by checkout_request_id succeeded");
-      }
-    } else {
-      console.log("✅ Primary update succeeded. Returned data:", JSON.stringify(updateData));
-    }
-
-    // 🔍 VERIFICATION: Re-read to confirm status actually changed
-    const { data: verifyRow, error: verifyError } = await supabase
-      .from("stk_transactions")
-      .select("id, status, checkout_request_id")
-      .eq("id", txn.id)
-      .maybeSingle();
-
-    if (verifyError) {
-      console.error("⚠️ Verification read failed:", JSON.stringify(verifyError));
-    } else if (verifyRow) {
-      console.log("🔍 Verification read - status is now:", verifyRow.status);
-      if (verifyRow.status !== "success") {
-        console.error("🚨 STATUS DID NOT PERSIST! Still:", verifyRow.status, "— Attempting raw update");
-        // Last resort: try one more time
-        await supabase
-          .from("stk_transactions")
-          .update({ status: "success", mpesa_receipt: mpesaReceipt, paid_at: now, updated_at: now })
-          .eq("checkout_request_id", CheckoutRequestID)
-          .neq("status", "success");
-      }
     }
 
     const purpose = txn.purpose;
@@ -227,38 +192,32 @@ Deno.serve(async (req) => {
             amount: individualAmount,
             stk_reference: mpesaReceipt,
             month: entryDate.toISOString().slice(0, 7),
-            description: `Arrears Clearance (${i + 1}/${missedCount})`,
           });
         }
 
-        await supabase.from("chama_savings").insert(arrearsEntries);
+        const { error: arrErr } = await supabase.from("chama_savings").insert(arrearsEntries);
+        if (arrErr) console.error("❌ Arrears insert failed:", JSON.stringify(arrErr));
       } else {
-        await supabase.from("chama_savings").insert({
+        const { error: savErr } = await supabase.from("chama_savings").insert({
           group_id: txn.group_id,
           user_id: txn.user_id,
           amount: actualAmount,
           stk_reference: mpesaReceipt,
           month: new Date().toISOString().slice(0, 7),
-          description: "Regular Savings",
         });
+        if (savErr) console.error("❌ Savings insert failed:", JSON.stringify(savErr));
       }
     }
 
     // ---------------- CHAMA PENALTY ----------------
     if (purpose === "chama_penalty") {
-      const penaltyId =
-        txn.penalty_id || txn.metadata?.penaltyId || null;
+      const penaltyId = txn.penalty_id || txn.metadata?.penaltyId || null;
 
       if (penaltyId) {
         await supabase
           .from("chama_penalties")
           .update({ is_paid: true })
           .eq("id", penaltyId);
-      } else {
-        await supabase.rpc("mark_oldest_penalty_paid", {
-          p_user_id: txn.user_id,
-          p_group_id: txn.group_id,
-        });
       }
     }
 
@@ -297,36 +256,44 @@ Deno.serve(async (req) => {
           .insert(contributionRecord);
 
         if (contribError) {
-          console.error("❌ Harambee contribution insert failed:", contribError);
+          console.error("❌ Harambee contribution insert failed:", JSON.stringify(contribError));
         }
       }
     }
 
     // ---------------- LOAN REPAYMENT ----------------
     if (purpose === "loan_repayment") {
-      const { data: d } = await supabase
-        .from("loan_disbursements")
-        .select("*")
-        .eq("user_id", txn.user_id)
-        .eq("status", "active")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      const disbursementId = txn.disbursement_id || txn.metadata?.disbursement_id;
+      
+      let d = null;
+      if (disbursementId) {
+        const { data } = await supabase
+          .from("loan_disbursements")
+          .select("*")
+          .eq("id", disbursementId)
+          .maybeSingle();
+        d = data;
+      }
+      
+      if (!d && txn.user_id) {
+        const { data } = await supabase
+          .from("loan_disbursements")
+          .select("*")
+          .eq("user_id", txn.user_id)
+          .eq("status", "active")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        d = data;
+      }
 
       if (d) {
-        const newBal = Math.max(
-          0,
-          (d.outstanding_balance || 0) - actualAmount
-        );
-
+        const newBal = Math.max(0, (d.outstanding_balance || 0) - actualAmount);
         const newStatus = newBal <= 0 ? "paid" : "active";
 
         await supabase
           .from("loan_disbursements")
-          .update({
-            outstanding_balance: newBal,
-            status: newStatus,
-          })
+          .update({ outstanding_balance: newBal, status: newStatus })
           .eq("id", d.id);
 
         if (newStatus === "paid") {
@@ -335,19 +302,11 @@ Deno.serve(async (req) => {
             .update({ status: "paid" })
             .eq("id", d.loan_id);
         }
-
-        await supabase.from("loan_repayments").insert({
-          disbursement_id: d.id,
-          user_id: txn.user_id,
-          amount: actualAmount,
-          mpesa_reference: mpesaReceipt,
-          status: "completed",
-        });
       }
     }
 
     // ---------------- WALLET ----------------
-    if (["activation", "wallet_deposit"].includes(purpose)) {
+    if (["activation", "wallet_deposit"].includes(purpose) && txn.user_id) {
       const { data: w } = await supabase
         .from("wallets")
         .select("id, balance")
@@ -357,13 +316,10 @@ Deno.serve(async (req) => {
       if (w) {
         await supabase
           .from("wallets")
-          .update({
-            balance: Number(w.balance || 0) + Number(actualAmount),
-          })
+          .update({ balance: Number(w.balance || 0) + Number(actualAmount) })
           .eq("id", w.id);
 
-        await supabase.from("wallet_transactions").insert({
-          wallet_id: w.id,
+        const { error: wtErr } = await supabase.from("wallet_transactions").insert({
           user_id: txn.user_id,
           type: "deposit",
           amount: actualAmount,
@@ -371,6 +327,7 @@ Deno.serve(async (req) => {
           reference_id: mpesaReceipt,
           status: "completed",
         });
+        if (wtErr) console.error("❌ Wallet tx insert failed:", JSON.stringify(wtErr));
       }
     }
 
@@ -385,29 +342,28 @@ Deno.serve(async (req) => {
       if (ps) {
         await supabase
           .from("personal_savings")
-          .update({
-            saved_amount: (ps.saved_amount || 0) + actualAmount,
-          })
+          .update({ saved_amount: (ps.saved_amount || 0) + actualAmount })
           .eq("id", txn.savings_id);
 
-        await supabase.from("personal_savings_deposits").insert({
+        const { error: depErr } = await supabase.from("personal_savings_deposits").insert({
           savings_id: txn.savings_id,
           user_id: txn.user_id,
           amount: actualAmount,
           stk_reference: mpesaReceipt,
         });
+        if (depErr) console.error("❌ Savings deposit insert failed:", JSON.stringify(depErr));
       }
     }
 
     // ---------------- CHAMA JOIN ----------------
     if (purpose === "chama_joining_fee" || purpose === "chama_join") {
-      if (txn.group_id) {
-        await supabase.from("chama_joining_fees").insert({
+      if (txn.group_id && txn.user_id) {
+        const { error: feeErr } = await supabase.from("chama_joining_fees").insert({
           group_id: txn.group_id,
           user_id: txn.user_id,
           amount: actualAmount,
-          reference: mpesaReceipt,
         });
+        if (feeErr) console.error("❌ Joining fee insert failed:", JSON.stringify(feeErr));
 
         await supabase.from("chama_members").insert({
           group_id: txn.group_id,
@@ -425,17 +381,13 @@ Deno.serve(async (req) => {
 
     // ---------------- NOTIFICATION ----------------
     if (txn.user_id) {
-      await supabase.from("notifications").insert({
+      const { error: notifErr } = await supabase.from("notifications").insert({
         user_id: txn.user_id,
         title: "Payment Confirmed ✅",
         message: notificationMsg,
         type: "payment",
-        metadata: {
-          receipt: mpesaReceipt,
-          amount: actualAmount,
-          purpose,
-        },
       });
+      if (notifErr) console.error("❌ Notification insert failed:", JSON.stringify(notifErr));
     }
 
     return jsonResponse({ ResultCode: 0, ResultDesc: "Accepted" });
@@ -444,4 +396,3 @@ Deno.serve(async (req) => {
     return jsonResponse({ ResultCode: 0, ResultDesc: "Accepted" });
   }
 });
- 
