@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
-import { HandCoins, Phone, Send, CheckCircle2, XCircle, Loader2, Users, Target, Hash, Heart, Sparkles, TrendingUp } from 'lucide-react';
+import { HandCoins, Phone, Send, CheckCircle2, XCircle, Loader2, Users, Target, Hash, Heart, Sparkles, TrendingUp, Trophy, Medal, Award, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -21,6 +21,7 @@ export default function PublicHarambeePage() {
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [groupName, setGroupName] = useState('');
+  const [groupImage, setGroupImage] = useState<string | null>(null);
 
   const [phone, setPhone] = useState('');
   const [amount, setAmount] = useState('');
@@ -54,10 +55,13 @@ export default function PublicHarambeePage() {
 
     const { data: group } = await supabase
       .from('chama_groups')
-      .select('name')
+      .select('name, profile_image_url')
       .eq('id', data.group_id)
       .maybeSingle();
-    if (group) setGroupName(group.name);
+    if (group) {
+      setGroupName(group.name);
+      setGroupImage(group.profile_image_url);
+    }
 
     const { data: contribs } = await supabase
       .from('chama_harambee_contributions')
@@ -67,6 +71,22 @@ export default function PublicHarambeePage() {
     if (contribs) setContributions(contribs);
     setLoading(false);
   };
+
+  // Build leaderboard: aggregate by contributor name, sorted by total
+  const leaderboard = useMemo(() => {
+    const map = new Map<string, { name: string; total: number; count: number }>();
+    contributions.forEach((c) => {
+      const n = c.contributor_name || 'Anonymous';
+      const existing = map.get(n);
+      if (existing) {
+        existing.total += c.amount;
+        existing.count += 1;
+      } else {
+        map.set(n, { name: n, total: c.amount, count: 1 });
+      }
+    });
+    return Array.from(map.values()).sort((a, b) => b.total - a.total);
+  }, [contributions]);
 
   const startPolling = (reference: string) => {
     if (pollingRef.current) clearInterval(pollingRef.current);
@@ -167,6 +187,13 @@ export default function PublicHarambeePage() {
 
   const images: string[] = (harambee as any)?.image_urls || [];
 
+  const getMedalIcon = (index: number) => {
+    if (index === 0) return <Trophy size={14} className="text-[hsl(42,92%,56%)]" />;
+    if (index === 1) return <Medal size={14} className="text-[hsl(210,16%,72%)]" />;
+    if (index === 2) return <Award size={14} className="text-[hsl(25,70%,50%)]" />;
+    return null;
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[hsl(213,30%,9%)] flex items-center justify-center">
@@ -203,11 +230,16 @@ export default function PublicHarambeePage() {
       <div className="relative bg-gradient-to-b from-[hsl(213,35%,14%)] to-[hsl(213,30%,9%)] border-b border-[hsl(213,30%,20%,0.5)]">
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[hsl(42,92%,56%,0.3)] to-transparent" />
         <div className="max-w-lg mx-auto px-4 py-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[hsl(42,92%,56%,0.1)] border border-[hsl(42,92%,56%,0.2)] flex items-center justify-center">
-            <HandCoins size={18} className="text-[hsl(42,92%,56%)]" />
-          </div>
+          {/* Profile Picture */}
+          {groupImage ? (
+            <img src={groupImage} alt={groupName} className="w-10 h-10 rounded-xl object-cover border border-[hsl(42,92%,56%,0.2)]" />
+          ) : (
+            <div className="w-10 h-10 rounded-xl bg-[hsl(42,92%,56%,0.1)] border border-[hsl(42,92%,56%,0.2)] flex items-center justify-center">
+              <HandCoins size={18} className="text-[hsl(42,92%,56%)]" />
+            </div>
+          )}
           <div>
-            <h1 className="font-bold text-[hsl(210,40%,96%)] text-base">DASNET VENTURES</h1>
+            <h1 className="font-bold text-[hsl(210,40%,96%)] text-base">{groupName || 'DASNET VENTURES'}</h1>
             <p className="text-[10px] text-[hsl(42,92%,56%)] font-semibold uppercase tracking-[0.15em]">Community Harambee</p>
           </div>
         </div>
@@ -248,11 +280,6 @@ export default function PublicHarambeePage() {
                   {harambee.status === 'active' ? 'Active Campaign' : 'Campaign Closed'}
                 </span>
               </div>
-              {harambee.is_cross_chama && (
-                <Badge className="bg-[hsl(213,60%,32%,0.3)] text-[hsl(213,40%,80%)] border-[hsl(213,60%,32%,0.5)] text-[9px] font-semibold">
-                  Cross-Chama
-                </Badge>
-              )}
             </div>
 
             <div className="p-5 space-y-5">
@@ -420,6 +447,52 @@ export default function PublicHarambeePage() {
               </div>
               <h3 className="font-bold text-[hsl(210,40%,96%)] text-lg">Thank You! 🎉</h3>
               <p className="text-sm text-[hsl(213,16%,58%)]">Your contribution has been received and recorded.</p>
+            </Card>
+          </motion.div>
+        )}
+
+        {/* Leaderboard */}
+        {leaderboard.length > 0 && (
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.25 }}>
+            <Card className="overflow-hidden bg-[hsl(213,35%,14%)] border-[hsl(213,30%,20%,0.6)]">
+              <div className="px-5 py-3 border-b border-[hsl(213,30%,20%,0.5)] bg-gradient-to-r from-[hsl(42,92%,56%,0.06)] to-transparent">
+                <h3 className="text-sm font-bold text-[hsl(210,40%,96%)] flex items-center gap-2">
+                  <Trophy size={13} className="text-[hsl(42,92%,56%)]" />
+                  Top Contributors
+                </h3>
+              </div>
+              <div className="divide-y divide-[hsl(213,30%,20%,0.3)]">
+                {leaderboard.slice(0, 10).map((entry, idx) => (
+                  <motion.div
+                    key={entry.name + idx}
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.05 }}
+                    className="px-5 py-3.5 flex items-center justify-between hover:bg-[hsl(213,30%,17%,0.3)] transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      {/* Rank */}
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold ${
+                        idx === 0 ? 'bg-[hsl(42,92%,56%,0.15)] text-[hsl(42,92%,56%)]' :
+                        idx === 1 ? 'bg-[hsl(210,16%,72%,0.15)] text-[hsl(210,16%,82%)]' :
+                        idx === 2 ? 'bg-[hsl(25,70%,50%,0.15)] text-[hsl(25,70%,60%)]' :
+                        'bg-[hsl(213,30%,20%)] text-[hsl(213,16%,58%)]'
+                      }`}>
+                        {idx < 3 ? getMedalIcon(idx) : idx + 1}
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-[hsl(210,40%,96%)]">{entry.name}</p>
+                        <p className="text-[9px] text-[hsl(213,16%,58%)]">
+                          {entry.count} contribution{entry.count !== 1 ? 's' : ''}
+                        </p>
+                      </div>
+                    </div>
+                    <span className={`text-sm font-bold ${idx === 0 ? 'text-[hsl(42,92%,56%)]' : 'text-[hsl(210,40%,96%)]'}`}>
+                      KES {entry.total.toLocaleString()}
+                    </span>
+                  </motion.div>
+                ))}
+              </div>
             </Card>
           </motion.div>
         )}

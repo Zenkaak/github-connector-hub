@@ -30,7 +30,9 @@ import {
   Calendar,
   Hash,
   FileText,
-  Banknote
+  Banknote,
+  User,
+  ArrowRight
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -74,6 +76,7 @@ export default function WalletPage() {
   const [sendMoneyOpen, setSendMoneyOpen] = useState(false);
   const [requestMoneyOpen, setRequestMoneyOpen] = useState(false);
   const [selectedTx, setSelectedTx] = useState<WalletTransaction | null>(null);
+  const [selectedTxExtra, setSelectedTxExtra] = useState<any>(null);
   const [showBalance, setShowBalance] = useState(true);
   const [filterType, setFilterType] = useState<'all' | 'in' | 'out'>('all');
   const [searchQuery, setSearchQuery] = useState('');
@@ -297,9 +300,57 @@ export default function WalletPage() {
     return ArrowUpRight;
   };
 
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case 'completed':
+      case 'success':
+        return { label: 'Completed', className: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' };
+      case 'pending':
+        return { label: 'Pending', className: 'bg-amber-500/15 text-amber-400 border-amber-500/30' };
+      case 'failed':
+      case 'cancelled':
+        return { label: 'Failed', className: 'bg-rose-500/15 text-rose-400 border-rose-500/30' };
+      default:
+        return { label: status || 'Completed', className: 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30' };
+    }
+  };
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text);
     toast.success('Copied to clipboard');
+  };
+
+  // When a transaction is clicked, fetch extra details (STK data, transfer data)
+  const handleTxClick = async (tx: WalletTransaction) => {
+    setSelectedTx(tx);
+    setSelectedTxExtra(null);
+
+    const desc = tx.description?.toLowerCase() || '';
+
+    // Try to find matching STK transaction
+    if (tx.type === 'deposit' || desc.includes('deposit')) {
+      const { data } = await supabase.from('stk_transactions')
+        .select('mpesa_receipt, status, phone, reference, paid_at')
+        .eq('user_id', user!.id)
+        .eq('purpose', 'wallet_deposit')
+        .eq('amount', tx.amount)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (data) setSelectedTxExtra(data);
+    }
+
+    // For transfers, find the matching transfer record
+    if (desc.includes('transfer to') || desc.includes('transfer from')) {
+      const { data } = await supabase.from('wallet_transfers')
+        .select('*')
+        .or(`sender_id.eq.${user!.id},receiver_id.eq.${user!.id}`)
+        .eq('amount', tx.amount)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (data) setSelectedTxExtra({ ...data, _type: 'transfer' });
+    }
   };
 
   if (walletDisabled) return <DashboardLayout><FeatureDisabled /></DashboardLayout>;
@@ -461,13 +512,14 @@ export default function WalletPage() {
                     {filteredTransactions.map((tx, idx) => {
                       const TxIcon = getTransactionIcon(tx);
                       const label = getTransactionLabel(tx);
+                      const statusInfo = getStatusBadge(tx.status || 'completed');
                       return (
                         <motion.div
                           key={tx.id}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
                           transition={{ delay: idx * 0.02 }}
-                          onClick={() => setSelectedTx(tx)}
+                          onClick={() => handleTxClick(tx)}
                           className="px-4 py-3.5 flex items-center justify-between hover:bg-muted/20 cursor-pointer transition-all group"
                         >
                           <div className="flex items-center gap-3">
@@ -479,11 +531,14 @@ export default function WalletPage() {
                             </div>
                             <div>
                               <p className="text-[13px] font-semibold text-foreground">{label}</p>
-                              <p className="text-[10px] text-muted-foreground mt-0.5">
-                                {tx.description && tx.description !== label ? tx.description : ''}
-                                {tx.description && tx.description !== label ? ' · ' : ''}
-                                {new Date(tx.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                              </p>
+                              <div className="flex items-center gap-1.5 mt-0.5">
+                                <p className="text-[10px] text-muted-foreground">
+                                  {new Date(tx.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                                </p>
+                                <Badge className={cn("text-[8px] font-bold px-1.5 py-0 h-4", statusInfo.className)}>
+                                  {statusInfo.label}
+                                </Badge>
+                              </div>
                             </div>
                           </div>
                           <div className="text-right">
@@ -726,87 +781,138 @@ export default function WalletPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Professional Transaction Receipt */}
+        {/* Enhanced Professional Transaction Receipt */}
         <Dialog open={!!selectedTx} onOpenChange={() => setSelectedTx(null)}>
           <DialogContent className="sm:max-w-md rounded-2xl p-0 overflow-hidden border-border/30">
-            {selectedTx && (
-              <>
-                {/* Receipt Header */}
-                <div className="bg-gradient-to-br from-[hsl(var(--navy-800))] via-[hsl(var(--navy-700))] to-[hsl(var(--navy-900))] p-6 pb-8 text-center relative">
-                  <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
-                  <div className="flex items-center justify-center gap-2 mb-4">
-                    <div className="w-6 h-6 rounded-lg bg-accent/20 flex items-center justify-center">
-                      <Wallet size={12} className="text-accent" />
-                    </div>
-                    <span className="text-[10px] font-bold text-accent uppercase tracking-[0.2em]">DASNET VENTURES</span>
-                  </div>
-                  <p className="text-[10px] text-foreground/40 uppercase tracking-[0.15em] mb-2">Transaction Receipt</p>
-                  <p className={cn(
-                    "text-3xl font-bold tracking-tight",
-                    isIncoming(selectedTx) ? "text-emerald-400" : "text-foreground"
-                  )}>
-                    {isIncoming(selectedTx) ? '+' : '-'} {formatCurrency(selectedTx.amount)}
-                  </p>
-                  <div className="mt-3">
-                    <Badge className={cn(
-                      "text-[10px] font-bold px-3 py-0.5",
-                      isIncoming(selectedTx)
-                        ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
-                        : "bg-rose-500/15 text-rose-400 border-rose-500/30"
-                    )}>
-                      {getTransactionLabel(selectedTx)}
-                    </Badge>
-                  </div>
-                </div>
+            {selectedTx && (() => {
+              const statusInfo = getStatusBadge(selectedTx.status || 'completed');
+              const isTransfer = selectedTxExtra?._type === 'transfer';
+              const desc = selectedTx.description?.toLowerCase() || '';
+              const isSent = desc.includes('transfer to');
 
-                {/* Dotted separator */}
-                <div className="relative -mt-3 px-4">
-                  <div className="flex items-center">
-                    <div className="w-6 h-6 rounded-full bg-background -ml-7" />
-                    <div className="flex-1 border-b-2 border-dashed border-border/30" />
-                    <div className="w-6 h-6 rounded-full bg-background -mr-7" />
-                  </div>
-                </div>
-
-                {/* Receipt Details */}
-                <div className="p-6 space-y-4">
-                  <div className="space-y-3">
-                    {[
-                      { icon: Hash, label: 'Transaction ID', value: selectedTx.id.slice(0, 16).toUpperCase(), copyable: true, fullValue: selectedTx.id },
-                      { icon: Calendar, label: 'Date & Time', value: new Date(selectedTx.created_at).toLocaleString('en-KE', { dateStyle: 'medium', timeStyle: 'short' }) },
-                      { icon: FileText, label: 'Description', value: selectedTx.description || 'No description' },
-                      { icon: Receipt, label: 'Reference', value: selectedTx.reference_id || 'N/A' },
-                      { icon: Activity, label: 'Type', value: selectedTx.type.charAt(0).toUpperCase() + selectedTx.type.slice(1) },
-                    ].map((item, i) => (
-                      <div key={i} className="flex items-start justify-between gap-3 py-2 border-b border-border/10 last:border-0">
-                        <div className="flex items-center gap-2.5">
-                          <div className="w-7 h-7 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
-                            <item.icon size={12} className="text-muted-foreground" />
-                          </div>
-                          <span className="text-[11px] text-muted-foreground font-medium">{item.label}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <span className="text-[11px] font-semibold text-foreground text-right max-w-[160px] truncate">{item.value}</span>
-                          {item.copyable && (
-                            <button onClick={() => copyToClipboard(item.fullValue!)} className="text-muted-foreground hover:text-accent transition-colors p-0.5">
-                              <Copy size={10} />
-                            </button>
-                          )}
-                        </div>
+              return (
+                <>
+                  {/* Receipt Header */}
+                  <div className="bg-gradient-to-br from-[hsl(var(--navy-800))] via-[hsl(var(--navy-700))] to-[hsl(var(--navy-900))] p-6 pb-8 text-center relative">
+                    <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-accent/30 to-transparent" />
+                    <div className="flex items-center justify-center gap-2 mb-4">
+                      <div className="w-6 h-6 rounded-lg bg-accent/20 flex items-center justify-center">
+                        <Wallet size={12} className="text-accent" />
                       </div>
-                    ))}
+                      <span className="text-[10px] font-bold text-accent uppercase tracking-[0.2em]">DASNET VENTURES</span>
+                    </div>
+                    <p className="text-[10px] text-foreground/40 uppercase tracking-[0.15em] mb-2">Transaction Receipt</p>
+                    <p className={cn(
+                      "text-3xl font-bold tracking-tight",
+                      isIncoming(selectedTx) ? "text-emerald-400" : "text-foreground"
+                    )}>
+                      {isIncoming(selectedTx) ? '+' : '-'} {formatCurrency(selectedTx.amount)}
+                    </p>
+                    <div className="mt-3 flex items-center justify-center gap-2">
+                      <Badge className={cn("text-[10px] font-bold px-3 py-0.5", 
+                        isIncoming(selectedTx)
+                          ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30"
+                          : "bg-rose-500/15 text-rose-400 border-rose-500/30"
+                      )}>
+                        {getTransactionLabel(selectedTx)}
+                      </Badge>
+                      <Badge className={cn("text-[10px] font-bold px-3 py-0.5", statusInfo.className)}>
+                        {statusInfo.label}
+                      </Badge>
+                    </div>
                   </div>
 
-                  <div className="text-center pt-2">
-                    <p className="text-[9px] text-muted-foreground/50 uppercase tracking-wider">Powered by DASNET VENTURES</p>
+                  {/* Dotted separator */}
+                  <div className="relative -mt-3 px-4">
+                    <div className="flex items-center">
+                      <div className="w-6 h-6 rounded-full bg-background -ml-7" />
+                      <div className="flex-1 border-b-2 border-dashed border-border/30" />
+                      <div className="w-6 h-6 rounded-full bg-background -mr-7" />
+                    </div>
                   </div>
 
-                  <Button variant="outline" className="w-full rounded-xl h-10 text-xs font-semibold" onClick={() => setSelectedTx(null)}>
-                    Close Receipt
-                  </Button>
-                </div>
-              </>
-            )}
+                  {/* Transfer Sender/Receiver Details */}
+                  {isTransfer && (
+                    <div className="px-6 pt-4">
+                      <div className="p-4 rounded-xl bg-muted/30 border border-border/30">
+                        <div className="flex items-center justify-between">
+                          {/* Sender */}
+                          <div className="flex flex-col items-center gap-1.5 flex-1">
+                            <div className="w-10 h-10 rounded-full bg-rose-500/10 flex items-center justify-center">
+                              <User size={16} className="text-rose-400" />
+                            </div>
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Sender</p>
+                            <p className="text-xs font-bold text-foreground text-center">{selectedTxExtra.sender_name || 'Unknown'}</p>
+                          </div>
+                          {/* Arrow */}
+                          <div className="px-2">
+                            <div className="w-8 h-8 rounded-full bg-accent/10 flex items-center justify-center">
+                              <ArrowRight size={14} className="text-accent" />
+                            </div>
+                          </div>
+                          {/* Receiver */}
+                          <div className="flex flex-col items-center gap-1.5 flex-1">
+                            <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                              <User size={16} className="text-emerald-400" />
+                            </div>
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Receiver</p>
+                            <p className="text-xs font-bold text-foreground text-center">{selectedTxExtra.receiver_name || 'Unknown'}</p>
+                          </div>
+                        </div>
+                        {selectedTxExtra.reason && (
+                          <div className="mt-3 pt-3 border-t border-border/20 text-center">
+                            <p className="text-[10px] text-muted-foreground">Reason</p>
+                            <p className="text-xs font-medium text-foreground">{selectedTxExtra.reason}</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Receipt Details */}
+                  <div className="p-6 space-y-4">
+                    <div className="space-y-3">
+                      {[
+                        { icon: Hash, label: 'Transaction ID', value: selectedTx.id.slice(0, 16).toUpperCase(), copyable: true, fullValue: selectedTx.id },
+                        { icon: Calendar, label: 'Date & Time', value: new Date(selectedTx.created_at).toLocaleString('en-KE', { dateStyle: 'medium', timeStyle: 'short' }) },
+                        { icon: FileText, label: 'Description', value: selectedTx.description || 'No description' },
+                        { icon: Receipt, label: 'Reference', value: selectedTx.reference_id || 'N/A' },
+                        { icon: Activity, label: 'Type', value: selectedTx.type.charAt(0).toUpperCase() + selectedTx.type.slice(1) },
+                        ...(selectedTxExtra?.mpesa_receipt ? [{ icon: Smartphone, label: 'M-Pesa Receipt', value: selectedTxExtra.mpesa_receipt, copyable: true, fullValue: selectedTxExtra.mpesa_receipt }] : []),
+                        ...(selectedTxExtra?.phone && !isTransfer ? [{ icon: Smartphone, label: 'Phone', value: selectedTxExtra.phone }] : []),
+                        ...(selectedTxExtra?.paid_at ? [{ icon: Calendar, label: 'Paid At', value: new Date(selectedTxExtra.paid_at).toLocaleString('en-KE', { dateStyle: 'medium', timeStyle: 'short' }) }] : []),
+                        ...(isTransfer && selectedTxExtra?.status ? [{ icon: Activity, label: 'Transfer Status', value: selectedTxExtra.status.charAt(0).toUpperCase() + selectedTxExtra.status.slice(1) }] : []),
+                      ].map((item: any, i) => (
+                        <div key={i} className="flex items-start justify-between gap-3 py-2 border-b border-border/10 last:border-0">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-7 h-7 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
+                              <item.icon size={12} className="text-muted-foreground" />
+                            </div>
+                            <span className="text-[11px] text-muted-foreground font-medium">{item.label}</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[11px] font-semibold text-foreground text-right max-w-[160px] truncate">{item.value}</span>
+                            {item.copyable && (
+                              <button onClick={() => copyToClipboard(item.fullValue!)} className="text-muted-foreground hover:text-accent transition-colors p-0.5">
+                                <Copy size={10} />
+                              </button>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="text-center pt-2">
+                      <p className="text-[9px] text-muted-foreground/50 uppercase tracking-wider">Powered by DASNET VENTURES</p>
+                    </div>
+
+                    <Button variant="outline" className="w-full rounded-xl h-10 text-xs font-semibold" onClick={() => setSelectedTx(null)}>
+                      Close Receipt
+                    </Button>
+                  </div>
+                </>
+              );
+            })()}
           </DialogContent>
         </Dialog>
 
