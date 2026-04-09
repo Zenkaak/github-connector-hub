@@ -161,28 +161,8 @@ export default function TransactionsPage() {
       const error = stkRes.error;
       if (error) throw error;
       
-      const FIVE_MINUTES = 5 * 60 * 1000;
-      const now = Date.now();
       const txns = (data as Transaction[]) || [];
-      const expired = txns.filter(t => t.status === 'pending' && (now - new Date(t.created_at).getTime()) > FIVE_MINUTES);
-      
-      if (expired.length > 0) {
-        await Promise.all(expired.map(t =>
-          supabase.from('stk_transactions').update({
-            status: 'failed' as any,
-            result_code: 'EXPIRED',
-            result_desc: 'Transaction expired - no response within 5 minutes',
-          }).eq('id', t.id).eq('status', 'pending')
-        ));
-        const { data: refreshed } = await supabase
-          .from('stk_transactions')
-          .select('*')
-          .eq('user_id', user?.id)
-          .order('created_at', { ascending: false });
-        setTransactions((refreshed as Transaction[]) || []);
-      } else {
-        setTransactions(txns);
-      }
+      setTransactions(txns);
     } catch (error) {
       console.error('Error fetching transactions:', error);
     } finally {
