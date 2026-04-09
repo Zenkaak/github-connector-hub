@@ -29,6 +29,7 @@ import SupportPage from "./pages/SupportPage";
 import TransactionsPage from "./pages/TransactionsPage";
 import WalletPage from "./pages/WalletPage";
 import SavingsPage from "./pages/SavingsPage";
+import CreateHarambeePage from "./pages/CreateHarambeePage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import AdminChamaPage from "./pages/AdminChamaPage";
 import AdminSettingsPage from "./pages/AdminSettingsPage";
