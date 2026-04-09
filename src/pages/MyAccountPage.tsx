@@ -6,7 +6,8 @@ import {
   User, Mail, Phone, MapPin, CreditCard, Calendar, Shield, BadgeCheck, Edit3, 
   AlertCircle, Lock, Download, Fingerprint, Smartphone, ShieldCheck, Key, 
   ChevronRight, UserCheck, Loader2, History, Eye, X, FileText, Monitor, Globe, LogOut,
-  Camera, ShieldAlert, Wallet, PiggyBank, Landmark, Users, Send, ArrowUpRight, CheckCircle2
+  Camera, ShieldAlert, Wallet, PiggyBank, Landmark, Users, Send, ArrowUpRight, CheckCircle2,
+  Zap, HeartHandshake
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
