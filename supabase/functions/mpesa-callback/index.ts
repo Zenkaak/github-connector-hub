@@ -70,7 +70,7 @@ Deno.serve(async (req) => {
           callback_result: JSON.stringify(callback),
           updated_at: now,
         })
-        .eq("id", txn.id)
+        .eq("checkout_request_id", CheckoutRequestID)
         .select("id, status, mpesa_receipt, result_code, updated_at")
         .single();
 
