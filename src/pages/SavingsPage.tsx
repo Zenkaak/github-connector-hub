@@ -70,6 +70,7 @@ export default function SavingsPage() {
   const [detailOpen, setDetailOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [stkPolling, setStkPolling] = useState(false);
+  const [receiptDeposit, setReceiptDeposit] = useState<SavingsDeposit | null>(null);
 
   // Create form
   const [newName, setNewName] = useState('');
