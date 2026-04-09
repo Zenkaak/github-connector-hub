@@ -580,6 +580,10 @@ export default function ChamaGroupDetailPage() {
             <ChamaPenalties groupId={groupId!} group={group} members={members} myRole={myRole} />
           </TabsContent>
 
+          <TabsContent value="emergency" className="mt-4">
+            <ChamaEmergencyFund groupId={groupId!} members={members} />
+          </TabsContent>
+
           <TabsContent value="arrears" className="mt-4">
             <ChamaArrears groupId={groupId!} group={group} members={members} />
           </TabsContent>
