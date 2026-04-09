@@ -281,7 +281,7 @@ export function ChamaHarambee({ groupId, group, members, myRole }: Props) {
       )}
 
       {loading ? (
-        <div className="text-center py-8 text-slate-500 text-sm">Loading harambees...</div>
+        <div className="text-center py-8 text-muted-foreground text-sm">Loading harambees...</div>
       ) : harambees.length === 0 ? (
         <div className="text-center py-12 bg-muted/20 rounded-xl border border-dashed border-border/40">
           <HandCoins size={40} className="mx-auto mb-3 text-muted-foreground/30" />
@@ -340,21 +340,21 @@ export function ChamaHarambee({ groupId, group, members, myRole }: Props) {
           <DialogHeader><DialogTitle className="flex items-center gap-2 text-xl font-black"><HandCoins /> NEW HARAMBEE</DialogTitle></DialogHeader>
           <div className="space-y-4 pt-4">
             <div>
-              <Label className="text-[10px] font-black uppercase text-slate-500">Beneficiary Name</Label>
+              <Label className="text-[10px] font-black uppercase text-muted-foreground">Beneficiary Name</Label>
               <Input value={beneficiary} onChange={e => setBeneficiary(e.target.value)} placeholder="e.g. John Doe Hospital Fund" className="mt-1 h-11 font-bold" />
             </div>
             <div>
-              <Label className="text-[10px] font-black uppercase text-slate-500">Reason / Description</Label>
+              <Label className="text-[10px] font-black uppercase text-muted-foreground">Reason / Description</Label>
               <Textarea value={reason} onChange={e => setReason(e.target.value)} placeholder="Provide context for contributors..." className="mt-1 font-medium" />
             </div>
             <div>
-              <Label className="text-[10px] font-black uppercase text-slate-500">Target Amount (KES)</Label>
+              <Label className="text-[10px] font-black uppercase text-muted-foreground">Target Amount (KES)</Label>
               <Input type="number" value={targetAmount} onChange={e => setTargetAmount(e.target.value)} placeholder="0.00" className="mt-1 h-11 font-black text-lg" />
             </div>
-            <div className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100">
+            <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border border-border/40">
               <div className="space-y-0.5">
                 <Label className="text-xs font-bold">Public Harambee</Label>
-                <p className="text-[10px] text-slate-500">Allow non-members to contribute via link</p>
+                <p className="text-[10px] text-muted-foreground">Allow non-members to contribute via link</p>
               </div>
               <Switch checked={isPublic} onCheckedChange={setIsPublic} />
             </div>
@@ -414,25 +414,25 @@ export function ChamaHarambee({ groupId, group, members, myRole }: Props) {
         <DialogContent>
           <DialogHeader><DialogTitle className="text-xl font-black uppercase">CONTRIBUTE</DialogTitle></DialogHeader>
           <div className="space-y-4 pt-2">
-            <div className="p-4 rounded-xl bg-blue-50 border border-blue-100 flex items-center gap-3">
-              <div className="bg-blue-600 p-2 rounded-lg text-white"><HandCoins size={20}/></div>
+            <div className="p-4 rounded-xl bg-primary/10 border border-primary/20 flex items-center gap-3">
+              <div className="bg-primary p-2 rounded-lg text-primary-foreground"><HandCoins size={20}/></div>
               <div>
-                <p className="text-[10px] font-black text-blue-600 uppercase">Supporting</p>
-                <p className="text-sm font-bold text-blue-900">{selectedHarambee?.beneficiary_name}</p>
+                <p className="text-[10px] font-black text-primary uppercase">Supporting</p>
+                <p className="text-sm font-bold text-foreground">{selectedHarambee?.beneficiary_name}</p>
               </div>
             </div>
             <div>
-              <Label className="text-[10px] font-black uppercase text-slate-500">Amount (KES)</Label>
+              <Label className="text-[10px] font-black uppercase text-muted-foreground">Amount (KES)</Label>
               <Input type="number" value={contributeAmount} onChange={e => setContributeAmount(e.target.value)} placeholder="Enter amount" className="mt-1 h-12 text-xl font-black" />
             </div>
             <div>
-              <Label className="text-[10px] font-black uppercase text-slate-500">M-Pesa Number</Label>
+              <Label className="text-[10px] font-black uppercase text-muted-foreground">M-Pesa Number</Label>
               <Input value={contributePhone} onChange={e => setContributePhone(e.target.value)} placeholder="07xxxxxxxx" className="mt-1 h-12 font-bold" />
             </div>
             <Button onClick={handleContribute} disabled={contributing} className="w-full h-14 text-lg font-black shadow-xl bg-emerald-600 hover:bg-emerald-700">
               {contributing ? <Loader2 className="animate-spin mr-2" /> : 'SEND CONTRIBUTION'}
             </Button>
-            <p className="text-[10px] text-center text-slate-400 font-medium italic">An M-Pesa prompt will be sent to your phone</p>
+            <p className="text-[10px] text-center text-muted-foreground font-medium italic">An M-Pesa prompt will be sent to your phone</p>
           </div>
         </DialogContent>
       </Dialog>
