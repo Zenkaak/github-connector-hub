@@ -109,6 +109,76 @@ export type Database = {
           },
         ]
       }
+      chama_emergency_contributions: {
+        Row: {
+          amount: number
+          created_at: string
+          group_id: string
+          id: string
+          month: string
+          status: string
+          stk_reference: string | null
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          created_at?: string
+          group_id: string
+          id?: string
+          month: string
+          status?: string
+          stk_reference?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          group_id?: string
+          id?: string
+          month?: string
+          status?: string
+          stk_reference?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chama_emergency_contributions_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "chama_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chama_emergency_fund: {
+        Row: {
+          balance: number
+          created_at: string
+          group_id: string
+          id: string
+        }
+        Insert: {
+          balance?: number
+          created_at?: string
+          group_id: string
+          id?: string
+        }
+        Update: {
+          balance?: number
+          created_at?: string
+          group_id?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chama_emergency_fund_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: true
+            referencedRelation: "chama_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chama_groups: {
         Row: {
           allow_early_withdrawal: boolean | null
@@ -1508,6 +1578,7 @@ export type Database = {
           savings_id: string
           status: string
           user_id: string
+          withdrawal_amount: number | null
         }
         Insert: {
           admin_reason?: string | null
@@ -1518,6 +1589,7 @@ export type Database = {
           savings_id: string
           status?: string
           user_id: string
+          withdrawal_amount?: number | null
         }
         Update: {
           admin_reason?: string | null
@@ -1528,6 +1600,7 @@ export type Database = {
           savings_id?: string
           status?: string
           user_id?: string
+          withdrawal_amount?: number | null
         }
         Relationships: [
           {
@@ -1952,6 +2025,15 @@ export type Database = {
         Args: { chairperson_id: string; decision: string; request_id: string }
         Returns: undefined
       }
+      handle_savings_withdrawal_decision: {
+        Args: {
+          _admin_id: string
+          _admin_reason?: string
+          _decision: string
+          _request_id: string
+        }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -1966,6 +2048,15 @@ export type Database = {
       is_chama_member: {
         Args: { _group_id: string; _user_id: string }
         Returns: boolean
+      }
+      request_savings_withdrawal: {
+        Args: {
+          _penalty_percentage?: number
+          _reason: string
+          _savings_id: string
+          _user_id: string
+        }
+        Returns: string
       }
       request_withdrawal_secure: {
         Args: { _amount: number; _phone: string; _user_id: string }
