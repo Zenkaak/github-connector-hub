@@ -316,7 +316,7 @@ export function ChamaLoans({ groupId, group, members, myRole }: Props) {
         <DialogContent>
           <DialogHeader><DialogTitle className="text-red-600 font-black uppercase">Reject Loan Request</DialogTitle></DialogHeader>
           <div className="space-y-4 pt-4">
-            <Label className="text-slate-500 font-black uppercase text-[10px]">Reason for Rejection</Label>
+            <Label className="text-muted-foreground font-black uppercase text-[10px]">Reason for Rejection</Label>
             <Textarea 
               value={rejectReason} 
               onChange={e => setRejectReason(e.target.value)} 
