@@ -1072,6 +1072,39 @@ export default function WalletPage() {
           </DialogContent>
         </Dialog>
 
+        {/* Statement Period Selector */}
+        <Dialog open={statementPeriod !== null} onOpenChange={(open) => { if (!open) setStatementPeriod(null); }}>
+          <DialogContent className="sm:max-w-sm rounded-2xl p-0 overflow-hidden">
+            <div className="bg-gradient-to-br from-[hsl(var(--navy-800))] to-[hsl(var(--navy-900))] p-6">
+              <DialogTitle className="text-lg font-bold text-foreground flex items-center gap-2">
+                <FileText size={20} /> Download Statement
+              </DialogTitle>
+              <p className="text-xs text-muted-foreground mt-1">Select the period for your professional PDF statement</p>
+            </div>
+            <div className="p-6 space-y-3">
+              {[
+                { months: 3, label: '3 Months' },
+                { months: 6, label: '6 Months' },
+                { months: 12, label: '12 Months' },
+              ].map(opt => (
+                <Button
+                  key={opt.months}
+                  variant="outline"
+                  className="w-full h-14 rounded-xl justify-between text-sm font-bold border-border/40 hover:border-accent/50 hover:bg-accent/5"
+                  onClick={() => generatePDFStatement(opt.months)}
+                  disabled={generatingStatement}
+                >
+                  <span className="flex items-center gap-2">
+                    <Calendar size={16} className="text-accent" />
+                    {opt.label}
+                  </span>
+                  {generatingStatement ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} className="text-muted-foreground" />}
+                </Button>
+              ))}
+            </div>
+          </DialogContent>
+        </Dialog>
+
         <SendMoneyDialog open={sendMoneyOpen} onOpenChange={setSendMoneyOpen} walletBalance={wallet?.balance || 0} onSuccess={fetchWalletData} />
         <RequestMoneyDialog open={requestMoneyOpen} onOpenChange={setRequestMoneyOpen} onSuccess={fetchWalletData} />
         {selectedTransfer && (
