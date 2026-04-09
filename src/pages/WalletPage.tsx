@@ -313,19 +313,18 @@ export default function WalletPage() {
   };
 
   const handleWithdraw = async () => {
-    if (!wallet || !withdrawAmount || !withdrawPhone) return;
+    if (!wallet || !withdrawAmount || !registeredPhone) return;
     const amount = Number(withdrawAmount);
     if (amount < 100 || amount > wallet.balance) return toast.error("Invalid amount");
     setActionLoading(true);
     try {
       const { error } = await supabase.rpc('request_withdrawal_secure' as any, {
-        _user_id: user!.id, _amount: amount, _phone: withdrawPhone.trim(),
+        _user_id: user!.id, _amount: amount, _phone: registeredPhone.trim(),
       });
       if (error) throw error;
       toast.success("Withdrawal request submitted");
       setWithdrawDialog(false);
       setWithdrawAmount('');
-      setWithdrawPhone('');
       fetchWalletData();
     } catch (e: any) {
       toast.error(e.message);
