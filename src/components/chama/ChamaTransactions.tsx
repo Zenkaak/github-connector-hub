@@ -116,7 +116,7 @@ export function ChamaTransactions({ groupId, members }: Props) {
           .order('created_at', { ascending: false }),
         supabase
           .from('chama_savings')
-          .select('mpesa_receipt')
+          .select('stk_reference')
           .eq('group_id', groupId)
       ]);
 
@@ -127,7 +127,7 @@ export function ChamaTransactions({ groupId, members }: Props) {
       if (savingsRes.data) {
         const validReceipts = new Set(
           savingsRes.data
-            .map(s => s.mpesa_receipt)
+            .map(s => s.stk_reference)
             .filter((r): r is string => !!r)
         );
         setConfirmedReceipts(validReceipts);

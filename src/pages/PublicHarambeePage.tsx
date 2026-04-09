@@ -24,7 +24,7 @@ export default function PublicHarambeePage() {
   const [amount, setAmount] = useState('');
   const [name, setName] = useState('');
   const [contributing, setContributing] = useState(false);
-  const [paymentStatus, setPaymentStatus] = useState<'idle' | 'pending' | 'success' | 'failed'>('idle');
+  const [paymentStatus, setPaymentStatus] = useState<string>('idle');
   const [statusMessage, setStatusMessage] = useState('');
 
   const channelRef = useRef<RealtimeChannel | null>(null);
@@ -187,6 +187,7 @@ export default function PublicHarambeePage() {
             amount: amt,
             purpose: 'harambee',
             harambee_id: harambee.id,
+            contributor_name: name.trim() || 'Anonymous',
             metadata: {
               type: 'harambee_contribution',
               harambee_id: harambee.id,

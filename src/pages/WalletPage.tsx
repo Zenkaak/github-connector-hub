@@ -686,8 +686,10 @@ export default function WalletPage() {
         </Dialog>
 
         <SendMoneyDialog open={sendMoneyOpen} onOpenChange={setSendMoneyOpen} walletBalance={wallet?.balance || 0} onSuccess={fetchWalletData} />
-        <RequestMoneyDialog open={requestMoneyOpen} onOpenChange={setRequestMoneyOpen} />
-        <TransferDetailsDialog transfer={selectedTransfer} open={!!selectedTransfer} onOpenChange={() => setSelectedTransfer(null)} currentUserId={user?.id || ''} onRefresh={fetchWalletData} />
+        <RequestMoneyDialog open={requestMoneyOpen} onOpenChange={setRequestMoneyOpen} onSuccess={fetchWalletData} />
+        {selectedTransfer && (
+          <TransferDetailsDialog transfer={selectedTransfer} onClose={() => setSelectedTransfer(null)} onRefresh={fetchWalletData} />
+        )}
       </div>
     </DashboardLayout>
   );
