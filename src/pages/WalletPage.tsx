@@ -439,6 +439,7 @@ export default function WalletPage() {
   const getTransactionLabel = (tx: WalletTransaction) => {
     const desc = tx.description?.toLowerCase() || '';
     if (tx.type === 'deposit') return 'M-Pesa Deposit';
+    if (tx.type === 'loan_repayment') return 'Loan Repayment';
     if (tx.type === 'credit') {
       if (desc.includes('transfer from')) return 'Received Funds';
       if (desc.includes('loan')) return 'Loan Disbursement';
@@ -455,6 +456,7 @@ export default function WalletPage() {
   const getTransactionIcon = (tx: WalletTransaction) => {
     const desc = tx.description?.toLowerCase() || '';
     if (tx.type === 'deposit') return ArrowDownLeft;
+    if (tx.type === 'loan_repayment') return Banknote;
     if (tx.type === 'credit') {
       if (desc.includes('transfer from')) return HandCoins;
       if (desc.includes('loan')) return Banknote;
