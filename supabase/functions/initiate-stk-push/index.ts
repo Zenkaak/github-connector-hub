@@ -7,7 +7,7 @@ const corsHeaders = {
 };
 
 Deno.serve(async (req) => {
-  // 1. Handle CORS Preflight (Essential for Browser Fetch)
+  // 1. Handle CORS Preflight
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -19,12 +19,12 @@ Deno.serve(async (req) => {
 
     console.log("RAW BODY RECEIVED:", body);
 
-    // 2. Extract Fields (Supporting direct props and nested metadata)
+    // 2. Extract Data (Supporting direct props and nested metadata)
     const phone = body.phone;
     const amount = body.amount;
     const purpose = body.purpose || body.metadata?.type || "harambee";
     
-    // userId is optional for Harambee contributions (Public users)
+    // userId is optional for Harambee (Public users)
     const userId = body.userId || body.metadata?.userId || null;
     
     const groupId = body.groupId || body.metadata?.group_id || null;
@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
     const loanId = body.loanId || body.loan_id || body.metadata?.loan_id || null;
     const disbursementId = body.disbursementId || body.disbursement_id || null;
 
-    // 3. Validation Logic
+    // 3. Validation Logic (FIXED: userId is no longer mandatory for Harambee)
     if (!phone || amount === undefined || amount === null) {
       return new Response(
         JSON.stringify({ error: "Missing phone or amount" }),
@@ -45,7 +45,8 @@ Deno.serve(async (req) => {
     }
 
     // Require userId ONLY for non-harambee purposes
-    if (!userId && purpose !== "harambee" && purpose !== "harambee_contribution") {
+    const isHarambee = purpose === "harambee" || purpose === "harambee_contribution";
+    if (!userId && !isHarambee) {
       return new Response(
         JSON.stringify({ error: "User ID is required for this transaction type" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -60,13 +61,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    if (!purpose) {
-      return new Response(
-        JSON.stringify({ error: "Missing purpose" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
     // 4. Phone Normalization (254...)
     let formattedPhone = phone.replace(/\s/g, "").replace(/\+/g, "");
     if (formattedPhone.startsWith("0")) {
@@ -75,7 +69,7 @@ Deno.serve(async (req) => {
       formattedPhone = "254" + formattedPhone;
     }
 
-    // 5. Load Environment Variables
+    // 5. Environment Variables
     const consumerKey = Deno.env.get("MPESA_CONSUMER_KEY");
     const consumerSecret = Deno.env.get("MPESA_CONSUMER_SECRET");
     const shortcode = Deno.env.get("MPESA_SHORTCODE");
@@ -95,15 +89,11 @@ Deno.serve(async (req) => {
       "https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
       { headers: { Authorization: `Basic ${auth}` } }
     );
-
     const tokenData = await tokenRes.json();
-    if (!tokenData.access_token) {
-      console.error("Token error:", tokenData);
-      throw new Error("Failed to get M-Pesa access token");
-    }
+    if (!tokenData.access_token) throw new Error("Failed to get M-Pesa access token");
     const accessToken = tokenData.access_token;
 
-    // 7. Prepare Security Timestamp and Password
+    // 7. Security Timestamp and Password
     const now = new Date();
     const timestamp =
       now.getFullYear().toString() +
@@ -124,13 +114,11 @@ Deno.serve(async (req) => {
       harambee_contribution: "HRB_",
       activation: "ACT_",
       wallet_deposit: "DEP_",
-      chama_joining_fee: "CJFEE_",
     };
-
     const prefix = prefixMap[purpose] || "PAY";
     const reference = `${prefix}${Date.now()}${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
 
-    // 9. Call Safaricom STK Push API
+    // 9. Call M-Pesa STK Push API
     const stkBody = {
       BusinessShortCode: shortcode,
       Password: password,
@@ -161,21 +149,17 @@ Deno.serve(async (req) => {
 
     if (stkData.ResponseCode !== "0") {
       return new Response(
-        JSON.stringify({
-          success: false,
-          error: stkData.errorMessage || stkData.ResponseDescription || "STK Push failed",
-          details: stkData,
-        }),
+        JSON.stringify({ success: false, error: stkData.CustomerMessage || "STK Push failed" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // 10. Initialize Supabase Client & Save Transaction
+    // 10. Save Transaction to Database
     const supabase = createClient(supabaseUrl, serviceRoleKey);
-
-    // Final validation for Harambee Purpose
-    if ((purpose === "harambee" || purpose === "harambee_contribution") && !harambee_id) {
-      throw new Error("harambee_id is required for harambee payments");
+    
+    // Safety check for harambee_id
+    if (isHarambee && !harambee_id) {
+      throw new Error("harambee_id is required for contributions");
     }
 
     const { error: insertError } = await supabase.from("stk_transactions").insert({
@@ -186,9 +170,8 @@ Deno.serve(async (req) => {
       checkout_request_id: stkData.CheckoutRequestID,
       merchant_request_id: stkData.MerchantRequestID,
       status: "pending",
-      purpose: (purpose === "harambee_contribution") ? "harambee" : purpose,
+      purpose: isHarambee ? "harambee" : purpose,
       group_id: groupId,
-      savings_id: savingsId,
       harambee_id: harambee_id,
       loan_id: loanId,
       disbursement_id: disbursementId,
@@ -199,14 +182,8 @@ Deno.serve(async (req) => {
       throw new Error("Failed to save transaction: " + insertError.message);
     }
 
-    // 11. Return Success
     return new Response(
-      JSON.stringify({
-        success: true,
-        reference,
-        checkoutRequestId: stkData.CheckoutRequestID,
-        message: "STK Push sent successfully.",
-      }),
+      JSON.stringify({ success: true, reference, message: "STK Push sent successfully." }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
 
