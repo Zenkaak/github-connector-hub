@@ -32,7 +32,7 @@ Deno.serve(async (req) => {
     // Use maybeSingle() to prevent 406 errors when the record isn't found yet
     const { data, error } = await supabase
       .from("stk_transactions")
-      .select("status, result_desc, mpesa_receipt")
+      .select("status, result_desc, mpesa_receipt, checkout_request_id")
       .eq("reference", reference)
       .maybeSingle();
 
@@ -58,6 +58,7 @@ Deno.serve(async (req) => {
         status: data.status,
         message: data.result_desc,
         receipt: data.mpesa_receipt,
+          checkoutRequestId: data.checkout_request_id,
       }),
       { 
         status: 200, 
