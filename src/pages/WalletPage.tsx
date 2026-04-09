@@ -852,11 +852,12 @@ export default function WalletPage() {
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold">M-Pesa Number</Label>
+                  <Label className="text-xs font-semibold">M-Pesa Number (Registered)</Label>
                   <div className="relative">
                     <Smartphone size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    <Input value={withdrawPhone} onChange={(e) => setWithdrawPhone(e.target.value)} placeholder="07XXXXXXXX" className="h-12 rounded-xl pl-10 font-semibold" />
+                    <Input value={registeredPhone} readOnly className="h-12 rounded-xl pl-10 font-semibold bg-muted/50 cursor-not-allowed" />
                   </div>
+                  <p className="text-[10px] text-muted-foreground">Withdrawals are sent to your registered number only.</p>
                 </div>
               </div>
               <div className="flex items-start gap-2 p-3 rounded-lg bg-accent/5 border border-accent/10">
@@ -902,8 +903,9 @@ export default function WalletPage() {
                       <Input type="number" value={depositAmount} onChange={(e) => setDepositAmount(e.target.value)} placeholder="Enter amount" className="h-12 rounded-xl text-lg font-semibold" disabled={depositStatus === 'pending'} />
                     </div>
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-semibold">M-Pesa Number</Label>
-                      <Input value={depositPhone} onChange={(e) => setDepositPhone(e.target.value)} placeholder="07XXXXXXXX" className="h-12 rounded-xl font-semibold" disabled={depositStatus === 'pending'} />
+                      <Label className="text-xs font-semibold">M-Pesa Number (Registered)</Label>
+                      <Input value={registeredPhone} readOnly className="h-12 rounded-xl font-semibold bg-muted/50 cursor-not-allowed" />
+                      <p className="text-[10px] text-muted-foreground">Deposits are charged to your registered number.</p>
                     </div>
                   </div>
 
