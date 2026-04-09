@@ -127,7 +127,7 @@ export default function WalletPage() {
 
   const filteredTransactions = useMemo(() => {
     return transactions.filter(tx => {
-      const isIn = tx.type === 'credit';
+      const isIn = tx.type === 'credit' || tx.type === 'deposit';
       const isOut = tx.type === 'debit' || tx.type === 'withdrawal';
       const matchesType = filterType === 'all' || (filterType === 'in' && isIn) || (filterType === 'out' && isOut);
       const matchesSearch = tx.description?.toLowerCase().includes(searchQuery.toLowerCase()) || tx.id.toLowerCase().includes(searchQuery.toLowerCase());
