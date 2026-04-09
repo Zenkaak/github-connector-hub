@@ -32,7 +32,6 @@ import { ChamaReports } from '@/components/chama/ChamaReports';
 import { ChamaPenalties } from '@/components/chama/ChamaPenalties';
 import { ChamaEmergencyFund } from '@/components/chama/ChamaEmergencyFund';
 import { cn } from '@/lib/utils';
-import { cn } from '@/lib/utils';
 
 interface Member {
   id: string;
