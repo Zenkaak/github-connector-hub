@@ -67,6 +67,7 @@ export default function SavingsPage() {
   const [depositOpen, setDepositOpen] = useState(false);
   const [withdrawOpen, setWithdrawOpen] = useState(false);
   const [selectedSavings, setSelectedSavings] = useState<PersonalSavings | null>(null);
+  const [selectedWithdrawalRequest, setSelectedWithdrawalRequest] = useState<WithdrawalRequest | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [stkPolling, setStkPolling] = useState(false);
