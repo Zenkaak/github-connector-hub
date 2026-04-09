@@ -217,14 +217,63 @@ Deno.serve(async (req) => {
         const { error: arrErr } = await supabase.from("chama_savings").insert(arrearsEntries);
         if (arrErr) console.error("❌ Arrears insert failed:", JSON.stringify(arrErr));
       } else {
-        const { error: savErr } = await supabase.from("chama_savings").insert({
-          group_id: txn.group_id,
-          user_id: txn.user_id,
-          amount: actualAmount,
-          stk_reference: mpesaReceipt,
-          month: new Date().toISOString().slice(0, 7),
-        });
-        if (savErr) console.error("❌ Savings insert failed:", JSON.stringify(savErr));
+        // ---- EMERGENCY FEE AUTO-DEDUCTION ----
+        let savingsAmount = actualAmount;
+
+        // Check for unpaid emergency contributions
+        const { data: unpaidEmergency } = await supabase
+          .from("chama_emergency_contributions")
+          .select("id, amount")
+          .eq("group_id", txn.group_id)
+          .eq("user_id", txn.user_id)
+          .eq("status", "pending")
+          .order("created_at", { ascending: true });
+
+        if (unpaidEmergency && unpaidEmergency.length > 0) {
+          for (const ec of unpaidEmergency) {
+            if (savingsAmount <= 0) break;
+
+            const deduction = Math.min(savingsAmount, ec.amount);
+            savingsAmount -= deduction;
+
+            // Mark emergency contribution as paid
+            await supabase
+              .from("chama_emergency_contributions")
+              .update({ status: "paid", stk_reference: mpesaReceipt })
+              .eq("id", ec.id);
+
+            // Credit the group emergency fund
+            await supabase.rpc("increment_emergency_fund", {
+              _group_id: txn.group_id,
+              _amount: deduction,
+            });
+
+            console.log(`✅ Emergency fee KES ${deduction} deducted for user ${txn.user_id}`);
+          }
+
+          // Notify user about the deduction
+          if (savingsAmount < actualAmount && txn.user_id) {
+            const deducted = actualAmount - savingsAmount;
+            await supabase.from("notifications").insert({
+              user_id: txn.user_id,
+              title: "Emergency Fund Deducted",
+              message: `KES ${deducted} was auto-deducted from your deposit for emergency fund. KES ${savingsAmount} credited to savings.`,
+              type: "chama_emergency",
+            });
+          }
+        }
+
+        // Only insert savings if there's remaining amount
+        if (savingsAmount > 0) {
+          const { error: savErr } = await supabase.from("chama_savings").insert({
+            group_id: txn.group_id,
+            user_id: txn.user_id,
+            amount: savingsAmount,
+            stk_reference: mpesaReceipt,
+            month: new Date().toISOString().slice(0, 7),
+          });
+          if (savErr) console.error("❌ Savings insert failed:", JSON.stringify(savErr));
+        }
       }
     }
 
