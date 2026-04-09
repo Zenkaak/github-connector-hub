@@ -473,7 +473,7 @@ export default function WalletPage() {
                           <div className="flex items-center gap-3">
                             <div className={cn(
                               "w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-105",
-                              tx.type === 'credit' ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"
+                              isIncoming(tx) ? "bg-emerald-500/10 text-emerald-400" : "bg-rose-500/10 text-rose-400"
                             )}>
                               <TxIcon size={17} />
                             </div>
