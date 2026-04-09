@@ -318,7 +318,7 @@ export type Database = {
           harambee_id: string
           id: string
           stk_reference: string | null
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           amount: number
@@ -327,7 +327,7 @@ export type Database = {
           harambee_id: string
           id?: string
           stk_reference?: string | null
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           amount?: number
@@ -336,7 +336,7 @@ export type Database = {
           harambee_id?: string
           id?: string
           stk_reference?: string | null
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -1542,15 +1542,21 @@ export type Database = {
       stk_transactions: {
         Row: {
           amount: number
+          callback_result: string | null
           checkout_request_id: string | null
+          contributor_name: string | null
           created_at: string
           disbursement_id: string | null
           group_id: string | null
           harambee_id: string | null
           id: string
+          is_arrears_clearance: boolean | null
           loan_id: string | null
           merchant_request_id: string | null
+          metadata: Json | null
           mpesa_receipt: string | null
+          paid_at: string | null
+          penalty_id: string | null
           phone: string
           purpose: string | null
           reference: string
@@ -1559,19 +1565,25 @@ export type Database = {
           savings_id: string | null
           status: string
           updated_at: string
-          user_id: string
+          user_id: string | null
         }
         Insert: {
           amount: number
+          callback_result?: string | null
           checkout_request_id?: string | null
+          contributor_name?: string | null
           created_at?: string
           disbursement_id?: string | null
           group_id?: string | null
           harambee_id?: string | null
           id?: string
+          is_arrears_clearance?: boolean | null
           loan_id?: string | null
           merchant_request_id?: string | null
+          metadata?: Json | null
           mpesa_receipt?: string | null
+          paid_at?: string | null
+          penalty_id?: string | null
           phone: string
           purpose?: string | null
           reference?: string
@@ -1580,19 +1592,25 @@ export type Database = {
           savings_id?: string | null
           status?: string
           updated_at?: string
-          user_id: string
+          user_id?: string | null
         }
         Update: {
           amount?: number
+          callback_result?: string | null
           checkout_request_id?: string | null
+          contributor_name?: string | null
           created_at?: string
           disbursement_id?: string | null
           group_id?: string | null
           harambee_id?: string | null
           id?: string
+          is_arrears_clearance?: boolean | null
           loan_id?: string | null
           merchant_request_id?: string | null
+          metadata?: Json | null
           mpesa_receipt?: string | null
+          paid_at?: string | null
+          penalty_id?: string | null
           phone?: string
           purpose?: string | null
           reference?: string
@@ -1601,7 +1619,7 @@ export type Database = {
           savings_id?: string | null
           status?: string
           updated_at?: string
-          user_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -1609,6 +1627,13 @@ export type Database = {
             columns: ["group_id"]
             isOneToOne: false
             referencedRelation: "chama_groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stk_transactions_penalty_id_fkey"
+            columns: ["penalty_id"]
+            isOneToOne: false
+            referencedRelation: "chama_penalties"
             referencedColumns: ["id"]
           },
           {
@@ -1856,7 +1881,52 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      harambee_contributors: {
+        Row: {
+          amount: number | null
+          contributor_name: string | null
+          harambee_id: string | null
+          paid_at: string | null
+          phone: string | null
+          reference: string | null
+          status: string | null
+        }
+        Insert: {
+          amount?: number | null
+          contributor_name?: string | null
+          harambee_id?: string | null
+          paid_at?: string | null
+          phone?: string | null
+          reference?: string | null
+          status?: string | null
+        }
+        Update: {
+          amount?: number | null
+          contributor_name?: string | null
+          harambee_id?: string | null
+          paid_at?: string | null
+          phone?: string | null
+          reference?: string | null
+          status?: string | null
+        }
+        Relationships: []
+      }
+      harambee_totals: {
+        Row: {
+          harambee_id: string | null
+          total_amount: number | null
+          total_contributions: number | null
+        }
+        Relationships: []
+      }
+      member_arrears_summary: {
+        Row: {
+          missed_payments_count: number | null
+          total_arrears: number | null
+          user_id: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       cancel_wallet_transfer: {
@@ -1870,6 +1940,13 @@ export type Database = {
       get_active_chama_member_count: {
         Args: { _group_id: string }
         Returns: number
+      }
+      get_harambee_summary: {
+        Args: { h_id: string }
+        Returns: {
+          total_amount: number
+          total_contributions: number
+        }[]
       }
       handle_join_request: {
         Args: { chairperson_id: string; decision: string; request_id: string }
