@@ -2041,6 +2041,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_emergency_fund: {
+        Args: { _amount: number; _group_id: string }
+        Returns: undefined
+      }
       is_chama_leader: {
         Args: { _group_id: string; _user_id: string }
         Returns: boolean
