@@ -302,7 +302,7 @@ export default function AdminHarambeeApplicationsPage() {
 
           {/* Applications List */}
           {filtered.length === 0 ? (
-            <EmptyState title="No applications found" description={filter === 'pending_review' ? 'All caught up! No pending reviews.' : 'No matching applications.'} />
+            <EmptyState icon={Heart} title="No applications found" description={filter === 'pending_review' ? 'All caught up! No pending reviews.' : 'No matching applications.'} />
           ) : (
             <div className="space-y-3">
               {filtered.map(app => {
