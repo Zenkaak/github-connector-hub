@@ -85,6 +85,21 @@ const faqs = [
 export default function Index() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const { canInstall, isInstalled, promptInstall } = useInstallPrompt();
+  const [activeHarambees, setActiveHarambees] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchHarambees = async () => {
+      const { data } = await supabase
+        .from('chama_harambees')
+        .select('id, title, description, target_amount, raised_amount, deadline, order_number, status, is_public, group_id, image_urls')
+        .eq('status', 'active')
+        .eq('is_public', true)
+        .order('created_at', { ascending: false })
+        .limit(10);
+      setActiveHarambees(data || []);
+    };
+    fetchHarambees();
+  }, []);
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[hsl(213,72%,8%)]">
