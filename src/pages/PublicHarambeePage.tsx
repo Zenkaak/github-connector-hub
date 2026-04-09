@@ -525,7 +525,7 @@ export default function PublicHarambeePage() {
                       </div>
                       <div>
                         <p className="text-sm font-semibold text-[hsl(210,40%,96%)]">
-                          {c.contributor_name || 'Member'}
+                          {c.contributor_name || 'Anonymous'}
                         </p>
                         <p className="text-[9px] text-[hsl(213,16%,58%)]">
                           {new Date(c.created_at).toLocaleDateString('en-KE', { dateStyle: 'medium' })}
