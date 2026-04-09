@@ -144,8 +144,13 @@ export default function Index() {
                 Open Free Account <ArrowRight size={20} />
               </Button>
             </Link>
-            <Link to="/auth">
+            <Link to="/signup">
               <Button variant="outline" size="xl" className="border-white/10 text-white hover:bg-white/[0.06] backdrop-blur-sm min-w-[160px]">
+                <HeartHandshake size={18} /> Start a Fundraiser
+              </Button>
+            </Link>
+            <Link to="/auth">
+              <Button variant="ghost" size="xl" className="text-white/50 hover:text-white hover:bg-white/[0.06] min-w-[120px]">
                 Sign In
               </Button>
             </Link>
