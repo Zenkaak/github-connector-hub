@@ -32,6 +32,7 @@ const adminNavItems = [
   { label: 'Dashboard', icon: LayoutDashboard, path: '/dashboard/admin' },
   { label: 'Users', icon: Users, path: '/dashboard/admin/users' },
   { label: 'Loan Applications', icon: FileText, path: '/dashboard/admin/loans' },
+  { label: 'Harambee Requests', icon: Bell, path: '/dashboard/admin/harambee-applications' },
   { label: 'Transactions', icon: Wallet, path: '/dashboard/admin/transactions' },
   { label: 'Messages', icon: MessageSquare, path: '/dashboard/admin/messages' },
   { label: 'Withdrawals', icon: Send, path: '/dashboard/admin/withdrawals' },

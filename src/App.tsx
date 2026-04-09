@@ -33,6 +33,7 @@ import CreateHarambeePage from "./pages/CreateHarambeePage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import AdminChamaPage from "./pages/AdminChamaPage";
 import AdminSettingsPage from "./pages/AdminSettingsPage";
+import AdminHarambeeApplicationsPage from "./pages/AdminHarambeeApplicationsPage";
 import ChamaGroupsPage from "./pages/ChamaGroupsPage";
 import ChamaGroupDetailPage from "./pages/ChamaGroupDetailPage";
 import ChamaExplorerPage from "./pages/ChamaExplorerPage";
@@ -146,6 +147,7 @@ function AppRoutes() {
       <Route path="/dashboard/admin/harambees" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="harambees" /></ProtectedRoute>} />
       <Route path="/dashboard/admin/notifications" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="notifications" /></ProtectedRoute>} />
       <Route path="/dashboard/admin/settings" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="settings" /></ProtectedRoute>} />
+      <Route path="/dashboard/admin/harambee-applications" element={<ProtectedRoute requireAdmin><AdminHarambeeApplicationsPage /></ProtectedRoute>} />
       <Route path="/dashboard/admin/chama" element={<ProtectedRoute requireAdmin><AdminChamaPage /></ProtectedRoute>} />
 
       <Route path="*" element={<NotFound />} />

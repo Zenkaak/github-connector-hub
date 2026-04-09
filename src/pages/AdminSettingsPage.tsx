@@ -29,11 +29,14 @@ const categoryLabels: Record<string, { label: string; icon: string }> = {
   wallet: { label: 'Wallet & Transfers', icon: '💳' },
   savings: { label: 'Savings', icon: '🏦' },
   chama: { label: 'Chama Groups', icon: '👥' },
+  harambee: { label: 'Harambee / Fundraisers', icon: '❤️' },
+  limits: { label: 'Limits & KYC', icon: '🔒' },
+  security: { label: 'Security', icon: '🛡️' },
   notifications: { label: 'Notifications', icon: '🔔' },
   system: { label: 'System', icon: '⚙️' },
 };
 
-const categoryOrder = ['general', 'fees', 'loans', 'wallet', 'savings', 'chama', 'notifications', 'system'];
+const categoryOrder = ['general', 'fees', 'loans', 'wallet', 'savings', 'chama', 'harambee', 'limits', 'security', 'notifications', 'system'];
 
 export default function AdminSettingsPage() {
   const { user } = useAuth();
@@ -45,6 +48,16 @@ export default function AdminSettingsPage() {
 
   useEffect(() => {
     fetchSettings();
+
+    // Real-time subscription for settings changes
+    const channel = supabase
+      .channel('admin-settings-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'platform_settings' }, () => {
+        fetchSettings();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
   }, []);
 
   const fetchSettings = async () => {
@@ -96,7 +109,7 @@ export default function AdminSettingsPage() {
   };
 
   const isBooleanSetting = (key: string) =>
-    ['sms_notifications_enabled', 'email_notifications_enabled', 'maintenance_mode', 'new_registrations_enabled', 'loan_applications_enabled', 'chama_creation_enabled'].includes(key);
+    key.includes('enabled') || key.includes('_mode') || key.includes('_required') || key === 'chama_auto_payout' || key === 'chama_meeting_reminders' || key === 'chama_roles_enabled' || key === 'loan_auto_disburse' || key === 'loan_collateral_required';
 
   const filteredSettings = settings.filter(s =>
     !search || s.label.toLowerCase().includes(search.toLowerCase()) || s.key.toLowerCase().includes(search.toLowerCase()) || s.category.toLowerCase().includes(search.toLowerCase())
