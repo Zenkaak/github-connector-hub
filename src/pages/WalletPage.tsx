@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import {
   Wallet,
@@ -22,7 +22,9 @@ import {
   Eye,
   EyeOff,
   Activity,
-  X
+  X,
+  CheckCircle2,
+  XCircle
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -75,6 +77,19 @@ export default function WalletPage() {
   const [depositAmount, setDepositAmount] = useState('');
   const [depositPhone, setDepositPhone] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
+
+  // NEW: Deposit status tracking
+  const [depositStatus, setDepositStatus] = useState<'idle' | 'pending' | 'success' | 'failed'>('idle');
+  const [depositStatusMessage, setDepositStatusMessage] = useState('');
+  const depositPollingRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const depositChannelRef = useRef<any>(null);
+
+  useEffect(() => {
+    return () => {
+      if (depositPollingRef.current) clearInterval(depositPollingRef.current);
+      if (depositChannelRef.current) supabase.removeChannel(depositChannelRef.current);
+    };
+  }, []);
 
   const fetchWalletData = async () => {
     if (!user) return;
@@ -156,22 +171,111 @@ export default function WalletPage() {
     }
   };
 
+  // ========== FIXED: handleDeposit now tracks payment status ==========
+  const startDepositPolling = (reference: string) => {
+    if (depositPollingRef.current) clearInterval(depositPollingRef.current);
+
+    depositPollingRef.current = setInterval(async () => {
+      try {
+        const { data, error } = await supabase
+          .from('stk_transactions')
+          .select('status, result_desc')
+          .eq('reference', reference)
+          .maybeSingle();
+
+        if (error || !data) return;
+
+        if (data.status === 'success' || data.status === 'Completed') {
+          setDepositStatus('success');
+          setDepositStatusMessage('Deposit received successfully! Your wallet has been credited. 🎉');
+          setActionLoading(false);
+          fetchWalletData();
+          if (depositPollingRef.current) clearInterval(depositPollingRef.current);
+        } else if (data.status === 'failed' || data.status === 'Cancelled') {
+          setDepositStatus('failed');
+          setDepositStatusMessage(data.result_desc || 'Payment failed or was cancelled.');
+          setActionLoading(false);
+          if (depositPollingRef.current) clearInterval(depositPollingRef.current);
+        }
+      } catch (err) {
+        console.error('Deposit polling error:', err);
+      }
+    }, 5000);
+  };
+
+  const subscribeToDeposit = (reference: string) => {
+    if (depositChannelRef.current) {
+      supabase.removeChannel(depositChannelRef.current);
+    }
+
+    depositChannelRef.current = supabase
+      .channel(`deposit-status-${reference}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'stk_transactions',
+          filter: `reference=eq.${reference}`,
+        },
+        (payload) => {
+          const row: any = payload.new;
+          if (!row) return;
+
+          if (row.status === 'success' || row.status === 'Completed') {
+            setDepositStatus('success');
+            setDepositStatusMessage('Deposit received successfully! Your wallet has been credited. 🎉');
+            setActionLoading(false);
+            fetchWalletData();
+            if (depositPollingRef.current) clearInterval(depositPollingRef.current);
+          } else if (row.status === 'failed' || row.status === 'Cancelled') {
+            setDepositStatus('failed');
+            setDepositStatusMessage(row.result_desc || 'Payment failed or was cancelled.');
+            setActionLoading(false);
+            if (depositPollingRef.current) clearInterval(depositPollingRef.current);
+          }
+        }
+      )
+      .subscribe();
+  };
+
   const handleDeposit = async () => {
     if (!depositAmount || !depositPhone) return;
     setActionLoading(true);
+    setDepositStatus('pending');
+    setDepositStatusMessage('Sending M-Pesa prompt to your phone...');
+
     try {
-      const { error } = await supabase.functions.invoke('initiate-stk-push', {
+      const { data, error } = await supabase.functions.invoke('initiate-stk-push', {
         body: { phone: depositPhone.trim(), amount: Number(depositAmount), userId: user!.id, purpose: 'wallet_deposit' },
       });
       if (error) throw error;
-      toast.success("M-Pesa STK Push sent");
-      setDepositDialog(false);
+
+      const reference = data?.reference;
+      if (reference) {
+        setDepositStatusMessage('Check your phone for the M-Pesa prompt. Enter your PIN to complete.');
+        subscribeToDeposit(reference);
+        startDepositPolling(reference);
+      } else {
+        setDepositStatusMessage('STK push sent. Check your phone.');
+      }
     } catch {
-      toast.error("M-Pesa service unavailable");
-    } finally {
+      setDepositStatus('failed');
+      setDepositStatusMessage('M-Pesa service unavailable. Please try again.');
       setActionLoading(false);
     }
   };
+
+  const resetDepositState = () => {
+    setDepositDialog(false);
+    setDepositStatus('idle');
+    setDepositStatusMessage('');
+    setDepositAmount('');
+    setDepositPhone('');
+    if (depositPollingRef.current) clearInterval(depositPollingRef.current);
+    if (depositChannelRef.current) supabase.removeChannel(depositChannelRef.current);
+  };
+  // ========== END FIX ==========
 
   if (walletDisabled) return <DashboardLayout><FeatureDisabled /></DashboardLayout>;
   if (loading) return <DashboardLayout><div className="h-screen flex items-center justify-center"><Loader2 className="animate-spin text-accent" size={28} /></div></DashboardLayout>;
@@ -340,13 +444,40 @@ export default function WalletPage() {
             </Card>
           </div>
 
-          {/* Sidebar */}
-          <div className="lg:col-span-4 space-y-6">
+          {/* Side Panel */}
+          <div className="lg:col-span-4 space-y-4">
+            {/* Quick Info */}
+            <Card className="border-border/40">
+              <CardContent className="p-5 space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
+                    <Globe size={18} className="text-accent" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">DASNET Wallet</p>
+                    <p className="text-[11px] text-muted-foreground">Instant M-Pesa deposits & withdrawals</p>
+                  </div>
+                </div>
+                <div className="space-y-2 text-xs">
+                  {[
+                    { icon: ShieldCheck, text: 'Bank-grade security' },
+                    { icon: Smartphone, text: 'M-Pesa integration' },
+                    { icon: Lock, text: 'Encrypted transactions' },
+                  ].map((f, i) => (
+                    <div key={i} className="flex items-center gap-2 text-muted-foreground">
+                      <f.icon size={12} className="text-accent" />
+                      <span>{f.text}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Pending Withdrawals */}
             <Card className="border-border/40">
               <CardHeader className="p-4 border-b border-border/30 flex flex-row items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Clock size={16} className="text-accent" />
+                  <Clock size={14} className="text-accent" />
                   <CardTitle className="text-sm font-bold">Pending Withdrawals</CardTitle>
                 </div>
                 <Badge variant="outline" className="text-[10px] font-semibold">
@@ -469,8 +600,8 @@ export default function WalletPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Deposit Dialog */}
-        <Dialog open={depositDialog} onOpenChange={setDepositDialog}>
+        {/* FIXED: Deposit Dialog with status tracking */}
+        <Dialog open={depositDialog} onOpenChange={(open) => { if (!open) resetDepositState(); else setDepositDialog(true); }}>
           <DialogContent className="sm:max-w-md rounded-2xl p-0 overflow-hidden">
             <div className="bg-gradient-to-br from-[hsl(var(--navy-800))] to-[hsl(var(--navy-900))] p-6">
               <DialogTitle className="text-lg font-bold text-foreground flex items-center gap-2">
@@ -479,23 +610,48 @@ export default function WalletPage() {
               <p className="text-xs text-muted-foreground mt-1">Add funds to your wallet</p>
             </div>
             <div className="p-6 space-y-5">
-              <div className="space-y-3">
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold">Amount (KES)</Label>
-                  <Input type="number" value={depositAmount} onChange={(e) => setDepositAmount(e.target.value)} placeholder="Enter amount" className="h-12 rounded-xl text-lg font-semibold" />
+              {depositStatus === 'success' ? (
+                <div className="text-center py-4 space-y-3">
+                  <CheckCircle2 size={48} className="mx-auto text-emerald-500" />
+                  <h3 className="font-bold text-foreground text-lg">Deposit Successful!</h3>
+                  <p className="text-sm text-muted-foreground">{depositStatusMessage}</p>
+                  <Button onClick={resetDepositState} className="mt-2">Done</Button>
                 </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold">M-Pesa Number</Label>
-                  <Input value={depositPhone} onChange={(e) => setDepositPhone(e.target.value)} placeholder="07XXXXXXXX" className="h-12 rounded-xl font-semibold" />
-                </div>
+              ) : (
+                <>
+                  <div className="space-y-3">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold">Amount (KES)</Label>
+                      <Input type="number" value={depositAmount} onChange={(e) => setDepositAmount(e.target.value)} placeholder="Enter amount" className="h-12 rounded-xl text-lg font-semibold" disabled={depositStatus === 'pending'} />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-semibold">M-Pesa Number</Label>
+                      <Input value={depositPhone} onChange={(e) => setDepositPhone(e.target.value)} placeholder="07XXXXXXXX" className="h-12 rounded-xl font-semibold" disabled={depositStatus === 'pending'} />
+                    </div>
+                  </div>
+
+                  {depositStatus !== 'idle' && (
+                    <div className={cn(
+                      "p-3 rounded-lg text-sm flex items-start gap-2",
+                      depositStatus === 'pending' ? "bg-yellow-500/10 text-yellow-600" :
+                      depositStatus === 'failed' ? "bg-destructive/10 text-destructive" : ""
+                    )}>
+                      {depositStatus === 'pending' && <Loader2 size={16} className="animate-spin mt-0.5" />}
+                      {depositStatus === 'failed' && <XCircle size={16} className="mt-0.5" />}
+                      <span>{depositStatusMessage}</span>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+            {depositStatus !== 'success' && (
+              <div className="p-4 bg-muted/10 border-t border-border/20 flex gap-3">
+                <Button variant="ghost" onClick={resetDepositState} className="flex-1 h-11 rounded-xl font-semibold text-sm">Cancel</Button>
+                <Button variant="gold" onClick={handleDeposit} disabled={actionLoading || !depositAmount || depositStatus === 'pending'} className="flex-1 h-11 rounded-xl font-semibold text-sm">
+                  {actionLoading ? <Loader2 className="animate-spin" size={16} /> : "Send STK Push"}
+                </Button>
               </div>
-            </div>
-            <div className="p-4 bg-muted/10 border-t border-border/20 flex gap-3">
-              <Button variant="ghost" onClick={() => setDepositDialog(false)} className="flex-1 h-11 rounded-xl font-semibold text-sm">Cancel</Button>
-              <Button variant="gold" onClick={handleDeposit} disabled={actionLoading || !depositAmount} className="flex-1 h-11 rounded-xl font-semibold text-sm">
-                {actionLoading ? <Loader2 className="animate-spin" size={16} /> : "Send STK Push"}
-              </Button>
-            </div>
+            )}
           </DialogContent>
         </Dialog>
 
@@ -507,22 +663,22 @@ export default function WalletPage() {
                 <div className="bg-gradient-to-br from-[hsl(var(--navy-800))] to-[hsl(var(--navy-900))] p-8 text-center">
                   <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3">Transaction Receipt</p>
                   <p className="text-4xl font-bold text-foreground">{formatCurrency(selectedTx.amount)}</p>
-                  <Badge className="mt-4 bg-accent/10 text-accent border-accent/20 font-mono text-[10px]">
-                    {selectedTx.id.slice(0, 16).toUpperCase()}
+                  <Badge className={cn("mt-3", selectedTx.type === 'credit' ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive")}>
+                    {selectedTx.type.toUpperCase()}
                   </Badge>
                 </div>
                 <div className="p-6 space-y-4">
                   {[
-                    { l: 'Type', v: selectedTx.type.charAt(0).toUpperCase() + selectedTx.type.slice(1) },
+                    { l: 'Transaction ID', v: selectedTx.id.slice(0, 16) },
                     { l: 'Date', v: new Date(selectedTx.created_at).toLocaleString() },
-                    { l: 'Description', v: selectedTx.description || '—' },
-                  ].map((row, idx) => (
-                    <div key={idx} className="flex items-center justify-between border-b border-border/20 pb-3">
-                      <span className="text-xs font-medium text-muted-foreground">{row.l}</span>
-                      <span className="text-sm font-semibold text-foreground text-right">{row.v}</span>
+                    { l: 'Description', v: selectedTx.description || '-' },
+                    { l: 'Reference', v: selectedTx.reference_id || '-' },
+                  ].map((r, i) => (
+                    <div key={i} className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">{r.l}</span>
+                      <span className="font-semibold text-foreground text-right max-w-[200px] truncate">{r.v}</span>
                     </div>
                   ))}
-                  <Button variant="outline" className="w-full h-10 rounded-xl font-semibold text-sm mt-2" onClick={() => setSelectedTx(null)}>Close</Button>
                 </div>
               </>
             )}
@@ -530,8 +686,8 @@ export default function WalletPage() {
         </Dialog>
 
         <SendMoneyDialog open={sendMoneyOpen} onOpenChange={setSendMoneyOpen} walletBalance={wallet?.balance || 0} onSuccess={fetchWalletData} />
-        <RequestMoneyDialog open={requestMoneyOpen} onOpenChange={setRequestMoneyOpen} onSuccess={fetchWalletData} />
-        <TransferDetailsDialog transfer={selectedTransfer} onClose={() => setSelectedTransfer(null)} onRefresh={fetchWalletData} />
+        <RequestMoneyDialog open={requestMoneyOpen} onOpenChange={setRequestMoneyOpen} />
+        <TransferDetailsDialog transfer={selectedTransfer} open={!!selectedTransfer} onOpenChange={() => setSelectedTransfer(null)} currentUserId={user?.id || ''} onRefresh={fetchWalletData} />
       </div>
     </DashboardLayout>
   );
