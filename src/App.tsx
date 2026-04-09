@@ -29,6 +29,7 @@ import SupportPage from "./pages/SupportPage";
 import TransactionsPage from "./pages/TransactionsPage";
 import WalletPage from "./pages/WalletPage";
 import SavingsPage from "./pages/SavingsPage";
+import CreateHarambeePage from "./pages/CreateHarambeePage";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import AdminChamaPage from "./pages/AdminChamaPage";
 import AdminSettingsPage from "./pages/AdminSettingsPage";
@@ -128,6 +129,7 @@ function AppRoutes() {
       <Route path="/dashboard/chama" element={<ProtectedRoute><ChamaGroupsPage /></ProtectedRoute>} />
       <Route path="/dashboard/chama/explore" element={<ProtectedRoute><ChamaExplorerPage /></ProtectedRoute>} />
       <Route path="/dashboard/chama/:groupId" element={<ProtectedRoute><ChamaGroupDetailPage /></ProtectedRoute>} />
+      <Route path="/dashboard/create-fundraiser" element={<ProtectedRoute><CreateHarambeePage /></ProtectedRoute>} />
 
       {/* ADMIN */}
       <Route path="/dashboard/admin" element={<ProtectedRoute requireAdmin><AdminDashboardPage /></ProtectedRoute>} />
