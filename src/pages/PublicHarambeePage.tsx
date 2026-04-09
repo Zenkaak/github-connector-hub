@@ -1,4 +1,4 @@
-  import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import { HandCoins, Phone, Send, CheckCircle2, XCircle, Loader2, Users, Target, Hash, ChevronLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -126,18 +126,22 @@ export default function PublicHarambeePage() {
     setStatusMessage('Sending payment request to your phone...');
 
     try {
+      // Use direct fetch to the function URL to bypass auth requirements for public users
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
-
       const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/public-harambee-contribute`,
+        `https://${projectId}.supabase.co/functions/v1/initiate-stk-push`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             phone: phone.trim(),
             amount: amt,
-            orderNumber,
-            contributorName: name.trim() || undefined,
+            metadata: {
+              type: 'harambee_contribution',
+              harambee_id: harambee.id,
+              contributor_name: name.trim() || 'Anonymous Contribution',
+              order_number: orderNumber
+            }
           }),
         }
       );
@@ -148,7 +152,6 @@ export default function PublicHarambeePage() {
       if (data.error) throw new Error(data.error);
 
       referenceRef.current = data.reference;
-
       setStatusMessage('Check your phone for the M-Pesa prompt. Enter your PIN to complete.');
       subscribeToTransaction(data.reference);
 
@@ -188,7 +191,6 @@ export default function PublicHarambeePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      {/* UI remains EXACTLY unchanged */}
       <div className="bg-card border-b border-border">
         <div className="max-w-lg mx-auto px-4 py-4 flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center">
@@ -202,195 +204,189 @@ export default function PublicHarambeePage() {
       </div>
 
       <div className="max-w-lg mx-auto px-4 py-6 space-y-5">
-        {/* (ALL YOUR ORIGINAL JSX REMAINS EXACTLY THE SAME — UNCHANGED) */}
-      </div>
+        {/* Images */}  
+        {images.length > 0 && (  
+          <div className="grid grid-cols-3 gap-2 rounded-xl overflow-hidden">  
+            {images.map((img, i) => (  
+              <img  
+                key={i}  
+                src={img}  
+                alt={`Harambee ${i + 1}`}  
+                className={`w-full object-cover rounded-lg ${images.length === 1 ? 'col-span-3 h-48' : 'h-32'}`}  
+              />  
+            ))}  
+          </div>  
+        )}  
+
+        {/* Harambee Details */}  
+        <Card className="p-5 space-y-4">  
+          <div>  
+            <div className="flex items-center gap-2 mb-1">  
+              <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${harambee.status === 'active' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-muted text-muted-foreground'}`}>  
+                {harambee.status === 'active' ? '🟢 Active' : '🔴 Closed'}  
+              </span>  
+              {harambee.is_cross_chama && (  
+                <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 font-medium">  
+                  Cross-Chama  
+                </span>  
+              )}  
+            </div>  
+            <h2 className="text-xl font-bold text-foreground mt-2">  
+              Harambee for {harambee.beneficiary_name}  
+            </h2>  
+            <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{harambee.description}</p>  
+          </div>  
+
+          <div className="flex items-center gap-4 text-xs text-muted-foreground">  
+            <div className="flex items-center gap-1.5">  
+              <Hash size={12} />  
+              <span className="font-mono font-bold">{harambee.order_number}</span>  
+            </div>  
+            {groupName && (  
+              <div className="flex items-center gap-1.5">  
+                <Users size={12} />  
+                <span>{groupName}</span>  
+              </div>  
+            )}  
+          </div>  
+
+          <div className="p-4 rounded-xl bg-muted/40 border border-border/40 space-y-2">  
+            <div className="flex justify-between text-sm">  
+              <span className="text-muted-foreground">Collected</span>  
+              <span className="font-bold text-foreground">  
+                KES {(harambee.raised_amount || 0).toLocaleString()} / {harambee.target_amount?.toLocaleString()}  
+              </span>  
+            </div>  
+            <Progress value={progress} className="h-3" />  
+            <div className="flex justify-between text-[11px] text-muted-foreground">  
+              <span>{Math.round(progress)}% reached</span>  
+              <span>{contributions.length} contribution{contributions.length !== 1 ? 's' : ''}</span>  
+            </div>  
+          </div>  
+
+          <p className="text-[11px] text-muted-foreground">  
+            Started {new Date(harambee.created_at).toLocaleDateString('en-KE', { dateStyle: 'long' })}  
+          </p>  
+        </Card>  
+
+        {/* Contribute Form */}  
+        {harambee.status === 'active' && paymentStatus !== 'success' && (  
+          <Card className="p-5 space-y-4">  
+            <h3 className="text-base font-bold text-foreground flex items-center gap-2">  
+              <Send size={16} className="text-accent" /> Contribute via M-Pesa  
+            </h3>  
+
+            <div>  
+              <Label>Your Name (optional)</Label>  
+              <Input  
+                value={name}  
+                onChange={e => setName(e.target.value)}  
+                placeholder="e.g. Jane Wanjiku"  
+                maxLength={100}  
+                className="mt-1"  
+                disabled={contributing}  
+              />  
+            </div>  
+
+            <div>  
+              <Label>M-Pesa Phone Number *</Label>  
+              <Input  
+                value={phone}  
+                onChange={e => setPhone(e.target.value)}  
+                placeholder="0712345678"  
+                maxLength={15}  
+                className="mt-1"  
+                disabled={contributing}  
+              />  
+            </div>  
+
+            <div>  
+              <Label>Amount (KES) *</Label>  
+              <Input  
+                type="number"  
+                value={amount}  
+                onChange={e => setAmount(e.target.value)}  
+                placeholder="Enter amount"  
+                min={1}  
+                className="mt-1"  
+                disabled={contributing}  
+              />  
+            </div>  
+
+            <Button  
+              onClick={handleContribute}  
+              disabled={contributing || !phone.trim() || !amount}  
+              className="w-full gap-2"  
+            >  
+              {contributing ? (  
+                <><Loader2 size={16} className="animate-spin" /> Processing...</>  
+              ) : (  
+                <><HandCoins size={16} /> Contribute KES {amount ? parseInt(amount).toLocaleString() : '0'}</>  
+              )}  
+            </Button>  
+          </Card>  
+        )}  
+
+        {/* Payment Status */}  
+        {paymentStatus !== 'idle' && (  
+          <Card className={`p-5 text-center space-y-3 ${  
+            paymentStatus === 'success' ? 'border-emerald-500/30' :  
+            paymentStatus === 'failed' ? 'border-destructive/30' : 'border-accent/30'  
+          }`}>  
+            {paymentStatus === 'pending' && (  
+              <Loader2 size={40} className="mx-auto text-accent animate-spin" />  
+            )}  
+            {paymentStatus === 'success' && (  
+              <CheckCircle2 size={40} className="mx-auto text-emerald-500" />  
+            )}  
+            {paymentStatus === 'failed' && (  
+              <XCircle size={40} className="mx-auto text-destructive" />  
+            )}  
+            <p className="text-sm text-foreground font-medium">{statusMessage}</p>  
+            {paymentStatus === 'failed' && (  
+              <Button  
+                variant="outline"  
+                size="sm"  
+                onClick={() => {  
+                  setPaymentStatus('idle');  
+                  setStatusMessage('');  
+                }}  
+              >  
+                Try Again  
+              </Button>  
+            )}  
+          </Card>  
+        )}  
+
+        {/* Recent Contributions */}  
+        {contributions.length > 0 && (  
+          <Card className="p-5">  
+            <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-3">  
+              Recent Contributions ({contributions.length})  
+            </h3>  
+            <div className="space-y-2">  
+              {contributions.slice(0, 20).map(c => (  
+                <div key={c.id} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/30 border border-border/30">  
+                  <div>  
+                    <p className="text-xs font-medium text-foreground">Contributor</p>  
+                    <p className="text-[10px] text-muted-foreground">  
+                      {new Date(c.created_at).toLocaleDateString('en-KE', { dateStyle: 'medium' })}  
+                    </p>  
+                  </div>  
+                  <span className="text-sm font-bold text-accent">KES {c.amount?.toLocaleString()}</span>  
+                </div>  
+              ))}  
+            </div>  
+          </Card>  
+        )}  
+
+        <div className="text-center py-4">  
+          <p className="text-[11px] text-muted-foreground">  
+            Powered by <a href="/" className="text-accent hover:underline font-medium">DASNET VENTURES</a>  
+          </p>  
+        </div>  
+      </div>  
     </div>
   );
 }
-    {/* Images */}  
-    {images.length > 0 && (  
-      <div className="grid grid-cols-3 gap-2 rounded-xl overflow-hidden">  
-        {images.map((img, i) => (  
-          <img  
-            key={i}  
-            src={img}  
-            alt={`Harambee ${i + 1}`}  
-            className={`w-full object-cover rounded-lg ${images.length === 1 ? 'col-span-3 h-48' : 'h-32'}`}  
-          />  
-        ))}  
-      </div>  
-    )}  
-
-    {/* Harambee Details */}  
-    <Card className="p-5 space-y-4">  
-      <div>  
-        <div className="flex items-center gap-2 mb-1">  
-          <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${harambee.status === 'active' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-muted text-muted-foreground'}`}>  
-            {harambee.status === 'active' ? '🟢 Active' : '🔴 Closed'}  
-          </span>  
-          {harambee.is_cross_chama && (  
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-500 font-medium">  
-              Cross-Chama  
-            </span>  
-          )}  
-        </div>  
-        <h2 className="text-xl font-bold text-foreground mt-2">  
-          Harambee for {harambee.beneficiary_name}  
-        </h2>  
-        <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{harambee.description}</p>  
-      </div>  
-
-      <div className="flex items-center gap-4 text-xs text-muted-foreground">  
-        <div className="flex items-center gap-1.5">  
-          <Hash size={12} />  
-          <span className="font-mono font-bold">{harambee.order_number}</span>  
-        </div>  
-        {groupName && (  
-          <div className="flex items-center gap-1.5">  
-            <Users size={12} />  
-            <span>{groupName}</span>  
-          </div>  
-        )}  
-      </div>  
-
-      {/* Progress */}  
-      <div className="p-4 rounded-xl bg-muted/40 border border-border/40 space-y-2">  
-        <div className="flex justify-between text-sm">  
-          <span className="text-muted-foreground">Collected</span>  
-          <span className="font-bold text-foreground">  
-            KES {(harambee.raised_amount || 0).toLocaleString()} / {harambee.target_amount?.toLocaleString()}  
-          </span>  
-        </div>  
-        <Progress value={progress} className="h-3" />  
-        <div className="flex justify-between text-[11px] text-muted-foreground">  
-          <span>{Math.round(progress)}% reached</span>  
-          <span>{contributions.length} contribution{contributions.length !== 1 ? 's' : ''}</span>  
-        </div>  
-      </div>  
-
-      <p className="text-[11px] text-muted-foreground">  
-        Started {new Date(harambee.created_at).toLocaleDateString('en-KE', { dateStyle: 'long' })}  
-      </p>  
-    </Card>  
-
-    {/* Contribute Form */}  
-    {harambee.status === 'active' && paymentStatus !== 'success' && (  
-      <Card className="p-5 space-y-4">  
-        <h3 className="text-base font-bold text-foreground flex items-center gap-2">  
-          <Send size={16} className="text-accent" /> Contribute via M-Pesa  
-        </h3>  
-
-        <div>  
-          <Label>Your Name (optional)</Label>  
-          <Input  
-            value={name}  
-            onChange={e => setName(e.target.value)}  
-            placeholder="e.g. Jane Wanjiku"  
-            maxLength={100}  
-            className="mt-1"  
-            disabled={contributing}  
-          />  
-        </div>  
-
-        <div>  
-          <Label>M-Pesa Phone Number *</Label>  
-          <Input  
-            value={phone}  
-            onChange={e => setPhone(e.target.value)}  
-            placeholder="0712345678"  
-            maxLength={15}  
-            className="mt-1"  
-            disabled={contributing}  
-          />  
-        </div>  
-
-        <div>  
-          <Label>Amount (KES) *</Label>  
-          <Input  
-            type="number"  
-            value={amount}  
-            onChange={e => setAmount(e.target.value)}  
-            placeholder="Enter amount"  
-            min={1}  
-            className="mt-1"  
-            disabled={contributing}  
-          />  
-        </div>  
-
-        <Button  
-          onClick={handleContribute}  
-          disabled={contributing || !phone.trim() || !amount}  
-          className="w-full gap-2"  
-        >  
-          {contributing ? (  
-            <><Loader2 size={16} className="animate-spin" /> Processing...</>  
-          ) : (  
-            <><HandCoins size={16} /> Contribute KES {amount ? parseInt(amount).toLocaleString() : '0'}</>  
-          )}  
-        </Button>  
-      </Card>  
-    )}  
-
-    {/* Payment Status */}  
-    {paymentStatus !== 'idle' && (  
-      <Card className={`p-5 text-center space-y-3 ${  
-        paymentStatus === 'success' ? 'border-emerald-500/30' :  
-        paymentStatus === 'failed' ? 'border-destructive/30' : 'border-accent/30'  
-      }`}>  
-        {paymentStatus === 'pending' && (  
-          <Loader2 size={40} className="mx-auto text-accent animate-spin" />  
-        )}  
-        {paymentStatus === 'success' && (  
-          <CheckCircle2 size={40} className="mx-auto text-emerald-500" />  
-        )}  
-        {paymentStatus === 'failed' && (  
-          <XCircle size={40} className="mx-auto text-destructive" />  
-        )}  
-        <p className="text-sm text-foreground font-medium">{statusMessage}</p>  
-        {paymentStatus === 'failed' && (  
-          <Button  
-            variant="outline"  
-            size="sm"  
-            onClick={() => {  
-              setPaymentStatus('idle');  
-              setStatusMessage('');  
-            }}  
-          >  
-            Try Again  
-          </Button>  
-        )}  
-      </Card>  
-    )}  
-
-    {/* Recent Contributions */}  
-    {contributions.length > 0 && (  
-      <Card className="p-5">  
-        <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground mb-3">  
-          Recent Contributions ({contributions.length})  
-        </h3>  
-        <div className="space-y-2">  
-          {contributions.slice(0, 20).map(c => (  
-            <div key={c.id} className="flex items-center justify-between p-2.5 rounded-lg bg-muted/30 border border-border/30">  
-              <div>  
-                <p className="text-xs font-medium text-foreground">Contributor</p>  
-                <p className="text-[10px] text-muted-foreground">  
-                  {new Date(c.created_at).toLocaleDateString('en-KE', { dateStyle: 'medium' })}  
-                </p>  
-              </div>  
-              <span className="text-sm font-bold text-accent">KES {c.amount?.toLocaleString()}</span>  
-            </div>  
-          ))}  
-        </div>  
-      </Card>  
-    )}  
-{/* Footer */}  
-    <div className="text-center py-4">  
-      <p className="text-[11px] text-muted-foreground">  
-        Powered by <a href="/" className="text-accent hover:underline font-medium">DASNET VENTURES</a>  
-      </p>  
-    </div>  
-  </div>  
-</div>
-
-);
-    } 
+ 
