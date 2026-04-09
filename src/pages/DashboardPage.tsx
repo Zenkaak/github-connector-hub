@@ -147,6 +147,7 @@ export default function DashboardPage() {
   const [disbursements, setDisbursements] = useState<any[]>([]);
   const { canInstall, isInstalled, promptInstall } = useInstallPrompt();
   const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [chamaUpdates, setChamaUpdates] = useState<any[]>([]);
 
   const fetchApplications = async () => {
     try {
