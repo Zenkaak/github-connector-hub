@@ -102,14 +102,29 @@ export default function WalletPage() {
   const fetchWalletData = async () => {
     if (!user) return;
     try {
-      const [w, t, wd, tr] = await Promise.all([
+      const [w, t, wd, tr, loanRepayments] = await Promise.all([
         supabase.from('wallets').select('*').eq('user_id', user.id).maybeSingle(),
         supabase.from('wallet_transactions').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
         supabase.from('withdrawal_requests').select('*').eq('user_id', user.id).order('created_at', { ascending: false }),
-        supabase.from('wallet_transfers').select('*').or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`).order('created_at', { ascending: false })
+        supabase.from('wallet_transfers').select('*').or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`).order('created_at', { ascending: false }),
+        supabase.from('stk_transactions').select('id, amount, mpesa_receipt, status, created_at, reference, purpose').eq('user_id', user.id).eq('purpose', 'loan_repayment').eq('status', 'success').order('created_at', { ascending: false })
       ]);
       if (w.data) setWallet(w.data);
-      if (t.data) setTransactions(t.data as any);
+      
+      // Merge loan repayments as virtual "out" transactions
+      const walletTxs = (t.data || []) as WalletTransaction[];
+      const repaymentTxs: WalletTransaction[] = (loanRepayments.data || []).map((r: any) => ({
+        id: r.id,
+        type: 'loan_repayment',
+        amount: r.amount,
+        description: `Loan Repayment: ${r.mpesa_receipt || r.reference}`,
+        reference_id: r.mpesa_receipt || r.reference,
+        created_at: r.created_at,
+        status: 'completed',
+      }));
+      const allTxs = [...walletTxs, ...repaymentTxs].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      setTransactions(allTxs);
+      
       if (wd.data) setWithdrawals(wd.data as any);
       if (tr.data) setTransfers(tr.data as any);
     } catch {
