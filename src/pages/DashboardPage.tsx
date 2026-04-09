@@ -138,15 +138,6 @@ interface ChamaGroup {
 export default function DashboardPage() {
   const navigate = useNavigate();
   const { profile, user, isAdmin } = useAuth();
-
-  // Admin users should never see the user dashboard
-  useEffect(() => {
-    if (isAdmin) {
-      navigate('/dashboard/admin', { replace: true });
-    }
-  }, [isAdmin, navigate]);
-
-  if (isAdmin) return null;
   const [applications, setApplications] = useState<LoanApplication[]>([]);
   const [walletBalance, setWalletBalance] = useState<number | null>(null);
   const [chamaGroups, setChamaGroups] = useState<ChamaGroup[]>([]);
