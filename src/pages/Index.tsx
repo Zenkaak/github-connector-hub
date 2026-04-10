@@ -694,7 +694,7 @@ export default function Index() {
               {canInstall ? (
                 <Button variant="hero" size="lg" onClick={promptInstall} className="shadow-gold-lg"><Smartphone size={18} /> Install App Now</Button>
               ) : (
-                <p className="text-xs text-white/55">Open browser menu → "Add to Home Screen" to install</p>
+                <Button variant="hero" size="lg" onClick={() => alert('Open your browser menu and tap "Add to Home Screen" or "Install App" to install.')} className="shadow-gold-lg"><Smartphone size={18} /> Install App</Button>
               )}
             </motion.div>
           </div>
