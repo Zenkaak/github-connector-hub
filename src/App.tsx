@@ -39,6 +39,7 @@ import ChamaGroupDetailPage from "./pages/ChamaGroupDetailPage";
 import ChamaExplorerPage from "./pages/ChamaExplorerPage";
 import PublicHarambeePage from "./pages/PublicHarambeePage";
 import NotFound from "./pages/NotFound";
+import UnsubscribePage from "./pages/UnsubscribePage";
 
 /* SEO LANDING PAGES - Corrected to match exact filenames in screenshots */
 import ChamaManagementKenyaPage from "./pages/ChamaManagementKenyaPage";
@@ -86,6 +87,7 @@ function AppRoutes() {
       <Route path="/terms" element={<TermsPage />} />
       <Route path="/contact" element={<ContactPage />} />
       <Route path="/harambee/:orderNumber" element={<PublicHarambeePage />} />
+      <Route path="/unsubscribe" element={<UnsubscribePage />} />
 
       {/* SEO LANDING PAGES */}
       <Route path="/chama-management-kenya" element={<ChamaManagementKenyaPage />} />
