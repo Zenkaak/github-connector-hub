@@ -456,6 +456,48 @@ Deno.serve(async (req) => {
         type: "payment",
       });
       if (notifErr) console.error("❌ Notification insert failed:", JSON.stringify(notifErr));
+
+      // --- EMAIL NOTIFICATION ---
+      try {
+        const { data: userProfile } = await supabase
+          .from("profiles")
+          .select("email, full_name")
+          .eq("user_id", txn.user_id)
+          .maybeSingle();
+
+        if (userProfile?.email) {
+          const purposeLabels: Record<string, string> = {
+            chama_savings: "Chama Savings",
+            chama_penalty: "Penalty Payment",
+            harambee: "Harambee Contribution",
+            loan_repayment: "Loan Repayment",
+            activation: "Account Activation",
+            wallet_deposit: "Wallet Deposit",
+            personal_savings: "Personal Savings",
+            chama_joining_fee: "Joining Fee",
+            chama_join: "Joining Fee",
+          };
+
+          await supabase.functions.invoke("send-transactional-email", {
+            body: {
+              templateName: "transaction-notification",
+              recipientEmail: userProfile.email,
+              idempotencyKey: `txn-${txn.id}-${mpesaReceipt}`,
+              templateData: {
+                type: purposeLabels[purpose] || purpose || "Payment",
+                amount: `KES ${Number(actualAmount).toLocaleString()}`,
+                reference: mpesaReceipt,
+                status: "Completed",
+                date: new Date().toLocaleString("en-KE", { dateStyle: "medium", timeStyle: "short" }),
+                description: ResultDesc || "",
+                name: userProfile.full_name || userName,
+              },
+            },
+          });
+        }
+      } catch (emailErr) {
+        console.error("⚠️ Email notification failed (non-fatal):", emailErr);
+      }
     }
 
     return jsonResponse({ ResultCode: 0, ResultDesc: "Accepted" });
