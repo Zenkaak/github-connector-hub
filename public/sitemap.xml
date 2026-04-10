@@ -1,231 +1,141 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
-<!-- Homepage -->
+<!-- CORE PAGES -->
 <url>
-<loc>https://dassn.lovable.app/</loc>
-<lastmod>2026-04-09</lastmod>
-<changefreq>daily</changefreq>
-<priority>1.0</priority>
-</url>
-
-<!-- Authentication -->
-<url>
-<loc>https://dassn.lovable.app/auth</loc>
-<changefreq>monthly</changefreq>
-<priority>0.7</priority>
+  <loc>https://dasnett.site/</loc>
+  <lastmod>2026-04-10</lastmod>
+  <changefreq>daily</changefreq>
+  <priority>1.0</priority>
 </url>
 
 <url>
-<loc>https://dassn.lovable.app/signup</loc>
-<changefreq>monthly</changefreq>
-<priority>0.7</priority>
+  <loc>https://dasnett.site/explore-chamas</loc>
+  <lastmod>2026-04-10</lastmod>
+  <changefreq>daily</changefreq>
+  <priority>0.8</priority>
 </url>
 
 <url>
-<loc>https://dassn.lovable.app/forgot-password</loc>
-<changefreq>yearly</changefreq>
-<priority>0.4</priority>
+  <loc>https://dasnett.site/loan-products</loc>
+  <lastmod>2026-04-10</lastmod>
+  <changefreq>weekly</changefreq>
+  <priority>0.8</priority>
 </url>
 
-<!-- Public Pages -->
+<!-- TRUST & INFO -->
 <url>
-<loc>https://dassn.lovable.app/about</loc>
-<changefreq>monthly</changefreq>
-<priority>0.7</priority>
-</url>
-
-<url>
-<loc>https://dassn.lovable.app/contact</loc>
-<changefreq>monthly</changefreq>
-<priority>0.7</priority>
+  <loc>https://dasnett.site/about</loc>
+  <lastmod>2026-04-10</lastmod>
+  <changefreq>monthly</changefreq>
+  <priority>0.6</priority>
 </url>
 
 <url>
-<loc>https://dassn.lovable.app/terms</loc>
-<changefreq>yearly</changefreq>
-<priority>0.5</priority>
+  <loc>https://dasnett.site/contact</loc>
+  <lastmod>2026-04-10</lastmod>
+  <changefreq>monthly</changefreq>
+  <priority>0.6</priority>
 </url>
 
 <url>
-<loc>https://dassn.lovable.app/explore-chamas</loc>
-<changefreq>daily</changefreq>
-<priority>0.8</priority>
+  <loc>https://dasnett.site/terms</loc>
+  <lastmod>2026-04-10</lastmod>
+  <changefreq>yearly</changefreq>
+  <priority>0.5</priority>
 </url>
 
 <url>
-<loc>https://dassn.lovable.app/loan-products</loc>
-<changefreq>weekly</changefreq>
-<priority>0.8</priority>
-</url>
-
-<!-- SEO Landing Pages -->
-<url>
-<loc>https://dassn.lovable.app/chama-management-kenya</loc>
-<changefreq>weekly</changefreq>
-<priority>0.9</priority>
+  <loc>https://dasnett.site/pricing</loc>
+  <lastmod>2026-04-10</lastmod>
+  <changefreq>monthly</changefreq>
+  <priority>0.7</priority>
 </url>
 
 <url>
-<loc>https://dassn.lovable.app/harambee-fundraising-kenya</loc>
-<changefreq>weekly</changefreq>
-<priority>0.9</priority>
+  <loc>https://dasnett.site/how-it-works</loc>
+  <lastmod>2026-04-10</lastmod>
+  <changefreq>monthly</changefreq>
+  <priority>0.7</priority>
 </url>
 
 <url>
-<loc>https://dassn.lovable.app/community-loans-kenya</loc>
-<changefreq>weekly</changefreq>
-<priority>0.9</priority>
+  <loc>https://dasnett.site/faq</loc>
+  <lastmod>2026-04-10</lastmod>
+  <changefreq>monthly</changefreq>
+  <priority>0.6</priority>
+</url>
+
+<!-- HIGH-VALUE SEO PAGES -->
+<url>
+  <loc>https://dasnett.site/chama-app-kenya</loc>
+  <lastmod>2026-04-10</lastmod>
+  <changefreq>weekly</changefreq>
+  <priority>0.9</priority>
 </url>
 
 <url>
-<loc>https://dassn.lovable.app/digital-chama-platform</loc>
-<changefreq>weekly</changefreq>
-<priority>0.9</priority>
+  <loc>https://dasnett.site/chama-management-kenya</loc>
+  <lastmod>2026-04-10</lastmod>
+  <changefreq>weekly</changefreq>
+  <priority>0.7</priority>
 </url>
 
 <url>
-<loc>https://dassn.lovable.app/chama-savings-app</loc>
-<changefreq>weekly</changefreq>
-<priority>0.9</priority>
+  <loc>https://dasnett.site/harambee-fundraising-kenya</loc>
+  <lastmod>2026-04-10</lastmod>
+  <changefreq>weekly</changefreq>
+  <priority>0.7</priority>
 </url>
 
 <url>
-<loc>https://dassn.lovable.app/chama-accounting-software</loc>
-<changefreq>weekly</changefreq>
-<priority>0.9</priority>
+  <loc>https://dasnett.site/community-loans-kenya</loc>
+  <lastmod>2026-04-10</lastmod>
+  <changefreq>weekly</changefreq>
+  <priority>0.7</priority>
 </url>
 
 <url>
-<loc>https://dassn.lovable.app/savings-and-credit-groups-kenya</loc>
-<changefreq>weekly</changefreq>
-<priority>0.9</priority>
+  <loc>https://dasnett.site/table-banking-kenya</loc>
+  <lastmod>2026-04-10</lastmod>
+  <changefreq>weekly</changefreq>
+  <priority>0.6</priority>
 </url>
 
 <url>
-<loc>https://dassn.lovable.app/community-investment-platform</loc>
-<changefreq>weekly</changefreq>
-<priority>0.9</priority>
+  <loc>https://dasnett.site/group-savings-app-kenya</loc>
+  <lastmod>2026-04-10</lastmod>
+  <changefreq>weekly</changefreq>
+  <priority>0.6</priority>
+</url>
+
+<!-- BLOG (TRAFFIC ENGINE) -->
+<url>
+  <loc>https://dasnett.site/blog/how-to-start-chama-kenya</loc>
+  <lastmod>2026-04-10</lastmod>
+  <changefreq>weekly</changefreq>
+  <priority>0.7</priority>
 </url>
 
 <url>
-<loc>https://dassn.lovable.app/mobile-money-chama-platform</loc>
-<changefreq>weekly</changefreq>
-<priority>0.9</priority>
+  <loc>https://dasnett.site/blog/chama-rules-and-regulations</loc>
+  <lastmod>2026-04-10</lastmod>
+  <changefreq>weekly</changefreq>
+  <priority>0.7</priority>
 </url>
 
 <url>
-<loc>https://dassn.lovable.app/chama-financial-management</loc>
-<changefreq>weekly</changefreq>
-<priority>0.9</priority>
+  <loc>https://dasnett.site/blog/best-chama-app-kenya</loc>
+  <lastmod>2026-04-10</lastmod>
+  <changefreq>weekly</changefreq>
+  <priority>0.7</priority>
 </url>
 
 <url>
-<loc>https://dassn.lovable.app/digital-chama-wallet</loc>
-<changefreq>weekly</changefreq>
-<priority>0.8</priority>
-</url>
-
-<url>
-<loc>https://dassn.lovable.app/community-savings-platform</loc>
-<changefreq>weekly</changefreq>
-<priority>0.8</priority>
-</url>
-
-<url>
-<loc>https://dassn.lovable.app/chama-member-management</loc>
-<changefreq>weekly</changefreq>
-<priority>0.8</priority>
-</url>
-
-<url>
-<loc>https://dassn.lovable.app/chama-contribution-app</loc>
-<changefreq>weekly</changefreq>
-<priority>0.8</priority>
-</url>
-
-<url>
-<loc>https://dassn.lovable.app/online-investment-groups-kenya</loc>
-<changefreq>weekly</changefreq>
-<priority>0.8</priority>
-</url>
-
-<url>
-<loc>https://dassn.lovable.app/harambee-fundraising-platform</loc>
-<changefreq>weekly</changefreq>
-<priority>0.8</priority>
-</url>
-
-<url>
-<loc>https://dassn.lovable.app/online-fundraising-kenya</loc>
-<changefreq>weekly</changefreq>
-<priority>0.8</priority>
-</url>
-
-<url>
-<loc>https://dassn.lovable.app/harambee-donation-platform</loc>
-<changefreq>weekly</changefreq>
-<priority>0.8</priority>
-</url>
-
-<url>
-<loc>https://dassn.lovable.app/table-banking-kenya</loc>
-<changefreq>weekly</changefreq>
-<priority>0.8</priority>
-</url>
-
-<url>
-<loc>https://dassn.lovable.app/rotating-savings-groups-kenya</loc>
-<changefreq>weekly</changefreq>
-<priority>0.8</priority>
-</url>
-
-<url>
-<loc>https://dassn.lovable.app/digital-savings-groups-kenya</loc>
-<changefreq>weekly</changefreq>
-<priority>0.8</priority>
-</url>
-
-<url>
-<loc>https://dassn.lovable.app/chama-investment-groups-kenya</loc>
-<changefreq>weekly</changefreq>
-<priority>0.8</priority>
-</url>
-
-<url>
-<loc>https://dassn.lovable.app/group-savings-app-kenya</loc>
-<changefreq>weekly</changefreq>
-<priority>0.8</priority>
-</url>
-
-<url>
-<loc>https://dassn.lovable.app/chama-contribution-tracking</loc>
-<changefreq>weekly</changefreq>
-<priority>0.8</priority>
-</url>
-
-<url>
-<loc>https://dassn.lovable.app/chama-loan-management</loc>
-<changefreq>weekly</changefreq>
-<priority>0.8</priority>
-</url>
-
-<url>
-<loc>https://dassn.lovable.app/chama-record-keeping-software</loc>
-<changefreq>weekly</changefreq>
-<priority>0.8</priority>
-</url>
-
-<url>
-<loc>https://dassn.lovable.app/mpesa-chama-management</loc>
-<changefreq>weekly</changefreq>
-<priority>0.8</priority>
-</url>
-
-<url>
-<loc>https://dassn.lovable.app/group-investment-management</loc>
-<changefreq>weekly</changefreq>
-<priority>0.8</priority>
+  <loc>https://dasnett.site/blog/how-harambee-works</loc>
+  <lastmod>2026-04-10</lastmod>
+  <changefreq>weekly</changefreq>
+  <priority>0.7</priority>
 </url>
 
 </urlset>
