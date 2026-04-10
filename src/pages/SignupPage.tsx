@@ -130,7 +130,7 @@ export default function SignupPage() {
           <Logo size="md" />
         </Link>
         <Link to="/auth" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-          Already have an account? <span className="font-semibold text-primary">Sign In</span>
+          Already have an account? <span className="font-semibold text-accent">Sign In</span>
         </Link>
       </div>
 
@@ -147,7 +147,7 @@ export default function SignupPage() {
               Create Your Account
             </h1>
             <p className="text-muted-foreground text-sm">
-              Join Nyota Foundation and access flexible loan products
+              Join DASNET VENTURES and access chama management, savings & loans
             </p>
           </div>
 

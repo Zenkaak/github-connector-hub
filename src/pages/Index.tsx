@@ -212,10 +212,12 @@ export default function Index() {
 
             {!isInstalled && (
               <motion.div variants={fadeUp} custom={5} className="mt-8 flex flex-col items-center gap-2">
-                <Button variant="gold" size="lg" onClick={promptInstall} className="gap-2.5 shadow-gold">
+                <Button variant="gold" size="lg" onClick={canInstall ? promptInstall : undefined} className="gap-2.5 shadow-gold">
                   <Smartphone size={18} /> Download App
                 </Button>
-                <p className="text-[11px] text-white/50">Install for a faster, offline-ready experience</p>
+                <p className="text-[11px] text-white/50">
+                  {canInstall ? 'Tap to install for a faster, offline-ready experience' : 'Open browser menu → "Add to Home Screen" to install'}
+                </p>
               </motion.div>
             )}
           </motion.div>
@@ -692,7 +694,7 @@ export default function Index() {
               {canInstall ? (
                 <Button variant="hero" size="lg" onClick={promptInstall} className="shadow-gold-lg"><Smartphone size={18} /> Install App Now</Button>
               ) : (
-                <p className="text-xs text-white/55">Open browser menu → "Add to Home Screen" to install</p>
+                <Button variant="hero" size="lg" onClick={() => alert('Open your browser menu and tap "Add to Home Screen" or "Install App" to install.')} className="shadow-gold-lg"><Smartphone size={18} /> Install App</Button>
               )}
             </motion.div>
           </div>
