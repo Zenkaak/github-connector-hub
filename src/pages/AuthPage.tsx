@@ -202,7 +202,7 @@ export default function AuthPage() {
             Welcome back to
             <br />
             <span className="bg-gradient-to-r from-accent to-gold-300 bg-clip-text text-transparent">
-              Nyota Foundation
+              DASNET VENTURES
             </span>
           </h2>
           <p className="text-white/50 leading-relaxed max-w-sm">
@@ -223,7 +223,7 @@ export default function AuthPage() {
         </div>
 
         <div className="relative z-10">
-          <p className="text-xs text-white/20">© {new Date().getFullYear()} Nyota Foundation</p>
+          <p className="text-xs text-white/20">© {new Date().getFullYear()} DASNET VENTURES LTD</p>
         </div>
       </div>
 
@@ -363,11 +363,11 @@ export default function AuthPage() {
             )}
             <p className="text-sm text-muted-foreground">
               Don't have an account?{' '}
-              <Link to="/signup" className="text-primary font-semibold hover:underline">
+              <Link to="/signup" className="text-accent font-semibold hover:underline">
                 Create Account
               </Link>
             </p>
-            <Link to="/forgot-password" className="text-xs text-muted-foreground hover:text-accent transition-colors block">
+            <Link to="/forgot-password" className="text-xs text-accent/70 hover:text-accent transition-colors block">
               Forgot your password?
             </Link>
           </div>
