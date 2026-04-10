@@ -102,7 +102,7 @@ export default function Index() {
                 ))}
               </nav>
               <div className="flex items-center gap-2">
-                <Link to="/auth" className="hidden sm:inline-flex">
+                <Link to="/auth">
                   <Button variant="ghost" size="sm" className="text-[13px] text-white/70 hover:text-white hover:bg-white/[0.06]">Sign In</Button>
                 </Link>
                 <Link to="/signup" className="hidden sm:inline-flex">
@@ -188,10 +188,16 @@ export default function Index() {
                 Open Free Account <ArrowRight size={18} />
               </Button>
             </Link>
-            <Link to="/signup" className="w-full sm:w-auto">
+            <Link to="/auth" className="w-full sm:w-auto">
               <Button variant="outline" size="xl" className="w-full sm:w-auto border-white/10 text-white hover:bg-white/[0.06] backdrop-blur-sm min-w-[160px]">
-                <HeartHandshake size={18} /> Start a Fundraiser
+                <Shield size={18} /> Sign In
               </Button>
+            </Link>
+          </motion.div>
+
+          <motion.div variants={fadeUp} custom={3.5} className="mt-4">
+            <Link to="/signup" className="inline-flex items-center gap-2 text-sm text-accent hover:text-accent/80 transition-colors font-semibold">
+              <HeartHandshake size={16} /> Start a Fundraiser <ArrowRight size={14} />
             </Link>
           </motion.div>
 
