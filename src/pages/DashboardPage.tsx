@@ -338,7 +338,7 @@ export default function DashboardPage() {
     { label: 'My Savings', icon: PiggyBank, path: '/dashboard/savings', color: 'bg-success/80 text-success-foreground', desc: 'Target & Lock savings' },
     { label: 'Transactions', icon: Receipt, path: '/dashboard/transactions', color: 'bg-primary/80 text-primary-foreground', desc: 'Payment history' },
     { label: 'Chama Groups', icon: Users, path: '/dashboard/chama', color: 'bg-primary text-primary-foreground', desc: 'My groups' },
-    { label: 'Create Fundraiser', icon: HeartHandshake, path: '/dashboard/harambee/create', color: 'bg-destructive/80 text-destructive-foreground', desc: 'Start a Harambee' },
+    { label: 'Create Fundraiser', icon: HeartHandshake, path: '/dashboard/harambee/create-fundraiser', color: 'bg-destructive/80 text-destructive-foreground', desc: 'Start a Harambee' },
     { label: 'Settings', icon: Settings, path: '/dashboard/settings', color: 'bg-muted text-foreground', desc: 'Preferences' },
   ];
 
