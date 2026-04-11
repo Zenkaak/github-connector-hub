@@ -832,38 +832,73 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
         {/* Section Header */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} key={defaultTab}>
           <div className="flex items-center gap-2 mb-1">
-            <Shield size={18} className="text-accent" />
-            <h1 className="font-display text-lg sm:text-xl lg:text-2xl font-bold text-foreground">{currentSection.title}</h1>
+            <Shield size={16} className="text-accent" />
+            <h1 className="font-display text-base sm:text-lg lg:text-xl font-bold text-foreground">{currentSection.title}</h1>
           </div>
-          <p className="text-xs lg:text-sm text-muted-foreground">{currentSection.desc}</p>
+          <p className="text-[10px] lg:text-xs text-muted-foreground">{currentSection.desc}</p>
         </motion.div>
 
         {/* Overview Stats - only on main dashboard */}
         {defaultTab === 'users' && (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 lg:gap-3">
-            {[
-              { label: 'Total Users', value: stats.totalUsers, icon: Users, color: 'text-emerald-400', bg: 'bg-emerald-500/15' },
-              { label: 'Active Users', value: stats.activeUsers, icon: CheckCircle, color: 'text-emerald-400', bg: 'bg-emerald-500/15' },
-              { label: 'Pending Loans', value: stats.pending, icon: Clock, color: 'text-accent', bg: 'bg-accent/15' },
-              { label: 'M-Pesa Revenue', value: formatCurrency(stats.totalRevenue), icon: Wallet, color: 'text-emerald-400', bg: 'bg-emerald-500/15' },
-              { label: 'Chama Groups', value: stats.chamaGroups, icon: Crown, color: 'text-accent', bg: 'bg-accent/15' },
-              { label: 'Chama Savings', value: formatCurrency(stats.chamaSavings), icon: PiggyBank, color: 'text-accent', bg: 'bg-accent/15' },
-              { label: 'Platform Fees', value: formatCurrency(stats.platformFees), icon: DollarSign, color: 'text-emerald-400', bg: 'bg-emerald-500/15' },
-              { label: 'Personal Savings', value: formatCurrency(stats.personalSavings), icon: Landmark, color: 'text-accent', bg: 'bg-accent/15' },
-            ].map((stat, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 * i }}>
-                <Card className="border-border/50 hover:border-accent/20 transition-colors">
-                  <CardContent className="p-3 lg:p-5">
-                    <div className={`w-8 h-8 lg:w-10 lg:h-10 rounded-xl ${stat.bg} flex items-center justify-center mb-2 lg:mb-3`}>
-                      <stat.icon className={stat.color} size={18} />
-                    </div>
-                    <p className="text-base sm:text-lg lg:text-2xl font-bold font-display text-foreground">{stat.value}</p>
-                    <p className="text-[10px] lg:text-xs text-muted-foreground mt-0.5">{stat.label}</p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 lg:gap-3">
+              {[
+                { label: 'Total Users', value: stats.totalUsers, icon: Users, color: 'text-emerald-400', bg: 'bg-emerald-500/15' },
+                { label: 'Active Users', value: stats.activeUsers, icon: CheckCircle, color: 'text-emerald-400', bg: 'bg-emerald-500/15' },
+                { label: 'Pending Loans', value: stats.pending, icon: Clock, color: 'text-accent', bg: 'bg-accent/15' },
+                { label: 'M-Pesa Revenue', value: formatCurrency(stats.totalRevenue), icon: Wallet, color: 'text-emerald-400', bg: 'bg-emerald-500/15' },
+                { label: 'Chama Groups', value: stats.chamaGroups, icon: Crown, color: 'text-accent', bg: 'bg-accent/15' },
+                { label: 'Chama Savings', value: formatCurrency(stats.chamaSavings), icon: PiggyBank, color: 'text-accent', bg: 'bg-accent/15' },
+                { label: 'Platform Fees', value: formatCurrency(stats.platformFees), icon: DollarSign, color: 'text-emerald-400', bg: 'bg-emerald-500/15' },
+                { label: 'Personal Savings', value: formatCurrency(stats.personalSavings), icon: Landmark, color: 'text-accent', bg: 'bg-accent/15' },
+              ].map((stat, i) => (
+                <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 * i }}>
+                  <Card className="border-border/50 hover:border-accent/20 transition-colors">
+                    <CardContent className="p-2.5 lg:p-4">
+                      <div className={`w-7 h-7 lg:w-9 lg:h-9 rounded-lg ${stat.bg} flex items-center justify-center mb-1.5 lg:mb-2`}>
+                        <stat.icon className={stat.color} size={15} />
+                      </div>
+                      <p className="text-sm sm:text-base lg:text-xl font-bold font-display text-foreground">{stat.value}</p>
+                      <p className="text-[9px] lg:text-[11px] text-muted-foreground mt-0.5">{stat.label}</p>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Quick Actions */}
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Quick Actions</p>
+              <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-6 gap-2">
+                {[
+                  { label: 'Users', icon: Users, path: '/dashboard/admin/users' },
+                  { label: 'Loans', icon: FileText, path: '/dashboard/admin/loans' },
+                  { label: 'M-Pesa', icon: Wallet, path: '/dashboard/admin/transactions' },
+                  { label: 'Transfers', icon: Send, path: '/dashboard/admin/transfers' },
+                  { label: 'Savings', icon: PiggyBank, path: '/dashboard/admin/savings' },
+                  { label: 'Messages', icon: MessageSquare, path: '/dashboard/admin/messages' },
+                  { label: 'Withdrawals', icon: Shield, path: '/dashboard/admin/withdrawals' },
+                  { label: 'Chama', icon: Crown, path: '/dashboard/admin/chama' },
+                  { label: 'Harambee', icon: Heart, path: '/dashboard/admin/harambee-applications' },
+                  { label: 'Audit Logs', icon: ClipboardList, path: '/dashboard/admin/audit' },
+                  { label: 'Notifications', icon: Bell, path: '/dashboard/admin/notifications' },
+                  { label: 'Settings', icon: Settings, path: '/dashboard/admin/settings' },
+                ].map((action, i) => (
+                  <motion.button
+                    key={action.path}
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.03 * i }}
+                    onClick={() => navigate(action.path)}
+                    className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-card border border-border/50 hover:border-accent/30 hover:bg-accent/5 transition-all"
+                  >
+                    <action.icon size={18} className="text-accent" />
+                    <span className="text-[10px] font-medium text-muted-foreground">{action.label}</span>
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+          </>
         )}
 
         {/* Content */}

@@ -427,8 +427,15 @@ export type Database = {
       }
       chama_harambees: {
         Row: {
+          bank_account_name: string | null
+          bank_account_number: string | null
+          bank_branch: string | null
+          bank_name: string | null
           beneficiary_name: string | null
           beneficiary_phone: string | null
+          close_reason: string | null
+          closed_at: string | null
+          closed_by: string | null
           created_at: string
           created_by: string
           deadline: string | null
@@ -438,14 +445,23 @@ export type Database = {
           image_urls: Json | null
           is_public: boolean
           order_number: string | null
+          payout_method: string | null
+          payout_phone: string | null
           raised_amount: number
           status: string
           target_amount: number
           title: string
         }
         Insert: {
+          bank_account_name?: string | null
+          bank_account_number?: string | null
+          bank_branch?: string | null
+          bank_name?: string | null
           beneficiary_name?: string | null
           beneficiary_phone?: string | null
+          close_reason?: string | null
+          closed_at?: string | null
+          closed_by?: string | null
           created_at?: string
           created_by: string
           deadline?: string | null
@@ -455,14 +471,23 @@ export type Database = {
           image_urls?: Json | null
           is_public?: boolean
           order_number?: string | null
+          payout_method?: string | null
+          payout_phone?: string | null
           raised_amount?: number
           status?: string
           target_amount?: number
           title: string
         }
         Update: {
+          bank_account_name?: string | null
+          bank_account_number?: string | null
+          bank_branch?: string | null
+          bank_name?: string | null
           beneficiary_name?: string | null
           beneficiary_phone?: string | null
+          close_reason?: string | null
+          closed_at?: string | null
+          closed_by?: string | null
           created_at?: string
           created_by?: string
           deadline?: string | null
@@ -472,6 +497,8 @@ export type Database = {
           image_urls?: Json | null
           is_public?: boolean
           order_number?: string | null
+          payout_method?: string | null
+          payout_phone?: string | null
           raised_amount?: number
           status?: string
           target_amount?: number
@@ -886,6 +913,27 @@ export type Database = {
           },
         ]
       }
+      chama_notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       chama_penalties: {
         Row: {
           amount: number
@@ -959,6 +1007,8 @@ export type Database = {
           created_at: string
           group_id: string
           id: string
+          last_emergency_paid_at: string | null
+          missed_emergency: boolean | null
           month: string | null
           stk_reference: string | null
           user_id: string
@@ -968,6 +1018,8 @@ export type Database = {
           created_at?: string
           group_id: string
           id?: string
+          last_emergency_paid_at?: string | null
+          missed_emergency?: boolean | null
           month?: string | null
           stk_reference?: string | null
           user_id: string
@@ -977,6 +1029,8 @@ export type Database = {
           created_at?: string
           group_id?: string
           id?: string
+          last_emergency_paid_at?: string | null
+          missed_emergency?: boolean | null
           month?: string | null
           stk_reference?: string | null
           user_id?: string
@@ -1358,6 +1412,10 @@ export type Database = {
           admin_notes: string | null
           approved_at: string | null
           approved_by: string | null
+          bank_account_name: string | null
+          bank_account_number: string | null
+          bank_branch: string | null
+          bank_name: string | null
           beneficiary_name: string
           beneficiary_phone: string | null
           beneficiary_relationship: string
@@ -1369,6 +1427,8 @@ export type Database = {
           harambee_id: string | null
           id: string
           is_public: boolean
+          payout_method: string | null
+          payout_phone: string | null
           platform_fee_percent: number
           status: string
           target_amount: number
@@ -1379,6 +1439,10 @@ export type Database = {
           admin_notes?: string | null
           approved_at?: string | null
           approved_by?: string | null
+          bank_account_name?: string | null
+          bank_account_number?: string | null
+          bank_branch?: string | null
+          bank_name?: string | null
           beneficiary_name: string
           beneficiary_phone?: string | null
           beneficiary_relationship: string
@@ -1390,6 +1454,8 @@ export type Database = {
           harambee_id?: string | null
           id?: string
           is_public?: boolean
+          payout_method?: string | null
+          payout_phone?: string | null
           platform_fee_percent?: number
           status?: string
           target_amount?: number
@@ -1400,6 +1466,10 @@ export type Database = {
           admin_notes?: string | null
           approved_at?: string | null
           approved_by?: string | null
+          bank_account_name?: string | null
+          bank_account_number?: string | null
+          bank_branch?: string | null
+          bank_name?: string | null
           beneficiary_name?: string
           beneficiary_phone?: string | null
           beneficiary_relationship?: string
@@ -1411,6 +1481,8 @@ export type Database = {
           harambee_id?: string | null
           id?: string
           is_public?: boolean
+          payout_method?: string | null
+          payout_phone?: string | null
           platform_fee_percent?: number
           status?: string
           target_amount?: number
@@ -2255,6 +2327,15 @@ export type Database = {
           total_contributions: number
         }[]
       }
+      handle_chama_withdrawal_decision: {
+        Args: {
+          _admin_id: string
+          _admin_reason?: string
+          _decision: string
+          _withdrawal_id: string
+        }
+        Returns: undefined
+      }
       handle_join_request: {
         Args: { chairperson_id: string; decision: string; request_id: string }
         Returns: undefined
@@ -2317,6 +2398,7 @@ export type Database = {
         Args: { _amount: number; _phone: string; _user_id: string }
         Returns: string
       }
+      run_monthly_emergency_deduction: { Args: never; Returns: undefined }
       transfer_wallet_funds: {
         Args: {
           _amount: number
