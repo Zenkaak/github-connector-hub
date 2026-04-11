@@ -685,67 +685,25 @@ export default function Index() {
       </section>
 {/* ───── DOWNLOAD APP ───── */}
 {!isInstalled && (
-  <section className="py-12 sm:py-16 px-4 bg-[hsl(213,72%,10%)] relative overflow-hidden">
-    <div className="container max-w-3xl">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true }}
-        className="rounded-2xl p-6 sm:p-8 md:p-10 text-center bg-gradient-to-br from-primary/20 via-primary/10 to-transparent border border-primary/20"
-      >
-        {/* Icon */}
-        <div className="w-12 h-12 sm:w-14 sm:h-14 mx-auto mb-4 rounded-2xl bg-primary/20 flex items-center justify-center">
-          <Smartphone size={22} className="text-accent" />
-        </div>
-
-        {/* Title */}
-        <h3 className="font-display text-xl sm:text-2xl font-bold text-white mb-2">
-          Install Dasnet App
-        </h3>
-
-        {/* Description */}
-        <p className="text-white/65 max-w-md mx-auto mb-6 text-xs sm:text-sm leading-relaxed">
-          Get faster access, offline support, and real-time notifications directly on your phone.
-        </p>
-
-        {/* Button */}
-        <Button
-          variant="hero"
-          size="lg"
-          disabled={!canInstall && !deferredPrompt}
-          onClick={async () => {
-            if (deferredPrompt) {
-              deferredPrompt.prompt();
-
-              const { outcome } = await deferredPrompt.userChoice;
-
-              if (outcome === "accepted") {
-                console.log("✅ App installed");
-              } else {
-                console.log("❌ Install dismissed");
-              }
-
-              setDeferredPrompt(null);
-              setCanInstall(false);
-            } else {
-              // fallback toast
-              if (typeof window !== "undefined") {
-                import("react-hot-toast").then(({ toast }) => {
-                  toast("Tap ⋮ then 'Install App' or 'Add to Home Screen'", {
-                    icon: "📱",
-                  });
-                });
-              }
-            }
-          }}
-          className="shadow-gold-lg flex items-center gap-2 justify-center"
-        >
-          <Smartphone size={18} />
-          {canInstall ? "Install App Now" : "Install App"}
-        </Button>
-      </motion.div>
-    </div>
-  </section>
+<section className="py-12 sm:py-16 px-4 bg-[hsl(213,72%,10%)] relative overflow-hidden">
+<div className="container max-w-3xl">
+<motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+className="rounded-2xl p-6 sm:p-8 md:p-10 text-center bg-gradient-to-br from-primary/20 via-primary/10 to-transparent border border-primary/20">
+<div className="w-12 h-12 sm:w-14 sm:h-14 mx-auto mb-4 rounded-2xl bg-primary/20 flex items-center justify-center">
+<Smartphone size={22} className="text-accent" />
+</div>
+<h3 className="font-display text-xl sm:text-2xl font-bold text-white mb-2">Download Dasnet App</h3>
+<p className="text-white/65 max-w-md mx-auto mb-6 text-xs sm:text-sm leading-relaxed">
+Install our app for a faster experience—offline support and instant notifications directly to your phone.
+</p>
+{canInstall ? (
+<Button variant="hero" size="lg" onClick={promptInstall} className="shadow-gold-lg"><Smartphone size={18} /> Install App Now</Button>
+) : (
+<Button variant="hero" size="lg" onClick={() => alert('Open your browser menu and tap "Add to Home Screen" or "Install App" to install.')} className="shadow-gold-lg"><Smartphone size={18} /> Install App</Button>
+)}
+</motion.div>
+</div>
+</section>
 )} 
 
       {/* ───── CTA ───── */}
