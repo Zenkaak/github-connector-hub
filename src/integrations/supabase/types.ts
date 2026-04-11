@@ -1245,6 +1245,7 @@ export type Database = {
           created_at: string
           group_id: string
           id: string
+          member_snapshots: Json | null
           reason: string | null
           requested_by: string
           status: string
@@ -1255,6 +1256,7 @@ export type Database = {
           created_at?: string
           group_id: string
           id?: string
+          member_snapshots?: Json | null
           reason?: string | null
           requested_by: string
           status?: string
@@ -1265,6 +1267,7 @@ export type Database = {
           created_at?: string
           group_id?: string
           id?: string
+          member_snapshots?: Json | null
           reason?: string | null
           requested_by?: string
           status?: string
@@ -2384,6 +2387,15 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      request_chama_withdrawal_secure: {
+        Args: {
+          _amount: number
+          _group_id: string
+          _reason?: string
+          _requested_by: string
+        }
+        Returns: string
       }
       request_savings_withdrawal: {
         Args: {
