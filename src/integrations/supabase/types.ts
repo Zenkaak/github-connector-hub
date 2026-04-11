@@ -886,6 +886,27 @@ export type Database = {
           },
         ]
       }
+      chama_notifications: {
+        Row: {
+          created_at: string | null
+          id: string
+          message: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       chama_penalties: {
         Row: {
           amount: number
@@ -959,6 +980,8 @@ export type Database = {
           created_at: string
           group_id: string
           id: string
+          last_emergency_paid_at: string | null
+          missed_emergency: boolean | null
           month: string | null
           stk_reference: string | null
           user_id: string
@@ -968,6 +991,8 @@ export type Database = {
           created_at?: string
           group_id: string
           id?: string
+          last_emergency_paid_at?: string | null
+          missed_emergency?: boolean | null
           month?: string | null
           stk_reference?: string | null
           user_id: string
@@ -977,6 +1002,8 @@ export type Database = {
           created_at?: string
           group_id?: string
           id?: string
+          last_emergency_paid_at?: string | null
+          missed_emergency?: boolean | null
           month?: string | null
           stk_reference?: string | null
           user_id?: string
@@ -2317,6 +2344,7 @@ export type Database = {
         Args: { _amount: number; _phone: string; _user_id: string }
         Returns: string
       }
+      run_monthly_emergency_deduction: { Args: never; Returns: undefined }
       transfer_wallet_funds: {
         Args: {
           _amount: number
