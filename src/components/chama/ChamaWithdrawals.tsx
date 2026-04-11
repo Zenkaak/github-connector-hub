@@ -61,19 +61,19 @@ export function ChamaWithdrawals({ groupId, members, myRole, savings }: Props) {
     if (!user || !amount) return;
     setSubmitting(true);
     try {
-      const { data: wd, error } = await supabase.from('chama_withdrawals').insert({
-        group_id: groupId,
-        requested_by: user.id,
-        amount: parseInt(amount),
-        reason: reason.trim() || null,
-        status: 'pending',
-      }).select().single();
+      // Use secure RPC that immediately debits all member savings
+      const { data: wdId, error } = await supabase.rpc('request_chama_withdrawal_secure', {
+        _group_id: groupId,
+        _requested_by: user.id,
+        _amount: parseInt(amount),
+        _reason: reason.trim() || null,
+      });
 
       if (error) throw error;
 
       // Create approval records for all 3 leaders
       const approvalRecords = leaders.map(l => ({
-        withdrawal_id: wd.id,
+        withdrawal_id: wdId,
         user_id: l.user_id,
         approved: null,
       }));
@@ -84,11 +84,11 @@ export function ChamaWithdrawals({ groupId, members, myRole, savings }: Props) {
         leaders.map(l => ({
           user_id: l.user_id,
           title: 'Withdrawal Request',
-          message: `${getMemberName(user.id)} has requested a withdrawal of KES ${parseInt(amount).toLocaleString()}. Please review and approve or reject.`,
+          message: `${getMemberName(user.id)} has requested a withdrawal of KES ${parseInt(amount).toLocaleString()}. Savings have been debited. Please review and approve or reject.`,
         }))
       );
 
-      toast({ title: 'Request Submitted', description: 'Leaders have been notified for approval.' });
+      toast({ title: 'Request Submitted', description: 'Savings debited immediately. Leaders have been notified.' });
       setRequestOpen(false);
       setAmount(''); setReason('');
       fetchData();
