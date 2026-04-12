@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   HeartHandshake, ArrowRight, ArrowLeft, Upload, X, Loader2, CheckCircle2,
   AlertCircle, FileText, Camera, User, Phone, Heart, GraduationCap, Stethoscope,
-  HelpCircle, Image as ImageIcon, Shield
+  HelpCircle, Image as ImageIcon, Shield, Wallet
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
@@ -99,6 +99,14 @@ export default function CreateHarambeePage() {
   const [targetAmount, setTargetAmount] = useState('');
   const [deadline, setDeadline] = useState('');
 
+  // Payout details
+  const [payoutMethod, setPayoutMethod] = useState('');
+  const [payoutPhone, setPayoutPhone] = useState('');
+  const [bankName, setBankName] = useState('');
+  const [bankAccountNumber, setBankAccountNumber] = useState('');
+  const [bankAccountName, setBankAccountName] = useState('');
+  const [bankBranch, setBankBranch] = useState('');
+
   // Category-specific answers
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const setAnswer = (key: string, val: string) => setAnswers(prev => ({ ...prev, [key]: val }));
@@ -114,9 +122,13 @@ export default function CreateHarambeePage() {
 
   // ─── Validation ───
   const canProceedStep2 = () => {
-    if (!beneficiaryName.trim() || !relationship.trim() || !description.trim()) return false;
+    if (!beneficiaryName.trim() || !relationship.trim()) return false;
+    // Description: min 400 chars
+    if (!description.trim() || description.trim().length < 400) return false;
     const amt = Number(targetAmount);
     if (!amt || amt < 500) return false;
+    // Deadline is mandatory
+    if (!deadline) return false;
 
     if (category === 'funeral') {
       if (!answers.deceased_name || !answers.date_of_death || !answers.burial_date || !answers.burial_location) return false;
@@ -131,6 +143,10 @@ export default function CreateHarambeePage() {
     if (category === 'other') {
       if (!answers.reason_detail) return false;
     }
+    // Payout details required
+    if (!payoutMethod) return false;
+    if (payoutMethod === 'mpesa' && !payoutPhone) return false;
+    if (payoutMethod === 'bank' && (!bankName || !bankAccountNumber || !bankAccountName || !bankBranch)) return false;
     return true;
   };
 
@@ -172,6 +188,13 @@ export default function CreateHarambeePage() {
 
     try {
       // 1. Create application
+      // Validate payout account name matches profile
+      if (payoutMethod === 'bank' && profile?.full_name && bankAccountName.trim().toLowerCase() !== profile.full_name.trim().toLowerCase()) {
+        toast.error('Bank account name must match your verified profile name: ' + profile.full_name);
+        setSubmitting(false);
+        return;
+      }
+
       const { data: app, error: appError } = await supabase
         .from('harambee_applications')
         .insert({
@@ -187,6 +210,12 @@ export default function CreateHarambeePage() {
           platform_fee_percent: 3,
           is_public: true,
           status: 'pending_review',
+          payout_method: payoutMethod,
+          payout_phone: payoutMethod === 'mpesa' ? payoutPhone : null,
+          bank_name: payoutMethod === 'bank' ? bankName : null,
+          bank_account_number: payoutMethod === 'bank' ? bankAccountNumber : null,
+          bank_account_name: payoutMethod === 'bank' ? bankAccountName : null,
+          bank_branch: payoutMethod === 'bank' ? bankBranch : null,
         })
         .select('id')
         .single();
@@ -417,14 +446,57 @@ export default function CreateHarambeePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Field label="Description / Story *" value={description} onChange={setDescription} multiline placeholder="Tell contributors why this fundraiser matters. Be honest and detailed..." />
+                <div>
+                  <Label className="text-[10px] font-bold uppercase text-muted-foreground">Description / Story * (min 400, max 800 characters)</Label>
+                  <Textarea value={description} onChange={e => { if (e.target.value.length <= 800) setDescription(e.target.value); }} placeholder="Tell contributors why this fundraiser matters. Be honest and detailed..." className="mt-1 font-medium min-h-[120px]" />
+                  <p className={`text-[10px] mt-1 ${description.length < 400 ? 'text-destructive' : description.length > 750 ? 'text-accent' : 'text-muted-foreground'}`}>
+                    {description.length}/800 characters {description.length < 400 && `(${400 - description.length} more needed)`}
+                  </p>
+                </div>
                 <Field label="Target Amount (KES) *" value={targetAmount} onChange={setTargetAmount} type="number" placeholder="Minimum KES 500" />
                 {Number(targetAmount) >= 500 && (
                   <p className="text-[10px] text-muted-foreground bg-muted/20 p-2 rounded-lg">
                     💡 Platform fee: 3% of collected = <strong className="text-accent">KES {Math.round(Number(targetAmount) * 0.03).toLocaleString()}</strong> if fully funded
                   </p>
                 )}
-                <Field label="Deadline (Optional)" value={deadline} onChange={setDeadline} type="date" />
+                <Field label="Deadline *" value={deadline} onChange={setDeadline} type="date" />
+              </CardContent>
+            </Card>
+
+            {/* Payout Details */}
+            <Card className="border-border/40">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-bold flex items-center gap-2">
+                  <Wallet size={14} className="text-primary" /> Payout Details *
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label className="text-[10px] font-bold uppercase text-muted-foreground">Payout Method *</Label>
+                  <Select value={payoutMethod} onValueChange={setPayoutMethod}>
+                    <SelectTrigger className="mt-1"><SelectValue placeholder="How should funds be sent?" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="mpesa">M-Pesa</SelectItem>
+                      <SelectItem value="bank">Bank Transfer</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {payoutMethod === 'mpesa' && (
+                  <Field label="M-Pesa Phone Number *" value={payoutPhone} onChange={setPayoutPhone} placeholder="07xxxxxxxx" />
+                )}
+                {payoutMethod === 'bank' && (
+                  <>
+                    <Field label="Bank Name *" value={bankName} onChange={setBankName} placeholder="e.g. KCB, Equity, Co-op" />
+                    <Field label="Account Number *" value={bankAccountNumber} onChange={setBankAccountNumber} placeholder="Bank account number" />
+                    <Field label="Account Name * (must match your profile name)" value={bankAccountName} onChange={setBankAccountName} placeholder={profile?.full_name || 'Full name on bank account'} />
+                    <Field label="Branch *" value={bankBranch} onChange={setBankBranch} placeholder="e.g. Nairobi CBD" />
+                    {profile?.full_name && bankAccountName && bankAccountName.trim().toLowerCase() !== profile.full_name.trim().toLowerCase() && (
+                      <p className="text-[10px] text-destructive bg-destructive/5 p-2 rounded-lg">
+                        ⚠️ Account name must match your verified profile name: <strong>{profile.full_name}</strong>
+                      </p>
+                    )}
+                  </>
+                )}
               </CardContent>
             </Card>
 

@@ -440,7 +440,7 @@ export type Database = {
           created_by: string
           deadline: string | null
           description: string | null
-          group_id: string
+          group_id: string | null
           id: string
           image_urls: Json | null
           is_public: boolean
@@ -466,7 +466,7 @@ export type Database = {
           created_by: string
           deadline?: string | null
           description?: string | null
-          group_id: string
+          group_id?: string | null
           id?: string
           image_urls?: Json | null
           is_public?: boolean
@@ -492,7 +492,7 @@ export type Database = {
           created_by?: string
           deadline?: string | null
           description?: string | null
-          group_id?: string
+          group_id?: string | null
           id?: string
           image_urls?: Json | null
           is_public?: boolean
@@ -2361,6 +2361,14 @@ export type Database = {
       }
       increment_emergency_fund: {
         Args: { _amount: number; _group_id: string }
+        Returns: undefined
+      }
+      increment_harambee_funds: {
+        Args: { amount_to_add: number; target_slug: string }
+        Returns: undefined
+      }
+      increment_harambee_funds_by_id: {
+        Args: { amount_to_add: number; target_id: string }
         Returns: undefined
       }
       is_chama_leader: {

@@ -73,6 +73,11 @@ export default function SignupPage() {
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
+        options: {
+          data: {
+            full_name: data.fullName,
+          },
+        },
       });
 
       if (authError) {
@@ -86,19 +91,26 @@ export default function SignupPage() {
 
       if (authData.user) {
         // With auto-confirm, user is now authenticated. Update the profile created by trigger.
-        const { error: profileError } = await supabase.from('profiles').update({
-          full_name: data.fullName,
-          email: data.email,
-          phone: phone,
-          county: data.county,
-          sub_county: data.subCounty,
-          ward: data.ward,
-          address: data.address,
-          id_number: data.idNumber,
-          date_of_birth: data.dateOfBirth,
-          is_verified: true,
-          is_active: true,
-        }).eq('user_id', authData.user.id);
+        // Retry to handle race condition where trigger hasn't created the profile yet
+        let profileError: any = null;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          const { error } = await supabase.from('profiles').update({
+            full_name: data.fullName,
+            email: data.email,
+            phone: phone,
+            county: data.county,
+            sub_county: data.subCounty,
+            ward: data.ward,
+            address: data.address,
+            id_number: data.idNumber,
+            date_of_birth: data.dateOfBirth,
+            is_verified: true,
+            is_active: true,
+          }).eq('user_id', authData.user.id);
+          profileError = error;
+          if (!error) break;
+          await new Promise(r => setTimeout(r, 500));
+        }
         if (profileError) throw profileError;
 
         const { error: roleError } = await supabase.from('user_roles').insert({
