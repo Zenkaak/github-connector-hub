@@ -99,6 +99,14 @@ export default function CreateHarambeePage() {
   const [targetAmount, setTargetAmount] = useState('');
   const [deadline, setDeadline] = useState('');
 
+  // Payout details
+  const [payoutMethod, setPayoutMethod] = useState('');
+  const [payoutPhone, setPayoutPhone] = useState('');
+  const [bankName, setBankName] = useState('');
+  const [bankAccountNumber, setBankAccountNumber] = useState('');
+  const [bankAccountName, setBankAccountName] = useState('');
+  const [bankBranch, setBankBranch] = useState('');
+
   // Category-specific answers
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const setAnswer = (key: string, val: string) => setAnswers(prev => ({ ...prev, [key]: val }));
@@ -114,9 +122,13 @@ export default function CreateHarambeePage() {
 
   // ─── Validation ───
   const canProceedStep2 = () => {
-    if (!beneficiaryName.trim() || !relationship.trim() || !description.trim()) return false;
+    if (!beneficiaryName.trim() || !relationship.trim()) return false;
+    // Description: min 400 chars
+    if (!description.trim() || description.trim().length < 400) return false;
     const amt = Number(targetAmount);
     if (!amt || amt < 500) return false;
+    // Deadline is mandatory
+    if (!deadline) return false;
 
     if (category === 'funeral') {
       if (!answers.deceased_name || !answers.date_of_death || !answers.burial_date || !answers.burial_location) return false;
@@ -131,6 +143,10 @@ export default function CreateHarambeePage() {
     if (category === 'other') {
       if (!answers.reason_detail) return false;
     }
+    // Payout details required
+    if (!payoutMethod) return false;
+    if (payoutMethod === 'mpesa' && !payoutPhone) return false;
+    if (payoutMethod === 'bank' && (!bankName || !bankAccountNumber || !bankAccountName || !bankBranch)) return false;
     return true;
   };
 
@@ -172,6 +188,13 @@ export default function CreateHarambeePage() {
 
     try {
       // 1. Create application
+      // Validate payout account name matches profile
+      if (payoutMethod === 'bank' && profile?.full_name && bankAccountName.trim().toLowerCase() !== profile.full_name.trim().toLowerCase()) {
+        toast.error('Bank account name must match your verified profile name: ' + profile.full_name);
+        setSubmitting(false);
+        return;
+      }
+
       const { data: app, error: appError } = await supabase
         .from('harambee_applications')
         .insert({
@@ -187,6 +210,12 @@ export default function CreateHarambeePage() {
           platform_fee_percent: 3,
           is_public: true,
           status: 'pending_review',
+          payout_method: payoutMethod,
+          payout_phone: payoutMethod === 'mpesa' ? payoutPhone : null,
+          bank_name: payoutMethod === 'bank' ? bankName : null,
+          bank_account_number: payoutMethod === 'bank' ? bankAccountNumber : null,
+          bank_account_name: payoutMethod === 'bank' ? bankAccountName : null,
+          bank_branch: payoutMethod === 'bank' ? bankBranch : null,
         })
         .select('id')
         .single();

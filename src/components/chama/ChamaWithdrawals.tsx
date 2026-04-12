@@ -61,7 +61,7 @@ export function ChamaWithdrawals({ groupId, members, myRole, savings }: Props) {
     if (!user || !amount) return;
     setSubmitting(true);
     try {
-      // Use secure RPC that immediately debits all member savings
+      // Use secure RPC that immediately debits all member savings (with arrears check)
       const { data: wdId, error } = await supabase.rpc('request_chama_withdrawal_secure', {
         _group_id: groupId,
         _requested_by: user.id,
@@ -69,7 +69,15 @@ export function ChamaWithdrawals({ groupId, members, myRole, savings }: Props) {
         _reason: reason.trim() || null,
       });
 
-      if (error) throw error;
+      if (error) {
+        // Check if it's an arrears error
+        if (error.message?.includes('arrears') || error.message?.includes('insufficient')) {
+          toast({ title: 'Withdrawal Unsuccessful', description: error.message, variant: 'destructive' });
+          setSubmitting(false);
+          return;
+        }
+        throw error;
+      }
 
       // Create approval records for all 3 leaders
       const approvalRecords = leaders.map(l => ({
