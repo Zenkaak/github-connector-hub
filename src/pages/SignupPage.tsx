@@ -29,13 +29,21 @@ export default function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [step, setStep] = useState(1);
 
+  // Check if registration is globally enabled
   if (!isEnabled('new_registrations_enabled')) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-background">
         <div className="max-w-md w-full">
           <div className="text-center mb-6"><Logo size="lg" /></div>
-          <FeatureDisabled title="Registration Closed" message="New account registrations are currently paused. Please check back later or contact support." />
-          <div className="text-center mt-4"><Link to="/auth" className="text-sm text-accent">Already have an account? Sign In</Link></div>
+          <FeatureDisabled 
+            title="Registration Closed" 
+            message="New account registrations are currently paused. Please check back later or contact support." 
+          />
+          <div className="text-center mt-4">
+            <Link to="/auth" className="text-sm text-accent hover:underline">
+              Already have an account? Sign In
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -49,27 +57,36 @@ export default function SignupPage() {
     formState: { errors },
   } = useForm<SignupFormData>({
     resolver: zodResolver(signupSchema),
+    defaultValues: {
+      idType: 'national_id'
+    }
   });
+
+  // Watch ID type to change placeholder/validation hints dynamically
+  const selectedIdType = watch('idType');
 
   const onSubmit = async (data: SignupFormData) => {
     setIsLoading(true);
     try {
+      // Format phone number to E.164 standard
       let phone = data.phone;
       if (phone.startsWith('0')) phone = '+254' + phone.slice(1);
       else if (!phone.startsWith('+')) phone = '+254' + phone;
 
+      // 1. Initial Check: See if details are already in use
       const { data: existingProfile } = await supabase
         .from('profiles')
-        .select('phone, email')
+        .select('phone, email, id_number')
         .or(`phone.eq.${phone},email.eq.${data.email},id_number.eq.${data.idNumber}`)
         .maybeSingle();
 
       if (existingProfile) {
-        toast.error('Account already exists. Please login.');
+        toast.error('An account with these details already exists.');
         navigate('/auth');
         return;
       }
 
+      // 2. Create the Authentication Account
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
@@ -82,7 +99,7 @@ export default function SignupPage() {
 
       if (authError) {
         if (authError.message?.includes('already registered')) {
-          toast.error('This email is already registered. Please login instead.');
+          toast.error('This email is already registered. Please login.');
           navigate('/auth');
           return;
         }
@@ -90,11 +107,12 @@ export default function SignupPage() {
       }
 
       if (authData.user) {
-        // With auto-confirm, user is now authenticated. Update the profile created by trigger.
-        // Retry to handle race condition where trigger hasn't created the profile yet
-        let profileError: any = null;
-        for (let attempt = 0; attempt < 3; attempt++) {
-          const { error } = await supabase.from('profiles').update({
+        // 3. Save ALL details using UPSERT
+        // We use upsert to ensure the profile exists with all form data
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert({
+            user_id: authData.user.id,
             full_name: data.fullName,
             email: data.email,
             phone: phone,
@@ -106,29 +124,27 @@ export default function SignupPage() {
             date_of_birth: data.dateOfBirth,
             is_verified: true,
             is_active: true,
-          }).eq('user_id', authData.user.id);
-          profileError = error;
-          if (!error) break;
-          await new Promise(r => setTimeout(r, 500));
-        }
+            disable_reason: 'none',
+          }, {
+            onConflict: 'user_id'
+          });
+
         if (profileError) throw profileError;
 
+        // 4. Assign default user role
         const { error: roleError } = await supabase.from('user_roles').insert({
           user_id: authData.user.id,
           role: 'user',
         });
-        if (roleError) console.error('Role error:', roleError);
+        
+        if (roleError) console.error('Role assignment error:', roleError);
 
         toast.success('Account created successfully!');
         navigate('/dashboard');
       }
     } catch (error: any) {
       console.error('Signup error:', error);
-      if (error.message?.includes('duplicate key')) {
-        toast.error('Phone number or ID is already registered.');
-      } else {
-        toast.error(error.message || 'Failed to create account');
-      }
+      toast.error(error.message || 'Failed to create account. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -136,7 +152,7 @@ export default function SignupPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Top bar */}
+      {/* Navigation Bar */}
       <div className="h-16 border-b border-border/50 flex items-center justify-between px-4 md:px-8 bg-card/50 backdrop-blur-sm">
         <Link to="/">
           <Logo size="md" />
@@ -153,17 +169,17 @@ export default function SignupPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
         >
-          {/* Header */}
+          {/* Page Header */}
           <div className="text-center mb-8">
             <h1 className="font-display text-2xl md:text-3xl font-bold text-foreground mb-2">
               Create Your Account
             </h1>
             <p className="text-muted-foreground text-sm">
-              Join DASNET VENTURES and access chama management, savings & loans
+              Join DASNET VENTURES and manage your chama, savings, and loans.
             </p>
           </div>
 
-          {/* Step indicator */}
+          {/* Stepper Component */}
           <div className="flex items-center justify-center gap-0 mb-8">
             {stepInfo.map((s, i) => {
               const stepNum = i + 1;
@@ -177,7 +193,7 @@ export default function SignupPage() {
                         isCompleted
                           ? 'bg-success text-success-foreground'
                           : isActive
-                          ? 'bg-primary text-primary-foreground shadow-navy'
+                          ? 'bg-primary text-primary-foreground shadow-lg'
                           : 'bg-muted text-muted-foreground'
                       }`}
                     >
@@ -195,8 +211,8 @@ export default function SignupPage() {
             })}
           </div>
 
-          {/* Form card */}
-          <div className="bg-card rounded-2xl border border-border/50 shadow-lg overflow-hidden">
+          {/* Main Form Card */}
+          <div className="bg-card rounded-2xl border border-border/50 shadow-xl overflow-hidden">
             <div className="p-6 md:p-8 border-b border-border/50 bg-muted/20">
               <h2 className="font-display font-semibold text-lg">
                 {stepInfo[step - 1].desc}
@@ -209,49 +225,75 @@ export default function SignupPage() {
             <div className="p-6 md:p-8">
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
                 <AnimatePresence mode="wait">
+                  
+                  {/* STEP 1: Personal Details */}
                   {step === 1 && (
-                    <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.25 }}>
+                    <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
                       <div className="grid gap-5 sm:grid-cols-2">
                         <div className="sm:col-span-2">
                           <Label htmlFor="fullName" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Full Name (as per ID)</Label>
-                          <Input id="fullName" placeholder="John Doe" {...register('fullName')} className={`mt-2 h-12 rounded-xl ${errors.fullName ? 'border-destructive' : ''}`} />
+                          <Input id="fullName" placeholder="Enter your full name" {...register('fullName')} className="mt-2 h-12 rounded-xl" />
                           {errors.fullName && <p className="text-xs text-destructive mt-1.5">{errors.fullName.message}</p>}
                         </div>
                         <div>
                           <Label htmlFor="email" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Email Address</Label>
-                          <Input id="email" type="email" placeholder="john@example.com" {...register('email')} className={`mt-2 h-12 rounded-xl ${errors.email ? 'border-destructive' : ''}`} />
+                          <Input id="email" type="email" placeholder="john@example.com" {...register('email')} className="mt-2 h-12 rounded-xl" />
                           {errors.email && <p className="text-xs text-destructive mt-1.5">{errors.email.message}</p>}
                         </div>
                         <div>
                           <Label htmlFor="phone" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Phone Number</Label>
-                          <Input id="phone" placeholder="0712345678" {...register('phone')} className={`mt-2 h-12 rounded-xl ${errors.phone ? 'border-destructive' : ''}`} />
+                          <Input id="phone" placeholder="0712345678" {...register('phone')} className="mt-2 h-12 rounded-xl" />
                           {errors.phone && <p className="text-xs text-destructive mt-1.5">{errors.phone.message}</p>}
                         </div>
+
+                        {/* ID Type Selection */}
                         <div>
-                          <Label htmlFor="idNumber" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">National ID Number</Label>
-                          <Input id="idNumber" placeholder="12345678" {...register('idNumber')} className={`mt-2 h-12 rounded-xl ${errors.idNumber ? 'border-destructive' : ''}`} />
+                          <Label htmlFor="idType" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">ID Document Type</Label>
+                          <Select onValueChange={(value) => setValue('idType', value as any)} defaultValue="national_id">
+                            <SelectTrigger className="mt-2 h-12 rounded-xl">
+                              <SelectValue placeholder="Select ID Type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="national_id">National ID</SelectItem>
+                              <SelectItem value="maisha_card">Maisha Card</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div>
+                          <Label htmlFor="idNumber" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                            {selectedIdType === 'maisha_card' ? 'Maisha Card Number' : 'National ID Number'}
+                          </Label>
+                          <Input 
+                            id="idNumber" 
+                            placeholder={selectedIdType === 'maisha_card' ? "8 or 9 digits" : "8 digits"} 
+                            {...register('idNumber')} 
+                            className="mt-2 h-12 rounded-xl" 
+                          />
                           {errors.idNumber && <p className="text-xs text-destructive mt-1.5">{errors.idNumber.message}</p>}
                         </div>
-                        <div>
+
+                        <div className="sm:col-span-2">
                           <Label htmlFor="dateOfBirth" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Date of Birth</Label>
-                          <Input id="dateOfBirth" type="date" {...register('dateOfBirth')} className={`mt-2 h-12 rounded-xl ${errors.dateOfBirth ? 'border-destructive' : ''}`} />
+                          <Input id="dateOfBirth" type="date" {...register('dateOfBirth')} className="mt-2 h-12 rounded-xl" />
                           {errors.dateOfBirth && <p className="text-xs text-destructive mt-1.5">{errors.dateOfBirth.message}</p>}
                         </div>
                       </div>
-                      <Button type="button" variant="gold" className="w-full mt-6 h-12 text-base" onClick={() => setStep(2)}>
+                      <Button type="button" variant="gold" className="w-full mt-6 h-12 text-base font-semibold" onClick={() => setStep(2)}>
                         Continue
-                        <ArrowRight size={18} />
+                        <ArrowRight size={18} className="ml-2" />
                       </Button>
                     </motion.div>
                   )}
 
+                  {/* STEP 2: Location Details */}
                   {step === 2 && (
-                    <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.25 }}>
+                    <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
                       <div className="grid gap-5 sm:grid-cols-2">
                         <div>
                           <Label htmlFor="county" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">County</Label>
                           <Select onValueChange={(value) => setValue('county', value)}>
-                            <SelectTrigger className={`mt-2 h-12 rounded-xl ${errors.county ? 'border-destructive' : ''}`}>
+                            <SelectTrigger className="mt-2 h-12 rounded-xl">
                               <SelectValue placeholder="Select county" />
                             </SelectTrigger>
                             <SelectContent>
@@ -264,35 +306,36 @@ export default function SignupPage() {
                         </div>
                         <div>
                           <Label htmlFor="subCounty" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Sub-County</Label>
-                          <Input id="subCounty" placeholder="Enter sub-county" {...register('subCounty')} className={`mt-2 h-12 rounded-xl ${errors.subCounty ? 'border-destructive' : ''}`} />
+                          <Input id="subCounty" placeholder="Enter sub-county" {...register('subCounty')} className="mt-2 h-12 rounded-xl" />
                           {errors.subCounty && <p className="text-xs text-destructive mt-1.5">{errors.subCounty.message}</p>}
                         </div>
                         <div>
                           <Label htmlFor="ward" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Ward</Label>
-                          <Input id="ward" placeholder="Enter ward" {...register('ward')} className={`mt-2 h-12 rounded-xl ${errors.ward ? 'border-destructive' : ''}`} />
+                          <Input id="ward" placeholder="Enter ward" {...register('ward')} className="mt-2 h-12 rounded-xl" />
                           {errors.ward && <p className="text-xs text-destructive mt-1.5">{errors.ward.message}</p>}
                         </div>
                         <div>
-                          <Label htmlFor="address" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Physical Address</Label>
-                          <Input id="address" placeholder="Street, Building, etc." {...register('address')} className={`mt-2 h-12 rounded-xl ${errors.address ? 'border-destructive' : ''}`} />
+                          <Label htmlFor="address" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Physical Address (Min 3 characters)</Label>
+                          <Input id="address" placeholder="Street, Building, or Landmark" {...register('address')} className="mt-2 h-12 rounded-xl" />
                           {errors.address && <p className="text-xs text-destructive mt-1.5">{errors.address.message}</p>}
                         </div>
                       </div>
                       <div className="flex gap-3 mt-6">
-                        <Button type="button" variant="outline" className="flex-1 h-12" onClick={() => setStep(1)}>
-                          <ArrowLeft size={16} />
+                        <Button type="button" variant="outline" className="flex-1 h-12 rounded-xl" onClick={() => setStep(1)}>
+                          <ArrowLeft size={16} className="mr-2" />
                           Back
                         </Button>
-                        <Button type="button" variant="gold" className="flex-1 h-12 text-base" onClick={() => setStep(3)}>
+                        <Button type="button" variant="gold" className="flex-1 h-12 rounded-xl text-base font-semibold" onClick={() => setStep(3)}>
                           Continue
-                          <ArrowRight size={18} />
+                          <ArrowRight size={18} className="ml-2" />
                         </Button>
                       </div>
                     </motion.div>
                   )}
 
+                  {/* STEP 3: Security Details */}
                   {step === 3 && (
-                    <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.25 }}>
+                    <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}>
                       <div className="space-y-5">
                         <div>
                           <Label htmlFor="password" className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Password</Label>
@@ -302,14 +345,14 @@ export default function SignupPage() {
                               type={showPassword ? 'text' : 'password'}
                               placeholder="Create a strong password"
                               {...register('password')}
-                              className={`h-12 rounded-xl ${errors.password ? 'border-destructive pr-10' : 'pr-10'}`}
+                              className="h-12 rounded-xl pr-10"
                             />
                             <button
                               type="button"
                               onClick={() => setShowPassword(!showPassword)}
                               className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                             >
-                              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                             </button>
                           </div>
                           {errors.password && <p className="text-xs text-destructive mt-1.5">{errors.password.message}</p>}
@@ -321,26 +364,26 @@ export default function SignupPage() {
                             type="password"
                             placeholder="Confirm your password"
                             {...register('confirmPassword')}
-                            className={`mt-2 h-12 rounded-xl ${errors.confirmPassword ? 'border-destructive' : ''}`}
+                            className="mt-2 h-12 rounded-xl"
                           />
                           {errors.confirmPassword && <p className="text-xs text-destructive mt-1.5">{errors.confirmPassword.message}</p>}
                         </div>
                       </div>
                       <div className="flex gap-3 mt-6">
-                        <Button type="button" variant="outline" className="flex-1 h-12" onClick={() => setStep(2)}>
-                          <ArrowLeft size={16} />
+                        <Button type="button" variant="outline" className="flex-1 h-12 rounded-xl" onClick={() => setStep(2)}>
+                          <ArrowLeft size={16} className="mr-2" />
                           Back
                         </Button>
-                        <Button type="submit" variant="gold" className="flex-1 h-12 text-base" disabled={isLoading}>
+                        <Button type="submit" variant="gold" className="flex-1 h-12 rounded-xl text-base font-semibold" disabled={isLoading}>
                           {isLoading ? (
                             <>
-                              <Loader2 className="animate-spin" size={18} />
-                              Creating...
+                              <Loader2 className="animate-spin mr-2" size={18} />
+                              Processing...
                             </>
                           ) : (
                             <>
                               Create Account
-                              <ArrowRight size={18} />
+                              <ArrowRight size={18} className="ml-2" />
                             </>
                           )}
                         </Button>
