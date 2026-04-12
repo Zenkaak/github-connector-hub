@@ -3,14 +3,18 @@ import { z } from 'zod';
 export const signupSchema = z.object({
   fullName: z.string().min(2, 'Full name must be at least 2 characters').max(100),
   email: z.string().email('Invalid email address'),
-  phone: z.string().regex(/^(?:\+254|0)7\d{8}$/, 'Enter a valid Kenyan phone number'),
+  phone: z.string().regex(/^(?:\+254|0)[17]\d{8}$/, 'Enter a valid Kenyan phone number'),
   password: z.string().min(8, 'Password must be at least 8 characters'),
   confirmPassword: z.string(),
   county: z.string().min(1, 'County is required'),
   subCounty: z.string().min(1, 'Sub-county is required'),
   ward: z.string().min(1, 'Ward is required'),
-  address: z.string().min(5, 'Physical address must be at least 5 characters'),
-  idNumber: z.string().regex(/^\d{7,8}$/, 'Enter a valid National ID number (7-8 digits)'),
+  // Updated to 3 characters minimum as requested
+  address: z.string().min(3, 'Physical address must be at least 3 characters'),
+  // New field to support ID selection
+  idType: z.enum(['national_id', 'maisha_card']),
+  // Updated to support 8-9 digits
+  idNumber: z.string().regex(/^\d{8,9}$/, 'Enter a valid ID number (8-9 digits)'),
   dateOfBirth: z.string().min(1, 'Date of birth is required'),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
@@ -34,14 +38,14 @@ export const loanApplicationSchema = z.object({
   existingLoanAmount: z.number().optional(),
   monthlyExpenses: z.number().min(0, 'Monthly expenses cannot be negative'),
   nextOfKinName: z.string().min(2, 'Next of kin name is required'),
-  nextOfKinPhone: z.string().regex(/^(?:\+254|0)7\d{8}$/, 'Enter a valid Kenyan phone number'),
+  nextOfKinPhone: z.string().regex(/^(?:\+254|0)[17]\d{8}$/, 'Enter a valid Kenyan phone number'),
   businessSector: z.string().optional(),
   numberOfDependents: z.number().optional(),
   educationLevel: z.string().optional(),
 });
 
 export const stkPushSchema = z.object({
-  phone: z.string().regex(/^(?:\+254|0)7\d{8}$/, 'Enter a valid Kenyan phone number'),
+  phone: z.string().regex(/^(?:\+254|0)[17]\d{8}$/, 'Enter a valid Kenyan phone number'),
 });
 
 export type SignupFormData = z.infer<typeof signupSchema>;
