@@ -446,14 +446,57 @@ export default function CreateHarambeePage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Field label="Description / Story *" value={description} onChange={setDescription} multiline placeholder="Tell contributors why this fundraiser matters. Be honest and detailed..." />
+                <div>
+                  <Label className="text-[10px] font-bold uppercase text-muted-foreground">Description / Story * (min 400, max 800 characters)</Label>
+                  <Textarea value={description} onChange={e => { if (e.target.value.length <= 800) setDescription(e.target.value); }} placeholder="Tell contributors why this fundraiser matters. Be honest and detailed..." className="mt-1 font-medium min-h-[120px]" />
+                  <p className={`text-[10px] mt-1 ${description.length < 400 ? 'text-destructive' : description.length > 750 ? 'text-accent' : 'text-muted-foreground'}`}>
+                    {description.length}/800 characters {description.length < 400 && `(${400 - description.length} more needed)`}
+                  </p>
+                </div>
                 <Field label="Target Amount (KES) *" value={targetAmount} onChange={setTargetAmount} type="number" placeholder="Minimum KES 500" />
                 {Number(targetAmount) >= 500 && (
                   <p className="text-[10px] text-muted-foreground bg-muted/20 p-2 rounded-lg">
                     💡 Platform fee: 3% of collected = <strong className="text-accent">KES {Math.round(Number(targetAmount) * 0.03).toLocaleString()}</strong> if fully funded
                   </p>
                 )}
-                <Field label="Deadline (Optional)" value={deadline} onChange={setDeadline} type="date" />
+                <Field label="Deadline *" value={deadline} onChange={setDeadline} type="date" />
+              </CardContent>
+            </Card>
+
+            {/* Payout Details */}
+            <Card className="border-border/40">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm font-bold flex items-center gap-2">
+                  <Wallet size={14} className="text-primary" /> Payout Details *
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label className="text-[10px] font-bold uppercase text-muted-foreground">Payout Method *</Label>
+                  <Select value={payoutMethod} onValueChange={setPayoutMethod}>
+                    <SelectTrigger className="mt-1"><SelectValue placeholder="How should funds be sent?" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="mpesa">M-Pesa</SelectItem>
+                      <SelectItem value="bank">Bank Transfer</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {payoutMethod === 'mpesa' && (
+                  <Field label="M-Pesa Phone Number *" value={payoutPhone} onChange={setPayoutPhone} placeholder="07xxxxxxxx" />
+                )}
+                {payoutMethod === 'bank' && (
+                  <>
+                    <Field label="Bank Name *" value={bankName} onChange={setBankName} placeholder="e.g. KCB, Equity, Co-op" />
+                    <Field label="Account Number *" value={bankAccountNumber} onChange={setBankAccountNumber} placeholder="Bank account number" />
+                    <Field label="Account Name * (must match your profile name)" value={bankAccountName} onChange={setBankAccountName} placeholder={profile?.full_name || 'Full name on bank account'} />
+                    <Field label="Branch *" value={bankBranch} onChange={setBankBranch} placeholder="e.g. Nairobi CBD" />
+                    {profile?.full_name && bankAccountName && bankAccountName.trim().toLowerCase() !== profile.full_name.trim().toLowerCase() && (
+                      <p className="text-[10px] text-destructive bg-destructive/5 p-2 rounded-lg">
+                        ⚠️ Account name must match your verified profile name: <strong>{profile.full_name}</strong>
+                      </p>
+                    )}
+                  </>
+                )}
               </CardContent>
             </Card>
 
