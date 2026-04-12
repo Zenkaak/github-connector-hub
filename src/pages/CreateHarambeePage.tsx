@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   HeartHandshake, ArrowRight, ArrowLeft, Upload, X, Loader2, CheckCircle2,
   AlertCircle, FileText, Camera, User, Phone, Heart, GraduationCap, Stethoscope,
-  HelpCircle, Image as ImageIcon, Shield
+  HelpCircle, Image as ImageIcon, Shield, Wallet
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
