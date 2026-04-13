@@ -716,7 +716,6 @@ export default function CreateHarambeePage() {
               By submitting, you confirm all information and documents are genuine. False applications will be reported.
             </p>
           </div>
-          </div>
         )}
           </TabsContent>
         </Tabs>
