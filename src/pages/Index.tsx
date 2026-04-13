@@ -788,7 +788,7 @@ Install our app for a faster experience—offline support and instant notificati
               <h4 className="text-[11px] font-bold uppercase tracking-[0.18em] text-white/70 mb-3 sm:mb-4">Contact</h4>
               <ul className="space-y-2.5">
                 <li className="flex items-center gap-2.5 text-xs sm:text-sm text-white/65">
-                  <Phone size={13} className="text-accent/60 shrink-0" /> +254 725 336 731
+                  <Phone size={13} className="text-accent/60 shrink-0" /> +254 751 414 437
                 </li>
                 <li className="flex items-center gap-2.5 text-xs sm:text-sm text-white/65">
                   <Mail size={13} className="text-accent/60 shrink-0" /> support@dasnet.site
