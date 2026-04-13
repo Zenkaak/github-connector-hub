@@ -941,6 +941,7 @@ export type Database = {
           group_id: string
           id: string
           is_paid: boolean
+          period_date: string | null
           reason: string | null
           user_id: string
         }
@@ -950,6 +951,7 @@ export type Database = {
           group_id: string
           id?: string
           is_paid?: boolean
+          period_date?: string | null
           reason?: string | null
           user_id: string
         }
@@ -959,6 +961,7 @@ export type Database = {
           group_id?: string
           id?: string
           is_paid?: boolean
+          period_date?: string | null
           reason?: string | null
           user_id?: string
         }
