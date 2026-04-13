@@ -302,7 +302,7 @@ export default function SignupPage() {
                           <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Full Name (As per Identity Document)</Label>
                           <div className="relative mt-2">
                             <User className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
-                            <Input {...register('fullName')} placeholder="e.g. Timothy Cheruiyot" className="h-14 rounded-2xl pl-11 bg-muted/30 border-none focus-visible:ring-2" />
+                            <Input {...register('fullName')} placeholder="e.g. Full name" className="h-14 rounded-2xl pl-11 bg-muted/30 border-none focus-visible:ring-2" />
                           </div>
                           {errors.fullName && <p className="text-xs text-destructive mt-2 font-medium ml-1">{errors.fullName.message}</p>}
                         </div>
@@ -511,7 +511,7 @@ export default function SignupPage() {
       {/* Simplified Footer */}
       <footer className="py-10 border-t border-border/40 text-center">
         <p className="text-[10px] md:text-xs text-muted-foreground font-bold uppercase tracking-[0.2em]">
-          &copy; {new Date().getFullYear()} DATAVEND VENTURES. All Rights Reserved.
+          &copy; {new Date().getFullYear()} DATAVEND VENTURES LTD. All Rights Reserved.
         </p>
       </footer>
     </div>
