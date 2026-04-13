@@ -1,9 +1,9 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   HeartHandshake, ArrowRight, ArrowLeft, Upload, X, Loader2, CheckCircle2,
   AlertCircle, FileText, Camera, User, Phone, Heart, GraduationCap, Stethoscope,
-  HelpCircle, Image as ImageIcon, Shield, Wallet
+  HelpCircle, Image as ImageIcon, Shield, Wallet, Eye, Plus, Clock, CheckCircle, XCircle
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
@@ -12,9 +12,11 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
 
 // ─── Category definitions ───
 const CATEGORIES = [
