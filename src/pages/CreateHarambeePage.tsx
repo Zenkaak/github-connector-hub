@@ -458,6 +458,36 @@ export default function CreateHarambeePage() {
           </TabsContent>
 
           <TabsContent value="create" className="mt-4 space-y-4">
+            {/* Progress bar */}
+            <div className="flex gap-1.5">
+              {Array.from({ length: totalSteps }).map((_, i) => (
+                <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${i < step ? 'bg-accent' : 'bg-muted/30'}`} />
+              ))}
+            </div>
+
+            {/* ─── STEP 1: Category ─── */}
+            {step === 1 && (
+              <div className="space-y-4">
+                <div className="p-4 rounded-xl bg-accent/5 border border-accent/10">
+                  <p className="text-xs font-bold text-accent flex items-center gap-2"><Shield size={14} /> All fundraisers are verified before going live. A 3% platform fee applies on collected funds.</p>
+                </div>
+                <h2 className="text-lg font-bold">What is this fundraiser for?</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {CATEGORIES.map(cat => (
+                    <button key={cat.id} onClick={() => { setCategory(cat.id); setStep(2); }}
+                      className={`text-left p-5 rounded-2xl border transition-all duration-200 group hover:shadow-md ${
+                        category === cat.id ? 'border-accent bg-accent/5' : 'border-border/40 bg-card hover:border-accent/30'
+                      }`}>
+                      <div className={`w-11 h-11 rounded-xl ${cat.bg} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
+                        <cat.icon size={20} className={cat.color} />
+                      </div>
+                      <h3 className="font-bold text-sm">{cat.label}</h3>
+                      <p className="text-[11px] text-muted-foreground mt-1">{cat.desc}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
         {/* ─── STEP 2: Details & Questions ─── */}
         {step === 2 && (
