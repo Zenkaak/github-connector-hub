@@ -14,23 +14,39 @@ export function MobileBottomNav() {
   const location = useLocation();
 
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 h-16 bg-card/95 backdrop-blur-xl border-t border-border/50 z-50 flex items-center justify-around px-1 safe-area-bottom">
-      {navItems.map((item) => {
-        const isActive = location.pathname === item.path;
-        return (
-          <Link
-            key={item.path}
-            to={item.path}
-            className={cn(
-              'flex flex-col items-center justify-center gap-0.5 flex-1 py-1 rounded-lg transition-colors',
-              isActive ? 'text-accent' : 'text-muted-foreground'
-            )}
-          >
-            <item.icon size={20} strokeWidth={isActive ? 2.5 : 1.8} />
-            <span className={cn('text-[10px]', isActive && 'font-semibold')}>{item.label}</span>
-          </Link>
-        );
-      })}
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-card border-t border-border/50 z-50 safe-area-bottom">
+      <div className="flex items-stretch justify-around h-16 px-2">
+        {navItems.map((item) => {
+          const isActive =
+            item.path === '/dashboard'
+              ? location.pathname === '/dashboard'
+              : location.pathname.startsWith(item.path);
+          return (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={cn(
+                'flex flex-col items-center justify-center flex-1 min-w-0 gap-0.5 transition-colors relative',
+                isActive ? 'text-accent' : 'text-muted-foreground'
+              )}
+            >
+              {isActive && (
+                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 rounded-b-full bg-accent" />
+              )}
+              <item.icon size={20} strokeWidth={isActive ? 2.5 : 1.5} />
+              <span
+                className={cn(
+                  'text-[10px] leading-tight truncate max-w-full',
+                  isActive ? 'font-semibold' : 'font-medium'
+                )}
+              >
+                {item.label}
+              </span>
+            </Link>
+          );
+        })}
+      </div>
     </nav>
   );
 }
+ 
