@@ -359,7 +359,7 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout>
-      <div className="p-5 lg:p-8 space-y-6 max-w-[1200px]">
+        <div className="px-4 py-5 lg:p-8 space-y-6 max-w-[1200px] mx-auto">
         {/* Greeting + Quick Actions Row */}
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5">
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="flex-1">
@@ -418,7 +418,7 @@ export default function DashboardPage() {
 
         {/* Quick Actions */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
             {quickActions.map((action, i) => (
               <button
                 key={i}
@@ -436,7 +436,7 @@ export default function DashboardPage() {
         </motion.div>
 
         {/* Stats Grid */}
-        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
+                <div className="grid gap-2.5 sm:gap-4 grid-cols-2 lg:grid-cols-4">
           {statCards.map((stat, i) => (
             <motion.div
               key={i}
