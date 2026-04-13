@@ -59,7 +59,6 @@ function ChamaTxnSummary({ userId, chamaGroups }: { userId?: string; chamaGroups
     if (!userId || !chamaGroups.length) { setLoading(false); return; }
     const fetchTxns = async () => {
       const groupIds = chamaGroups.map(g => g.id);
-      // Fetch STK transactions with CHAMA_ prefix for user's groups
       const { data } = await supabase
         .from('stk_transactions')
         .select('*')
@@ -266,7 +265,6 @@ export default function DashboardPage() {
       fetchDisbursements();
       fetchChamaUpdates();
 
-      // Periodic install toast
       const timer = setTimeout(() => {
         if (shouldShowInstallToast() && !isInstalled) {
           markInstallToastShown();
@@ -284,7 +282,6 @@ export default function DashboardPage() {
     }
   }, [user]);
 
-  // Redirect admins to the admin panel
   if (isAdmin) {
     return <Navigate to="/dashboard/admin" replace />;
   }
@@ -359,9 +356,9 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout>
-        <div className="px-4 py-5 lg:p-8 space-y-6 max-w-[1200px] mx-auto">
+        <div className="px-3 py-4 lg:p-8 space-y-4 max-w-[1200px] mx-auto">
         {/* Greeting + Quick Actions Row */}
-        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5">
+        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="flex-1">
             <h1 className="font-display text-2xl font-bold text-foreground">
               {greeting}, {firstName} 👋
@@ -387,11 +384,11 @@ export default function DashboardPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary via-primary/90 to-primary/80 p-5 md:p-6"
+            className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary via-primary/90 to-primary/80 p-4 md:p-6"
           >
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_right,_hsl(42_92%_56%_/_0.15),_transparent_60%)]" />
             <div className="absolute inset-0 grid-pattern opacity-[0.02]" />
-            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="flex items-start gap-3">
                 <div className="w-11 h-11 rounded-xl bg-accent/20 flex items-center justify-center shrink-0">
                   <Sparkles className="text-accent" size={22} />
@@ -418,14 +415,14 @@ export default function DashboardPage() {
 
         {/* Quick Actions */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2.5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
             {quickActions.map((action, i) => (
               <button
                 key={i}
                 onClick={() => navigate(action.path)}
-                className="group p-4 rounded-2xl bg-card border border-border/50 hover:border-accent/30 hover:shadow-md transition-all duration-300 text-left"
+                className="group p-3 rounded-2xl bg-card border border-border/50 hover:border-accent/30 hover:shadow-md transition-all duration-300 text-left"
               >
-                <div className={`w-10 h-10 rounded-xl ${action.color} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300`}>
+                <div className={`w-10 h-10 rounded-xl ${action.color} flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300`}>
                   <action.icon size={18} />
                 </div>
                 <p className="font-semibold text-sm">{action.label}</p>
@@ -436,7 +433,7 @@ export default function DashboardPage() {
         </motion.div>
 
         {/* Stats Grid */}
-                <div className="grid gap-2.5 sm:gap-4 grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-2 sm:gap-4 grid-cols-2 lg:grid-cols-4">
           {statCards.map((stat, i) => (
             <motion.div
               key={i}
@@ -451,15 +448,15 @@ export default function DashboardPage() {
                   if ((stat as any).action === 'request') setRequestMoneyOpen(true);
                 }}
               >
-                <CardContent className="p-5">
-                  <div className="flex items-center justify-between mb-3">
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-2">
                     <div className={`w-10 h-10 rounded-xl ${stat.bg} flex items-center justify-center`}>
                       <stat.icon className={stat.color} size={20} />
                     </div>
                   </div>
                   <p className="text-2xl font-bold font-display tracking-tight">{stat.value}</p>
                   <p className="text-xs text-muted-foreground mt-1">{stat.label}</p>
-                  <p className="text-[10px] text-muted-foreground/60 mt-2 uppercase tracking-wider">{stat.trend}</p>
+                  <p className="text-[10px] text-muted-foreground/60 mt-1.5 uppercase tracking-wider">{stat.trend}</p>
                 </CardContent>
               </Card>
             </motion.div>
@@ -470,9 +467,9 @@ export default function DashboardPage() {
         {walletBalance !== null && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22 }}>
             <Card className="border-border/50 overflow-hidden">
-              <div className="relative p-5 md:p-6 bg-gradient-to-r from-primary via-primary/90 to-primary/80">
+              <div className="relative p-4 md:p-6 bg-gradient-to-r from-primary via-primary/90 to-primary/80">
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_right,_hsl(42_92%_56%_/_0.15),_transparent_60%)]" />
-                <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div>
                     <p className="text-xs text-white/60 uppercase tracking-wider mb-1">Wallet Balance</p>
                     <p className="text-3xl font-bold font-display text-white">{formatCurrency(walletBalance)}</p>
@@ -509,7 +506,7 @@ export default function DashboardPage() {
                   const daysLeft = Math.max(0, Math.ceil((new Date(d.repayment_due_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
                   const isOverdue = daysLeft === 0 && d.outstanding_balance > 0;
                   return (
-                    <div key={d.id} className="p-4 rounded-xl bg-muted/40 space-y-3 cursor-pointer hover:bg-muted/60 transition-colors" onClick={() => navigate('/dashboard/applications')}>
+                    <div key={d.id} className="p-3 rounded-xl bg-muted/40 space-y-3 cursor-pointer hover:bg-muted/60 transition-colors" onClick={() => navigate('/dashboard/applications')}>
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="font-semibold text-sm">Loan · {formatCurrency(d.disbursed_amount)}</p>
@@ -570,7 +567,7 @@ export default function DashboardPage() {
                 <div className="space-y-2">
                   {chamaGroups.slice(0, 3).map((group) => (
                     <Link key={group.id} to={`/dashboard/chama/${group.id}`}>
-                      <div className="flex items-center justify-between p-3.5 rounded-xl bg-muted/40 hover:bg-muted/60 transition-colors cursor-pointer">
+                      <div className="flex items-center justify-between p-3 rounded-xl bg-muted/40 hover:bg-muted/60 transition-colors cursor-pointer">
                         <div className="flex items-center gap-3">
                           <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
                             <Users className="text-primary" size={16} />
@@ -621,7 +618,7 @@ export default function DashboardPage() {
           </motion.div>
         )}
 
-        <div className="grid gap-5 lg:grid-cols-3">
+        <div className="grid gap-4 lg:grid-cols-3">
           {/* Profile Completion */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
             <Card className="border-border/50 h-full">
@@ -699,7 +696,7 @@ export default function DashboardPage() {
                     {applications.map((app) => (
                       <div
                         key={app.id}
-                        className="flex items-center justify-between p-3.5 rounded-xl bg-muted/40 hover:bg-muted/60 transition-colors cursor-pointer"
+                        className="flex items-center justify-between p-3 rounded-xl bg-muted/40 hover:bg-muted/60 transition-colors cursor-pointer"
                         onClick={() => navigate('/dashboard/applications')}
                       >
                         <div className="flex items-center gap-3">
@@ -772,7 +769,7 @@ export default function DashboardPage() {
           };
 
           return (
-            <div className="grid gap-5 lg:grid-cols-2">
+            <div className="grid gap-4 lg:grid-cols-2">
               {/* Support & Admin Messages */}
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.28 }}>
                 <Card className="border-border/50 h-full">
@@ -879,7 +876,7 @@ export default function DashboardPage() {
                   toast.info('To install: tap your browser menu → "Add to Home Screen" or "Install App"');
                 }
               }}
-              className="w-full rounded-xl bg-accent text-accent-foreground p-4 flex items-center gap-3 shadow-gold hover:bg-accent/90 transition-colors cursor-pointer"
+              className="w-full rounded-xl bg-accent text-accent-foreground p-3 flex items-center gap-3 shadow-gold hover:bg-accent/90 transition-colors cursor-pointer"
             >
               <Download size={20} className="shrink-0" />
               <div className="text-left flex-1">
@@ -897,7 +894,7 @@ export default function DashboardPage() {
 
         {/* Loan Products */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
-          <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="font-display text-lg font-bold">Available Products</h2>
               <p className="text-sm text-muted-foreground">Choose a loan product that fits your needs</p>
@@ -906,7 +903,7 @@ export default function DashboardPage() {
               See All <ArrowUpRight size={14} />
             </Button>
           </div>
-          <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {loanProducts.slice(0, 3).map((product) => (
               <LoanProductCard key={product.id} product={product} onApply={handleApplyLoan} disabled={hasActiveApplication} />
             ))}
@@ -928,3 +925,4 @@ export default function DashboardPage() {
     </DashboardLayout>
   );
 }
+ 
