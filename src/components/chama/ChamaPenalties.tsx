@@ -117,7 +117,6 @@ export function ChamaPenalties({ groupId, group, members, myRole }: Props) {
         user_id: m.user_id,
         amount: penaltyAmount,
         reason: 'Late contribution penalty',
-        period_date: periodDate,
       }));
 
       const { error } = await supabase.from('chama_penalties').insert(newPenalties as any);

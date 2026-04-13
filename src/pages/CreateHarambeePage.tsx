@@ -1,9 +1,9 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   HeartHandshake, ArrowRight, ArrowLeft, Upload, X, Loader2, CheckCircle2,
   AlertCircle, FileText, Camera, User, Phone, Heart, GraduationCap, Stethoscope,
-  HelpCircle, Image as ImageIcon, Shield, Wallet
+  HelpCircle, Image as ImageIcon, Shield, Wallet, Eye, Plus, Clock, CheckCircle, XCircle
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
@@ -12,9 +12,11 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
+import { format } from 'date-fns';
 
 // ─── Category definitions ───
 const CATEGORIES = [
@@ -85,8 +87,27 @@ export default function CreateHarambeePage() {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
 
-  const [step, setStep] = useState(1); // 1=category, 2=details, 3=documents, 4=review
+  const [activeTab, setActiveTab] = useState('create');
+  const [myApplications, setMyApplications] = useState<any[]>([]);
+  const [loadingApps, setLoadingApps] = useState(false);
+
+  const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (user && activeTab === 'my_apps') {
+      setLoadingApps(true);
+      supabase
+        .from('harambee_applications')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .then(({ data }) => {
+          if (data) setMyApplications(data);
+          setLoadingApps(false);
+        });
+    }
+  }, [user, activeTab]);
 
   // Step 1
   const [category, setCategory] = useState('');
@@ -382,36 +403,91 @@ export default function CreateHarambeePage() {
           </div>
         </div>
 
-        {/* Progress bar */}
-        <div className="flex gap-1.5">
-          {Array.from({ length: totalSteps }).map((_, i) => (
-            <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${i < step ? 'bg-accent' : 'bg-muted/30'}`} />
-          ))}
-        </div>
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="w-full grid grid-cols-2">
+            <TabsTrigger value="create" className="gap-1.5 text-xs"><Plus size={14} /> New Fundraiser</TabsTrigger>
+            <TabsTrigger value="my_apps" className="gap-1.5 text-xs"><Eye size={14} /> My Applications</TabsTrigger>
+          </TabsList>
 
-        {/* ─── STEP 1: Category ─── */}
-        {step === 1 && (
-          <div className="space-y-4">
-            <div className="p-4 rounded-xl bg-accent/5 border border-accent/10">
-              <p className="text-xs font-bold text-accent flex items-center gap-2"><Shield size={14} /> All fundraisers are verified before going live. A 3% platform fee applies on collected funds.</p>
-            </div>
-            <h2 className="text-lg font-bold">What is this fundraiser for?</h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {CATEGORIES.map(cat => (
-                <button key={cat.id} onClick={() => { setCategory(cat.id); setStep(2); }}
-                  className={`text-left p-5 rounded-2xl border transition-all duration-200 group hover:shadow-md ${
-                    category === cat.id ? 'border-accent bg-accent/5' : 'border-border/40 bg-card hover:border-accent/30'
-                  }`}>
-                  <div className={`w-11 h-11 rounded-xl ${cat.bg} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
-                    <cat.icon size={20} className={cat.color} />
+          <TabsContent value="my_apps" className="mt-4 space-y-3">
+            {loadingApps ? (
+              <div className="p-8 text-center"><Loader2 className="animate-spin mx-auto text-muted-foreground" /></div>
+            ) : myApplications.length === 0 ? (
+              <Card className="p-8 text-center">
+                <HeartHandshake size={32} className="mx-auto text-muted-foreground/30 mb-3" />
+                <p className="text-sm font-medium">No Applications Yet</p>
+                <p className="text-xs text-muted-foreground mt-1">Create your first fundraiser to get started.</p>
+              </Card>
+            ) : (
+              myApplications.map(app => (
+                <Card key={app.id} className="p-4">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <p className="font-semibold text-sm">{app.beneficiary_name}</p>
+                      <p className="text-xs text-muted-foreground capitalize">{app.category?.replace('_', ' ')} · {format(new Date(app.created_at), 'MMM d, yyyy')}</p>
+                    </div>
+                    <span className={`text-[10px] px-2 py-1 rounded-full font-medium ${
+                      app.status === 'approved' || app.status === 'active' ? 'bg-emerald-500/10 text-emerald-500' :
+                      app.status === 'rejected' ? 'bg-destructive/10 text-destructive' :
+                      'bg-accent/10 text-accent'
+                    }`}>
+                      {app.status === 'pending_review' ? 'Under Review' : app.status?.replace('_', ' ')}
+                    </span>
                   </div>
-                  <h3 className="font-bold text-sm">{cat.label}</h3>
-                  <p className="text-[11px] text-muted-foreground mt-1">{cat.desc}</p>
-                </button>
+                  <p className="text-xs text-muted-foreground line-clamp-2">{app.description}</p>
+                  <div className="flex items-center justify-between mt-3">
+                    <p className="text-sm font-bold">KES {app.target_amount?.toLocaleString()}</p>
+                    {app.deadline && (
+                      <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                        <Clock size={10} /> Deadline: {format(new Date(app.deadline), 'MMM d, yyyy')}
+                      </p>
+                    )}
+                  </div>
+                  {app.payout_method && (
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      Payout: {app.payout_method === 'mpesa' ? `M-Pesa (${app.payout_phone || 'N/A'})` : `Bank (${app.bank_name || 'N/A'})`}
+                    </p>
+                  )}
+                  {app.admin_notes && (
+                    <p className="text-[10px] text-muted-foreground mt-2 italic bg-muted/20 p-2 rounded">Admin: {app.admin_notes}</p>
+                  )}
+                </Card>
+              ))
+            )}
+          </TabsContent>
+
+          <TabsContent value="create" className="mt-4 space-y-4">
+            {/* Progress bar */}
+            <div className="flex gap-1.5">
+              {Array.from({ length: totalSteps }).map((_, i) => (
+                <div key={i} className={`h-1.5 flex-1 rounded-full transition-colors ${i < step ? 'bg-accent' : 'bg-muted/30'}`} />
               ))}
             </div>
-          </div>
-        )}
+
+            {/* ─── STEP 1: Category ─── */}
+            {step === 1 && (
+              <div className="space-y-4">
+                <div className="p-4 rounded-xl bg-accent/5 border border-accent/10">
+                  <p className="text-xs font-bold text-accent flex items-center gap-2"><Shield size={14} /> All fundraisers are verified before going live. A 3% platform fee applies on collected funds.</p>
+                </div>
+                <h2 className="text-lg font-bold">What is this fundraiser for?</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {CATEGORIES.map(cat => (
+                    <button key={cat.id} onClick={() => { setCategory(cat.id); setStep(2); }}
+                      className={`text-left p-5 rounded-2xl border transition-all duration-200 group hover:shadow-md ${
+                        category === cat.id ? 'border-accent bg-accent/5' : 'border-border/40 bg-card hover:border-accent/30'
+                      }`}>
+                      <div className={`w-11 h-11 rounded-xl ${cat.bg} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform`}>
+                        <cat.icon size={20} className={cat.color} />
+                      </div>
+                      <h3 className="font-bold text-sm">{cat.label}</h3>
+                      <p className="text-[11px] text-muted-foreground mt-1">{cat.desc}</p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
         {/* ─── STEP 2: Details & Questions ─── */}
         {step === 2 && (
@@ -641,6 +717,8 @@ export default function CreateHarambeePage() {
             </p>
           </div>
         )}
+          </TabsContent>
+        </Tabs>
       </div>
     </DashboardLayout>
   );

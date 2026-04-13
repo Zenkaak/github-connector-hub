@@ -941,6 +941,7 @@ export type Database = {
           group_id: string
           id: string
           is_paid: boolean
+          period_date: string | null
           reason: string | null
           user_id: string
         }
@@ -950,6 +951,7 @@ export type Database = {
           group_id: string
           id?: string
           is_paid?: boolean
+          period_date?: string | null
           reason?: string | null
           user_id: string
         }
@@ -959,6 +961,7 @@ export type Database = {
           group_id?: string
           id?: string
           is_paid?: boolean
+          period_date?: string | null
           reason?: string | null
           user_id?: string
         }
@@ -1246,6 +1249,7 @@ export type Database = {
           group_id: string
           id: string
           member_snapshots: Json | null
+          processed: boolean | null
           reason: string | null
           requested_by: string
           status: string
@@ -1257,6 +1261,7 @@ export type Database = {
           group_id: string
           id?: string
           member_snapshots?: Json | null
+          processed?: boolean | null
           reason?: string | null
           requested_by: string
           status?: string
@@ -1268,6 +1273,7 @@ export type Database = {
           group_id?: string
           id?: string
           member_snapshots?: Json | null
+          processed?: boolean | null
           reason?: string | null
           requested_by?: string
           status?: string
@@ -2255,6 +2261,25 @@ export type Database = {
       }
     }
     Views: {
+      chama_member_arrears: {
+        Row: {
+          actual_savings: number | null
+          arrears: number | null
+          expected_savings: number | null
+          group_id: string | null
+          joined_at: string | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chama_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "chama_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       harambee_contributors: {
         Row: {
           amount: number | null
@@ -2305,6 +2330,10 @@ export type Database = {
     Functions: {
       cancel_wallet_transfer: {
         Args: { _transfer_id: string; _user_id: string }
+        Returns: undefined
+      }
+      check_arrears_before_withdrawal: {
+        Args: { p_group_id: string }
         Returns: undefined
       }
       credit_wallet_on_loan_approval: {
@@ -2387,6 +2416,14 @@ export type Database = {
           source_queue: string
         }
         Returns: number
+      }
+      process_chama_withdrawal_action: {
+        Args: { p_withdrawal_id: string }
+        Returns: undefined
+      }
+      process_withdrawal_deduction: {
+        Args: { p_amount: number; p_group_id: string }
+        Returns: undefined
       }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
