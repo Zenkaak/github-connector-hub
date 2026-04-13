@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { ArrowDownToLine, Check, X, Clock, Trash2 } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { ArrowDownToLine, Check, X, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -27,6 +27,7 @@ export function ChamaWithdrawals({ groupId, members, myRole, savings }: Props) {
   const [amount, setAmount] = useState('');
   const [reason, setReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [voting, setVoting] = useState<string | null>(null);
 
   const isTreasurer = myRole === 'treasurer';
   const isChair = myRole === 'chairperson';
@@ -36,7 +37,7 @@ export function ChamaWithdrawals({ groupId, members, myRole, savings }: Props) {
   const getMemberName = (userId: string) => members.find(m => m.user_id === userId)?.profile?.full_name || 'Unknown';
   const getMemberRole = (userId: string) => members.find(m => m.user_id === userId)?.role || 'member';
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     const { data: wd } = await supabase
       .from('chama_withdrawals')
       .select('*')
@@ -53,15 +54,25 @@ export function ChamaWithdrawals({ groupId, members, myRole, savings }: Props) {
       if (ap) setApprovals(ap);
     }
     setLoading(false);
-  };
+  }, [groupId]);
 
-  useEffect(() => { fetchData(); }, [groupId]);
+  useEffect(() => {
+    fetchData();
+
+    // Real-time subscription for instant UI updates
+    const wdChannel = supabase
+      .channel('wd-realtime-' + groupId)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'chama_withdrawals', filter: `group_id=eq.${groupId}` }, () => fetchData())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'chama_withdrawal_approvals' }, () => fetchData())
+      .subscribe();
+
+    return () => { supabase.removeChannel(wdChannel); };
+  }, [groupId, fetchData]);
 
   const handleSubmitRequest = async () => {
     if (!user || !amount) return;
     setSubmitting(true);
     try {
-      // Use secure RPC that immediately debits all member savings (with arrears check)
       const { data: wdId, error } = await supabase.rpc('request_chama_withdrawal_secure', {
         _group_id: groupId,
         _requested_by: user.id,
@@ -70,16 +81,12 @@ export function ChamaWithdrawals({ groupId, members, myRole, savings }: Props) {
       });
 
       if (error) {
-        // Check if it's an arrears error
-        if (error.message?.includes('arrears') || error.message?.includes('insufficient')) {
-          toast({ title: 'Withdrawal Unsuccessful', description: error.message, variant: 'destructive' });
-          setSubmitting(false);
-          return;
-        }
-        throw error;
+        toast({ title: 'Withdrawal Unsuccessful', description: error.message, variant: 'destructive' });
+        setSubmitting(false);
+        return;
       }
 
-      // Create approval records for all 3 leaders
+      // Create approval records for all leaders
       const approvalRecords = leaders.map(l => ({
         withdrawal_id: wdId,
         user_id: l.user_id,
@@ -87,7 +94,7 @@ export function ChamaWithdrawals({ groupId, members, myRole, savings }: Props) {
       }));
       await supabase.from('chama_withdrawal_approvals').insert(approvalRecords);
 
-      // Notify all leaders
+      // Notify leaders
       await supabase.from('notifications').insert(
         leaders.map(l => ({
           user_id: l.user_id,
@@ -109,54 +116,24 @@ export function ChamaWithdrawals({ groupId, members, myRole, savings }: Props) {
 
   const handleApproval = async (withdrawalId: string, decision: 'approved' | 'rejected') => {
     if (!user) return;
+    setVoting(withdrawalId);
     try {
-      // Update my approval
-      await supabase.from('chama_withdrawal_approvals')
+      // Update my approval — the DB trigger handles status + reversal automatically
+      const { error } = await supabase.from('chama_withdrawal_approvals')
         .update({ approved: decision === 'approved' })
         .eq('withdrawal_id', withdrawalId)
         .eq('user_id', user.id);
 
-      // Check all approvals for this withdrawal
-      const { data: allApprovals } = await supabase
-        .from('chama_withdrawal_approvals')
-        .select('*')
-        .eq('withdrawal_id', withdrawalId);
+      if (error) throw error;
 
-      if (!allApprovals) return;
+      toast({ title: decision === 'approved' ? 'Approved' : 'Rejected', description: 'Vote recorded. Status will update automatically.' });
 
-      const updatedApprovals = allApprovals.map((a: any) => a.user_id === user.id ? { ...a, approved: decision === 'approved' } : a);
-      const rejected = updatedApprovals.find((a: any) => a.approved === false);
-      const allApproved = updatedApprovals.every((a: any) => a.approved === true);
-
-      if (rejected) {
-        const rejectorRole = getMemberRole(rejected.user_id);
-        const roleLabel = rejectorRole.charAt(0).toUpperCase() + rejectorRole.slice(1);
-
-        await supabase.from('chama_withdrawals')
-          .update({ status: 'rejected' })
-          .eq('id', withdrawalId);
-
-        await supabase.from('notifications').insert(
-          leaders.map(l => ({
-            user_id: l.user_id,
-            title: 'Withdrawal Declined',
-            message: `${roleLabel} declined the withdrawal request. Please liaise with them and retry.`,
-          }))
-        );
-        toast({ title: 'Withdrawal Rejected', description: 'Leaders have been notified.' });
-      } else if (allApproved) {
-        await supabase.from('chama_withdrawals')
-          .update({ status: 'approved_by_leaders' })
-          .eq('id', withdrawalId);
-
-        toast({ title: 'All Leaders Approved', description: 'Withdrawal sent to admin for final approval.' });
-      } else {
-        toast({ title: decision === 'approved' ? 'Approved' : 'Rejected' });
-      }
-
-      fetchData();
+      // Immediate re-fetch (trigger has already updated status)
+      await fetchData();
     } catch (error: any) {
       toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    } finally {
+      setVoting(null);
     }
   };
 
@@ -175,6 +152,8 @@ export function ChamaWithdrawals({ groupId, members, myRole, savings }: Props) {
   const pendingCount = withdrawals.filter(w => w.status === 'pending').length;
   const approvedCount = withdrawals.filter(w => ['approved', 'approved_by_leaders', 'disbursed'].includes(w.status)).length;
   const totalWithdrawn = withdrawals.filter(w => w.status === 'disbursed').reduce((s, w) => s + w.amount, 0);
+
+  if (loading) return <div className="p-8 text-center"><Loader2 className="animate-spin mx-auto text-muted-foreground" /></div>;
 
   return (
     <div className="space-y-4">
@@ -210,7 +189,9 @@ export function ChamaWithdrawals({ groupId, members, myRole, savings }: Props) {
         {withdrawals.map(w => {
           const wdApprovals = approvals.filter(a => a.withdrawal_id === w.id);
           const myApproval = wdApprovals.find(a => a.user_id === user?.id);
+          // Only show buttons when status is EXACTLY 'pending' and user hasn't voted
           const canApprove = isLeader && w.status === 'pending' && myApproval && myApproval.approved === null;
+          const isVoting = voting === w.id;
 
           return (
             <Card key={w.id} className="p-4">
@@ -240,13 +221,20 @@ export function ChamaWithdrawals({ groupId, members, myRole, savings }: Props) {
 
               {canApprove && (
                 <div className="flex gap-2 mt-3">
-                  <Button size="sm" className="gap-1 bg-emerald-600 hover:bg-emerald-700" onClick={() => handleApproval(w.id, 'approved')}>
-                    <Check size={14} /> Approve
+                  <Button size="sm" className="gap-1 bg-emerald-600 hover:bg-emerald-700" 
+                    disabled={isVoting} onClick={() => handleApproval(w.id, 'approved')}>
+                    {isVoting ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Approve
                   </Button>
-                  <Button size="sm" variant="destructive" className="gap-1" onClick={() => handleApproval(w.id, 'rejected')}>
-                    <X size={14} /> Reject
+                  <Button size="sm" variant="destructive" className="gap-1" 
+                    disabled={isVoting} onClick={() => handleApproval(w.id, 'rejected')}>
+                    {isVoting ? <Loader2 size={14} className="animate-spin" /> : <X size={14} />} Reject
                   </Button>
                 </div>
+              )}
+
+              {/* Show rejection/approval admin reason */}
+              {w.admin_reason && (
+                <p className="text-[10px] text-muted-foreground mt-2 italic">Admin: {w.admin_reason}</p>
               )}
             </Card>
           );
@@ -261,6 +249,16 @@ export function ChamaWithdrawals({ groupId, members, myRole, savings }: Props) {
         <DialogContent>
           <DialogHeader><DialogTitle>Request Withdrawal</DialogTitle></DialogHeader>
           <div className="space-y-4">
+            <div className="p-3 rounded-lg bg-accent/5 border border-accent/10">
+              <p className="text-[11px] text-muted-foreground">
+                ⚠️ Savings will be debited immediately. If rejected, all members' savings will be restored exactly.
+              </p>
+              <ul className="text-[10px] text-muted-foreground mt-2 space-y-1 list-disc ml-3">
+                <li>Members with zero savings will block withdrawal</li>
+                <li>Members with arrears will block withdrawal</li>
+                <li>Partial withdrawal: minimum KES 50 balance per member</li>
+              </ul>
+            </div>
             <div>
               <Label>Amount (KES)</Label>
               <Input type="number" value={amount} onChange={e => setAmount(e.target.value)} min={1} max={savings} className="mt-1" />
@@ -269,7 +267,6 @@ export function ChamaWithdrawals({ groupId, members, myRole, savings }: Props) {
               <Label>Reason</Label>
               <Textarea value={reason} onChange={e => setReason(e.target.value)} placeholder="Why is this withdrawal needed?" className="mt-1" />
             </div>
-            <p className="text-xs text-muted-foreground">This request will be sent to all leaders (Chairperson, Secretary, Treasurer) for approval before going to admin.</p>
             <Button onClick={handleSubmitRequest} disabled={submitting || !amount} className="w-full">
               {submitting ? 'Submitting...' : 'Submit Request'}
             </Button>
