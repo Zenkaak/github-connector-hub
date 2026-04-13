@@ -162,15 +162,15 @@ export default function LoanApplicationsPage() {
 
   return (
     <DashboardLayout>
-      <div className="p-5 lg:p-8 space-y-6 max-w-[1000px]">
+      <div className="p-4 lg:p-6 space-y-5 max-w-[1000px]">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
-            <h1 className="font-display text-2xl font-bold text-foreground">My Applications</h1>
-            <p className="text-sm text-muted-foreground mt-1">Track and manage your loan applications</p>
+            <h1 className="font-display text-xl font-bold text-foreground">My Applications</h1>
+            <p className="text-xs text-muted-foreground mt-0.5">Track and manage your loan applications</p>
           </div>
           {!profile?.is_active && (
-            <Button variant="gold" size="sm" onClick={() => setShowActivation(true)}>
-              <AlertCircle size={14} />
+            <Button variant="gold" size="sm" className="h-8 text-xs px-3" onClick={() => setShowActivation(true)}>
+              <AlertCircle size={12} className="mr-1.5" />
               Activate (KES 349)
             </Button>
           )}
@@ -178,26 +178,24 @@ export default function LoanApplicationsPage() {
 
         {loading ? (
           <div className="flex items-center justify-center py-16">
-            <div className="spinner w-8 h-8 border-primary border-t-transparent" />
+            <Loader2 className="animate-spin text-primary" size={24} />
           </div>
         ) : applications.length === 0 ? (
-          <Card className="border-border/50">
-            <CardContent className="flex flex-col items-center justify-center py-20">
-              <div className="w-16 h-16 rounded-2xl bg-muted flex items-center justify-center mb-4">
-                <FileText className="text-muted-foreground" size={28} />
+          <Card className="border-border/40">
+            <CardContent className="flex flex-col items-center justify-center py-16">
+              <div className="w-14 h-14 rounded-2xl bg-muted flex items-center justify-center mb-4">
+                <FileText className="text-muted-foreground" size={24} />
               </div>
-              <h3 className="font-display text-lg font-semibold mb-2">No Applications Yet</h3>
-              <p className="text-muted-foreground text-sm text-center max-w-md">
+              <h3 className="font-display text-base font-semibold mb-1">No Applications Yet</h3>
+              <p className="text-muted-foreground text-xs text-center max-w-xs">
                 You haven't applied for any loans yet. Browse our products and apply for one that suits your needs.
               </p>
             </CardContent>
           </Card>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {applications.map((app, i) => {
               const disb = getDisbursement(app.id);
-              const totalToPay = disb ? disb.outstanding_balance : null;
-              const interestAmount = disb ? disb.outstanding_balance - disb.disbursed_amount : null;
               const daysUntilDue = disb ? Math.ceil((new Date(disb.repayment_due_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)) : null;
               const totalOwed = disb ? disb.disbursed_amount * (1 + disb.interest_rate / 100) : 0;
               const totalPaid = totalOwed - (disb?.outstanding_balance || 0);
@@ -212,84 +210,84 @@ export default function LoanApplicationsPage() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.04 }}
                 >
-                  <Card className="border-border/50 hover:shadow-md transition-shadow">
-                    <CardContent className="p-5">
-                      <div className="flex items-start justify-between gap-3 mb-4">
+                  <Card className="border-border/40 hover:shadow-sm transition-shadow">
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between gap-3 mb-3">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                            <CreditCard className="text-primary" size={18} />
+                          <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <CreditCard className="text-primary" size={16} />
                           </div>
                           <div>
-                            <h3 className="font-semibold capitalize">{app.loan_type.replace('_', ' ')} Loan</h3>
-                            <p className="text-xs text-muted-foreground">
-                              {new Date(app.created_at).toLocaleDateString('en-KE', { year: 'numeric', month: 'long', day: 'numeric' })}
+                            <h3 className="text-sm font-bold capitalize">{app.loan_type.replace('_', ' ')} Loan</h3>
+                            <p className="text-[10px] text-muted-foreground">
+                              {new Date(app.created_at).toLocaleDateString('en-KE', { year: 'numeric', month: 'short', day: 'numeric' })}
                             </p>
                           </div>
                         </div>
-                        <StatusBadge status={app.status} />
+                        <StatusBadge status={app.status} className="scale-90" />
                       </div>
 
-                      <div className="grid gap-4 grid-cols-2 sm:grid-cols-4">
+                      <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
                         <div>
-                          <p className="text-[11px] text-muted-foreground uppercase tracking-wider mb-0.5">Applied</p>
-                          <p className="font-bold text-base">{formatCurrency(app.applied_amount)}</p>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-tight mb-0.5">Applied</p>
+                          <p className="font-bold text-sm">{formatCurrency(app.applied_amount)}</p>
                         </div>
                         <div>
-                          <p className="text-[11px] text-muted-foreground uppercase tracking-wider mb-0.5">Limit</p>
-                          <p className="font-bold text-base">{formatCurrency(app.generated_limit)}</p>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-tight mb-0.5">Limit</p>
+                          <p className="font-bold text-sm">{formatCurrency(app.generated_limit)}</p>
                         </div>
                         <div>
-                          <p className="text-[11px] text-muted-foreground uppercase tracking-wider mb-0.5">Employment</p>
-                          <p className="font-medium text-sm capitalize">{app.employment_status.replace('_', ' ')}</p>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-tight mb-0.5">Employment</p>
+                          <p className="font-medium text-xs capitalize">{app.employment_status.replace('_', ' ')}</p>
                         </div>
                         <div>
-                          <p className="text-[11px] text-muted-foreground uppercase tracking-wider mb-0.5">Status</p>
-                          <p className="font-medium text-sm capitalize">{app.status}</p>
+                          <p className="text-[10px] text-muted-foreground uppercase tracking-tight mb-0.5">Status</p>
+                          <p className="font-medium text-xs capitalize">{app.status}</p>
                         </div>
                       </div>
 
                       {/* Repayment Details for approved/disbursed loans */}
                       {disb && (app.status === 'approved' || app.status === 'disbursed') && (
-                        <div className="mt-4 p-4 rounded-xl bg-muted/40 border border-border/50 space-y-3">
+                        <div className="mt-4 p-3.5 rounded-xl bg-muted/30 border border-border/40 space-y-3">
                           <div className="flex items-center gap-2 mb-1">
-                            <TrendingUp size={14} className="text-accent" />
-                            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Repayment Schedule</h4>
+                            <TrendingUp size={12} className="text-accent" />
+                            <h4 className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Repayment Schedule</h4>
                           </div>
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                             <div>
-                              <p className="text-[10px] text-muted-foreground uppercase">Disbursed</p>
-                              <p className="font-bold text-sm text-success">{formatCurrency(disb.disbursed_amount)}</p>
+                              <p className="text-[9px] text-muted-foreground uppercase">Disbursed</p>
+                              <p className="font-bold text-xs text-success">{formatCurrency(disb.disbursed_amount)}</p>
                             </div>
                             <div>
-                              <p className="text-[10px] text-muted-foreground uppercase">Interest ({disb.interest_rate}%)</p>
-                              <p className="font-bold text-sm text-accent">{formatCurrency(totalOwed - disb.disbursed_amount)}</p>
+                              <p className="text-[9px] text-muted-foreground uppercase">Interest ({disb.interest_rate}%)</p>
+                              <p className="font-bold text-xs text-accent">{formatCurrency(totalOwed - disb.disbursed_amount)}</p>
                             </div>
                             <div>
-                              <p className="text-[10px] text-muted-foreground uppercase">Total Paid</p>
-                              <p className="font-bold text-sm text-emerald-400">{formatCurrency(totalPaid)}</p>
+                              <p className="text-[9px] text-muted-foreground uppercase">Total Paid</p>
+                              <p className="font-bold text-xs text-emerald-400">{formatCurrency(totalPaid)}</p>
                             </div>
                             <div>
-                              <p className="text-[10px] text-muted-foreground uppercase">Outstanding</p>
-                              <p className="font-bold text-sm text-rose-400">{formatCurrency(disb.outstanding_balance)}</p>
+                              <p className="text-[9px] text-muted-foreground uppercase">Outstanding</p>
+                              <p className="font-bold text-xs text-rose-400">{formatCurrency(disb.outstanding_balance)}</p>
                             </div>
                           </div>
 
-                          <div className="space-y-1.5">
-                            <div className="flex items-center justify-between text-xs">
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between text-[10px]">
                               <span className="text-muted-foreground">Repayment Progress</span>
                               <span className="font-bold">{Math.round(repaymentProgress)}%</span>
                             </div>
-                            <Progress value={repaymentProgress} className="h-2.5" />
+                            <Progress value={repaymentProgress} className="h-1.5" />
                           </div>
 
-                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+                          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-1">
                             <div className="flex items-center gap-2">
-                              <Calendar size={12} className="text-muted-foreground" />
-                              <span className="text-xs text-muted-foreground">
-                                Due: {new Date(disb.repayment_due_date).toLocaleDateString('en-KE', { month: 'long', day: 'numeric', year: 'numeric' })}
+                              <Calendar size={11} className="text-muted-foreground" />
+                              <span className="text-[10px] text-muted-foreground">
+                                Due: {new Date(disb.repayment_due_date).toLocaleDateString('en-KE', { month: 'short', day: 'numeric', year: 'numeric' })}
                                 {daysUntilDue !== null && (
-                                  <span className={cn('ml-1 font-semibold', daysUntilDue <= 3 ? 'text-destructive' : daysUntilDue <= 7 ? 'text-accent' : 'text-success')}>
-                                    ({daysUntilDue > 0 ? `${daysUntilDue} days left` : 'Overdue'})
+                                  <span className={cn('ml-1 font-bold', daysUntilDue <= 3 ? 'text-destructive' : daysUntilDue <= 7 ? 'text-accent' : 'text-success')}>
+                                    ({daysUntilDue > 0 ? `${daysUntilDue}d left` : 'Overdue'})
                                   </span>
                                 )}
                               </span>
@@ -298,65 +296,52 @@ export default function LoanApplicationsPage() {
                               <Button
                                 variant="gold"
                                 size="sm"
-                                className="text-xs h-7"
+                                className="text-[10px] h-7 px-3"
                                 onClick={() => {
                                   setSelectedApp(app);
                                   setRepayAmount(String(disb.outstanding_balance));
                                 }}
                               >
-                                <Wallet size={12} /> Pay via M-Pesa
+                                <Wallet size={10} className="mr-1.5" /> Pay via M-Pesa
                               </Button>
                             )}
                           </div>
 
                           {/* Repayment History */}
                           {loanRepayments.length > 0 && (
-                            <div className="mt-2">
+                            <div className="mt-2 border-t border-border/20 pt-2">
                               <button
                                 onClick={() => setExpandedLoan(isExpanded ? null : app.id)}
-                                className="flex items-center gap-2 text-xs font-semibold text-accent hover:text-accent/80 transition-colors"
+                                className="flex items-center gap-1.5 text-[10px] font-bold text-accent hover:opacity-80 transition-opacity"
                               >
-                                <Receipt size={12} />
-                                {isExpanded ? 'Hide' : 'View'} Repayment History ({loanRepayments.length})
+                                <Receipt size={10} />
+                                {isExpanded ? 'Hide' : 'View'} History ({loanRepayments.length})
                               </button>
 
                               {isExpanded && (
                                 <motion.div
                                   initial={{ opacity: 0, height: 0 }}
                                   animate={{ opacity: 1, height: 'auto' }}
-                                  className="mt-3 space-y-2"
+                                  className="mt-2 space-y-1.5"
                                 >
                                   {loanRepayments.map((rep) => (
-                                    <div key={rep.id} className="p-3 rounded-lg bg-background/60 border border-border/30 flex items-center justify-between">
-                                      <div className="flex items-center gap-3">
+                                    <div key={rep.id} className="p-2 rounded bg-background/50 border border-border/20 flex items-center justify-between">
+                                      <div className="flex items-center gap-2">
                                         <div className={cn(
-                                          "w-8 h-8 rounded-lg flex items-center justify-center",
-                                          rep.status === 'success' ? "bg-emerald-500/10" : rep.status === 'pending' ? "bg-amber-500/10" : "bg-rose-500/10"
+                                          "w-7 h-7 rounded flex items-center justify-center",
+                                          rep.status === 'success' ? "bg-emerald-500/10" : "bg-amber-500/10"
                                         )}>
-                                          {rep.status === 'success' ? <CheckCircle size={14} className="text-emerald-400" /> :
-                                           rep.status === 'pending' ? <Clock size={14} className="text-amber-400" /> :
-                                           <AlertCircle size={14} className="text-rose-400" />}
+                                          {rep.status === 'success' ? <CheckCircle size={12} className="text-emerald-400" /> : <Clock size={12} className="text-amber-400" />}
                                         </div>
                                         <div>
-                                          <p className="text-xs font-bold text-foreground">{formatCurrency(rep.amount)}</p>
-                                          <div className="flex items-center gap-2 mt-0.5">
-                                            <span className="text-[9px] text-muted-foreground">
-                                              {new Date(rep.paid_at || rep.created_at).toLocaleString('en-KE', { dateStyle: 'medium', timeStyle: 'short' })}
-                                            </span>
-                                            {rep.mpesa_receipt && (
-                                              <Badge variant="outline" className="text-[8px] h-4 px-1.5 font-mono">
-                                                {rep.mpesa_receipt}
-                                              </Badge>
-                                            )}
-                                          </div>
+                                          <p className="text-[10px] font-bold">{formatCurrency(rep.amount)}</p>
+                                          <p className="text-[8px] text-muted-foreground">
+                                            {new Date(rep.paid_at || rep.created_at).toLocaleDateString()}
+                                          </p>
                                         </div>
                                       </div>
-                                      <Badge className={cn("text-[8px] font-bold",
-                                        rep.status === 'success' ? "bg-emerald-500/15 text-emerald-400 border-emerald-500/30" :
-                                        rep.status === 'pending' ? "bg-amber-500/15 text-amber-400 border-amber-500/30" :
-                                        "bg-rose-500/15 text-rose-400 border-rose-500/30"
-                                      )}>
-                                        {rep.status === 'success' ? 'Paid' : rep.status === 'pending' ? 'Pending' : 'Failed'}
+                                      <Badge variant="outline" className="text-[8px] px-1.5 h-4 font-mono">
+                                        {rep.mpesa_receipt || 'STK'}
                                       </Badge>
                                     </div>
                                   ))}
@@ -366,12 +351,12 @@ export default function LoanApplicationsPage() {
                           )}
 
                           {/* Till Number Info */}
-                          <div className="p-2 rounded-lg bg-muted/30 border border-border/30 mt-1">
-                            <p className="text-[10px] text-muted-foreground">You can also pay directly via M-Pesa Buy Goods:</p>
-                            <p className="text-xs font-bold">Till: 8448104 (DASNET VENTURES LTD)</p>
+                          <div className="p-2 rounded-lg bg-muted/40 border border-border/20">
+                            <p className="text-[9px] text-muted-foreground leading-tight uppercase tracking-wide">Direct Payment:</p>
+                            <p className="text-[10px] font-bold">Buy Goods Till: 8448104 (DASNET VENTURES LTD)</p>
                           </div>
 
-                          <div className={cn('text-[10px] font-semibold px-2 py-1 rounded-full w-fit',
+                          <div className={cn('text-[9px] font-bold px-2 py-0.5 rounded-full w-fit uppercase tracking-wider',
                             disb.status === 'active' ? 'bg-accent/10 text-accent' :
                             disb.status === 'paid' ? 'bg-success/10 text-success' :
                             'bg-muted text-muted-foreground'
@@ -382,9 +367,9 @@ export default function LoanApplicationsPage() {
                       )}
 
                       {app.admin_message && (
-                        <div className="mt-4 p-3.5 rounded-xl bg-muted/50 border border-border/50">
-                          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Admin Message</p>
-                          <p className="text-sm">{app.admin_message}</p>
+                        <div className="mt-3 p-3 rounded-xl bg-muted/40 border border-border/40">
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase mb-0.5">Admin Message</p>
+                          <p className="text-xs leading-relaxed">{app.admin_message}</p>
                         </div>
                       )}
                     </CardContent>
@@ -399,65 +384,60 @@ export default function LoanApplicationsPage() {
         <Dialog open={!!selectedApp} onOpenChange={(o) => !o && handleRepayClose()}>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
-                <Wallet size={18} /> Repay via M-Pesa
+              <DialogTitle className="flex items-center gap-2 text-base">
+                <Wallet size={16} /> Repay via M-Pesa
               </DialogTitle>
             </DialogHeader>
 
             {repayStep === 'form' && selectedApp && (
               <div className="space-y-4">
                 <div className="p-3 rounded-xl bg-muted/40 border border-border/40 text-center">
-                  <p className="text-xs text-muted-foreground">Outstanding Balance</p>
-                  <p className="text-2xl font-bold font-display text-primary">
+                  <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tight">Outstanding Balance</p>
+                  <p className="text-xl font-bold font-display text-primary">
                     {formatCurrency(getDisbursement(selectedApp.id)?.outstanding_balance || 0)}
                   </p>
                 </div>
                 <div>
-                  <Label className="text-xs">Amount to Pay (KES)</Label>
-                  <Input type="number" value={repayAmount} onChange={(e) => setRepayAmount(e.target.value)} placeholder="Enter amount" className="mt-1" />
+                  <Label className="text-[11px] font-bold mb-1.5 block">Amount to Pay (KES)</Label>
+                  <Input type="number" value={repayAmount} onChange={(e) => setRepayAmount(e.target.value)} placeholder="Enter amount" className="h-9 text-sm" />
                 </div>
-                <div className="p-3 rounded-lg bg-muted/30 border border-border/30 space-y-1">
-                  <p className="text-xs text-muted-foreground">STK Push will be sent to:</p>
-                  <p className="font-semibold text-sm">{profile?.phone || '—'}</p>
-                  <p className="text-xs text-muted-foreground mt-2">Or pay directly via M-Pesa Buy Goods:</p>
-                  <p className="font-semibold text-sm">Till: 8448104 (DASNET VENTURES LTD)</p>
+                <div className="p-2.5 rounded-lg bg-muted/30 border border-border/30 text-[11px] space-y-1">
+                  <p className="text-muted-foreground">STK Push to: <span className="text-foreground font-semibold">{profile?.phone || '—'}</span></p>
+                  <p className="text-muted-foreground">Manual Till: <span className="text-foreground font-semibold">8448104 (DASNET)</span></p>
                 </div>
-                <p className="text-xs text-muted-foreground">An M-Pesa STK push will be sent to your phone. Enter your M-Pesa PIN to complete the payment.</p>
-                <div className="flex justify-end gap-2">
-                  <Button variant="outline" onClick={handleRepayClose}>Cancel</Button>
-                  <Button variant="gold" onClick={handleRepayViaStk} disabled={repayLoading || !repayAmount || Number(repayAmount) <= 0}>Pay Now</Button>
+                <p className="text-[10px] text-muted-foreground text-center">Enter your M-Pesa PIN on your phone to complete.</p>
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button variant="outline" size="sm" onClick={handleRepayClose}>Cancel</Button>
+                  <Button variant="gold" size="sm" onClick={handleRepayViaStk} disabled={repayLoading || !repayAmount || Number(repayAmount) <= 0}>Pay Now</Button>
                 </div>
               </div>
             )}
 
             {repayStep === 'polling' && (
-              <div className="py-8 text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-accent/10 flex items-center justify-center">
-                  <Loader2 className="animate-spin text-accent" size={32} />
-                </div>
-                <h3 className="font-semibold text-lg mb-2">Processing Payment</h3>
-                <p className="text-muted-foreground text-sm">Please check your phone and enter your M-Pesa PIN to complete the repayment.</p>
+              <div className="py-6 text-center space-y-3">
+                <Loader2 className="animate-spin text-accent mx-auto" size={28} />
+                <p className="text-sm font-semibold">Processing Payment...</p>
+                <p className="text-xs text-muted-foreground">Please check your phone for the PIN request.</p>
               </div>
             )}
 
             {repayStep === 'success' && (
-              <div className="py-8 text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-success/10 flex items-center justify-center">
-                  <CheckCircle className="text-success" size={32} />
+              <div className="py-6 text-center space-y-3">
+                <div className="w-12 h-12 mx-auto rounded-full bg-success/10 flex items-center justify-center">
+                  <CheckCircle className="text-success" size={24} />
                 </div>
-                <h3 className="font-semibold text-lg mb-2">Payment Received!</h3>
-                <p className="text-muted-foreground text-sm">Your loan repayment has been processed successfully.</p>
+                <p className="text-sm font-bold">Payment Received!</p>
+                <p className="text-xs text-muted-foreground">Your loan balance has been updated.</p>
               </div>
             )}
 
             {repayStep === 'failed' && (
-              <div className="py-8 text-center">
-                <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-destructive/10 flex items-center justify-center">
-                  <AlertCircle className="text-destructive" size={32} />
+              <div className="py-6 text-center space-y-3">
+                <div className="w-12 h-12 mx-auto rounded-full bg-destructive/10 flex items-center justify-center">
+                  <AlertCircle className="text-destructive" size={24} />
                 </div>
-                <h3 className="font-semibold text-lg mb-2">Payment Failed</h3>
-                <p className="text-muted-foreground text-sm mb-4">The payment could not be completed. Please try again.</p>
-                <Button variant="gold" onClick={() => setRepayStep('form')}>Retry</Button>
+                <p className="text-sm font-bold">Payment Failed</p>
+                <Button variant="gold" size="sm" onClick={() => setRepayStep('form')}>Retry</Button>
               </div>
             )}
           </DialogContent>
