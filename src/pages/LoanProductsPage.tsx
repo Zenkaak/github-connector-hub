@@ -33,37 +33,37 @@ function ProductCard({ product }: { product: Product }) {
       "border-border/50 h-full flex flex-col overflow-hidden transition-all hover:border-accent/30 hover:shadow-md cursor-pointer",
       product.comingSoon && "opacity-75"
     )} onClick={handleClick}>
-      <CardContent className="p-5 flex-1 flex flex-col">
-        <div className="flex items-start justify-between mb-4">
-          <div className="w-12 h-12 rounded-xl bg-muted flex items-center justify-center text-2xl">
+      <CardContent className="p-4 flex-1 flex flex-col">
+        <div className="flex items-start justify-between mb-3">
+          <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center text-xl">
             {product.icon}
           </div>
           {product.highlight && (
-            <span className="text-[11px] font-bold text-accent bg-accent/10 px-2.5 py-1 rounded-full">
+            <span className="text-[10px] font-bold text-accent bg-accent/10 px-2 py-0.5 rounded-full">
               {product.highlight}
             </span>
           )}
           {product.comingSoon && (
-            <Badge variant="secondary" className="text-[10px] bg-muted text-muted-foreground">
+            <Badge variant="secondary" className="text-[9px] bg-muted text-muted-foreground px-1.5 py-0">
               Coming Soon
             </Badge>
           )}
         </div>
-        <h3 className="font-display font-bold text-base mb-1.5">{product.name}</h3>
-        <p className="text-sm text-muted-foreground leading-relaxed mb-4 flex-1">{product.description}</p>
-        <ul className="space-y-1.5">
+        <h3 className="font-display font-bold text-sm mb-1">{product.name}</h3>
+        <p className="text-[13px] text-muted-foreground leading-relaxed mb-3 flex-1">{product.description}</p>
+        <ul className="space-y-1">
           {product.features.slice(0, 3).map((f, i) => (
-            <li key={i} className="flex items-start gap-2 text-xs text-muted-foreground">
-              <Check size={12} className="text-emerald-500 mt-0.5 shrink-0" />
+            <li key={i} className="flex items-start gap-2 text-[11px] text-muted-foreground">
+              <Check size={10} className="text-emerald-500 mt-0.5 shrink-0" />
               <span>{f}</span>
             </li>
           ))}
         </ul>
       </CardContent>
-      <div className="px-5 py-3 bg-muted/30 border-t border-border/50">
-        <Button variant={product.comingSoon ? "outline" : "gold"} size="sm" className="w-full text-xs" disabled={product.comingSoon}>
+      <div className="px-4 py-2.5 bg-muted/30 border-t border-border/50">
+        <Button variant={product.comingSoon ? "outline" : "gold"} size="sm" className="w-full text-[11px] h-8" disabled={product.comingSoon}>
           {product.comingSoon ? 'Notify Me' : product.category === 'chama' ? 'Get Started' : 'Learn More'}
-          <ArrowRight size={14} />
+          <ArrowRight size={12} />
         </Button>
       </div>
     </Card>
@@ -88,10 +88,10 @@ export default function LoanProductsPage() {
 
   return (
     <DashboardLayout>
-      <div className="p-5 lg:p-8 space-y-6 max-w-[1200px]">
+      <div className="p-5 lg:p-8 space-y-5 max-w-[1200px]">
         <div>
-          <h1 className="font-display text-2xl font-bold text-foreground">Products & Services</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <h1 className="font-display text-xl font-bold text-foreground">Products & Services</h1>
+          <p className="text-[13px] text-muted-foreground mt-0.5">
             Explore our full range of financial products designed for your needs
           </p>
         </div>
@@ -103,13 +103,13 @@ export default function LoanProductsPage() {
               key={cat.id}
               onClick={() => setActiveCategory(cat.id)}
               className={cn(
-                "flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all shrink-0",
+                "flex items-center gap-2 px-3.5 py-2 rounded-lg text-[13px] font-medium whitespace-nowrap transition-all shrink-0",
                 activeCategory === cat.id
                   ? "bg-accent text-accent-foreground shadow-gold"
                   : "bg-muted/50 text-muted-foreground hover:bg-muted"
               )}
             >
-              <span className="text-base">{cat.icon}</span>
+              <span className="text-sm">{cat.icon}</span>
               {cat.label}
             </button>
           ))}
@@ -120,39 +120,29 @@ export default function LoanProductsPage() {
           key={activeCategory}
           initial={{ opacity: 0, y: 4 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-sm text-muted-foreground"
+          className="text-[13px] text-muted-foreground"
         >
           {productCategories.find(c => c.id === activeCategory)?.description}
         </motion.p>
 
         {/* Loan Products (original cards) */}
         {activeCategory === 'loans' && (
-          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-            {loanProducts.map((product, i) => (
-              <motion.div
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {loanProducts.map((product) => (
+              <LoanProductCard
                 key={product.id}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.06 }}
-              >
-                <LoanProductCard product={product} onApply={handleApply} />
-              </motion.div>
+                product={product}
+                onApply={() => handleApply(product)}
+              />
             ))}
           </div>
         )}
 
-        {/* Other Product Categories */}
+        {/* Other Products */}
         {activeCategory !== 'loans' && (
-          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-            {filteredProducts.map((product, i) => (
-              <motion.div
-                key={product.id}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.06 }}
-              >
-                <ProductCard product={product} />
-              </motion.div>
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            {filteredProducts.map((product) => (
+              <ProductCard key={product.id} product={product} />
             ))}
           </div>
         )}
@@ -160,3 +150,4 @@ export default function LoanProductsPage() {
     </DashboardLayout>
   );
 }
+ 
