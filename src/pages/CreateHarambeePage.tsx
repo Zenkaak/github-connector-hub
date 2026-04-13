@@ -87,8 +87,27 @@ export default function CreateHarambeePage() {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
 
-  const [step, setStep] = useState(1); // 1=category, 2=details, 3=documents, 4=review
+  const [activeTab, setActiveTab] = useState('create');
+  const [myApplications, setMyApplications] = useState<any[]>([]);
+  const [loadingApps, setLoadingApps] = useState(false);
+
+  const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (user && activeTab === 'my_apps') {
+      setLoadingApps(true);
+      supabase
+        .from('harambee_applications')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .then(({ data }) => {
+          if (data) setMyApplications(data);
+          setLoadingApps(false);
+        });
+    }
+  }, [user, activeTab]);
 
   // Step 1
   const [category, setCategory] = useState('');
