@@ -317,7 +317,7 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout>
-      <div className="px-3 py-3 lg:p-8 space-y-3 max-w-[1200px] mx-auto">
+      <div className="px-1.5 py-2 sm:px-3 lg:p-8 space-y-2.5 max-w-[1200px] mx-auto">
         {/* Greeting */}
         <div className="flex items-center justify-between">
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
@@ -368,12 +368,12 @@ export default function DashboardPage() {
 
         {/* Quick Actions - Compact 4-column grid on mobile */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}>
-          <div className="grid grid-cols-4 sm:grid-cols-4 lg:grid-cols-4 gap-2">
+          <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
             {quickActions.map((action, i) => (
               <button
                 key={i}
                 onClick={() => navigate(action.path)}
-                className="group flex flex-col items-center text-center p-2 sm:p-2.5 rounded-xl bg-card border border-border/50 hover:border-accent/30 hover:shadow-md transition-all duration-300 active:scale-[0.97]"
+                className="group flex flex-col items-center text-center p-1.5 sm:p-2.5 rounded-xl bg-card border border-border/50 hover:border-accent/30 hover:shadow-md transition-all duration-300 active:scale-[0.97]"
               >
                 <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl ${action.color} flex items-center justify-center mb-1 group-hover:scale-110 transition-transform duration-300`}>
                   <action.icon size={16} />
@@ -386,13 +386,13 @@ export default function DashboardPage() {
         </motion.div>
 
         {/* Send & Request Money + Stats - 2x2 grid */}
-        <div className="grid gap-2 grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-1.5 sm:gap-2 grid-cols-2 lg:grid-cols-4">
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
             <Card
               className="border-border/50 hover:shadow-md transition-all duration-300 hover:border-accent/20 cursor-pointer active:scale-[0.97]"
               onClick={() => setSendMoneyOpen(true)}
             >
-              <CardContent className="p-2.5 flex items-center gap-2">
+              <CardContent className="p-2 sm:p-2.5 flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                   <Send className="text-primary" size={15} />
                 </div>
@@ -408,7 +408,7 @@ export default function DashboardPage() {
               className="border-border/50 hover:shadow-md transition-all duration-300 hover:border-accent/20 cursor-pointer active:scale-[0.97]"
               onClick={() => setRequestMoneyOpen(true)}
             >
-              <CardContent className="p-2.5 flex items-center gap-2">
+              <CardContent className="p-2 sm:p-2.5 flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
                   <HandCoins className="text-accent" size={15} />
                 </div>
@@ -421,7 +421,7 @@ export default function DashboardPage() {
           </motion.div>
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.19 }}>
             <Card className="border-border/50">
-              <CardContent className="p-2.5 flex items-center gap-2">
+              <CardContent className="p-2 sm:p-2.5 flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
                   <Clock className="text-accent" size={15} />
                 </div>
@@ -434,7 +434,7 @@ export default function DashboardPage() {
           </motion.div>
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.21 }}>
             <Card className="border-border/50">
-              <CardContent className="p-2.5 flex items-center gap-2">
+              <CardContent className="p-2 sm:p-2.5 flex items-center gap-2">
                 <div className="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center shrink-0">
                   <Wallet className="text-success" size={15} />
                 </div>
@@ -471,7 +471,7 @@ export default function DashboardPage() {
         {disbursements.length > 0 && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.23 }}>
             <Card className="border-border/50">
-              <CardHeader className="flex-row items-center justify-between px-3 pt-2.5 pb-2">
+              <CardHeader className="flex-row items-center justify-between px-2.5 sm:px-3 pt-2.5 pb-2">
                 <div>
                   <CardTitle className="text-xs flex items-center gap-2">
                     <TrendingUp size={13} className="text-accent" />
@@ -480,7 +480,7 @@ export default function DashboardPage() {
                   <CardDescription className="text-[10px]">Track your outstanding balances</CardDescription>
                 </div>
               </CardHeader>
-              <CardContent className="px-3 pb-2.5 space-y-1.5">
+              <CardContent className="px-2.5 sm:px-3 pb-2.5 space-y-1.5">
                 {disbursements.map((d) => {
                   const total = d.disbursed_amount + (d.disbursed_amount * (d.interest_rate / 100));
                   const repaid = total - d.outstanding_balance;
@@ -520,7 +520,7 @@ export default function DashboardPage() {
         {/* Chama Groups */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.24 }}>
           <Card className="border-border/50">
-            <CardHeader className="flex-row items-center justify-between px-3 pt-2.5 pb-2">
+            <CardHeader className="flex-row items-center justify-between px-2.5 sm:px-3 pt-2.5 pb-2">
               <div>
                 <CardTitle className="text-xs flex items-center gap-2">
                   <Users size={13} className="text-primary" />
@@ -532,7 +532,7 @@ export default function DashboardPage() {
                 View All <ArrowUpRight size={11} />
               </Button>
             </CardHeader>
-            <CardContent className="px-3 pb-2.5">
+            <CardContent className="px-2.5 sm:px-3 pb-2.5">
               {chamaGroups.length === 0 ? (
                 <EmptyState icon={Users} title="No Chama groups yet" description="Create or join a savings group" actionLabel="Create Group" onAction={() => navigate('/dashboard/chama')} />
               ) : (
@@ -574,7 +574,7 @@ export default function DashboardPage() {
         {chamaGroups.length > 0 && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.26 }}>
             <Card className="border-border/50">
-              <CardHeader className="flex-row items-center justify-between px-3 pt-2.5 pb-2">
+              <CardHeader className="flex-row items-center justify-between px-2.5 sm:px-3 pt-2.5 pb-2">
                 <div>
                   <CardTitle className="text-xs flex items-center gap-2">
                     <Receipt size={13} className="text-accent" />
@@ -583,24 +583,24 @@ export default function DashboardPage() {
                   <CardDescription className="text-[10px]">Your recent chama payments</CardDescription>
                 </div>
               </CardHeader>
-              <CardContent className="px-3 pb-2.5">
+              <CardContent className="px-2.5 sm:px-3 pb-2.5">
                 <ChamaTxnSummary userId={user?.id} chamaGroups={chamaGroups} />
               </CardContent>
             </Card>
           </motion.div>
         )}
 
-        <div className="grid gap-2 lg:grid-cols-3">
+        <div className="grid gap-1.5 sm:gap-2 lg:grid-cols-3">
           {/* Profile Completion */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
             <Card className="border-border/50 h-full">
-              <CardHeader className="px-3 pt-2.5 pb-2">
+              <CardHeader className="px-2.5 sm:px-3 pt-2.5 pb-2">
                 <CardTitle className="text-xs flex items-center gap-2">
                   <Activity size={13} className="text-primary" />
                   Profile Completion
                 </CardTitle>
               </CardHeader>
-              <CardContent className="px-3 pb-2.5 space-y-2.5">
+              <CardContent className="px-2.5 sm:px-3 pb-2.5 space-y-2.5">
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] text-muted-foreground">Progress</span>
@@ -633,7 +633,7 @@ export default function DashboardPage() {
           {/* Recent Applications */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="lg:col-span-2">
             <Card className="border-border/50 h-full">
-              <CardHeader className="flex-row items-center justify-between px-3 pt-2.5 pb-2">
+              <CardHeader className="flex-row items-center justify-between px-2.5 sm:px-3 pt-2.5 pb-2">
                 <div>
                   <CardTitle className="text-xs">Recent Applications</CardTitle>
                   <CardDescription className="text-[10px]">Your latest loan activity</CardDescription>
@@ -644,7 +644,7 @@ export default function DashboardPage() {
                   </Button>
                 )}
               </CardHeader>
-              <CardContent className="px-3 pb-2.5">
+              <CardContent className="px-2.5 sm:px-3 pb-2.5">
                 {applications.length === 0 ? (
                   <EmptyState icon={FileText} title="No applications yet" description="Start your journey by applying for a loan" actionLabel="Browse Products" onAction={() => navigate('/dashboard/products')} />
                 ) : (
@@ -725,10 +725,10 @@ export default function DashboardPage() {
           };
 
           return (
-            <div className="grid gap-2 lg:grid-cols-2">
+            <div className="grid gap-1.5 sm:gap-2 lg:grid-cols-2">
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.28 }}>
                 <Card className="border-border/50 h-full">
-                  <CardHeader className="flex-row items-center justify-between px-3 pt-2.5 pb-2">
+                  <CardHeader className="flex-row items-center justify-between px-2.5 sm:px-3 pt-2.5 pb-2">
                     <div>
                       <CardTitle className="text-xs flex items-center gap-2">
                         <MessageSquare size={13} className="text-accent" />
@@ -740,7 +740,7 @@ export default function DashboardPage() {
                       View All <ArrowUpRight size={11} />
                     </Button>
                   </CardHeader>
-                  <CardContent className="px-3 pb-2.5 space-y-1.5">
+                  <CardContent className="px-2.5 sm:px-3 pb-2.5 space-y-1.5">
                     {supportNotifs.length === 0 ? (
                       <p className="text-xs text-muted-foreground text-center py-3">No support messages</p>
                     ) : (
@@ -759,7 +759,7 @@ export default function DashboardPage() {
 
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
                 <Card className="border-border/50 h-full">
-                  <CardHeader className="flex-row items-center justify-between px-3 pt-2.5 pb-2">
+                  <CardHeader className="flex-row items-center justify-between px-2.5 sm:px-3 pt-2.5 pb-2">
                     <div>
                       <CardTitle className="text-xs flex items-center gap-2">
                         <Users size={13} className="text-primary" />
@@ -771,7 +771,7 @@ export default function DashboardPage() {
                       View All <ArrowUpRight size={11} />
                     </Button>
                   </CardHeader>
-                  <CardContent className="px-3 pb-2.5 space-y-1.5">
+                  <CardContent className="px-2.5 sm:px-3 pb-2.5 space-y-1.5">
                     {chamaUpdates.length === 0 ? (
                       <p className="text-xs text-muted-foreground text-center py-3">No chama updates</p>
                     ) : (
@@ -853,7 +853,7 @@ export default function DashboardPage() {
               See All <ArrowUpRight size={11} />
             </Button>
           </div>
-          <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-1.5 sm:gap-2 md:grid-cols-2 lg:grid-cols-3">
             {loanProducts.slice(0, 3).map((product) => (
               <LoanProductCard key={product.id} product={product} onApply={handleApplyLoan} disabled={hasActiveApplication} />
             ))}
