@@ -317,10 +317,10 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout>
-      <div className="px-2 py-2 lg:p-8 space-y-2 max-w-[1200px] mx-auto">
+      <div className="px-3 py-3 lg:p-8 space-y-3 max-w-[1200px] mx-auto">
         {/* Greeting */}
-        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-1.5">
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="flex-1">
+        <div className="flex items-center justify-between">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
             <h1 className="font-display text-lg font-bold text-foreground">
               {greeting}, {firstName} 👋
             </h1>
@@ -329,9 +329,10 @@ export default function DashboardPage() {
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="flex items-center gap-1.5">
             <Button variant="gold" size="sm" onClick={() => navigate('/dashboard/products')} className="shadow-gold h-8 text-[11px] px-2.5">
               <Plus size={13} />
-              New Loan Application
+              <span className="hidden sm:inline">New Loan Application</span>
+              <span className="sm:hidden">Apply</span>
             </Button>
-            <Button variant="outline" size="sm" onClick={() => navigate('/dashboard/chama')} className="border-accent/30 text-accent hover:bg-accent/10 h-8 px-2.5">
+            <Button variant="outline" size="sm" onClick={() => navigate('/dashboard/chama')} className="border-accent/30 text-accent hover:bg-accent/10 h-8 w-8 sm:w-auto px-0 sm:px-2.5">
               <Users size={13} />
               <span className="hidden sm:inline text-[11px]">Chama</span>
             </Button>
@@ -348,55 +349,57 @@ export default function DashboardPage() {
           >
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_right,_hsl(42_92%_56%_/_0.15),_transparent_60%)]" />
             <div className="absolute inset-0 grid-pattern opacity-[0.02]" />
-            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <div className="flex items-start gap-2">
+            <div className="relative z-10 flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0">
                 <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center shrink-0">
                   <Sparkles className="text-accent" size={16} />
                 </div>
-                <div>
-                  <h3 className="font-semibold text-white text-xs">Loan Activation Required</h3>
-                  <p className="text-[10px] text-white/50 mt-0.5">Pay KES 349 once to unlock borrowing</p>
+                <div className="min-w-0">
+                  <h3 className="font-semibold text-white text-xs">Activation Required</h3>
+                  <p className="text-[10px] text-white/50 truncate">Pay KES 349 to unlock borrowing</p>
                 </div>
               </div>
-              <Button variant="hero" size="sm" onClick={() => navigate('/dashboard/products')} className="w-fit shrink-0 h-7 text-[11px]">
-                Browse Products <ArrowRight size={11} />
+              <Button variant="hero" size="sm" onClick={() => navigate('/dashboard/products')} className="shrink-0 h-7 text-[11px]">
+                Browse <ArrowRight size={11} />
               </Button>
             </div>
           </motion.div>
         )}
 
-        {/* Quick Actions */}
+        {/* Quick Actions - Compact 4-column grid on mobile */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1.5">
+          <div className="grid grid-cols-4 sm:grid-cols-4 lg:grid-cols-4 gap-2">
             {quickActions.map((action, i) => (
               <button
                 key={i}
                 onClick={() => navigate(action.path)}
-                className="group p-2.5 rounded-xl bg-card border border-border/50 hover:border-accent/30 hover:shadow-md transition-all duration-300 text-left active:scale-[0.97]"
+                className="group flex flex-col items-center text-center p-2 sm:p-2.5 rounded-xl bg-card border border-border/50 hover:border-accent/30 hover:shadow-md transition-all duration-300 active:scale-[0.97]"
               >
-                <div className={`w-8 h-8 rounded-lg ${action.color} flex items-center justify-center mb-1.5 group-hover:scale-110 transition-transform duration-300`}>
-                  <action.icon size={15} />
+                <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl ${action.color} flex items-center justify-center mb-1 group-hover:scale-110 transition-transform duration-300`}>
+                  <action.icon size={16} />
                 </div>
-                <p className="font-semibold text-xs leading-tight">{action.label}</p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">{action.desc}</p>
+                <p className="font-semibold text-[10px] sm:text-xs leading-tight">{action.label}</p>
+                <p className="text-[9px] sm:text-[10px] text-muted-foreground mt-0.5 hidden sm:block">{action.desc}</p>
               </button>
             ))}
           </div>
         </motion.div>
 
-        {/* Send & Request Money + Stats */}
-        <div className="grid gap-1.5 grid-cols-2 lg:grid-cols-4">
+        {/* Send & Request Money + Stats - 2x2 grid */}
+        <div className="grid gap-2 grid-cols-2 lg:grid-cols-4">
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
             <Card
               className="border-border/50 hover:shadow-md transition-all duration-300 hover:border-accent/20 cursor-pointer active:scale-[0.97]"
               onClick={() => setSendMoneyOpen(true)}
             >
-              <CardContent className="p-2.5">
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center mb-1.5">
+              <CardContent className="p-2.5 flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                   <Send className="text-primary" size={15} />
                 </div>
-                <p className="text-xs font-bold">Send Money</p>
-                <p className="text-[10px] text-muted-foreground">Free transfer</p>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold">Send Money</p>
+                  <p className="text-[10px] text-muted-foreground">Free transfer</p>
+                </div>
               </CardContent>
             </Card>
           </motion.div>
@@ -405,34 +408,40 @@ export default function DashboardPage() {
               className="border-border/50 hover:shadow-md transition-all duration-300 hover:border-accent/20 cursor-pointer active:scale-[0.97]"
               onClick={() => setRequestMoneyOpen(true)}
             >
-              <CardContent className="p-2.5">
-                <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center mb-1.5">
+              <CardContent className="p-2.5 flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
                   <HandCoins className="text-accent" size={15} />
                 </div>
-                <p className="text-xs font-bold">Request Money</p>
-                <p className="text-[10px] text-muted-foreground">From users</p>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold">Request Money</p>
+                  <p className="text-[10px] text-muted-foreground">From users</p>
+                </div>
               </CardContent>
             </Card>
           </motion.div>
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.19 }}>
             <Card className="border-border/50">
-              <CardContent className="p-2.5">
-                <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center mb-1.5">
+              <CardContent className="p-2.5 flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
                   <Clock className="text-accent" size={15} />
                 </div>
-                <p className="text-base font-bold font-display">{stats.pending}</p>
-                <p className="text-[10px] text-muted-foreground">Pending Review</p>
+                <div className="min-w-0">
+                  <p className="text-base font-bold font-display">{stats.pending}</p>
+                  <p className="text-[10px] text-muted-foreground">Pending Review</p>
+                </div>
               </CardContent>
             </Card>
           </motion.div>
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.21 }}>
             <Card className="border-border/50">
-              <CardContent className="p-2.5">
-                <div className="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center mb-1.5">
+              <CardContent className="p-2.5 flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center shrink-0">
                   <Wallet className="text-success" size={15} />
                 </div>
-                <p className="text-sm font-bold font-display">{formatCurrency(stats.totalAmount)}</p>
-                <p className="text-[10px] text-muted-foreground">Total Disbursed</p>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold font-display">{formatCurrency(stats.totalAmount)}</p>
+                  <p className="text-[10px] text-muted-foreground">Total Disbursed</p>
+                </div>
               </CardContent>
             </Card>
           </motion.div>
@@ -444,7 +453,7 @@ export default function DashboardPage() {
             <Card className="border-border/50 overflow-hidden">
               <div className="relative p-3 bg-gradient-to-r from-primary via-primary/90 to-primary/80">
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_right,_hsl(42_92%_56%_/_0.15),_transparent_60%)]" />
-                <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                <div className="relative z-10 flex items-center justify-between gap-2">
                   <div>
                     <p className="text-[10px] text-white/60 uppercase tracking-wider">Wallet Balance</p>
                     <p className="text-xl font-bold font-display text-white leading-tight">{formatCurrency(walletBalance)}</p>
@@ -481,14 +490,14 @@ export default function DashboardPage() {
                   return (
                     <div key={d.id} className="p-2.5 rounded-xl bg-muted/40 space-y-1.5 cursor-pointer hover:bg-muted/60 transition-colors" onClick={() => navigate('/dashboard/applications')}>
                       <div className="flex items-center justify-between gap-2">
-                        <div>
+                        <div className="min-w-0">
                           <p className="font-semibold text-xs">Loan · {formatCurrency(d.disbursed_amount)}</p>
                           <p className="text-[10px] text-muted-foreground">
                             {isOverdue ? <span className="text-destructive font-medium">Overdue</span> : <span>{daysLeft} day{daysLeft !== 1 ? 's' : ''} until due</span>}
                             {' · '}{new Date(d.repayment_due_date).toLocaleDateString('en-KE', { month: 'short', day: 'numeric', year: 'numeric' })}
                           </p>
                         </div>
-                        <div className="text-right">
+                        <div className="text-right shrink-0">
                           <p className="text-xs font-bold text-destructive">{formatCurrency(d.outstanding_balance)}</p>
                           <p className="text-[10px] text-muted-foreground">remaining</p>
                         </div>
@@ -531,12 +540,12 @@ export default function DashboardPage() {
                   {chamaGroups.slice(0, 3).map((group) => (
                     <Link key={group.id} to={`/dashboard/chama/${group.id}`}>
                       <div className="flex items-center justify-between p-2.5 rounded-xl bg-muted/40 hover:bg-muted/60 transition-colors cursor-pointer">
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                             <Users className="text-primary" size={14} />
                           </div>
-                          <div>
-                            <p className="font-medium text-xs">{group.name}</p>
+                          <div className="min-w-0">
+                            <p className="font-medium text-xs truncate">{group.name}</p>
                             <div className="flex items-center gap-2 mt-0.5">
                               <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
                                 group.my_role === 'chairperson' ? 'bg-accent/10 text-accent' :
@@ -551,7 +560,7 @@ export default function DashboardPage() {
                             </div>
                           </div>
                         </div>
-                        <ChevronRight size={14} className="text-muted-foreground" />
+                        <ChevronRight size={14} className="text-muted-foreground shrink-0" />
                       </div>
                     </Link>
                   ))}
@@ -599,15 +608,15 @@ export default function DashboardPage() {
                   </div>
                   <Progress value={profileCompletion} className="h-1.5" />
                 </div>
-                <div className="space-y-1.5">
+                <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-1 sm:gap-1.5">
                   {[
                     { label: 'Personal Info', done: !!(profile?.full_name && profile?.date_of_birth) },
                     { label: 'Contact Details', done: !!(profile?.email && profile?.phone) },
                     { label: 'Location', done: !!(profile?.county && profile?.address) },
                     { label: 'Account Activated', done: !!profile?.is_active },
                   ].map((item, i) => (
-                    <div key={i} className="flex items-center gap-2">
-                      <div className={`w-4 h-4 rounded-full flex items-center justify-center ${item.done ? 'bg-success/10' : 'bg-muted'}`}>
+                    <div key={i} className="flex items-center gap-1.5">
+                      <div className={`w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${item.done ? 'bg-success/10' : 'bg-muted'}`}>
                         {item.done ? <CheckCircle size={10} className="text-success" /> : <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30" />}
                       </div>
                       <span className={`text-[10px] ${item.done ? 'text-foreground' : 'text-muted-foreground'}`}>{item.label}</span>
@@ -646,18 +655,18 @@ export default function DashboardPage() {
                         className="flex items-center justify-between p-2.5 rounded-xl bg-muted/40 hover:bg-muted/60 transition-colors cursor-pointer"
                         onClick={() => navigate('/dashboard/applications')}
                       >
-                        <div className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                             <CreditCard className="text-primary" size={14} />
                           </div>
-                          <div>
-                            <p className="font-medium text-xs capitalize">{app.loan_type.replace('_', ' ')} Loan</p>
+                          <div className="min-w-0">
+                            <p className="font-medium text-xs capitalize truncate">{app.loan_type.replace('_', ' ')} Loan</p>
                             <p className="text-[10px] text-muted-foreground">
                               {new Date(app.created_at).toLocaleDateString('en-KE', { month: 'short', day: 'numeric', year: 'numeric' })}
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-1.5 shrink-0">
                           <p className="font-semibold text-[10px] hidden sm:block">{formatCurrency(app.applied_amount)}</p>
                           <StatusBadge status={app.status} />
                         </div>
@@ -690,10 +699,10 @@ export default function DashboardPage() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 mb-0.5">
-                      <h4 className="font-semibold text-[11px]">{notif.title}</h4>
+                      <h4 className="font-semibold text-[11px] truncate">{notif.title}</h4>
                       {!notif.is_read && <span className="w-1.5 h-1.5 rounded-full bg-accent shrink-0" />}
                     </div>
-                    <p className="text-[10px] text-muted-foreground leading-relaxed">{displayMessage}</p>
+                    <p className="text-[10px] text-muted-foreground leading-relaxed line-clamp-2">{displayMessage}</p>
                     {isDocRequest && (
                       <Button variant="outline" size="sm" className="mt-1.5 text-[10px] h-6 px-2" onClick={() => navigate('/dashboard/account')}>
                         <Upload size={9} className="mr-1" /> Upload Documents
@@ -820,9 +829,9 @@ export default function DashboardPage() {
               className="w-full rounded-xl bg-accent text-accent-foreground p-2.5 flex items-center gap-2.5 shadow-gold hover:bg-accent/90 transition-colors cursor-pointer"
             >
               <Download size={16} className="shrink-0" />
-              <div className="text-left flex-1">
+              <div className="text-left flex-1 min-w-0">
                 <p className="font-bold text-xs">Download Dasnet App</p>
-                <p className="text-[10px] opacity-80">Install for faster access & instant notifications</p>
+                <p className="text-[10px] opacity-80">Install for faster access & notifications</p>
               </div>
               <ArrowRight size={12} className="shrink-0 opacity-70" />
             </button>
@@ -866,4 +875,3 @@ export default function DashboardPage() {
     </DashboardLayout>
   );
 }
- 
