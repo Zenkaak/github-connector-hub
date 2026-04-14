@@ -2,34 +2,10 @@ import { useEffect, useState } from 'react';
 import { useNavigate, Navigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  CreditCard,
-  FileText,
-  TrendingUp,
-  ArrowRight,
-  CheckCircle,
-  Clock,
-  Sparkles,
-  ArrowUpRight,
-  ArrowDownLeft,
-  Wallet,
-  Plus,
-  Eye,
-  Settings,
-  User,
-  Activity,
-  Bell,
-  Upload,
-  MessageSquare,
-  Users,
-  Crown,
-  ChevronRight,
-  Receipt,
-  CheckCircle2,
-  XCircle,
-  Send,
-  HandCoins,
-  PiggyBank,
-  HeartHandshake,
+  CreditCard, FileText, TrendingUp, ArrowRight, CheckCircle, Clock, Sparkles,
+  ArrowUpRight, ArrowDownLeft, Wallet, Plus, Eye, Settings, User, Activity,
+  Bell, Upload, MessageSquare, Users, Crown, ChevronRight, Receipt,
+  CheckCircle2, XCircle, Send, HandCoins, PiggyBank, HeartHandshake,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -76,13 +52,13 @@ function ChamaTxnSummary({ userId, chamaGroups }: { userId?: string; chamaGroups
   }, [userId, chamaGroups]);
 
   if (loading) return <div className="h-14 bg-muted/40 animate-pulse rounded-xl" />;
-  if (txns.length === 0) return <p className="text-xs text-muted-foreground text-center py-2">No chama transactions yet</p>;
+  if (txns.length === 0) return <p className="text-xs text-muted-foreground text-center py-3">No chama transactions yet</p>;
 
   const statusIcon = { success: CheckCircle2, failed: XCircle, pending: Clock };
   const statusColor = { success: 'text-emerald-500 bg-emerald-500/10', failed: 'text-destructive bg-destructive/10', pending: 'text-accent bg-accent/10' };
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-1.5">
       {txns.slice(0, 5).map(tx => {
         const Icon = statusIcon[tx.status as keyof typeof statusIcon] || Clock;
         const color = statusColor[tx.status as keyof typeof statusColor] || statusColor.pending;
@@ -91,19 +67,19 @@ function ChamaTxnSummary({ userId, chamaGroups }: { userId?: string; chamaGroups
         return (
           <div
             key={tx.id}
-            className="flex items-center justify-between p-2 rounded-xl bg-muted/40 hover:bg-muted/60 transition-colors cursor-pointer"
+            className="flex items-center justify-between p-3 rounded-xl bg-muted/40 hover:bg-muted/60 transition-colors cursor-pointer"
             onClick={() => group && navigate(`/dashboard/chama/${group.id}`)}
           >
-            <div className="flex items-center gap-2">
-              <div className={cn('w-7 h-7 rounded-lg flex items-center justify-center', color.split(' ')[1])}>
-                <Icon size={13} className={color.split(' ')[0]} />
+            <div className="flex items-center gap-3">
+              <div className={cn('w-9 h-9 rounded-lg flex items-center justify-center', color.split(' ')[1])}>
+                <Icon size={16} className={color.split(' ')[0]} />
               </div>
               <div>
-                <p className="font-medium text-xs">{group?.name || 'Chama'} · KES {tx.amount.toLocaleString()}</p>
-                <p className="text-[10px] text-muted-foreground">{new Date(tx.created_at).toLocaleDateString('en-KE', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                <p className="font-medium text-sm">{group?.name || 'Chama'} · KES {tx.amount.toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground">{new Date(tx.created_at).toLocaleDateString('en-KE', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
               </div>
             </div>
-            <span className={cn('text-[10px] font-medium px-1.5 py-0.5 rounded-full', color)}>{tx.status}</span>
+            <span className={cn('text-xs font-medium px-2 py-0.5 rounded-full', color)}>{tx.status}</span>
           </div>
         );
       })}
@@ -309,13 +285,6 @@ export default function DashboardPage() {
     return { total, approved, pending, totalAmount };
   })();
 
-  const statCards = [
-    { label: 'Send Money', value: '→', icon: Send, color: 'text-primary', bg: 'bg-primary/10', trend: 'Free transfer', action: 'send' },
-    { label: 'Request Money', value: '←', icon: HandCoins, color: 'text-accent', bg: 'bg-accent/10', trend: 'From users', action: 'request' },
-    { label: 'Pending Review', value: stats.pending, icon: Clock, color: 'text-accent', bg: 'bg-accent/10', trend: 'Under review' },
-    { label: 'Total Disbursed', value: formatCurrency(stats.totalAmount), icon: Wallet, color: 'text-success', bg: 'bg-success/10', trend: 'Lifetime total' },
-  ];
-
   const firstName = profile?.full_name?.split(' ')[0] || 'there';
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
@@ -348,7 +317,7 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout>
-      <div className="px-2 py-2 lg:p-8 space-y-2 max-w-[1200px] mx-auto">
+      <div className="px-3 py-3 lg:p-8 space-y-3 max-w-[1200px] mx-auto">
         {/* Greeting */}
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-2">
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }} className="flex-1">
@@ -357,12 +326,12 @@ export default function DashboardPage() {
             </h1>
             <p className="text-xs text-muted-foreground">Here's your financial overview for today</p>
           </motion.div>
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="flex items-center gap-1.5">
-            <Button variant="gold" size="sm" onClick={() => navigate('/dashboard/products')} className="shadow-gold h-8 text-xs">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="flex items-center gap-2">
+            <Button variant="gold" size="sm" onClick={() => navigate('/dashboard/products')} className="shadow-gold h-9 text-xs px-3">
               <Plus size={14} />
               New Loan Application
             </Button>
-            <Button variant="outline" size="sm" onClick={() => navigate('/dashboard/chama')} className="border-accent/30 text-accent hover:bg-accent/10 h-8">
+            <Button variant="outline" size="sm" onClick={() => navigate('/dashboard/chama')} className="border-accent/30 text-accent hover:bg-accent/10 h-9 px-3">
               <Users size={14} />
               <span className="hidden sm:inline text-xs">Chama</span>
             </Button>
@@ -375,83 +344,113 @@ export default function DashboardPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary via-primary/90 to-primary/80 p-3"
+            className="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary via-primary/90 to-primary/80 p-4"
           >
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_right,_hsl(42_92%_56%_/_0.15),_transparent_60%)]" />
             <div className="absolute inset-0 grid-pattern opacity-[0.02]" />
-            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <div className="flex items-start gap-2">
-                <div className="w-9 h-9 rounded-lg bg-accent/20 flex items-center justify-center shrink-0">
-                  <Sparkles className="text-accent" size={18} />
+            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-lg bg-accent/20 flex items-center justify-center shrink-0">
+                  <Sparkles className="text-accent" size={20} />
                 </div>
                 <div>
                   <h3 className="font-semibold text-white text-sm">Loan Activation Required</h3>
-                  <p className="text-[11px] text-white/50 mt-0.5">Pay KES 349 once to unlock borrowing</p>
+                  <p className="text-xs text-white/50 mt-0.5">Pay KES 349 once to unlock borrowing</p>
                 </div>
               </div>
-              <Button variant="hero" size="sm" onClick={() => navigate('/dashboard/products')} className="w-fit shrink-0 h-7 text-xs">
+              <Button variant="hero" size="sm" onClick={() => navigate('/dashboard/products')} className="w-fit shrink-0 h-8 text-xs">
                 Browse Products <ArrowRight size={12} />
               </Button>
             </div>
           </motion.div>
         )}
 
-        {/* Quick Actions */}
+        {/* Quick Actions - bigger cards for mobile */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-1">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
             {quickActions.map((action, i) => (
               <button
                 key={i}
                 onClick={() => navigate(action.path)}
-                className="group p-2 rounded-xl bg-card border border-border/50 hover:border-accent/30 hover:shadow-md transition-all duration-300 text-left"
+                className="group p-3 rounded-xl bg-card border border-border/50 hover:border-accent/30 hover:shadow-md transition-all duration-300 text-left active:scale-[0.97]"
               >
-                <div className={`w-8 h-8 rounded-lg ${action.color} flex items-center justify-center mb-1 group-hover:scale-110 transition-transform duration-300`}>
-                  <action.icon size={15} />
+                <div className={`w-10 h-10 rounded-lg ${action.color} flex items-center justify-center mb-2 group-hover:scale-110 transition-transform duration-300`}>
+                  <action.icon size={18} />
                 </div>
-                <p className="font-semibold text-xs leading-tight">{action.label}</p>
-                <p className="text-[10px] text-muted-foreground">{action.desc}</p>
+                <p className="font-semibold text-sm leading-tight">{action.label}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{action.desc}</p>
               </button>
             ))}
           </div>
         </motion.div>
 
-        {/* Stats Grid */}
-        <div className="grid gap-1 grid-cols-2 lg:grid-cols-4">
-          {statCards.map((stat, i) => (
-            <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 * i + 0.15 }}>
-              <Card
-                className={cn("border-border/50 hover:shadow-md transition-all duration-300 hover:border-accent/20", (stat as any).action && "cursor-pointer")}
-                onClick={() => {
-                  if ((stat as any).action === 'send') setSendMoneyOpen(true);
-                  if ((stat as any).action === 'request') setRequestMoneyOpen(true);
-                }}
-              >
-                <CardContent className="p-2.5">
-                  <div className={`w-8 h-8 rounded-lg ${stat.bg} flex items-center justify-center mb-1`}>
-                    <stat.icon className={stat.color} size={16} />
-                  </div>
-                  <p className="text-lg font-bold font-display tracking-tight leading-none">{stat.value}</p>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">{stat.label}</p>
-                  <p className="text-[9px] text-muted-foreground/60 mt-0.5 uppercase tracking-wider">{stat.trend}</p>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
+        {/* Send & Request Money + Stats */}
+        <div className="grid gap-2 grid-cols-2 lg:grid-cols-4">
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+            <Card
+              className="border-border/50 hover:shadow-md transition-all duration-300 hover:border-accent/20 cursor-pointer active:scale-[0.97]"
+              onClick={() => setSendMoneyOpen(true)}
+            >
+              <CardContent className="p-3">
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-2">
+                  <Send className="text-primary" size={18} />
+                </div>
+                <p className="text-sm font-bold">Send Money</p>
+                <p className="text-xs text-muted-foreground">Free transfer</p>
+              </CardContent>
+            </Card>
+          </motion.div>
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.17 }}>
+            <Card
+              className="border-border/50 hover:shadow-md transition-all duration-300 hover:border-accent/20 cursor-pointer active:scale-[0.97]"
+              onClick={() => setRequestMoneyOpen(true)}
+            >
+              <CardContent className="p-3">
+                <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center mb-2">
+                  <HandCoins className="text-accent" size={18} />
+                </div>
+                <p className="text-sm font-bold">Request Money</p>
+                <p className="text-xs text-muted-foreground">From users</p>
+              </CardContent>
+            </Card>
+          </motion.div>
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.19 }}>
+            <Card className="border-border/50">
+              <CardContent className="p-3">
+                <div className="w-10 h-10 rounded-lg bg-accent/10 flex items-center justify-center mb-2">
+                  <Clock className="text-accent" size={18} />
+                </div>
+                <p className="text-lg font-bold font-display">{stats.pending}</p>
+                <p className="text-xs text-muted-foreground">Pending Review</p>
+              </CardContent>
+            </Card>
+          </motion.div>
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.21 }}>
+            <Card className="border-border/50">
+              <CardContent className="p-3">
+                <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center mb-2">
+                  <Wallet className="text-success" size={18} />
+                </div>
+                <p className="text-base font-bold font-display">{formatCurrency(stats.totalAmount)}</p>
+                <p className="text-xs text-muted-foreground">Total Disbursed</p>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
 
         {/* Wallet Summary */}
         {walletBalance !== null && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22 }}>
             <Card className="border-border/50 overflow-hidden">
-              <div className="relative p-3 bg-gradient-to-r from-primary via-primary/90 to-primary/80">
+              <div className="relative p-4 bg-gradient-to-r from-primary via-primary/90 to-primary/80">
                 <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_right,_hsl(42_92%_56%_/_0.15),_transparent_60%)]" />
                 <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <div>
-                    <p className="text-[10px] text-white/60 uppercase tracking-wider">Wallet Balance</p>
+                    <p className="text-xs text-white/60 uppercase tracking-wider">Wallet Balance</p>
                     <p className="text-2xl font-bold font-display text-white leading-tight">{formatCurrency(walletBalance)}</p>
                   </div>
-                  <Button variant="hero" size="sm" onClick={() => navigate('/dashboard/wallet')} className="h-7 text-xs">
-                    <Wallet size={13} /> View Wallet
+                  <Button variant="hero" size="sm" onClick={() => navigate('/dashboard/wallet')} className="h-9 text-xs">
+                    <Wallet size={14} /> View Wallet
                   </Button>
                 </div>
               </div>
@@ -463,16 +462,16 @@ export default function DashboardPage() {
         {disbursements.length > 0 && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.23 }}>
             <Card className="border-border/50">
-              <CardHeader className="flex-row items-center justify-between px-3 pt-2.5 pb-1.5">
+              <CardHeader className="flex-row items-center justify-between px-4 pt-3 pb-2">
                 <div>
-                  <CardTitle className="text-sm flex items-center gap-1.5">
-                    <TrendingUp size={13} className="text-accent" />
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <TrendingUp size={14} className="text-accent" />
                     Active Loan Repayments
                   </CardTitle>
-                  <CardDescription className="text-[10px]">Track your outstanding balances</CardDescription>
+                  <CardDescription className="text-xs">Track your outstanding balances</CardDescription>
                 </div>
               </CardHeader>
-              <CardContent className="px-3 pb-2.5 space-y-1.5">
+              <CardContent className="px-4 pb-3 space-y-2">
                 {disbursements.map((d) => {
                   const total = d.disbursed_amount + (d.disbursed_amount * (d.interest_rate / 100));
                   const repaid = total - d.outstanding_balance;
@@ -480,26 +479,26 @@ export default function DashboardPage() {
                   const daysLeft = Math.max(0, Math.ceil((new Date(d.repayment_due_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24)));
                   const isOverdue = daysLeft === 0 && d.outstanding_balance > 0;
                   return (
-                    <div key={d.id} className="p-2 rounded-xl bg-muted/40 space-y-2 cursor-pointer hover:bg-muted/60 transition-colors" onClick={() => navigate('/dashboard/applications')}>
+                    <div key={d.id} className="p-3 rounded-xl bg-muted/40 space-y-2 cursor-pointer hover:bg-muted/60 transition-colors" onClick={() => navigate('/dashboard/applications')}>
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="font-semibold text-xs">Loan · {formatCurrency(d.disbursed_amount)}</p>
-                          <p className="text-[10px] text-muted-foreground">
+                          <p className="font-semibold text-sm">Loan · {formatCurrency(d.disbursed_amount)}</p>
+                          <p className="text-xs text-muted-foreground">
                             {isOverdue ? <span className="text-destructive font-medium">Overdue</span> : <span>{daysLeft} day{daysLeft !== 1 ? 's' : ''} until due</span>}
                             {' · '}{new Date(d.repayment_due_date).toLocaleDateString('en-KE', { month: 'short', day: 'numeric', year: 'numeric' })}
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="text-xs font-bold text-destructive">{formatCurrency(d.outstanding_balance)}</p>
-                          <p className="text-[9px] text-muted-foreground">remaining</p>
+                          <p className="text-sm font-bold text-destructive">{formatCurrency(d.outstanding_balance)}</p>
+                          <p className="text-xs text-muted-foreground">remaining</p>
                         </div>
                       </div>
-                      <div className="space-y-0.5">
-                        <div className="flex justify-between text-[10px] text-muted-foreground">
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-xs text-muted-foreground">
                           <span>Repaid: {formatCurrency(repaid)}</span>
                           <span>{progress}%</span>
                         </div>
-                        <Progress value={progress} className="h-1.5" />
+                        <Progress value={progress} className="h-2" />
                       </div>
                     </div>
                   );
@@ -512,47 +511,47 @@ export default function DashboardPage() {
         {/* Chama Groups */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.24 }}>
           <Card className="border-border/50">
-            <CardHeader className="flex-row items-center justify-between px-3 pt-2.5 pb-1.5">
+            <CardHeader className="flex-row items-center justify-between px-4 pt-3 pb-2">
               <div>
-                <CardTitle className="text-sm flex items-center gap-1.5">
-                  <Users size={13} className="text-primary" />
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Users size={14} className="text-primary" />
                   My Chama Groups
                 </CardTitle>
-                <CardDescription className="text-[10px]">Your savings groups</CardDescription>
+                <CardDescription className="text-xs">Your savings groups</CardDescription>
               </div>
-              <Button variant="ghost" size="sm" className="text-[11px] h-6 px-1.5" onClick={() => navigate('/dashboard/chama')}>
-                View All <ArrowUpRight size={11} />
+              <Button variant="ghost" size="sm" className="text-xs h-8 px-2" onClick={() => navigate('/dashboard/chama')}>
+                View All <ArrowUpRight size={12} />
               </Button>
             </CardHeader>
-            <CardContent className="px-3 pb-2.5">
+            <CardContent className="px-4 pb-3">
               {chamaGroups.length === 0 ? (
                 <EmptyState icon={Users} title="No Chama groups yet" description="Create or join a savings group" actionLabel="Create Group" onAction={() => navigate('/dashboard/chama')} />
               ) : (
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   {chamaGroups.slice(0, 3).map((group) => (
                     <Link key={group.id} to={`/dashboard/chama/${group.id}`}>
-                      <div className="flex items-center justify-between p-2 rounded-xl bg-muted/40 hover:bg-muted/60 transition-colors cursor-pointer">
-                        <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
-                            <Users className="text-primary" size={13} />
+                      <div className="flex items-center justify-between p-3 rounded-xl bg-muted/40 hover:bg-muted/60 transition-colors cursor-pointer">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <Users className="text-primary" size={16} />
                           </div>
                           <div>
-                            <p className="font-medium text-xs">{group.name}</p>
-                            <div className="flex items-center gap-1.5 mt-0.5">
-                              <span className={`text-[9px] px-1 py-0.5 rounded-full font-medium ${
+                            <p className="font-medium text-sm">{group.name}</p>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${
                                 group.my_role === 'chairperson' ? 'bg-accent/10 text-accent' :
                                 group.my_role === 'treasurer' ? 'bg-emerald-500/10 text-emerald-500' :
                                 group.my_role === 'secretary' ? 'bg-blue-500/10 text-blue-500' :
                                 'bg-muted text-muted-foreground'
                               }`}>
-                                {group.my_role === 'chairperson' && <Crown size={7} className="inline mr-0.5" />}
+                                {group.my_role === 'chairperson' && <Crown size={9} className="inline mr-0.5" />}
                                 {group.my_role.charAt(0).toUpperCase() + group.my_role.slice(1)}
                               </span>
-                              <span className="text-[9px] text-muted-foreground">{group.member_count} members</span>
+                              <span className="text-xs text-muted-foreground">{group.member_count} members</span>
                             </div>
                           </div>
                         </div>
-                        <ChevronRight size={13} className="text-muted-foreground" />
+                        <ChevronRight size={16} className="text-muted-foreground" />
                       </div>
                     </Link>
                   ))}
@@ -566,57 +565,57 @@ export default function DashboardPage() {
         {chamaGroups.length > 0 && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.26 }}>
             <Card className="border-border/50">
-              <CardHeader className="flex-row items-center justify-between px-3 pt-2.5 pb-1.5">
+              <CardHeader className="flex-row items-center justify-between px-4 pt-3 pb-2">
                 <div>
-                  <CardTitle className="text-sm flex items-center gap-1.5">
-                    <Receipt size={13} className="text-accent" />
+                  <CardTitle className="text-sm flex items-center gap-2">
+                    <Receipt size={14} className="text-accent" />
                     Chama Transactions
                   </CardTitle>
-                  <CardDescription className="text-[10px]">Your recent chama payments</CardDescription>
+                  <CardDescription className="text-xs">Your recent chama payments</CardDescription>
                 </div>
               </CardHeader>
-              <CardContent className="px-3 pb-2.5">
+              <CardContent className="px-4 pb-3">
                 <ChamaTxnSummary userId={user?.id} chamaGroups={chamaGroups} />
               </CardContent>
             </Card>
           </motion.div>
         )}
 
-        <div className="grid gap-2 lg:grid-cols-3">
+        <div className="grid gap-3 lg:grid-cols-3">
           {/* Profile Completion */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
             <Card className="border-border/50 h-full">
-              <CardHeader className="px-3 pt-2.5 pb-1.5">
-                <CardTitle className="text-sm flex items-center gap-1.5">
-                  <Activity size={13} className="text-primary" />
+              <CardHeader className="px-4 pt-3 pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Activity size={14} className="text-primary" />
                   Profile Completion
                 </CardTitle>
               </CardHeader>
-              <CardContent className="px-3 pb-2.5 space-y-2">
+              <CardContent className="px-4 pb-3 space-y-3">
                 <div className="space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-[11px] text-muted-foreground">Progress</span>
-                    <span className="text-[11px] font-bold text-primary">{profileCompletion}%</span>
+                    <span className="text-xs text-muted-foreground">Progress</span>
+                    <span className="text-xs font-bold text-primary">{profileCompletion}%</span>
                   </div>
-                  <Progress value={profileCompletion} className="h-1.5" />
+                  <Progress value={profileCompletion} className="h-2" />
                 </div>
-                <div className="space-y-1.5">
+                <div className="space-y-2">
                   {[
                     { label: 'Personal Info', done: !!(profile?.full_name && profile?.date_of_birth) },
                     { label: 'Contact Details', done: !!(profile?.email && profile?.phone) },
                     { label: 'Location', done: !!(profile?.county && profile?.address) },
                     { label: 'Account Activated', done: !!profile?.is_active },
                   ].map((item, i) => (
-                    <div key={i} className="flex items-center gap-1.5">
-                      <div className={`w-4 h-4 rounded-full flex items-center justify-center ${item.done ? 'bg-success/10' : 'bg-muted'}`}>
-                        {item.done ? <CheckCircle size={9} className="text-success" /> : <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30" />}
+                    <div key={i} className="flex items-center gap-2">
+                      <div className={`w-5 h-5 rounded-full flex items-center justify-center ${item.done ? 'bg-success/10' : 'bg-muted'}`}>
+                        {item.done ? <CheckCircle size={11} className="text-success" /> : <div className="w-2 h-2 rounded-full bg-muted-foreground/30" />}
                       </div>
-                      <span className={`text-[11px] ${item.done ? 'text-foreground' : 'text-muted-foreground'}`}>{item.label}</span>
+                      <span className={`text-xs ${item.done ? 'text-foreground' : 'text-muted-foreground'}`}>{item.label}</span>
                     </div>
                   ))}
                 </div>
-                <Button variant="outline" size="sm" className="w-full h-7 text-[11px]" onClick={() => navigate('/dashboard/account')}>
-                  View Account <ArrowRight size={11} />
+                <Button variant="outline" size="sm" className="w-full h-9 text-xs" onClick={() => navigate('/dashboard/account')}>
+                  View Account <ArrowRight size={12} />
                 </Button>
               </CardContent>
             </Card>
@@ -625,41 +624,41 @@ export default function DashboardPage() {
           {/* Recent Applications */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="lg:col-span-2">
             <Card className="border-border/50 h-full">
-              <CardHeader className="flex-row items-center justify-between px-3 pt-2.5 pb-1.5">
+              <CardHeader className="flex-row items-center justify-between px-4 pt-3 pb-2">
                 <div>
                   <CardTitle className="text-sm">Recent Applications</CardTitle>
-                  <CardDescription className="text-[10px]">Your latest loan activity</CardDescription>
+                  <CardDescription className="text-xs">Your latest loan activity</CardDescription>
                 </div>
                 {applications.length > 0 && (
-                  <Button variant="ghost" size="sm" className="text-[11px] h-6 px-1.5" onClick={() => navigate('/dashboard/applications')}>
-                    View All <ArrowUpRight size={11} />
+                  <Button variant="ghost" size="sm" className="text-xs h-8 px-2" onClick={() => navigate('/dashboard/applications')}>
+                    View All <ArrowUpRight size={12} />
                   </Button>
                 )}
               </CardHeader>
-              <CardContent className="px-3 pb-2.5">
+              <CardContent className="px-4 pb-3">
                 {applications.length === 0 ? (
                   <EmptyState icon={FileText} title="No applications yet" description="Start your journey by applying for a loan" actionLabel="Browse Products" onAction={() => navigate('/dashboard/products')} />
                 ) : (
-                  <div className="space-y-1">
+                  <div className="space-y-1.5">
                     {applications.map((app) => (
                       <div
                         key={app.id}
-                        className="flex items-center justify-between p-2 rounded-xl bg-muted/40 hover:bg-muted/60 transition-colors cursor-pointer"
+                        className="flex items-center justify-between p-3 rounded-xl bg-muted/40 hover:bg-muted/60 transition-colors cursor-pointer"
                         onClick={() => navigate('/dashboard/applications')}
                       >
-                        <div className="flex items-center gap-2">
-                          <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
-                            <CreditCard className="text-primary" size={13} />
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <CreditCard className="text-primary" size={16} />
                           </div>
                           <div>
-                            <p className="font-medium text-xs capitalize">{app.loan_type.replace('_', ' ')} Loan</p>
-                            <p className="text-[10px] text-muted-foreground">
+                            <p className="font-medium text-sm capitalize">{app.loan_type.replace('_', ' ')} Loan</p>
+                            <p className="text-xs text-muted-foreground">
                               {new Date(app.created_at).toLocaleDateString('en-KE', { month: 'short', day: 'numeric', year: 'numeric' })}
                             </p>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
-                          <p className="font-semibold text-[11px] hidden sm:block">{formatCurrency(app.applied_amount)}</p>
+                          <p className="font-semibold text-xs hidden sm:block">{formatCurrency(app.applied_amount)}</p>
                           <StatusBadge status={app.status} />
                         </div>
                       </div>
@@ -684,23 +683,23 @@ export default function DashboardPage() {
             const isDocRequest = notif.message.startsWith('[DOCUMENT_REQUEST]');
             const displayMessage = isDocRequest ? notif.message.replace('[DOCUMENT_REQUEST] ', '') : notif.message;
             return (
-              <div key={notif.id} className={`p-2 rounded-xl border transition-all ${!notif.is_read ? 'border-l-4 border-l-accent border-border/50 bg-accent/5' : 'border-border/40 bg-muted/30'}`}>
+              <div key={notif.id} className={`p-3 rounded-xl border transition-all ${!notif.is_read ? 'border-l-4 border-l-accent border-border/50 bg-accent/5' : 'border-border/40 bg-muted/30'}`}>
                 <div className="flex items-start gap-2">
-                  <div className={`w-6 h-6 rounded-md flex items-center justify-center shrink-0 mt-0.5 ${accentClass}`}>
+                  <div className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 mt-0.5 ${accentClass}`}>
                     {icon}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1 mb-0.5">
-                      <h4 className="font-semibold text-[11px]">{notif.title}</h4>
-                      {!notif.is_read && <span className="w-1.5 h-1.5 rounded-full bg-accent shrink-0" />}
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <h4 className="font-semibold text-xs">{notif.title}</h4>
+                      {!notif.is_read && <span className="w-2 h-2 rounded-full bg-accent shrink-0" />}
                     </div>
-                    <p className="text-[10px] text-muted-foreground leading-relaxed">{displayMessage}</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{displayMessage}</p>
                     {isDocRequest && (
-                      <Button variant="outline" size="sm" className="mt-1 text-[10px] h-5 px-1.5" onClick={() => navigate('/dashboard/account')}>
-                        <Upload size={9} className="mr-0.5" /> Upload Documents
+                      <Button variant="outline" size="sm" className="mt-1.5 text-xs h-7 px-2" onClick={() => navigate('/dashboard/account')}>
+                        <Upload size={10} className="mr-1" /> Upload Documents
                       </Button>
                     )}
-                    <p className="text-[9px] text-muted-foreground/60 mt-0.5">
+                    <p className="text-[10px] text-muted-foreground/60 mt-1">
                       {(() => {
                         const diff = Date.now() - new Date(notif.created_at).getTime();
                         const mins = Math.floor(diff / 60000);
@@ -717,30 +716,30 @@ export default function DashboardPage() {
           };
 
           return (
-            <div className="grid gap-2 lg:grid-cols-2">
+            <div className="grid gap-3 lg:grid-cols-2">
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.28 }}>
                 <Card className="border-border/50 h-full">
-                  <CardHeader className="flex-row items-center justify-between px-3 pt-2.5 pb-1.5">
+                  <CardHeader className="flex-row items-center justify-between px-4 pt-3 pb-2">
                     <div>
-                      <CardTitle className="text-sm flex items-center gap-1.5">
-                        <MessageSquare size={13} className="text-accent" />
+                      <CardTitle className="text-sm flex items-center gap-2">
+                        <MessageSquare size={14} className="text-accent" />
                         Support & Admin
                       </CardTitle>
-                      <CardDescription className="text-[10px]">Loan updates & account alerts</CardDescription>
+                      <CardDescription className="text-xs">Loan updates & account alerts</CardDescription>
                     </div>
-                    <Button variant="ghost" size="sm" className="text-[11px] h-6 px-1.5" onClick={() => navigate('/dashboard/notifications')}>
-                      View All <ArrowUpRight size={11} />
+                    <Button variant="ghost" size="sm" className="text-xs h-8 px-2" onClick={() => navigate('/dashboard/notifications')}>
+                      View All <ArrowUpRight size={12} />
                     </Button>
                   </CardHeader>
-                  <CardContent className="px-3 pb-2.5 space-y-1">
+                  <CardContent className="px-4 pb-3 space-y-1.5">
                     {supportNotifs.length === 0 ? (
-                      <p className="text-[11px] text-muted-foreground text-center py-2">No support messages</p>
+                      <p className="text-xs text-muted-foreground text-center py-3">No support messages</p>
                     ) : (
                       supportNotifs.slice(0, 4).map((notif) => {
                         const isDocRequest = notif.message.startsWith('[DOCUMENT_REQUEST]');
                         return renderNotif(
                           notif,
-                          isDocRequest ? <Upload size={11} className="text-primary" /> : <MessageSquare size={11} className="text-accent" />,
+                          isDocRequest ? <Upload size={12} className="text-primary" /> : <MessageSquare size={12} className="text-accent" />,
                           isDocRequest ? 'bg-primary/10' : 'bg-accent/10'
                         );
                       })
@@ -751,53 +750,53 @@ export default function DashboardPage() {
 
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
                 <Card className="border-border/50 h-full">
-                  <CardHeader className="flex-row items-center justify-between px-3 pt-2.5 pb-1.5">
+                  <CardHeader className="flex-row items-center justify-between px-4 pt-3 pb-2">
                     <div>
-                      <CardTitle className="text-sm flex items-center gap-1.5">
-                        <Users size={13} className="text-primary" />
+                      <CardTitle className="text-sm flex items-center gap-2">
+                        <Users size={14} className="text-primary" />
                         Chama Updates
                       </CardTitle>
-                      <CardDescription className="text-[10px]">Group activity & reminders</CardDescription>
+                      <CardDescription className="text-xs">Group activity & reminders</CardDescription>
                     </div>
-                    <Button variant="ghost" size="sm" className="text-[11px] h-6 px-1.5" onClick={() => navigate('/dashboard/chama')}>
-                      View All <ArrowUpRight size={11} />
+                    <Button variant="ghost" size="sm" className="text-xs h-8 px-2" onClick={() => navigate('/dashboard/chama')}>
+                      View All <ArrowUpRight size={12} />
                     </Button>
                   </CardHeader>
-                  <CardContent className="px-3 pb-2.5 space-y-1">
+                  <CardContent className="px-4 pb-3 space-y-1.5">
                     {chamaUpdates.length === 0 ? (
-                      <p className="text-[11px] text-muted-foreground text-center py-2">No chama updates</p>
+                      <p className="text-xs text-muted-foreground text-center py-3">No chama updates</p>
                     ) : (
                       chamaUpdates.slice(0, 4).map((update) => {
                         const group = chamaGroups.find(g => g.id === update.group_id);
                         const groupName = group?.name || 'Chama';
                         let icon, accentClass, title, message;
                         if (update._type === 'announcement') {
-                          icon = <Bell size={11} className="text-accent" />;
+                          icon = <Bell size={12} className="text-accent" />;
                           accentClass = 'bg-accent/10';
                           title = `📢 ${update.title}`;
                           message = `${groupName}: ${update.message?.slice(0, 60)}${(update.message?.length || 0) > 60 ? '…' : ''}`;
                         } else if (update._type === 'meeting') {
-                          icon = <Clock size={11} className="text-primary" />;
+                          icon = <Clock size={12} className="text-primary" />;
                           accentClass = 'bg-primary/10';
                           title = `📅 ${update.title}`;
                           message = `${groupName} · ${new Date(update.created_at).toLocaleDateString('en-KE', { weekday: 'short', month: 'short', day: 'numeric' })}`;
                         } else {
-                          icon = <PiggyBank size={11} className="text-emerald-500" />;
+                          icon = <PiggyBank size={12} className="text-emerald-500" />;
                           accentClass = 'bg-emerald-500/10';
                           title = `💰 Contribution`;
                           message = `${groupName} · KES ${Number(update.amount).toLocaleString()}`;
                         }
                         return (
-                          <div key={update.id} className="p-2 rounded-xl border border-border/40 bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
+                          <div key={update.id} className="p-3 rounded-xl border border-border/40 bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors"
                             onClick={() => group && navigate(`/dashboard/chama/${group.id}`)}>
                             <div className="flex items-start gap-2">
-                              <div className={`w-6 h-6 rounded-md flex items-center justify-center shrink-0 mt-0.5 ${accentClass}`}>
+                              <div className={`w-7 h-7 rounded-md flex items-center justify-center shrink-0 mt-0.5 ${accentClass}`}>
                                 {icon}
                               </div>
                               <div className="flex-1 min-w-0">
                                 <p className="text-xs font-semibold truncate">{title}</p>
-                                <p className="text-[10px] text-muted-foreground truncate">{message}</p>
-                                <p className="text-[9px] text-muted-foreground mt-0.5">{new Date(update.created_at).toLocaleDateString('en-KE', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                                <p className="text-xs text-muted-foreground truncate">{message}</p>
+                                <p className="text-[10px] text-muted-foreground mt-0.5">{new Date(update.created_at).toLocaleDateString('en-KE', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
                               </div>
                             </div>
                           </div>
@@ -818,14 +817,14 @@ export default function DashboardPage() {
               onClick={() => {
                 if (canInstall) { promptInstall(); } else { toast.info('To install: tap your browser menu → "Add to Home Screen" or "Install App"'); }
               }}
-              className="w-full rounded-xl bg-accent text-accent-foreground p-2.5 flex items-center gap-2 shadow-gold hover:bg-accent/90 transition-colors cursor-pointer"
+              className="w-full rounded-xl bg-accent text-accent-foreground p-3 flex items-center gap-3 shadow-gold hover:bg-accent/90 transition-colors cursor-pointer"
             >
-              <Download size={16} className="shrink-0" />
+              <Download size={18} className="shrink-0" />
               <div className="text-left flex-1">
-                <p className="font-bold text-xs">Download Dasnet App</p>
-                <p className="text-[10px] opacity-80">Install for faster access & instant notifications</p>
+                <p className="font-bold text-sm">Download Dasnet App</p>
+                <p className="text-xs opacity-80">Install for faster access & instant notifications</p>
               </div>
-              <ArrowRight size={13} className="shrink-0 opacity-70" />
+              <ArrowRight size={14} className="shrink-0 opacity-70" />
             </button>
           </motion.div>
         )}
@@ -836,16 +835,16 @@ export default function DashboardPage() {
 
         {/* Loan Products */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between mb-3">
             <div>
               <h2 className="font-display text-sm font-bold">Available Products</h2>
-              <p className="text-[11px] text-muted-foreground">Choose a loan product that fits your needs</p>
+              <p className="text-xs text-muted-foreground">Choose a loan product that fits your needs</p>
             </div>
-            <Button variant="ghost" size="sm" className="text-[11px] h-6 px-1.5" onClick={() => navigate('/dashboard/products')}>
-              See All <ArrowUpRight size={11} />
+            <Button variant="ghost" size="sm" className="text-xs h-8 px-2" onClick={() => navigate('/dashboard/products')}>
+              See All <ArrowUpRight size={12} />
             </Button>
           </div>
-          <div className="grid gap-2 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
             {loanProducts.slice(0, 3).map((product) => (
               <LoanProductCard key={product.id} product={product} onApply={handleApplyLoan} disabled={hasActiveApplication} />
             ))}

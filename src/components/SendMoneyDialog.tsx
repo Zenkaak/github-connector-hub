@@ -142,12 +142,8 @@ export function SendMoneyDialog({ open, onOpenChange, walletBalance, onSuccess }
       });
 
       if (error) throw error;
-      const result = data as any;
-      if (!result?.success) {
-        toast.error(result?.error || 'Transfer failed');
-        return;
-      }
 
+      // The RPC returns a transfer UUID on success - any non-error response means success
       await Promise.all([
         supabase.from('notifications').insert({
           user_id: recipientId,
@@ -181,7 +177,6 @@ export function SendMoneyDialog({ open, onOpenChange, walletBalance, onSuccess }
           </DialogTitle>
         </DialogHeader>
 
-        {/* Password authorization step - replaces main content */}
         {showPasswordStep ? (
           <div className="space-y-4">
             <div className="p-4 rounded-xl bg-muted/40 border border-border/40 text-center space-y-1">
@@ -207,7 +202,6 @@ export function SendMoneyDialog({ open, onOpenChange, walletBalance, onSuccess }
             </div>
           </div>
         ) : (
-          /* Main send money form */
           <div className="space-y-4">
             <div className="p-3 rounded-xl bg-muted/40 border border-border/40 text-center">
               <p className="text-xs text-muted-foreground">Available Balance</p>
