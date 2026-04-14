@@ -292,8 +292,6 @@ export default function DashboardPage() {
   const quickActions = [
     { label: 'Deposit', icon: ArrowDownLeft, path: '/dashboard/wallet', color: 'bg-success/80 text-success-foreground', desc: 'Add funds' },
     { label: 'Withdraw', icon: ArrowUpRight, path: '/dashboard/wallet', color: 'bg-accent text-accent-foreground', desc: 'Cash out' },
-    { label: 'My Savings', icon: PiggyBank, path: '/dashboard/savings', color: 'bg-success/80 text-success-foreground', desc: 'Target & Lock savings' },
-    { label: 'Transactions', icon: Receipt, path: '/dashboard/transactions', color: 'bg-primary/80 text-primary-foreground', desc: 'Payment history' },
     { label: 'Chama Groups', icon: Users, path: '/dashboard/chama', color: 'bg-primary text-primary-foreground', desc: 'My groups' },
     { label: 'Create Fundraiser', icon: HeartHandshake, path: '/dashboard/create-fundraiser', color: 'bg-destructive/80 text-destructive-foreground', desc: 'Start a Harambee' },
   ];
@@ -364,14 +362,14 @@ export default function DashboardPage() {
           </motion.div>
         )}
 
-        {/* Quick Actions - Compact 3-column grid on mobile */}
+        {/* Quick Actions - 2x2 grid */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}>
-          <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
+          <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
             {quickActions.map((action, i) => (
               <button
                 key={i}
                 onClick={() => navigate(action.path)}
-                className="group flex flex-col items-center text-center p-1.5 sm:p-2.5 rounded-xl bg-card border border-border/50 hover:border-accent/30 hover:shadow-md transition-all duration-300 active:scale-[0.97]"
+                className="group flex flex-col items-center text-center p-2 sm:p-2.5 rounded-xl bg-card border border-border/50 hover:border-accent/30 hover:shadow-md transition-all duration-300 active:scale-[0.97]"
               >
                 <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl ${action.color} flex items-center justify-center mb-1 group-hover:scale-110 transition-transform duration-300`}>
                   <action.icon size={16} />
@@ -418,14 +416,17 @@ export default function DashboardPage() {
             </Card>
           </motion.div>
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.19 }}>
-            <Card className="border-border/50">
+            <Card
+              className="border-border/50 hover:shadow-md transition-all duration-300 hover:border-accent/20 cursor-pointer active:scale-[0.97]"
+              onClick={() => navigate('/dashboard/savings')}
+            >
               <CardContent className="p-2 sm:p-2.5 flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
-                  <Clock className="text-accent" size={15} />
+                <div className="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center shrink-0">
+                  <PiggyBank className="text-success" size={15} />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-base font-bold font-display">{stats.pending}</p>
-                  <p className="text-[10px] text-muted-foreground">Pending Review</p>
+                  <p className="text-xs font-bold">My Savings</p>
+                  <p className="text-[10px] text-muted-foreground">Target & Lock savings</p>
                 </div>
               </CardContent>
             </Card>
@@ -873,3 +874,4 @@ export default function DashboardPage() {
     </DashboardLayout>
   );
 }
+ 
