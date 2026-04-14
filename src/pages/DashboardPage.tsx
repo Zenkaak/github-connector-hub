@@ -58,7 +58,7 @@ function ChamaTxnSummary({ userId, chamaGroups }: { userId?: string; chamaGroups
   const statusColor = { success: 'text-emerald-500 bg-emerald-500/10', failed: 'text-destructive bg-destructive/10', pending: 'text-accent bg-accent/10' };
 
   return (
-    <div className="space-y-1">
+    <div className="space-y-1.5">
       {txns.slice(0, 5).map(tx => {
         const Icon = statusIcon[tx.status as keyof typeof statusIcon] || Clock;
         const color = statusColor[tx.status as keyof typeof statusColor] || statusColor.pending;
@@ -70,7 +70,7 @@ function ChamaTxnSummary({ userId, chamaGroups }: { userId?: string; chamaGroups
             className="flex items-center justify-between p-2.5 rounded-xl bg-muted/40 hover:bg-muted/60 transition-colors cursor-pointer"
             onClick={() => group && navigate(`/dashboard/chama/${group.id}`)}
           >
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2">
               <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center', color.split(' ')[1])}>
                 <Icon size={14} className={color.split(' ')[0]} />
               </div>
@@ -79,7 +79,7 @@ function ChamaTxnSummary({ userId, chamaGroups }: { userId?: string; chamaGroups
                 <p className="text-[10px] text-muted-foreground">{new Date(tx.created_at).toLocaleDateString('en-KE', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
               </div>
             </div>
-            <span className={cn('text-[10px] font-medium px-2 py-0.5 rounded-full', color)}>{tx.status}</span>
+            <span className={cn('text-[10px] font-medium px-1.5 py-0.5 rounded-full', color)}>{tx.status}</span>
           </div>
         );
       })}
@@ -349,7 +349,7 @@ export default function DashboardPage() {
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_right,_hsl(42_92%_56%_/_0.15),_transparent_60%)]" />
             <div className="absolute inset-0 grid-pattern opacity-[0.02]" />
             <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-              <div className="flex items-start gap-2.5">
+              <div className="flex items-start gap-2">
                 <div className="w-8 h-8 rounded-lg bg-accent/20 flex items-center justify-center shrink-0">
                   <Sparkles className="text-accent" size={16} />
                 </div>
@@ -462,9 +462,9 @@ export default function DashboardPage() {
         {disbursements.length > 0 && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.23 }}>
             <Card className="border-border/50">
-              <CardHeader className="flex-row items-center justify-between px-3 pt-2.5 pb-1.5">
+              <CardHeader className="flex-row items-center justify-between px-3 pt-2.5 pb-2">
                 <div>
-                  <CardTitle className="text-xs flex items-center gap-1.5">
+                  <CardTitle className="text-xs flex items-center gap-2">
                     <TrendingUp size={13} className="text-accent" />
                     Active Loan Repayments
                   </CardTitle>
@@ -480,7 +480,7 @@ export default function DashboardPage() {
                   const isOverdue = daysLeft === 0 && d.outstanding_balance > 0;
                   return (
                     <div key={d.id} className="p-2.5 rounded-xl bg-muted/40 space-y-1.5 cursor-pointer hover:bg-muted/60 transition-colors" onClick={() => navigate('/dashboard/applications')}>
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between gap-2">
                         <div>
                           <p className="font-semibold text-xs">Loan · {formatCurrency(d.disbursed_amount)}</p>
                           <p className="text-[10px] text-muted-foreground">
@@ -493,7 +493,7 @@ export default function DashboardPage() {
                           <p className="text-[10px] text-muted-foreground">remaining</p>
                         </div>
                       </div>
-                      <div className="space-y-0.5">
+                      <div className="space-y-1">
                         <div className="flex justify-between text-[10px] text-muted-foreground">
                           <span>Repaid: {formatCurrency(repaid)}</span>
                           <span>{progress}%</span>
@@ -511,9 +511,9 @@ export default function DashboardPage() {
         {/* Chama Groups */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.24 }}>
           <Card className="border-border/50">
-            <CardHeader className="flex-row items-center justify-between px-3 pt-2.5 pb-1.5">
+            <CardHeader className="flex-row items-center justify-between px-3 pt-2.5 pb-2">
               <div>
-                <CardTitle className="text-xs flex items-center gap-1.5">
+                <CardTitle className="text-xs flex items-center gap-2">
                   <Users size={13} className="text-primary" />
                   My Chama Groups
                 </CardTitle>
@@ -527,17 +527,17 @@ export default function DashboardPage() {
               {chamaGroups.length === 0 ? (
                 <EmptyState icon={Users} title="No Chama groups yet" description="Create or join a savings group" actionLabel="Create Group" onAction={() => navigate('/dashboard/chama')} />
               ) : (
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   {chamaGroups.slice(0, 3).map((group) => (
                     <Link key={group.id} to={`/dashboard/chama/${group.id}`}>
                       <div className="flex items-center justify-between p-2.5 rounded-xl bg-muted/40 hover:bg-muted/60 transition-colors cursor-pointer">
-                        <div className="flex items-center gap-2.5">
+                        <div className="flex items-center gap-2">
                           <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                             <Users className="text-primary" size={14} />
                           </div>
                           <div>
                             <p className="font-medium text-xs">{group.name}</p>
-                            <div className="flex items-center gap-1.5 mt-0.5">
+                            <div className="flex items-center gap-2 mt-0.5">
                               <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
                                 group.my_role === 'chairperson' ? 'bg-accent/10 text-accent' :
                                 group.my_role === 'treasurer' ? 'bg-emerald-500/10 text-emerald-500' :
@@ -565,9 +565,9 @@ export default function DashboardPage() {
         {chamaGroups.length > 0 && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.26 }}>
             <Card className="border-border/50">
-              <CardHeader className="flex-row items-center justify-between px-3 pt-2.5 pb-1.5">
+              <CardHeader className="flex-row items-center justify-between px-3 pt-2.5 pb-2">
                 <div>
-                  <CardTitle className="text-xs flex items-center gap-1.5">
+                  <CardTitle className="text-xs flex items-center gap-2">
                     <Receipt size={13} className="text-accent" />
                     Chama Transactions
                   </CardTitle>
@@ -585,14 +585,14 @@ export default function DashboardPage() {
           {/* Profile Completion */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
             <Card className="border-border/50 h-full">
-              <CardHeader className="px-3 pt-2.5 pb-1.5">
-                <CardTitle className="text-xs flex items-center gap-1.5">
+              <CardHeader className="px-3 pt-2.5 pb-2">
+                <CardTitle className="text-xs flex items-center gap-2">
                   <Activity size={13} className="text-primary" />
                   Profile Completion
                 </CardTitle>
               </CardHeader>
-              <CardContent className="px-3 pb-2.5 space-y-2">
-                <div className="space-y-0.5">
+              <CardContent className="px-3 pb-2.5 space-y-2.5">
+                <div className="space-y-1">
                   <div className="flex items-center justify-between">
                     <span className="text-[10px] text-muted-foreground">Progress</span>
                     <span className="text-[10px] font-bold text-primary">{profileCompletion}%</span>
@@ -606,11 +606,11 @@ export default function DashboardPage() {
                     { label: 'Location', done: !!(profile?.county && profile?.address) },
                     { label: 'Account Activated', done: !!profile?.is_active },
                   ].map((item, i) => (
-                    <div key={i} className="flex items-center gap-1.5">
+                    <div key={i} className="flex items-center gap-2">
                       <div className={`w-4 h-4 rounded-full flex items-center justify-center ${item.done ? 'bg-success/10' : 'bg-muted'}`}>
-                        {item.done ? <CheckCircle size={9} className="text-success" /> : <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30" />}
+                        {item.done ? <CheckCircle size={10} className="text-success" /> : <div className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30" />}
                       </div>
-                      <span className={`text-[11px] ${item.done ? 'text-foreground' : 'text-muted-foreground'}`}>{item.label}</span>
+                      <span className={`text-[10px] ${item.done ? 'text-foreground' : 'text-muted-foreground'}`}>{item.label}</span>
                     </div>
                   ))}
                 </div>
@@ -624,7 +624,7 @@ export default function DashboardPage() {
           {/* Recent Applications */}
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="lg:col-span-2">
             <Card className="border-border/50 h-full">
-              <CardHeader className="flex-row items-center justify-between px-3 pt-2.5 pb-1.5">
+              <CardHeader className="flex-row items-center justify-between px-3 pt-2.5 pb-2">
                 <div>
                   <CardTitle className="text-xs">Recent Applications</CardTitle>
                   <CardDescription className="text-[10px]">Your latest loan activity</CardDescription>
@@ -639,14 +639,14 @@ export default function DashboardPage() {
                 {applications.length === 0 ? (
                   <EmptyState icon={FileText} title="No applications yet" description="Start your journey by applying for a loan" actionLabel="Browse Products" onAction={() => navigate('/dashboard/products')} />
                 ) : (
-                  <div className="space-y-1">
+                  <div className="space-y-1.5">
                     {applications.map((app) => (
                       <div
                         key={app.id}
                         className="flex items-center justify-between p-2.5 rounded-xl bg-muted/40 hover:bg-muted/60 transition-colors cursor-pointer"
                         onClick={() => navigate('/dashboard/applications')}
                       >
-                        <div className="flex items-center gap-2.5">
+                        <div className="flex items-center gap-2">
                           <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                             <CreditCard className="text-primary" size={14} />
                           </div>
@@ -657,8 +657,8 @@ export default function DashboardPage() {
                             </p>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <p className="font-semibold text-[11px] hidden sm:block">{formatCurrency(app.applied_amount)}</p>
+                        <div className="flex items-center gap-1.5">
+                          <p className="font-semibold text-[10px] hidden sm:block">{formatCurrency(app.applied_amount)}</p>
                           <StatusBadge status={app.status} />
                         </div>
                       </div>
@@ -695,11 +695,11 @@ export default function DashboardPage() {
                     </div>
                     <p className="text-[10px] text-muted-foreground leading-relaxed">{displayMessage}</p>
                     {isDocRequest && (
-                      <Button variant="outline" size="sm" className="mt-1 text-[10px] h-6 px-2" onClick={() => navigate('/dashboard/account')}>
+                      <Button variant="outline" size="sm" className="mt-1.5 text-[10px] h-6 px-2" onClick={() => navigate('/dashboard/account')}>
                         <Upload size={9} className="mr-1" /> Upload Documents
                       </Button>
                     )}
-                    <p className="text-[9px] text-muted-foreground/60 mt-0.5">
+                    <p className="text-[10px] text-muted-foreground/60 mt-1">
                       {(() => {
                         const diff = Date.now() - new Date(notif.created_at).getTime();
                         const mins = Math.floor(diff / 60000);
@@ -719,9 +719,9 @@ export default function DashboardPage() {
             <div className="grid gap-2 lg:grid-cols-2">
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.28 }}>
                 <Card className="border-border/50 h-full">
-                  <CardHeader className="flex-row items-center justify-between px-3 pt-2.5 pb-1.5">
+                  <CardHeader className="flex-row items-center justify-between px-3 pt-2.5 pb-2">
                     <div>
-                      <CardTitle className="text-xs flex items-center gap-1.5">
+                      <CardTitle className="text-xs flex items-center gap-2">
                         <MessageSquare size={13} className="text-accent" />
                         Support & Admin
                       </CardTitle>
@@ -731,9 +731,9 @@ export default function DashboardPage() {
                       View All <ArrowUpRight size={11} />
                     </Button>
                   </CardHeader>
-                  <CardContent className="px-3 pb-2.5 space-y-1">
+                  <CardContent className="px-3 pb-2.5 space-y-1.5">
                     {supportNotifs.length === 0 ? (
-                      <p className="text-[10px] text-muted-foreground text-center py-2">No support messages</p>
+                      <p className="text-xs text-muted-foreground text-center py-3">No support messages</p>
                     ) : (
                       supportNotifs.slice(0, 4).map((notif) => {
                         const isDocRequest = notif.message.startsWith('[DOCUMENT_REQUEST]');
@@ -750,9 +750,9 @@ export default function DashboardPage() {
 
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
                 <Card className="border-border/50 h-full">
-                  <CardHeader className="flex-row items-center justify-between px-3 pt-2.5 pb-1.5">
+                  <CardHeader className="flex-row items-center justify-between px-3 pt-2.5 pb-2">
                     <div>
-                      <CardTitle className="text-xs flex items-center gap-1.5">
+                      <CardTitle className="text-xs flex items-center gap-2">
                         <Users size={13} className="text-primary" />
                         Chama Updates
                       </CardTitle>
@@ -762,9 +762,9 @@ export default function DashboardPage() {
                       View All <ArrowUpRight size={11} />
                     </Button>
                   </CardHeader>
-                  <CardContent className="px-3 pb-2.5 space-y-1">
+                  <CardContent className="px-3 pb-2.5 space-y-1.5">
                     {chamaUpdates.length === 0 ? (
-                      <p className="text-[10px] text-muted-foreground text-center py-2">No chama updates</p>
+                      <p className="text-xs text-muted-foreground text-center py-3">No chama updates</p>
                     ) : (
                       chamaUpdates.slice(0, 4).map((update) => {
                         const group = chamaGroups.find(g => g.id === update.group_id);
@@ -796,7 +796,7 @@ export default function DashboardPage() {
                               <div className="flex-1 min-w-0">
                                 <p className="text-[11px] font-semibold truncate">{title}</p>
                                 <p className="text-[10px] text-muted-foreground truncate">{message}</p>
-                                <p className="text-[9px] text-muted-foreground mt-0.5">{new Date(update.created_at).toLocaleDateString('en-KE', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                                <p className="text-[10px] text-muted-foreground mt-0.5">{new Date(update.created_at).toLocaleDateString('en-KE', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
                               </div>
                             </div>
                           </div>
@@ -835,7 +835,7 @@ export default function DashboardPage() {
 
         {/* Loan Products */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}>
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between mb-2.5">
             <div>
               <h2 className="font-display text-xs font-bold">Available Products</h2>
               <p className="text-[10px] text-muted-foreground">Choose a loan product that fits your needs</p>
