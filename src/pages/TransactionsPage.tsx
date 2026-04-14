@@ -99,7 +99,6 @@ export default function TransactionsPage() {
     if (user) fetchTransactions();
   }, [user]);
 
-  // Realtime subscription for instant deposit reflection
   useEffect(() => {
     if (!user) return;
     const channel = supabase
@@ -143,9 +142,8 @@ export default function TransactionsPage() {
       ]);
 
       if (walletRes.data) setWalletTxns(walletRes.data);
-
       if (trRes.data) setTransfers(trRes.data);
-      
+
       if (reqRes.data && reqRes.data.length > 0) {
         setRequests(reqRes.data);
         const userIds = [...new Set(reqRes.data.map(r => r.requester_id === user?.id ? r.requested_from_id : r.requester_id))];
@@ -160,7 +158,7 @@ export default function TransactionsPage() {
       const data = stkRes.data;
       const error = stkRes.error;
       if (error) throw error;
-      
+
       const txns = (data as Transaction[]) || [];
       setTransactions(txns);
     } catch (error) {
@@ -189,6 +187,9 @@ export default function TransactionsPage() {
       month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit',
     });
 
+  const formatTime = (dateStr: string) =>
+    new Date(dateStr).toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit' });
+
   const stats = {
     total: transactions.length,
     successful: transactions.filter((t) => t.status === 'success').length,
@@ -212,6 +213,23 @@ export default function TransactionsPage() {
     { label: 'Harambee', value: 'harambee', count: transactions.filter(t => getTxTypeKey(t.reference, t.purpose || undefined) === 'harambee').length },
   ];
 
+  const quickActions = [
+    { label: 'M-Pesa', value: 'mpesa' as const, icon: Receipt, count: transactions.length, desc: 'STK payments' },
+    { label: 'Wallet', value: 'wallet' as const, icon: Wallet, count: walletTxns.length, desc: 'Wallet activity' },
+    { label: 'Transfers', value: 'transfers' as const, icon: Send, count: transfers.length, desc: 'Sent & received' },
+    { label: 'Requests', value: 'requests' as const, icon: HandCoins, count: requests.length, desc: 'Money requests' },
+  ];
+
+  const groupByDate = <T extends { created_at: string }>(items: T[]) => {
+    const groups: Record<string, T[]> = {};
+    items.forEach(item => {
+      const date = new Date(item.created_at).toLocaleDateString('en-KE', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+      if (!groups[date]) groups[date] = [];
+      groups[date].push(item);
+    });
+    return groups;
+  };
+
   return (
     <DashboardLayout>
       <div className="p-5 lg:p-8 space-y-6 max-w-[1200px]">
@@ -220,413 +238,411 @@ export default function TransactionsPage() {
           <p className="text-sm text-muted-foreground mt-1">View all your payment & transfer history</p>
         </motion.div>
 
-        {/* View Toggle */}
-        <div className="flex gap-2 overflow-x-auto pb-1">
-          <Button
-            variant={activeView === 'mpesa' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setActiveView('mpesa')}
-            className="gap-1.5"
-          >
-            <Receipt size={14} /> M-Pesa ({transactions.length})
-          </Button>
-          <Button
-            variant={activeView === 'wallet' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setActiveView('wallet')}
-            className="gap-1.5"
-          >
-            <Wallet size={14} /> Wallet ({walletTxns.length})
-          </Button>
-          <Button
-            variant={activeView === 'transfers' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setActiveView('transfers')}
-            className="gap-1.5"
-          >
-            <Send size={14} /> Transfers ({transfers.length})
-          </Button>
-          <Button
-            variant={activeView === 'requests' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setActiveView('requests')}
-            className="gap-1.5"
-          >
-            <HandCoins size={14} /> Requests ({requests.length})
-          </Button>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {quickActions.map((action, i) => (
+            <motion.div
+              key={action.value}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.05 * i }}
+            >
+              <button
+                onClick={() => setActiveView(action.value)}
+                className={cn(
+                  'w-full text-left p-4 rounded-2xl border-2 transition-all duration-200',
+                  activeView === action.value
+                    ? 'border-primary bg-primary/5 shadow-sm'
+                    : 'border-border/50 bg-card hover:border-primary/30 hover:shadow-sm'
+                )}
+              >
+                <div className={cn(
+                  'w-10 h-10 rounded-xl flex items-center justify-center mb-3',
+                  activeView === action.value ? 'bg-primary/10' : 'bg-muted'
+                )}>
+                  <action.icon
+                    size={18}
+                    className={activeView === action.value ? 'text-primary' : 'text-muted-foreground'}
+                  />
+                </div>
+                <p className="font-semibold text-sm">{action.label}</p>
+                <div className="flex items-center justify-between mt-1">
+                  <p className="text-xs text-muted-foreground">{action.desc}</p>
+                  <span className={cn(
+                    'text-xs font-bold px-2 py-0.5 rounded-full',
+                    activeView === action.value ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+                  )}>
+                    {action.count}
+                  </span>
+                </div>
+              </button>
+            </motion.div>
+          ))}
         </div>
 
-        {activeView === 'mpesa' ? (
+        {activeView === 'mpesa' && (
           <>
-            {/* Summary Cards */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+              className="grid grid-cols-4 gap-3"
+            >
               {[
-                { label: 'Total Transactions', value: stats.total, icon: Wallet, color: 'text-primary', bg: 'bg-primary/10' },
-                { label: 'Successful', value: stats.successful, icon: CheckCircle2, color: 'text-success', bg: 'bg-success/10' },
-                { label: 'Failed', value: stats.failed, icon: XCircle, color: 'text-destructive', bg: 'bg-destructive/10' },
-                { label: 'Total Paid', value: formatCurrency(stats.totalAmount), icon: ArrowUpRight, color: 'text-accent', bg: 'bg-accent/10' },
+                { label: 'Total', value: stats.total, color: 'text-foreground' },
+                { label: 'Successful', value: stats.successful, color: 'text-success' },
+                { label: 'Failed', value: stats.failed, color: 'text-destructive' },
+                { label: 'Paid', value: formatCurrency(stats.totalAmount), color: 'text-primary' },
               ].map((stat, i) => (
-                <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 * i }}>
-                  <Card className="border-border/50 hover:border-accent/20 transition-all">
-                    <CardContent className="p-4">
-                      <div className={`w-9 h-9 rounded-xl ${stat.bg} flex items-center justify-center mb-3`}>
-                        <stat.icon className={stat.color} size={18} />
-                      </div>
-                      <p className="text-xl font-bold font-display">{stat.value}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{stat.label}</p>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-
-            {/* Filters & Search */}
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
-              <Card className="border-border/50">
-                <CardHeader className="pb-3">
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                   <div className="flex flex-col gap-2">
-                     <div className="flex items-center gap-2 overflow-x-auto pb-1">
-                       {filters.map((f) => (
-                         <button
-                           key={f.value}
-                           onClick={() => setFilter(f.value)}
-                           className={cn(
-                             'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all',
-                             filter === f.value
-                               ? 'bg-primary text-primary-foreground'
-                               : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                           )}
-                         >
-                           {f.label}
-                           <span className={cn('px-1.5 py-0.5 rounded-md text-[10px]', filter === f.value ? 'bg-primary-foreground/20' : 'bg-background')}>
-                             {f.count}
-                           </span>
-                         </button>
-                       ))}
-                     </div>
-                     <div className="flex items-center gap-2 overflow-x-auto pb-1">
-                       {typeFilters.map((f) => (
-                         <button
-                           key={f.value}
-                           onClick={() => setTypeFilter(f.value)}
-                           className={cn(
-                             'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all',
-                             typeFilter === f.value
-                               ? 'bg-accent text-accent-foreground'
-                               : 'bg-muted text-muted-foreground hover:bg-muted/80'
-                           )}
-                         >
-                           {f.label}
-                           <span className={cn('px-1.5 py-0.5 rounded-md text-[10px]', typeFilter === f.value ? 'bg-accent-foreground/20' : 'bg-background')}>
-                             {f.count}
-                           </span>
-                         </button>
-                       ))}
-                     </div>
-                   </div>
-                    <div className="relative w-full sm:w-64">
-                      <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                      <Input
-                        placeholder="Search by reference or phone..."
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        className="pl-9 h-9 text-sm"
-                      />
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  {loading ? (
-                    <div className="space-y-3">
-                      {[1, 2, 3].map((i) => (
-                        <div key={i} className="h-16 rounded-xl bg-muted/40 animate-pulse" />
-                      ))}
-                    </div>
-                  ) : filtered.length === 0 ? (
-                    <div className="text-center py-12">
-                      <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-muted flex items-center justify-center">
-                        <Wallet size={22} className="text-muted-foreground" />
-                      </div>
-                      <p className="font-semibold text-sm mb-1">No transactions found</p>
-                      <p className="text-xs text-muted-foreground">
-                        {filter !== 'all' ? 'Try changing the filter' : 'Your transaction history will appear here'}
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      {filtered.map((tx, i) => {
-                        const config = statusConfig[tx.status];
-                        const StatusIcon = config.icon;
-                        return (
-                          <motion.div
-                            key={tx.id}
-                            initial={{ opacity: 0, y: 5 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.02 * i }}
-                            onClick={() => setSelectedTx(tx)}
-                            className={cn(
-                              'flex items-center justify-between p-4 rounded-xl border transition-colors cursor-pointer',
-                              'bg-muted/30 hover:bg-muted/50',
-                              config.border
-                            )}
-                          >
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center shrink-0', config.bg)}>
-                                <StatusIcon className={config.color} size={18} />
-                              </div>
-                              <div className="min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <p className="font-medium text-sm truncate">{tx.reference}</p>
-                                  {(() => { const t = getTxType(tx.reference, (tx as any).purpose || undefined); return (
-                                    <span className={cn('text-[10px] font-medium px-1.5 py-0.5 rounded-md shrink-0', t.bg, t.color)}>{t.label}</span>
-                                  ); })()}
-                                </div>
-                                <div className="flex items-center gap-2 mt-0.5">
-                                  <span className="text-xs text-muted-foreground">{tx.phone}</span>
-                                  <span className="text-muted-foreground/30">·</span>
-                                  <span className="text-xs text-muted-foreground">{formatDate(tx.created_at)}</span>
-                                </div>
-                              </div>
-                            </div>
-                            <div className="flex items-center gap-3 shrink-0">
-                              <div className="text-right">
-                                <p className="font-bold text-sm">{formatCurrency(tx.amount)}</p>
-                                <span className={cn('text-[11px] font-medium', config.color)}>{config.label}</span>
-                              </div>
-                            </div>
-                          </motion.div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </motion.div>
-          </>
-        ) : activeView === 'wallet' ? (
-          /* ===== WALLET TRANSACTIONS VIEW ===== */
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-            <Card className="border-border/50">
-              <CardHeader className="pb-3">
-                <div className="text-base font-semibold flex items-center gap-2">
-                  <Wallet size={16} className="text-primary" /> Wallet Activity
+                <div key={i} className="text-center p-3 rounded-xl bg-muted/30 border border-border/30">
+                  <p className={cn('text-lg font-bold font-display', stat.color)}>{stat.value}</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">{stat.label}</p>
                 </div>
-                <p className="text-xs text-muted-foreground">Deposits, withdrawals, and wallet movements</p>
-                <div className="flex gap-1.5 mt-2 overflow-x-auto">
-                  {(['all', 'deposit', 'credit', 'debit', 'withdrawal'] as const).map((f) => (
+              ))}
+            </motion.div>
+
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
+              <div className="space-y-3">
+                <div className="relative">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    placeholder="Search by reference, phone or receipt..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    className="pl-9 h-10 text-sm bg-card border-border/50"
+                  />
+                  {search && (
+                    <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <X size={14} className="text-muted-foreground" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider shrink-0 mr-1">Status</span>
+                  {filters.map((f) => (
                     <button
-                      key={f}
-                      onClick={() => setWalletFilter(f)}
+                      key={f.value}
+                      onClick={() => setFilter(f.value)}
                       className={cn(
-                        'px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-all capitalize',
-                        walletFilter === f
-                          ? 'bg-primary text-primary-foreground'
-                          : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                        'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all',
+                        filter === f.value
+                          ? 'bg-primary text-primary-foreground shadow-sm'
+                          : 'bg-muted/60 text-muted-foreground hover:bg-muted'
                       )}
                     >
-                      {f === 'all' ? 'All' : f} ({f === 'all' ? walletTxns.length : walletTxns.filter(t => t.type === f).length})
+                      {f.label}
+                      <span className={cn(
+                        'px-1.5 py-0.5 rounded-full text-[10px] font-bold',
+                        filter === f.value ? 'bg-primary-foreground/20' : 'bg-background/80'
+                      )}>
+                        {f.count}
+                      </span>
                     </button>
                   ))}
                 </div>
-              </CardHeader>
-              <CardContent>
-                {(() => {
-                  const filtered = walletFilter === 'all' ? walletTxns : walletTxns.filter(t => t.type === walletFilter);
-                  if (filtered.length === 0) {
-                    return (
-                      <div className="text-center py-12">
-                        <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-muted flex items-center justify-center">
-                          <Wallet size={22} className="text-muted-foreground" />
-                        </div>
-                        <p className="font-semibold text-sm mb-1">No wallet transactions</p>
-                        <p className="text-xs text-muted-foreground">Your wallet activity will appear here</p>
-                      </div>
-                    );
-                  }
-                  return (
-                    <div className="space-y-2">
-                      {filtered.map((tx: any) => {
-                        const isIncoming = tx.type === 'deposit' || tx.type === 'credit';
-                        return (
-                          <div
-                            key={tx.id}
-                            className={cn(
-                              'flex items-center justify-between p-3 rounded-xl border transition-colors',
-                              'bg-muted/30 hover:bg-muted/50',
-                              isIncoming ? 'border-success/20' : 'border-destructive/20'
-                            )}
-                          >
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div className={cn('w-9 h-9 rounded-xl flex items-center justify-center shrink-0',
-                                isIncoming ? 'bg-success/10' : 'bg-destructive/10'
-                              )}>
-                                {isIncoming ? <ArrowDownLeft size={16} className="text-success" /> : <ArrowUpRight size={16} className="text-destructive" />}
-                              </div>
-                              <div className="min-w-0">
-                                <p className="font-medium text-sm truncate capitalize">{tx.type}</p>
-                                <p className="text-xs text-muted-foreground truncate">{tx.description || 'Wallet transaction'}</p>
-                                <p className="text-[10px] text-muted-foreground">{formatDate(tx.created_at)}</p>
-                              </div>
-                            </div>
-                            <div className="text-right shrink-0">
-                              <p className={cn('font-bold text-sm', isIncoming ? 'text-success' : 'text-destructive')}>
-                                {isIncoming ? '+' : '-'}{formatCurrency(tx.amount)}
-                              </p>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  );
-                })()}
-              </CardContent>
-            </Card>
-          </motion.div>
-        ) : activeView === 'transfers' ? (
-          /* ===== WALLET TRANSFERS VIEW ===== */
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-            <Card className="border-border/50">
-              <CardHeader className="pb-3">
-                <div className="text-base font-semibold flex items-center gap-2">
-                  <Send size={16} className="text-primary" /> Wallet Transfers
-                </div>
-                <p className="text-xs text-muted-foreground">Money sent & received between Dasnet wallets</p>
-              </CardHeader>
-              <CardContent>
-                {transfers.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-muted flex items-center justify-center">
-                      <Send size={22} className="text-muted-foreground" />
-                    </div>
-                    <p className="font-semibold text-sm mb-1">No transfers yet</p>
-                    <p className="text-xs text-muted-foreground">Your wallet transfer history will appear here</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {transfers.map((tr: any, i: number) => {
-                      const isSender = tr.sender_id === user?.id;
-                      return (
-                        <div
-                          key={tr.id}
-                          onClick={() => setSelectedTransfer(tr)}
-                          className={cn(
-                            'p-4 rounded-xl border transition-colors cursor-pointer',
-                            tr.status === 'cancelled' ? 'bg-destructive/5 border-destructive/20 hover:bg-destructive/10' : 'bg-muted/30 border-border/40 hover:bg-muted/50'
-                          )}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center',
-                                tr.status === 'cancelled' ? 'bg-destructive/10' : isSender ? 'bg-destructive/10' : 'bg-success/10'
-                              )}>
-                                {tr.status === 'cancelled' ? <XCircle size={16} className="text-destructive" /> :
-                                  isSender ? <ArrowUpRight size={16} className="text-destructive" /> :
-                                  <ArrowDownLeft size={16} className="text-success" />}
-                              </div>
-                              <div className="min-w-0">
-                                <p className="font-medium text-sm">
-                                  {isSender ? `To ${tr.receiver_name || 'Unknown'}` : `From ${tr.sender_name || 'Unknown'}`}
-                                </p>
-                                <p className="text-xs text-muted-foreground truncate">
-                                  {tr.reason || 'No reason'} · {formatDate(tr.created_at)}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="text-right shrink-0">
-                              <p className={cn('font-bold text-sm', tr.status === 'cancelled' ? 'text-muted-foreground line-through' : isSender ? 'text-destructive' : 'text-success')}>
-                                {isSender ? '-' : '+'}{formatCurrency(tr.amount)}
-                              </p>
-                              {tr.status === 'cancelled' && (
-                                <span className="text-[10px] font-bold text-destructive">CANCELLED</span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
-        ) : (
-          /* ===== MONEY REQUESTS VIEW ===== */
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-            <Card className="border-border/50">
-              <CardHeader className="pb-3">
-                <div className="text-base font-semibold flex items-center gap-2">
-                  <HandCoins size={16} className="text-accent" /> Money Requests
-                </div>
-                <p className="text-xs text-muted-foreground">Requests you sent or received</p>
-              </CardHeader>
-              <CardContent>
-                {requests.length === 0 ? (
-                  <div className="text-center py-12">
-                    <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-muted flex items-center justify-center">
-                      <HandCoins size={22} className="text-muted-foreground" />
-                    </div>
-                    <p className="font-semibold text-sm mb-1">No requests yet</p>
-                    <p className="text-xs text-muted-foreground">Money requests will appear here</p>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {requests.map((req, i) => {
-                      const isRequester = req.requester_id === user?.id;
-                      const otherName = requestNames[isRequester ? req.requested_from_id : req.requester_id] || 'Unknown';
-                      const statusColor = req.status === 'paid' ? 'text-success' : req.status === 'declined' ? 'text-destructive' : 'text-accent';
-                      const statusBg = req.status === 'paid' ? 'bg-success/10' : req.status === 'declined' ? 'bg-destructive/10' : 'bg-accent/10';
-                      const StatusIcon = req.status === 'paid' ? CheckCircle2 : req.status === 'declined' ? XCircle : Clock;
 
-                      return (
-                        <motion.div
-                          key={req.id}
-                          initial={{ opacity: 0, y: 5 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.02 * i }}
-                          onClick={() => setSelectedRequest(req)}
-                          className={cn(
-                            'p-4 rounded-xl border transition-colors cursor-pointer',
-                            req.status === 'paid' ? 'bg-success/5 border-success/20 hover:bg-success/10' :
-                            req.status === 'declined' ? 'bg-destructive/5 border-destructive/20 hover:bg-destructive/10' :
-                            'bg-muted/30 border-border/40 hover:bg-muted/50'
-                          )}
-                        >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center shrink-0', statusBg)}>
-                                <StatusIcon className={statusColor} size={16} />
-                              </div>
-                              <div className="min-w-0">
-                                <p className="font-medium text-sm">
-                                  {isRequester
-                                    ? `You requested from ${otherName}`
-                                    : `${otherName} requested from you`}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                  {formatDate(req.created_at)}
-                                </p>
-                              </div>
-                            </div>
-                            <div className="text-right shrink-0">
-                              <p className="font-bold text-sm">{formatCurrency(req.amount)}</p>
-                              <span className={cn('text-[10px] font-bold uppercase', statusColor)}>
-                                {req.status}
-                              </span>
-                            </div>
-                          </div>
-                        </motion.div>
-                      );
-                    })}
+                <div className="flex items-center gap-2 overflow-x-auto pb-1">
+                  <span className="text-[10px] text-muted-foreground uppercase tracking-wider shrink-0 mr-1">Type</span>
+                  {typeFilters.map((f) => (
+                    <button
+                      key={f.value}
+                      onClick={() => setTypeFilter(f.value)}
+                      className={cn(
+                        'flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all',
+                        typeFilter === f.value
+                          ? 'bg-accent text-accent-foreground shadow-sm'
+                          : 'bg-muted/60 text-muted-foreground hover:bg-muted'
+                      )}
+                    >
+                      {f.label}
+                      {f.count > 0 && (
+                        <span className={cn(
+                          'px-1.5 py-0.5 rounded-full text-[10px] font-bold',
+                          typeFilter === f.value ? 'bg-accent-foreground/20' : 'bg-background/80'
+                        )}>
+                          {f.count}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}>
+              {loading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="h-16 rounded-xl bg-muted/40 animate-pulse" />
+                  ))}
+                </div>
+              ) : filtered.length === 0 ? (
+                <div className="text-center py-16">
+                  <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-muted flex items-center justify-center">
+                    <Wallet size={22} className="text-muted-foreground" />
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                  <p className="font-semibold text-sm mb-1">No transactions found</p>
+                  <p className="text-xs text-muted-foreground">
+                    {filter !== 'all' || typeFilter !== 'all' ? 'Try changing filters' : 'Your transaction history will appear here'}
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  {Object.entries(groupByDate(filtered)).map(([date, txns]) => (
+                    <div key={date}>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">{date}</p>
+                      <Card className="border-border/40 overflow-hidden">
+                        <div className="divide-y divide-border/30">
+                          {txns.map((tx) => {
+                            const config = statusConfig[tx.status];
+                            const StatusIcon = config.icon;
+                            const txType = getTxType(tx.reference, tx.purpose || undefined);
+                            return (
+                              <div
+                                key={tx.id}
+                                onClick={() => setSelectedTx(tx)}
+                                className="flex items-center justify-between px-4 py-3.5 hover:bg-muted/30 transition-colors cursor-pointer"
+                              >
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center shrink-0', config.bg)}>
+                                    <StatusIcon className={config.color} size={18} />
+                                  </div>
+                                  <div className="min-w-0">
+                                    <div className="flex items-center gap-2">
+                                      <span className={cn('text-[10px] font-semibold px-2 py-0.5 rounded-full', txType.bg, txType.color)}>
+                                        {txType.label}
+                                      </span>
+                                    </div>
+                                    <div className="flex items-center gap-1.5 mt-0.5">
+                                      <span className="text-xs text-muted-foreground">{tx.phone}</span>
+                                      <span className="text-muted-foreground/30">·</span>
+                                      <span className="text-xs text-muted-foreground">{formatTime(tx.created_at)}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="text-right shrink-0">
+                                  <p className="font-bold text-sm tabular-nums">{formatCurrency(tx.amount)}</p>
+                                  <span className={cn('text-[10px] font-semibold', config.color)}>{config.label}</span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </Card>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </motion.div>
+          </>
+        )}
+
+        {activeView === 'wallet' && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+            <div className="flex items-center gap-2 overflow-x-auto pb-3">
+              {(['all', 'deposit', 'credit', 'debit', 'withdrawal'] as const).map((f) => (
+                <button
+                  key={f}
+                  onClick={() => setWalletFilter(f)}
+                  className={cn(
+                    'px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all capitalize',
+                    walletFilter === f
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'bg-muted/60 text-muted-foreground hover:bg-muted'
+                  )}
+                >
+                  {f === 'all' ? 'All' : f} ({f === 'all' ? walletTxns.length : walletTxns.filter(t => t.type === f).length})
+                </button>
+              ))}
+            </div>
+
+            {(() => {
+              const filteredWallet = walletFilter === 'all' ? walletTxns : walletTxns.filter(t => t.type === walletFilter);
+              if (filteredWallet.length === 0) {
+                return (
+                  <div className="text-center py-16">
+                    <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-muted flex items-center justify-center">
+                      <Wallet size={22} className="text-muted-foreground" />
+                    </div>
+                    <p className="font-semibold text-sm mb-1">No wallet transactions</p>
+                    <p className="text-xs text-muted-foreground">Your wallet activity will appear here</p>
+                  </div>
+                );
+              }
+
+              return (
+                <div className="space-y-6">
+                  {Object.entries(groupByDate(filteredWallet)).map(([date, txns]) => (
+                    <div key={date}>
+                      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">{date}</p>
+                      <Card className="border-border/40 overflow-hidden">
+                        <div className="divide-y divide-border/30">
+                          {txns.map((tx: any) => {
+                            const isIncoming = tx.type === 'deposit' || tx.type === 'credit';
+                            return (
+                              <div
+                                key={tx.id}
+                                className="flex items-center justify-between px-4 py-3.5 hover:bg-muted/30 transition-colors"
+                              >
+                                <div className="flex items-center gap-3 min-w-0">
+                                  <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center shrink-0',
+                                    isIncoming ? 'bg-success/10' : 'bg-destructive/10'
+                                  )}>
+                                    {isIncoming
+                                      ? <ArrowDownLeft size={16} className="text-success" />
+                                      : <ArrowUpRight size={16} className="text-destructive" />
+                                    }
+                                  </div>
+                                  <div className="min-w-0">
+                                    <p className="font-medium text-sm capitalize">{tx.type}</p>
+                                    <p className="text-xs text-muted-foreground truncate">{tx.description || 'Wallet transaction'}</p>
+                                  </div>
+                                </div>
+                                <div className="text-right shrink-0">
+                                  <p className={cn('font-bold text-sm tabular-nums', isIncoming ? 'text-success' : 'text-destructive')}>
+                                    {isIncoming ? '+' : '-'}{formatCurrency(tx.amount)}
+                                  </p>
+                                  <p className="text-[10px] text-muted-foreground">{formatTime(tx.created_at)}</p>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </Card>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+          </motion.div>
+        )}
+
+        {activeView === 'transfers' && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+            {transfers.length === 0 ? (
+              <div className="text-center py-16">
+                <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-muted flex items-center justify-center">
+                  <Send size={22} className="text-muted-foreground" />
+                </div>
+                <p className="font-semibold text-sm mb-1">No transfers yet</p>
+                <p className="text-xs text-muted-foreground">Your wallet transfer history will appear here</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {Object.entries(groupByDate(transfers)).map(([date, txns]) => (
+                  <div key={date}>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">{date}</p>
+                    <Card className="border-border/40 overflow-hidden">
+                      <div className="divide-y divide-border/30">
+                        {txns.map((tr: any) => {
+                          const isSender = tr.sender_id === user?.id;
+                          return (
+                            <div
+                              key={tr.id}
+                              onClick={() => setSelectedTransfer(tr)}
+                              className="flex items-center justify-between px-4 py-3.5 hover:bg-muted/30 transition-colors cursor-pointer"
+                            >
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center shrink-0',
+                                  tr.status === 'cancelled' ? 'bg-destructive/10' : isSender ? 'bg-destructive/10' : 'bg-success/10'
+                                )}>
+                                  {tr.status === 'cancelled'
+                                    ? <XCircle size={16} className="text-destructive" />
+                                    : isSender
+                                      ? <ArrowUpRight size={16} className="text-destructive" />
+                                      : <ArrowDownLeft size={16} className="text-success" />
+                                  }
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="font-medium text-sm">
+                                    {isSender ? `To ${tr.receiver_name || 'Unknown'}` : `From ${tr.sender_name || 'Unknown'}`}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground truncate">
+                                    {tr.reason || 'No reason'} · {formatTime(tr.created_at)}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <p className={cn(
+                                  'font-bold text-sm tabular-nums',
+                                  tr.status === 'cancelled' ? 'text-muted-foreground line-through' : isSender ? 'text-destructive' : 'text-success'
+                                )}>
+                                  {isSender ? '-' : '+'}{formatCurrency(tr.amount)}
+                                </p>
+                                {tr.status === 'cancelled' && (
+                                  <span className="text-[10px] font-bold text-destructive uppercase">Cancelled</span>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </Card>
+                  </div>
+                ))}
+              </div>
+            )}
+          </motion.div>
+        )}
+
+        {activeView === 'requests' && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+            {requests.length === 0 ? (
+              <div className="text-center py-16">
+                <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-muted flex items-center justify-center">
+                  <HandCoins size={22} className="text-muted-foreground" />
+                </div>
+                <p className="font-semibold text-sm mb-1">No requests yet</p>
+                <p className="text-xs text-muted-foreground">Money requests will appear here</p>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                {Object.entries(groupByDate(requests)).map(([date, reqs]) => (
+                  <div key={date}>
+                    <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2 px-1">{date}</p>
+                    <Card className="border-border/40 overflow-hidden">
+                      <div className="divide-y divide-border/30">
+                        {reqs.map((req) => {
+                          const isRequester = req.requester_id === user?.id;
+                          const otherName = requestNames[isRequester ? req.requested_from_id : req.requester_id] || 'Unknown';
+                          const statusColor = req.status === 'paid' ? 'text-success' : req.status === 'declined' ? 'text-destructive' : 'text-accent';
+                          const statusBg = req.status === 'paid' ? 'bg-success/10' : req.status === 'declined' ? 'bg-destructive/10' : 'bg-accent/10';
+                          const StatusIcon = req.status === 'paid' ? CheckCircle2 : req.status === 'declined' ? XCircle : Clock;
+
+                          return (
+                            <div
+                              key={req.id}
+                              onClick={() => setSelectedRequest(req)}
+                              className="flex items-center justify-between px-4 py-3.5 hover:bg-muted/30 transition-colors cursor-pointer"
+                            >
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center shrink-0', statusBg)}>
+                                  <StatusIcon className={statusColor} size={16} />
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="font-medium text-sm">
+                                    {isRequester ? `Requested from ${otherName}` : `${otherName} requested`}
+                                  </p>
+                                  <p className="text-xs text-muted-foreground">{formatTime(req.created_at)}</p>
+                                </div>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <p className="font-bold text-sm tabular-nums">{formatCurrency(req.amount)}</p>
+                                <span className={cn('text-[10px] font-bold uppercase', statusColor)}>{req.status}</span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </Card>
+                  </div>
+                ))}
+              </div>
+            )}
           </motion.div>
         )}
       </div>
 
-      {/* Transaction Detail Dialog */}
       <Dialog open={!!selectedTx} onOpenChange={(open) => !open && setSelectedTx(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -677,14 +693,12 @@ export default function TransactionsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Transfer Detail Dialog */}
       <TransferDetailsDialog
         transfer={selectedTransfer}
         onClose={() => setSelectedTransfer(null)}
         onRefresh={fetchTransactions}
       />
 
-      {/* Request Detail Dialog */}
       <Dialog open={!!selectedRequest} onOpenChange={(open) => !open && setSelectedRequest(null)}>
         <DialogContent className="max-w-md">
           <DialogHeader>
