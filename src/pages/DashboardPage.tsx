@@ -382,69 +382,50 @@ export default function DashboardPage() {
         </motion.div>
 
         {/* Send & Request Money + Stats - 2x2 grid */}
-        <div className="grid gap-1.5 sm:gap-2 grid-cols-2 lg:grid-cols-4">
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-            <Card
-              className="border-border/50 hover:shadow-md transition-all duration-300 hover:border-accent/20 cursor-pointer active:scale-[0.97]"
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+          <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
+            <button
               onClick={() => setSendMoneyOpen(true)}
+              className="group flex flex-col items-center text-center p-2 sm:p-2.5 rounded-xl bg-card border border-border/50 hover:border-accent/30 hover:shadow-md transition-all duration-300 active:scale-[0.97]"
             >
-              <CardContent className="p-2 sm:p-2.5 flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                  <Send className="text-primary" size={15} />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-bold">Send Money</p>
-                  <p className="text-[10px] text-muted-foreground">Free transfer</p>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.17 }}>
-            <Card
-              className="border-border/50 hover:shadow-md transition-all duration-300 hover:border-accent/20 cursor-pointer active:scale-[0.97]"
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-1 group-hover:scale-110 transition-transform duration-300">
+                <Send size={16} />
+              </div>
+              <p className="font-semibold text-[10px] sm:text-xs leading-tight">Send Money</p>
+              <p className="text-[9px] sm:text-[10px] text-muted-foreground mt-0.5 hidden sm:block">Free transfer</p>
+            </button>
+            <button
               onClick={() => setRequestMoneyOpen(true)}
+              className="group flex flex-col items-center text-center p-2 sm:p-2.5 rounded-xl bg-card border border-border/50 hover:border-accent/30 hover:shadow-md transition-all duration-300 active:scale-[0.97]"
             >
-              <CardContent className="p-2 sm:p-2.5 flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center shrink-0">
-                  <HandCoins className="text-accent" size={15} />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-bold">Request Money</p>
-                  <p className="text-[10px] text-muted-foreground">From users</p>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.19 }}>
-            <Card
-              className="border-border/50 hover:shadow-md transition-all duration-300 hover:border-accent/20 cursor-pointer active:scale-[0.97]"
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-accent/10 text-accent flex items-center justify-center mb-1 group-hover:scale-110 transition-transform duration-300">
+                <HandCoins size={16} />
+              </div>
+              <p className="font-semibold text-[10px] sm:text-xs leading-tight">Request Money</p>
+              <p className="text-[9px] sm:text-[10px] text-muted-foreground mt-0.5 hidden sm:block">From users</p>
+            </button>
+            <button
               onClick={() => navigate('/dashboard/savings')}
+              className="group flex flex-col items-center text-center p-2 sm:p-2.5 rounded-xl bg-card border border-border/50 hover:border-accent/30 hover:shadow-md transition-all duration-300 active:scale-[0.97]"
             >
-              <CardContent className="p-2 sm:p-2.5 flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center shrink-0">
-                  <PiggyBank className="text-success" size={15} />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-bold">My Savings</p>
-                  <p className="text-[10px] text-muted-foreground">Target & Lock savings</p>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.21 }}>
-            <Card className="border-border/50">
-              <CardContent className="p-2 sm:p-2.5 flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center shrink-0">
-                  <Wallet className="text-success" size={15} />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-bold font-display">{formatCurrency(stats.totalAmount)}</p>
-                  <p className="text-[10px] text-muted-foreground">Total Disbursed</p>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        </div>
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-success/10 text-success flex items-center justify-center mb-1 group-hover:scale-110 transition-transform duration-300">
+                <PiggyBank size={16} />
+              </div>
+              <p className="font-semibold text-[10px] sm:text-xs leading-tight">My Savings</p>
+              <p className="text-[9px] sm:text-[10px] text-muted-foreground mt-0.5 hidden sm:block">Target & Lock savings</p>
+            </button>
+            <button
+              onClick={() => navigate('/dashboard/applications')}
+              className="group flex flex-col items-center text-center p-2 sm:p-2.5 rounded-xl bg-card border border-border/50 hover:border-accent/30 hover:shadow-md transition-all duration-300 active:scale-[0.97]"
+            >
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-success/10 text-success flex items-center justify-center mb-1 group-hover:scale-110 transition-transform duration-300">
+                <Wallet size={16} />
+              </div>
+              <p className="font-semibold text-[10px] sm:text-xs leading-tight">{formatCurrency(stats.totalAmount)}</p>
+              <p className="text-[9px] sm:text-[10px] text-muted-foreground mt-0.5 hidden sm:block">Total Disbursed</p>
+            </button>
+          </div>
+        </motion.div>
 
         {/* Wallet Summary */}
         {walletBalance !== null && (
