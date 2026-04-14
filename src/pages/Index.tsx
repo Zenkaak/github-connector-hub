@@ -531,10 +531,15 @@ export default function Index() {
                           </div>
                         </div>
                       </div>
-                      <div className="px-4 sm:px-5 py-3 bg-white/[0.02] border-t border-white/[0.06]">
-                        <Link to={`/harambee/${h.order_number}`}>
+                      <div className="px-4 sm:px-5 py-3 bg-white/[0.02] border-t border-white/[0.06] flex gap-2">
+                        <Link to={`/harambee/${h.order_number}`} className="flex-1">
+                          <Button variant="outline" size="sm" className="w-full border-white/10 text-white hover:bg-white/[0.06] text-xs">
+                            <Eye size={14} /> View Details
+                          </Button>
+                        </Link>
+                        <Link to={`/harambee/${h.order_number}`} className="flex-1">
                           <Button variant="gold" size="sm" className="w-full shadow-gold text-xs">
-                            <Heart size={14} /> Contribute Now
+                            <Heart size={14} /> Contribute
                           </Button>
                         </Link>
                       </div>
