@@ -292,12 +292,10 @@ export default function DashboardPage() {
   const quickActions = [
     { label: 'Deposit', icon: ArrowDownLeft, path: '/dashboard/wallet', color: 'bg-success/80 text-success-foreground', desc: 'Add funds' },
     { label: 'Withdraw', icon: ArrowUpRight, path: '/dashboard/wallet', color: 'bg-accent text-accent-foreground', desc: 'Cash out' },
-    { label: 'Apply for Loan', icon: Plus, path: '/dashboard/products', color: 'bg-primary text-primary-foreground', desc: 'Browse products' },
     { label: 'My Savings', icon: PiggyBank, path: '/dashboard/savings', color: 'bg-success/80 text-success-foreground', desc: 'Target & Lock savings' },
     { label: 'Transactions', icon: Receipt, path: '/dashboard/transactions', color: 'bg-primary/80 text-primary-foreground', desc: 'Payment history' },
     { label: 'Chama Groups', icon: Users, path: '/dashboard/chama', color: 'bg-primary text-primary-foreground', desc: 'My groups' },
     { label: 'Create Fundraiser', icon: HeartHandshake, path: '/dashboard/create-fundraiser', color: 'bg-destructive/80 text-destructive-foreground', desc: 'Start a Harambee' },
-    { label: 'Settings', icon: Settings, path: '/dashboard/settings', color: 'bg-muted text-foreground', desc: 'Preferences' },
   ];
 
   const profileCompletion = (() => {
@@ -366,9 +364,9 @@ export default function DashboardPage() {
           </motion.div>
         )}
 
-        {/* Quick Actions - Compact 4-column grid on mobile */}
+        {/* Quick Actions - Compact 3-column grid on mobile */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}>
-          <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
+          <div className="grid grid-cols-3 gap-1.5 sm:gap-2">
             {quickActions.map((action, i) => (
               <button
                 key={i}
