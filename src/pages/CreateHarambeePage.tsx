@@ -420,40 +420,82 @@ export default function CreateHarambeePage() {
                 <p className="text-xs text-muted-foreground mt-1">Create your first fundraiser to get started.</p>
               </Card>
             ) : (
-              myApplications.map(app => (
-                <Card key={app.id} className="p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <p className="font-semibold text-sm">{app.beneficiary_name}</p>
-                      <p className="text-xs text-muted-foreground capitalize">{app.category?.replace('_', ' ')} · {format(new Date(app.created_at), 'MMM d, yyyy')}</p>
-                    </div>
-                    <span className={`text-[10px] px-2 py-1 rounded-full font-medium ${
-                      app.status === 'approved' || app.status === 'active' ? 'bg-emerald-500/10 text-emerald-500' :
-                      app.status === 'rejected' ? 'bg-destructive/10 text-destructive' :
-                      'bg-accent/10 text-accent'
-                    }`}>
-                      {app.status === 'pending_review' ? 'Under Review' : app.status?.replace('_', ' ')}
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground line-clamp-2">{app.description}</p>
-                  <div className="flex items-center justify-between mt-3">
-                    <p className="text-sm font-bold">KES {app.target_amount?.toLocaleString()}</p>
-                    {app.deadline && (
-                      <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                        <Clock size={10} /> Deadline: {format(new Date(app.deadline), 'MMM d, yyyy')}
-                      </p>
+              myApplications.map(app => {
+                const isLive = app.status === 'approved' || app.status === 'active';
+                return (
+                  <Card key={app.id} className="overflow-hidden">
+                    <button
+                      onClick={() => setSelectedApp(selectedApp === app.id ? null : app.id)}
+                      className="w-full text-left p-4 hover:bg-muted/20 transition-colors"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <p className="font-semibold text-sm">{app.beneficiary_name}</p>
+                          <p className="text-xs text-muted-foreground capitalize">{app.category?.replace('_', ' ')} · {format(new Date(app.created_at), 'MMM d, yyyy')}</p>
+                        </div>
+                        <span className={`text-[10px] px-2 py-1 rounded-full font-medium ${
+                          isLive ? 'bg-emerald-500/10 text-emerald-500' :
+                          app.status === 'rejected' ? 'bg-destructive/10 text-destructive' :
+                          'bg-accent/10 text-accent'
+                        }`}>
+                          {app.status === 'pending_review' ? 'Under Review' : app.status?.replace('_', ' ')}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground line-clamp-2">{app.description}</p>
+                      <div className="flex items-center justify-between mt-3">
+                        <p className="text-sm font-bold">KES {app.target_amount?.toLocaleString()}</p>
+                        {app.deadline && (
+                          <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                            <Clock size={10} /> Deadline: {format(new Date(app.deadline), 'MMM d, yyyy')}
+                          </p>
+                        )}
+                      </div>
+                    </button>
+
+                    {/* Expanded details */}
+                    {selectedApp === app.id && (
+                      <div className="px-4 pb-4 space-y-3 border-t border-border/30 pt-3">
+                        {/* Full description */}
+                        <div>
+                          <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">Full Description</p>
+                          <p className="text-xs text-muted-foreground whitespace-pre-line">{app.description}</p>
+                        </div>
+
+                        {/* Payout info */}
+                        {app.payout_method && (
+                          <div>
+                            <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">Payout Details</p>
+                            <p className="text-xs">
+                              {app.payout_method === 'mpesa'
+                                ? `M-Pesa: ${app.payout_phone || 'N/A'}`
+                                : `Bank: ${app.bank_name || ''} — Acc: ${app.bank_account_number || ''} (${app.bank_account_name || ''}), Branch: ${app.bank_branch || ''}`
+                              }
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Raised amount for live harambees */}
+                        {isLive && app.harambee_id && (
+                          <HarambeeLiveStats harambeeId={app.harambee_id} target={app.target_amount} />
+                        )}
+
+                        {/* Link to public page */}
+                        {isLive && app.harambee_id && (
+                          <HarambeeLink harambeeId={app.harambee_id} />
+                        )}
+
+                        {/* Admin notes */}
+                        {app.admin_notes && (
+                          <div className="bg-muted/20 p-3 rounded-lg">
+                            <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">Admin Feedback</p>
+                            <p className="text-xs text-muted-foreground italic">{app.admin_notes}</p>
+                          </div>
+                        )}
+                      </div>
                     )}
-                  </div>
-                  {app.payout_method && (
-                    <p className="text-[10px] text-muted-foreground mt-1">
-                      Payout: {app.payout_method === 'mpesa' ? `M-Pesa (${app.payout_phone || 'N/A'})` : `Bank (${app.bank_name || 'N/A'})`}
-                    </p>
-                  )}
-                  {app.admin_notes && (
-                    <p className="text-[10px] text-muted-foreground mt-2 italic bg-muted/20 p-2 rounded">Admin: {app.admin_notes}</p>
-                  )}
-                </Card>
-              ))
+                  </Card>
+                );
+              })
             )}
           </TabsContent>
 
