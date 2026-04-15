@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
-import { HandCoins, Phone, Send, CheckCircle2, XCircle, Loader2, Users, Target, Hash, Heart, Sparkles, TrendingUp, Trophy, Medal, Award, User } from 'lucide-react';
+import { HandCoins, Phone, Send, CheckCircle2, XCircle, Loader2, Users, Target, Hash, Heart, Sparkles, TrendingUp, Trophy, Medal, Award, User, ChevronDown } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -29,6 +29,9 @@ export default function PublicHarambeePage() {
   const [contributing, setContributing] = useState(false);
   const [paymentStatus, setPaymentStatus] = useState<string>('idle');
   const [statusMessage, setStatusMessage] = useState('');
+
+  const [showAllContributors, setShowAllContributors] = useState(false);
+  const [showAllRecent, setShowAllRecent] = useState(false);
 
   const channelRef = useRef<RealtimeChannel | null>(null);
   const referenceRef = useRef<string>('');
@@ -72,7 +75,6 @@ export default function PublicHarambeePage() {
     setLoading(false);
   };
 
-  // Build leaderboard: aggregate by contributor name, sorted by total
   const leaderboard = useMemo(() => {
     const map = new Map<string, { name: string; total: number; count: number }>();
     contributions.forEach((c) => {
@@ -218,6 +220,9 @@ export default function PublicHarambeePage() {
     );
   }
 
+  const visibleLeaderboard = showAllContributors ? leaderboard : leaderboard.slice(0, 10);
+  const visibleRecent = showAllRecent ? contributions : contributions.slice(0, 10);
+
   return (
     <div className="min-h-screen bg-[hsl(213,30%,9%)]">
       {/* Ambient glow effects */}
@@ -230,7 +235,6 @@ export default function PublicHarambeePage() {
       <div className="relative bg-gradient-to-b from-[hsl(213,35%,14%)] to-[hsl(213,30%,9%)] border-b border-[hsl(213,30%,20%,0.5)]">
         <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[hsl(42,92%,56%,0.3)] to-transparent" />
         <div className="max-w-lg mx-auto px-4 py-4 flex items-center gap-3">
-          {/* Profile Picture */}
           {groupImage ? (
             <img src={groupImage} alt={groupName} className="w-10 h-10 rounded-xl object-cover border border-[hsl(42,92%,56%,0.2)]" />
           ) : (
@@ -283,13 +287,13 @@ export default function PublicHarambeePage() {
             </div>
 
             <div className="p-5 space-y-5">
-              {/* Title */}
+              {/* Title - beneficiary name bold */}
               <div>
                 <h2 className="text-xl font-bold text-[hsl(210,40%,96%)] leading-tight">
-                  Harambee for {harambee.beneficiary_name}
+                  Harambee for <span className="text-[hsl(42,92%,56%)]">{harambee.beneficiary_name}</span>
                 </h2>
                 {harambee.description && (
-                  <p className="text-sm text-[hsl(213,16%,58%)] mt-2 leading-relaxed">{harambee.description}</p>
+                  <p className="text-sm text-[hsl(213,16%,68%)] mt-3 leading-relaxed whitespace-pre-line">{harambee.description}</p>
                 )}
               </div>
 
@@ -451,28 +455,30 @@ export default function PublicHarambeePage() {
           </motion.div>
         )}
 
-        {/* Leaderboard */}
+        {/* Leaderboard - show first 10, then View More */}
         {leaderboard.length > 0 && (
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.25 }}>
             <Card className="overflow-hidden bg-[hsl(213,35%,14%)] border-[hsl(213,30%,20%,0.6)]">
-              <div className="px-5 py-3 border-b border-[hsl(213,30%,20%,0.5)] bg-gradient-to-r from-[hsl(42,92%,56%,0.06)] to-transparent">
+              <div className="px-5 py-3 border-b border-[hsl(213,30%,20%,0.5)] bg-gradient-to-r from-[hsl(42,92%,56%,0.06)] to-transparent flex items-center justify-between">
                 <h3 className="text-sm font-bold text-[hsl(210,40%,96%)] flex items-center gap-2">
                   <Trophy size={13} className="text-[hsl(42,92%,56%)]" />
                   Top Contributors
                 </h3>
+                <Badge className="bg-[hsl(42,92%,56%,0.1)] text-[hsl(42,92%,56%)] border-[hsl(42,92%,56%,0.2)] text-[9px] font-bold">
+                  {leaderboard.length}
+                </Badge>
               </div>
               <div className="divide-y divide-[hsl(213,30%,20%,0.3)]">
-                {leaderboard.slice(0, 10).map((entry, idx) => (
+                {visibleLeaderboard.map((entry, idx) => (
                   <motion.div
                     key={entry.name + idx}
                     initial={{ opacity: 0, x: -8 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.05 }}
-                    className="px-5 py-3.5 flex items-center justify-between hover:bg-[hsl(213,30%,17%,0.3)] transition-colors"
+                    transition={{ delay: idx * 0.03 }}
+                    className="px-5 py-3 flex items-center justify-between hover:bg-[hsl(213,30%,17%,0.3)] transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      {/* Rank */}
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold ${
+                      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold ${
                         idx === 0 ? 'bg-[hsl(42,92%,56%,0.15)] text-[hsl(42,92%,56%)]' :
                         idx === 1 ? 'bg-[hsl(210,16%,72%,0.15)] text-[hsl(210,16%,82%)]' :
                         idx === 2 ? 'bg-[hsl(25,70%,50%,0.15)] text-[hsl(25,70%,60%)]' :
@@ -481,23 +487,36 @@ export default function PublicHarambeePage() {
                         {idx < 3 ? getMedalIcon(idx) : idx + 1}
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-[hsl(210,40%,96%)]">{entry.name}</p>
+                        <p className="text-xs font-semibold text-[hsl(210,40%,96%)]">{entry.name}</p>
                         <p className="text-[9px] text-[hsl(213,16%,58%)]">
                           {entry.count} contribution{entry.count !== 1 ? 's' : ''}
                         </p>
                       </div>
                     </div>
-                    <span className={`text-sm font-bold ${idx === 0 ? 'text-[hsl(42,92%,56%)]' : 'text-[hsl(210,40%,96%)]'}`}>
+                    <span className={`text-xs font-bold ${idx === 0 ? 'text-[hsl(42,92%,56%)]' : 'text-[hsl(210,40%,96%)]'}`}>
                       KES {entry.total.toLocaleString()}
                     </span>
                   </motion.div>
                 ))}
               </div>
+              {leaderboard.length > 10 && (
+                <div className="px-5 py-3 border-t border-[hsl(213,30%,20%,0.3)]">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowAllContributors(!showAllContributors)}
+                    className="w-full text-[hsl(42,92%,56%)] hover:bg-[hsl(42,92%,56%,0.06)] text-xs font-bold"
+                  >
+                    {showAllContributors ? 'Show Less' : `View All ${leaderboard.length} Contributors`}
+                    <ChevronDown size={14} className={`ml-1 transition-transform ${showAllContributors ? 'rotate-180' : ''}`} />
+                  </Button>
+                </div>
+              )}
             </Card>
           </motion.div>
         )}
 
-        {/* Recent Contributions */}
+        {/* Recent Contributions - show first 10, then View More */}
         {contributions.length > 0 && (
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}>
             <Card className="overflow-hidden bg-[hsl(213,35%,14%)] border-[hsl(213,30%,20%,0.6)]">
@@ -510,21 +529,21 @@ export default function PublicHarambeePage() {
                   {contributions.length}
                 </Badge>
               </div>
-              <div className="divide-y divide-[hsl(213,30%,20%,0.3)] max-h-60 overflow-y-auto">
-                {contributions.map((c, idx) => (
+              <div className="divide-y divide-[hsl(213,30%,20%,0.3)]">
+                {visibleRecent.map((c, idx) => (
                   <motion.div
                     key={c.id}
                     initial={{ opacity: 0, x: -8 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.05 }}
-                    className="px-5 py-3.5 flex justify-between items-center hover:bg-[hsl(213,30%,17%,0.3)] transition-colors"
+                    transition={{ delay: idx * 0.03 }}
+                    className="px-5 py-3 flex justify-between items-center hover:bg-[hsl(213,30%,17%,0.3)] transition-colors"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-[hsl(42,92%,56%,0.1)] flex items-center justify-center text-[10px] font-bold text-[hsl(42,92%,56%)]">
+                      <div className="w-7 h-7 rounded-full bg-[hsl(42,92%,56%,0.1)] flex items-center justify-center text-[10px] font-bold text-[hsl(42,92%,56%)]">
                         {(c.contributor_name || 'M')?.charAt(0).toUpperCase()}
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-[hsl(210,40%,96%)]">
+                        <p className="text-xs font-semibold text-[hsl(210,40%,96%)]">
                           {c.contributor_name || 'Anonymous'}
                         </p>
                         <p className="text-[9px] text-[hsl(213,16%,58%)]">
@@ -532,12 +551,25 @@ export default function PublicHarambeePage() {
                         </p>
                       </div>
                     </div>
-                    <span className="text-sm font-bold text-[hsl(42,92%,56%)]">
+                    <span className="text-xs font-bold text-[hsl(42,92%,56%)]">
                       KES {c.amount?.toLocaleString()}
                     </span>
                   </motion.div>
                 ))}
               </div>
+              {contributions.length > 10 && (
+                <div className="px-5 py-3 border-t border-[hsl(213,30%,20%,0.3)]">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setShowAllRecent(!showAllRecent)}
+                    className="w-full text-[hsl(42,92%,56%)] hover:bg-[hsl(42,92%,56%,0.06)] text-xs font-bold"
+                  >
+                    {showAllRecent ? 'Show Less' : `View All ${contributions.length} Contributions`}
+                    <ChevronDown size={14} className={`ml-1 transition-transform ${showAllRecent ? 'rotate-180' : ''}`} />
+                  </Button>
+                </div>
+              )}
             </Card>
           </motion.div>
         )}
