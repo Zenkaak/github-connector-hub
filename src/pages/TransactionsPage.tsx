@@ -232,50 +232,34 @@ export default function TransactionsPage() {
 
   return (
     <DashboardLayout>
-      <div className="p-5 lg:p-8 space-y-6 max-w-[1200px]">
+      <div className="p-4 lg:p-8 space-y-5 max-w-[1200px]">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="font-display text-2xl font-bold text-foreground">Transactions</h1>
-          <p className="text-sm text-muted-foreground mt-1">View all your payment & transfer history</p>
+          <h1 className="font-display text-xl font-bold text-foreground">Transactions</h1>
+          <p className="text-xs text-muted-foreground mt-0.5">Payment & transfer history</p>
         </motion.div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {quickActions.map((action, i) => (
-            <motion.div
+        {/* Tab Navigation - mobile optimized */}
+        <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+          {quickActions.map((action) => (
+            <button
               key={action.value}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.05 * i }}
+              onClick={() => setActiveView(action.value)}
+              className={cn(
+                'flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all',
+                activeView === action.value
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'bg-muted/60 text-muted-foreground hover:bg-muted'
+              )}
             >
-              <button
-                onClick={() => setActiveView(action.value)}
-                className={cn(
-                  'w-full text-left p-4 rounded-2xl border-2 transition-all duration-200',
-                  activeView === action.value
-                    ? 'border-primary bg-primary/5 shadow-sm'
-                    : 'border-border/50 bg-card hover:border-primary/30 hover:shadow-sm'
-                )}
-              >
-                <div className={cn(
-                  'w-10 h-10 rounded-xl flex items-center justify-center mb-3',
-                  activeView === action.value ? 'bg-primary/10' : 'bg-muted'
-                )}>
-                  <action.icon
-                    size={18}
-                    className={activeView === action.value ? 'text-primary' : 'text-muted-foreground'}
-                  />
-                </div>
-                <p className="font-semibold text-sm">{action.label}</p>
-                <div className="flex items-center justify-between mt-1">
-                  <p className="text-xs text-muted-foreground">{action.desc}</p>
-                  <span className={cn(
-                    'text-xs font-bold px-2 py-0.5 rounded-full',
-                    activeView === action.value ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
-                  )}>
-                    {action.count}
-                  </span>
-                </div>
-              </button>
-            </motion.div>
+              <action.icon size={16} />
+              {action.label}
+              <span className={cn(
+                'text-[10px] font-bold px-1.5 py-0.5 rounded-full',
+                activeView === action.value ? 'bg-primary-foreground/20' : 'bg-background/80'
+              )}>
+                {action.count}
+              </span>
+            </button>
           ))}
         </div>
 
