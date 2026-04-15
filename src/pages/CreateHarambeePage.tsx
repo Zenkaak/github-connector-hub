@@ -90,6 +90,7 @@ export default function CreateHarambeePage() {
   const [activeTab, setActiveTab] = useState('create');
   const [myApplications, setMyApplications] = useState<any[]>([]);
   const [loadingApps, setLoadingApps] = useState(false);
+  const [selectedApp, setSelectedApp] = useState<string | null>(null);
 
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
