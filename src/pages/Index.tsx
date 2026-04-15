@@ -170,9 +170,7 @@ export default function Index() {
   return (
     <div className="min-h-screen overflow-x-hidden bg-[hsl(213,72%,8%)]">
 
-      {/* ═══════════════════════════════════════════════════════════
-          HEADER
-      ═══════════════════════════════════════════════════════════ */}
+      {/* ───── HEADER ───── */}
       <header className="fixed top-0 left-0 right-0 z-50">
         <div className="mx-3 sm:mx-4 mt-3">
           <div className="glass-dark rounded-2xl shadow-lg max-w-6xl mx-auto border border-white/[0.06]">
@@ -235,9 +233,7 @@ export default function Index() {
         </AnimatePresence>
       </header>
 
-      {/* ═══════════════════════════════════════════════════════════
-          HERO
-      ═══════════════════════════════════════════════════════════ */}
+      {/* ───── HERO ───── */}
       <section className="hero-gradient pt-28 pb-16 sm:pt-36 sm:pb-24 md:pt-44 md:pb-36 px-4 relative overflow-hidden noise-overlay">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_hsl(42_92%_56%_/_0.08),_transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_hsl(156_72%_38%_/_0.05),_transparent_50%)]" />
@@ -284,7 +280,6 @@ export default function Index() {
             </Link>
           </motion.div>
 
-          {/* Live Stats */}
           <motion.div variants={fadeUp} custom={4} className="max-w-lg mx-auto mt-10 sm:mt-14 pt-7 border-t border-white/[0.08]">
             <div className="grid grid-cols-3 gap-4 sm:gap-8">
               {[
@@ -302,9 +297,7 @@ export default function Index() {
         </motion.div>
       </section>
 
-      {/* ═══════════════════════════════════════════════════════════
-          TRUST BADGES
-      ═══════════════════════════════════════════════════════════ */}
+      {/* ───── TRUST BADGES ───── */}
       <section className="py-6 sm:py-8 px-4 bg-[hsl(213,72%,6%)] border-y border-white/[0.04]">
         <div className="container max-w-5xl">
           <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 sm:gap-6 items-center justify-center">
@@ -318,241 +311,7 @@ export default function Index() {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════════════════
-          FEATURES
-      ═══════════════════════════════════════════════════════════ */}
-      <section id="features" className="py-12 sm:py-16 md:py-20 px-4 bg-[hsl(213,72%,10%)] relative">
-        <div className="container max-w-6xl">
-          <motion.div className="text-center mb-6 sm:mb-10" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.5 }}>
-            <span className="inline-block text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full bg-accent/10 text-accent mb-3">
-              Platform Features
-            </span>
-            <h2 className="font-display text-xl sm:text-2xl md:text-3xl font-bold mb-2 text-white">Everything You Need, One Platform</h2>
-            <p className="text-white/60 max-w-xl mx-auto text-xs sm:text-sm">From group savings to personal wallets — a complete digital financial ecosystem.</p>
-          </motion.div>
-
-          <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
-            {features.map((feature, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-50px' }} transition={{ delay: i * 0.04, duration: 0.5 }}
-                className="group p-3 sm:p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-accent/20 transition-all duration-400">
-                <div className="w-9 h-9 sm:w-10 sm:h-10 mb-2.5 rounded-xl bg-accent/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
-                  <feature.icon className="text-accent" size={18} />
-                </div>
-                <h3 className="font-display font-bold text-xs sm:text-sm mb-1 text-white">{feature.title}</h3>
-                <p className="text-white/55 text-[10px] sm:text-xs leading-relaxed">{feature.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════════════════════
-          HOW IT WORKS
-      ═══════════════════════════════════════════════════════════ */}
-      <section id="how-it-works" className="py-12 sm:py-16 md:py-20 px-4 bg-[hsl(213,72%,8%)] relative">
-        <div className="container max-w-5xl">
-          <motion.div className="text-center mb-8 sm:mb-12" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <span className="inline-block text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full bg-accent/10 text-accent mb-3">Getting Started</span>
-            <h2 className="font-display text-xl sm:text-2xl md:text-3xl font-bold mb-2 text-white">Start in 4 Simple Steps</h2>
-            <p className="text-white/60 max-w-lg mx-auto text-xs sm:text-sm">From sign-up to your first savings deposit in minutes.</p>
-          </motion.div>
-
-          <div className="grid gap-4 sm:gap-6 grid-cols-2 md:grid-cols-4 relative">
-            <div className="hidden md:block absolute top-[38px] left-[15%] right-[15%] h-[2px] bg-gradient-to-r from-white/[0.04] via-accent/20 to-white/[0.04]" />
-            {steps.map((item, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1, duration: 0.5 }} className="relative text-center">
-                <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 rounded-xl bg-accent flex items-center justify-center shadow-gold-lg relative z-10">
-                  <item.icon className="text-accent-foreground" size={20} />
-                </div>
-                <span className="text-[9px] sm:text-[10px] font-bold text-accent uppercase tracking-[0.2em] mb-1 block">Step {item.step}</span>
-                <h3 className="font-display font-bold text-xs sm:text-sm mb-1 text-white">{item.title}</h3>
-                <p className="text-white/55 text-[10px] sm:text-xs leading-relaxed max-w-[200px] mx-auto">{item.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════════════════════
-          WALLET & TRANSFERS
-      ═══════════════════════════════════════════════════════════ */}
-      <section id="wallet" className="py-12 sm:py-16 md:py-20 px-4 bg-[hsl(213,72%,10%)] relative overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center_right,_hsl(156_72%_38%_/_0.06),_transparent_60%)]" />
-        <div className="container max-w-5xl relative z-10">
-          <div className="grid md:grid-cols-2 gap-6 md:gap-10 items-center">
-            <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
-              <span className="inline-block text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 mb-3">
-                Digital Wallet
-              </span>
-              <h2 className="font-display text-xl sm:text-2xl md:text-3xl font-bold mb-3 text-white">Your Money,<br />Your Control</h2>
-              <p className="text-white/60 mb-5 text-xs sm:text-sm leading-relaxed">
-                A full-featured digital wallet powered by M-Pesa. Deposit, transfer to other members, request payments, and track every shilling.
-              </p>
-              <div className="space-y-2.5">
-                {walletFeatures.map((item, i) => (
-                  <motion.div key={i} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }}
-                    className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-emerald-500/20 transition-colors">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
-                      <item.icon size={14} className="text-emerald-400" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-xs text-white">{item.title}</h4>
-                      <p className="text-[10px] text-white/55">{item.desc}</p>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-
-            <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}
-              className="relative">
-              <div className="rounded-2xl p-5 sm:p-6 bg-gradient-to-br from-emerald-600/20 via-emerald-500/10 to-transparent border border-emerald-500/20 backdrop-blur-sm">
-                <div className="flex items-center justify-between mb-5">
-                  <div>
-                    <p className="text-[9px] uppercase tracking-[0.2em] text-white/55 font-bold">Wallet Balance</p>
-                    <p className="text-xl sm:text-2xl font-display font-bold text-white mt-1">KES 24,500</p>
-                  </div>
-                  <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
-                    <Wallet size={18} className="text-emerald-400" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { icon: ArrowUpRight, label: 'Deposit' },
-                    { icon: Send, label: 'Transfer' },
-                    { icon: ArrowDownUp, label: 'Request' },
-                  ].map((action, i) => (
-                    <div key={i} className="text-center p-2 rounded-lg bg-white/[0.06] border border-white/[0.06]">
-                      <action.icon size={14} className="mx-auto text-emerald-400 mb-1" />
-                      <p className="text-[9px] text-white/65 font-bold">{action.label}</p>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-4 space-y-1.5">
-                  <p className="text-[9px] uppercase tracking-[0.2em] text-white/55 font-bold">Recent</p>
-                  {[
-                    { name: 'Grace W.', type: 'Received', amount: '+1,200', color: 'text-emerald-400' },
-                    { name: 'M-Pesa Top Up', type: 'Deposit', amount: '+5,000', color: 'text-emerald-400' },
-                    { name: 'Peter O.', type: 'Sent', amount: '-800', color: 'text-red-400' },
-                  ].map((tx, i) => (
-                    <div key={i} className="flex items-center justify-between py-1.5 border-b border-white/[0.04] last:border-0">
-                      <div>
-                        <p className="text-[11px] text-white/75 font-medium">{tx.name}</p>
-                        <p className="text-[9px] text-white/45">{tx.type}</p>
-                      </div>
-                      <p className={`text-xs font-bold ${tx.color}`}>{tx.amount}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════════════════════
-          LOANS
-      ═══════════════════════════════════════════════════════════ */}
-      <section id="loans" className="py-12 sm:py-16 md:py-20 px-4 bg-[hsl(213,72%,8%)]">
-        <div className="container max-w-5xl">
-          <motion.div className="text-center mb-8 sm:mb-10" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <span className="inline-block text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full bg-accent/10 text-accent mb-3">Lending</span>
-            <h2 className="font-display text-xl sm:text-2xl md:text-3xl font-bold mb-2 text-white">Personal & Business Loans</h2>
-            <p className="text-white/60 max-w-lg mx-auto text-xs sm:text-sm">Access affordable credit for business growth, education, and personal needs.</p>
-          </motion.div>
-
-          <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
-            {loanProducts.map((product, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.06, duration: 0.5 }}
-                className="rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-accent/20 transition-all overflow-hidden flex flex-col">
-                <div className="p-4 flex-1">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="w-10 h-10 rounded-xl bg-white/[0.06] flex items-center justify-center text-lg">{product.icon}</div>
-                    <span className="text-[10px] font-bold text-accent bg-accent/10 px-2 py-1 rounded-full">{product.rate} p.a.</span>
-                  </div>
-                  <h3 className="font-display font-bold text-sm mb-1 text-white">{product.name}</h3>
-                  <p className="text-[11px] text-white/55 leading-relaxed">{product.desc}</p>
-                </div>
-                <div className="px-4 py-3 bg-white/[0.02] border-t border-white/[0.06] flex items-center justify-between">
-                  <div>
-                    <p className="text-[9px] text-white/50 uppercase tracking-wider">Up to</p>
-                    <p className="font-display font-bold text-white text-xs">{product.max}</p>
-                  </div>
-                  <Link to="/signup"><Button variant="gold" size="sm" className="shadow-gold text-[11px] h-7">Apply <ArrowRight size={12} /></Button></Link>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════════════════════
-          SECURITY
-      ═══════════════════════════════════════════════════════════ */}
-      <section className="py-12 sm:py-16 md:py-20 px-4 bg-[hsl(213,72%,10%)] relative">
-        <div className="container max-w-5xl">
-          <div className="grid md:grid-cols-2 gap-6 md:gap-10 items-center">
-            <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
-              <span className="inline-block text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full bg-red-500/10 text-red-400 mb-3">
-                Security First
-              </span>
-              <h2 className="font-display text-xl sm:text-2xl md:text-3xl font-bold mb-3 text-white">Bank-Grade<br />Security Built In</h2>
-              <p className="text-white/60 mb-4 text-xs sm:text-sm leading-relaxed">
-                Your money and data are protected with multiple layers of security at every level.
-              </p>
-            </motion.div>
-
-            <div className="grid grid-cols-2 gap-2.5">
-              {securityFeatures.map((item, i) => (
-                <motion.div key={i} initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}
-                  className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-                  <item.icon size={14} className="text-red-400 mb-1.5" />
-                  <h4 className="font-bold text-[11px] text-white mb-0.5">{item.title}</h4>
-                  <p className="text-[9px] text-white/55 leading-relaxed">{item.desc}</p>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════════════════════
-          TESTIMONIALS
-      ═══════════════════════════════════════════════════════════ */}
-      <section className="py-12 sm:py-16 md:py-20 px-4 bg-[hsl(213,72%,8%)] relative">
-        <div className="container max-w-6xl">
-          <motion.div className="text-center mb-6 sm:mb-10" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <span className="inline-block text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full bg-accent/10 text-accent mb-3">Testimonials</span>
-            <h2 className="font-display text-xl sm:text-2xl md:text-3xl font-bold mb-2 text-white">Trusted by Kenyans</h2>
-            <p className="text-white/60 max-w-lg mx-auto text-xs sm:text-sm">Hear from groups already managing their savings on Dasnet.</p>
-          </motion.div>
-
-          <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
-            {testimonials.map((t, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.06 }}
-                className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
-                <div className="flex gap-0.5 mb-3">
-                  {Array.from({ length: t.rating }).map((_, si) => <Star key={si} size={12} className="text-accent fill-accent" />)}
-                </div>
-                <p className="text-xs text-white/70 leading-relaxed mb-4">&ldquo;{t.text}&rdquo;</p>
-                <div className="flex items-center gap-2.5 pt-3 border-t border-white/[0.06]">
-                  <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-accent-foreground text-[10px] font-bold">
-                    {t.name.split(' ').map(n => n[0]).join('')}
-                  </div>
-                  <div>
-                    <p className="font-semibold text-xs text-white">{t.name}</p>
-                    <p className="text-[10px] text-white/55">{t.role}</p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════════════════════
-          ACTIVE HARAMBEES (dynamic)
-      ═══════════════════════════════════════════════════════════ */}
+      {/* ───── ACTIVE HARAMBEES (Moved after Hero) ───── */}
       {activeHarambees.length > 0 && (
         <section className="py-12 sm:py-16 px-4 bg-[hsl(213,72%,10%)] relative overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_hsl(0_80%_50%_/_0.04),_transparent_50%)]" />
@@ -630,15 +389,12 @@ export default function Index() {
                   <HeartHandshake size={16} /> Start Your Own Fundraiser <ArrowRight size={14} />
                 </Button>
               </Link>
-              <p className="text-[10px] text-white/45 mt-2">Verified Harambees only · 3% platform fee on collected funds</p>
             </div>
           </div>
         </section>
       )}
 
-      {/* ═══════════════════════════════════════════════════════════
-          PUBLIC CHAMAS (dynamic)
-      ═══════════════════════════════════════════════════════════ */}
+      {/* ───── PUBLIC CHAMAS (Moved after Harambee) ───── */}
       {publicChamas.length > 0 && (
         <section className="py-12 sm:py-16 px-4 bg-[hsl(213,72%,8%)]">
           <div className="container max-w-6xl">
@@ -689,9 +445,227 @@ export default function Index() {
         </section>
       )}
 
-      {/* ═══════════════════════════════════════════════════════════
-          FAQ
-      ═══════════════════════════════════════════════════════════ */}
+      {/* ───── FEATURES ───── */}
+      <section id="features" className="py-12 sm:py-16 md:py-20 px-4 bg-[hsl(213,72%,10%)] relative">
+        <div className="container max-w-6xl">
+          <motion.div className="text-center mb-6 sm:mb-10" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.5 }}>
+            <span className="inline-block text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full bg-accent/10 text-accent mb-3">
+              Platform Features
+            </span>
+            <h2 className="font-display text-xl sm:text-2xl md:text-3xl font-bold mb-2 text-white">Everything You Need, One Platform</h2>
+            <p className="text-white/60 max-w-xl mx-auto text-xs sm:text-sm">From group savings to personal wallets — a complete digital financial ecosystem.</p>
+          </motion.div>
+
+          <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
+            {features.map((feature, i) => (
+              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.04, duration: 0.5 }}
+                className="group p-3 sm:p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-accent/20 transition-all duration-400">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 mb-2.5 rounded-xl bg-accent/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+                  <feature.icon className="text-accent" size={18} />
+                </div>
+                <h3 className="font-display font-bold text-xs sm:text-sm mb-1 text-white">{feature.title}</h3>
+                <p className="text-white/55 text-[10px] sm:text-xs leading-relaxed">{feature.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ───── HOW IT WORKS ───── */}
+      <section id="how-it-works" className="py-12 sm:py-16 md:py-20 px-4 bg-[hsl(213,72%,8%)] relative">
+        <div className="container max-w-5xl">
+          <motion.div className="text-center mb-8 sm:mb-12" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+            <span className="inline-block text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full bg-accent/10 text-accent mb-3">Getting Started</span>
+            <h2 className="font-display text-xl sm:text-2xl md:text-3xl font-bold mb-2 text-white">Start in 4 Simple Steps</h2>
+            <p className="text-white/60 max-lg mx-auto text-xs sm:text-sm">From sign-up to your first savings deposit in minutes.</p>
+          </motion.div>
+
+          <div className="grid gap-4 sm:gap-6 grid-cols-2 md:grid-cols-4 relative">
+            <div className="hidden md:block absolute top-[38px] left-[15%] right-[15%] h-[2px] bg-gradient-to-r from-white/[0.04] via-accent/20 to-white/[0.04]" />
+            {steps.map((item, i) => (
+              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1, duration: 0.5 }} className="relative text-center">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 rounded-xl bg-accent flex items-center justify-center shadow-gold-lg relative z-10">
+                  <item.icon className="text-accent-foreground" size={20} />
+                </div>
+                <span className="text-[9px] sm:text-[10px] font-bold text-accent uppercase tracking-[0.2em] mb-1 block">Step {item.step}</span>
+                <h3 className="font-display font-bold text-xs sm:text-sm mb-1 text-white">{item.title}</h3>
+                <p className="text-white/55 text-[10px] sm:text-xs leading-relaxed max-w-[200px] mx-auto">{item.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ───── WALLET & TRANSFERS ───── */}
+      <section id="wallet" className="py-12 sm:py-16 md:py-20 px-4 bg-[hsl(213,72%,10%)] relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center_right,_hsl(156_72%_38%_/_0.06),_transparent_60%)]" />
+        <div className="container max-w-5xl relative z-10">
+          <div className="grid md:grid-cols-2 gap-6 md:gap-10 items-center">
+            <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
+              <span className="inline-block text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 mb-3">
+                Digital Wallet
+              </span>
+              <h2 className="font-display text-xl sm:text-2xl md:text-3xl font-bold mb-3 text-white">Your Money,<br />Your Control</h2>
+              <p className="text-white/60 mb-5 text-xs sm:text-sm leading-relaxed">
+                A full-featured digital wallet powered by M-Pesa. Deposit, transfer to other members, request payments, and track every shilling.
+              </p>
+              <div className="space-y-2.5">
+                {walletFeatures.map((item, i) => (
+                  <motion.div key={i} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }}
+                    className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-emerald-500/20 transition-colors">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
+                      <item.icon size={14} className="text-emerald-400" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-xs text-white">{item.title}</h4>
+                      <p className="text-[10px] text-white/55">{item.desc}</p>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+
+            <motion.div initial={{ opacity: 0, x: 30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}
+              className="relative">
+              <div className="rounded-2xl p-5 sm:p-6 bg-gradient-to-br from-emerald-600/20 via-emerald-500/10 to-transparent border border-emerald-500/20 backdrop-blur-sm">
+                <div className="flex items-center justify-between mb-5">
+                  <div>
+                    <p className="text-[9px] uppercase tracking-[0.2em] text-white/55 font-bold">Wallet Balance</p>
+                    <p className="text-xl sm:text-2xl font-display font-bold text-white mt-1">KES 24,500</p>
+                  </div>
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                    <Wallet size={18} className="text-emerald-400" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { icon: ArrowUpRight, label: 'Deposit' },
+                    { icon: Send, label: 'Transfer' },
+                    { icon: ArrowDownUp, label: 'Request' },
+                  ].map((action, i) => (
+                    <div key={i} className="text-center p-2 rounded-lg bg-white/[0.06] border border-white/[0.06]">
+                      <action.icon size={14} className="mx-auto text-emerald-400 mb-1" />
+                      <p className="text-[9px] text-white/65 font-bold">{action.label}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-4 space-y-1.5">
+                  <p className="text-[9px] uppercase tracking-[0.2em] text-white/55 font-bold">Recent</p>
+                  {[
+                    { name: 'Grace W.', type: 'Received', amount: '+1,200', color: 'text-emerald-400' },
+                    { name: 'M-Pesa Top Up', type: 'Deposit', amount: '+5,000', color: 'text-emerald-400' },
+                    { name: 'Peter O.', type: 'Sent', amount: '-800', color: 'text-red-400' },
+                  ].map((tx, i) => (
+                    <div key={i} className="flex items-center justify-between py-1.5 border-b border-white/[0.04] last:border-0">
+                      <div>
+                        <p className="text-[11px] text-white/75 font-medium">{tx.name}</p>
+                        <p className="text-[9px] text-white/45">{tx.type}</p>
+                      </div>
+                      <p className={`text-xs font-bold ${tx.color}`}>{tx.amount}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* ───── LOANS ───── */}
+      <section id="loans" className="py-12 sm:py-16 md:py-20 px-4 bg-[hsl(213,72%,8%)]">
+        <div className="container max-w-5xl">
+          <motion.div className="text-center mb-8 sm:mb-10" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+            <span className="inline-block text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full bg-accent/10 text-accent mb-3">Lending</span>
+            <h2 className="font-display text-xl sm:text-2xl md:text-3xl font-bold mb-2 text-white">Personal & Business Loans</h2>
+            <p className="text-white/60 max-w-lg mx-auto text-xs sm:text-sm">Access affordable credit for business growth, education, and personal needs.</p>
+          </motion.div>
+
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
+            {loanProducts.map((product, i) => (
+              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.06, duration: 0.5 }}
+                className="rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-accent/20 transition-all overflow-hidden flex flex-col">
+                <div className="p-4 flex-1">
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-white/[0.06] flex items-center justify-center text-lg">{product.icon}</div>
+                    <span className="text-[10px] font-bold text-accent bg-accent/10 px-2 py-1 rounded-full">{product.rate} p.a.</span>
+                  </div>
+                  <h3 className="font-display font-bold text-sm mb-1 text-white">{product.name}</h3>
+                  <p className="text-[11px] text-white/55 leading-relaxed">{product.desc}</p>
+                </div>
+                <div className="px-4 py-3 bg-white/[0.02] border-t border-white/[0.06] flex items-center justify-between">
+                  <div>
+                    <p className="text-[9px] text-white/50 uppercase tracking-wider">Up to</p>
+                    <p className="font-display font-bold text-white text-xs">{product.max}</p>
+                  </div>
+                  <Link to="/signup"><Button variant="gold" size="sm" className="shadow-gold text-[11px] h-7">Apply <ArrowRight size={12} /></Button></Link>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ───── SECURITY ───── */}
+      <section className="py-12 sm:py-16 md:py-20 px-4 bg-[hsl(213,72%,10%)] relative">
+        <div className="container max-w-5xl">
+          <div className="grid md:grid-cols-2 gap-6 md:gap-10 items-center">
+            <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
+              <span className="inline-block text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full bg-red-500/10 text-red-400 mb-3">
+                Security First
+              </span>
+              <h2 className="font-display text-xl sm:text-2xl md:text-3xl font-bold mb-3 text-white">Bank-Grade<br />Security Built In</h2>
+              <p className="text-white/60 mb-4 text-xs sm:text-sm leading-relaxed">
+                Your money and data are protected with multiple layers of security at every level.
+              </p>
+            </motion.div>
+
+            <div className="grid grid-cols-2 gap-2.5">
+              {securityFeatures.map((item, i) => (
+                <motion.div key={i} initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}
+                  className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                  <item.icon size={14} className="text-red-400 mb-1.5" />
+                  <h4 className="font-bold text-[11px] text-white mb-0.5">{item.title}</h4>
+                  <p className="text-[9px] text-white/55 leading-relaxed">{item.desc}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ───── TESTIMONIALS ───── */}
+      <section className="py-12 sm:py-16 md:py-20 px-4 bg-[hsl(213,72%,8%)] relative">
+        <div className="container max-w-6xl">
+          <motion.div className="text-center mb-6 sm:mb-10" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+            <span className="inline-block text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full bg-accent/10 text-accent mb-3">Testimonials</span>
+            <h2 className="font-display text-xl sm:text-2xl md:text-3xl font-bold mb-2 text-white">Trusted by Kenyans</h2>
+            <p className="text-white/60 max-w-lg mx-auto text-xs sm:text-sm">Hear from groups already managing their savings on Dasnet.</p>
+          </motion.div>
+
+          <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
+            {testimonials.map((t, i) => (
+              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.06 }}
+                className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                <div className="flex gap-0.5 mb-3">
+                  {Array.from({ length: t.rating }).map((_, si) => <Star key={si} size={12} className="text-accent fill-accent" />)}
+                </div>
+                <p className="text-xs text-white/70 leading-relaxed mb-4">&ldquo;{t.text}&rdquo;</p>
+                <div className="flex items-center gap-2.5 pt-3 border-t border-white/[0.06]">
+                  <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center text-accent-foreground text-[10px] font-bold">
+                    {t.name.split(' ').map(n => n[0]).join('')}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-xs text-white">{t.name}</p>
+                    <p className="text-[10px] text-white/55">{t.role}</p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ───── FAQ ───── */}
       <section id="faq" className="py-12 sm:py-16 md:py-20 px-4 bg-[hsl(213,72%,10%)]">
         <div className="container max-w-3xl">
           <motion.div className="text-center mb-8 sm:mb-10" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
@@ -719,9 +693,7 @@ export default function Index() {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════════════════
-          DOWNLOAD APP
-      ═══════════════════════════════════════════════════════════ */}
+      {/* ───── DOWNLOAD APP ───── */}
       {!isInstalled && (
         <section className="py-10 sm:py-12 px-4 bg-[hsl(213,72%,8%)] relative overflow-hidden">
           <div className="container max-w-3xl">
@@ -744,9 +716,7 @@ export default function Index() {
         </section>
       )}
 
-      {/* ═══════════════════════════════════════════════════════════
-          CTA
-      ═══════════════════════════════════════════════════════════ */}
+      {/* ───── CTA ───── */}
       <section className="py-12 sm:py-16 px-4 bg-[hsl(213,72%,10%)]">
         <div className="container max-w-4xl">
           <motion.div initial={{ opacity: 0, scale: 0.97 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}
@@ -773,9 +743,7 @@ export default function Index() {
         </div>
       </section>
 
-      {/* ═══════════════════════════════════════════════════════════
-          FOOTER
-      ═══════════════════════════════════════════════════════════ */}
+      {/* ───── FOOTER ───── */}
       <footer className="bg-[hsl(213,72%,6%)] text-white pt-10 sm:pt-12 pb-6 px-4 relative border-t border-white/[0.04]">
         <div className="container max-w-6xl relative z-10">
           <div className="grid gap-6 sm:gap-8 grid-cols-2 md:grid-cols-4 mb-8">
