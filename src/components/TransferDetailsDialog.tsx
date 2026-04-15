@@ -52,16 +52,11 @@ export function TransferDetailsDialog({ transfer, onClose, onRefresh }: Transfer
     if (!user) return;
     setCancelLoading(true);
     try {
-      const { data, error } = await supabase.rpc('cancel_wallet_transfer', {
+      const { error } = await supabase.rpc('cancel_wallet_transfer', {
         _transfer_id: transfer.id,
         _user_id: user.id,
       });
       if (error) throw error;
-      const result = data as any;
-      if (!result?.success) {
-        toast.error(result?.error || 'Cancellation failed');
-        return;
-      }
       toast.success('Transfer cancelled and refunded');
       onClose();
       onRefresh();

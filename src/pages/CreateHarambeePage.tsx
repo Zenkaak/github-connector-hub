@@ -90,6 +90,7 @@ export default function CreateHarambeePage() {
   const [activeTab, setActiveTab] = useState('create');
   const [myApplications, setMyApplications] = useState<any[]>([]);
   const [loadingApps, setLoadingApps] = useState(false);
+  const [selectedApp, setSelectedApp] = useState<string | null>(null);
 
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
@@ -420,40 +421,82 @@ export default function CreateHarambeePage() {
                 <p className="text-xs text-muted-foreground mt-1">Create your first fundraiser to get started.</p>
               </Card>
             ) : (
-              myApplications.map(app => (
-                <Card key={app.id} className="p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <p className="font-semibold text-sm">{app.beneficiary_name}</p>
-                      <p className="text-xs text-muted-foreground capitalize">{app.category?.replace('_', ' ')} · {format(new Date(app.created_at), 'MMM d, yyyy')}</p>
-                    </div>
-                    <span className={`text-[10px] px-2 py-1 rounded-full font-medium ${
-                      app.status === 'approved' || app.status === 'active' ? 'bg-emerald-500/10 text-emerald-500' :
-                      app.status === 'rejected' ? 'bg-destructive/10 text-destructive' :
-                      'bg-accent/10 text-accent'
-                    }`}>
-                      {app.status === 'pending_review' ? 'Under Review' : app.status?.replace('_', ' ')}
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground line-clamp-2">{app.description}</p>
-                  <div className="flex items-center justify-between mt-3">
-                    <p className="text-sm font-bold">KES {app.target_amount?.toLocaleString()}</p>
-                    {app.deadline && (
-                      <p className="text-[10px] text-muted-foreground flex items-center gap-1">
-                        <Clock size={10} /> Deadline: {format(new Date(app.deadline), 'MMM d, yyyy')}
-                      </p>
+              myApplications.map(app => {
+                const isLive = app.status === 'approved' || app.status === 'active';
+                return (
+                  <Card key={app.id} className="overflow-hidden">
+                    <button
+                      onClick={() => setSelectedApp(selectedApp === app.id ? null : app.id)}
+                      className="w-full text-left p-4 hover:bg-muted/20 transition-colors"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div>
+                          <p className="font-semibold text-sm">{app.beneficiary_name}</p>
+                          <p className="text-xs text-muted-foreground capitalize">{app.category?.replace('_', ' ')} · {format(new Date(app.created_at), 'MMM d, yyyy')}</p>
+                        </div>
+                        <span className={`text-[10px] px-2 py-1 rounded-full font-medium ${
+                          isLive ? 'bg-emerald-500/10 text-emerald-500' :
+                          app.status === 'rejected' ? 'bg-destructive/10 text-destructive' :
+                          'bg-accent/10 text-accent'
+                        }`}>
+                          {app.status === 'pending_review' ? 'Under Review' : app.status?.replace('_', ' ')}
+                        </span>
+                      </div>
+                      <p className="text-xs text-muted-foreground line-clamp-2">{app.description}</p>
+                      <div className="flex items-center justify-between mt-3">
+                        <p className="text-sm font-bold">KES {app.target_amount?.toLocaleString()}</p>
+                        {app.deadline && (
+                          <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                            <Clock size={10} /> Deadline: {format(new Date(app.deadline), 'MMM d, yyyy')}
+                          </p>
+                        )}
+                      </div>
+                    </button>
+
+                    {/* Expanded details */}
+                    {selectedApp === app.id && (
+                      <div className="px-4 pb-4 space-y-3 border-t border-border/30 pt-3">
+                        {/* Full description */}
+                        <div>
+                          <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">Full Description</p>
+                          <p className="text-xs text-muted-foreground whitespace-pre-line">{app.description}</p>
+                        </div>
+
+                        {/* Payout info */}
+                        {app.payout_method && (
+                          <div>
+                            <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">Payout Details</p>
+                            <p className="text-xs">
+                              {app.payout_method === 'mpesa'
+                                ? `M-Pesa: ${app.payout_phone || 'N/A'}`
+                                : `Bank: ${app.bank_name || ''} — Acc: ${app.bank_account_number || ''} (${app.bank_account_name || ''}), Branch: ${app.bank_branch || ''}`
+                              }
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Raised amount for live harambees */}
+                        {isLive && app.harambee_id && (
+                          <HarambeeLiveStats harambeeId={app.harambee_id} target={app.target_amount} />
+                        )}
+
+                        {/* Link to public page */}
+                        {isLive && app.harambee_id && (
+                          <HarambeeLink harambeeId={app.harambee_id} />
+                        )}
+
+                        {/* Admin notes */}
+                        {app.admin_notes && (
+                          <div className="bg-muted/20 p-3 rounded-lg">
+                            <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">Admin Feedback</p>
+                            <p className="text-xs text-muted-foreground italic">{app.admin_notes}</p>
+                          </div>
+                        )}
+                      </div>
                     )}
-                  </div>
-                  {app.payout_method && (
-                    <p className="text-[10px] text-muted-foreground mt-1">
-                      Payout: {app.payout_method === 'mpesa' ? `M-Pesa (${app.payout_phone || 'N/A'})` : `Bank (${app.bank_name || 'N/A'})`}
-                    </p>
-                  )}
-                  {app.admin_notes && (
-                    <p className="text-[10px] text-muted-foreground mt-2 italic bg-muted/20 p-2 rounded">Admin: {app.admin_notes}</p>
-                  )}
-                </Card>
-              ))
+                  </Card>
+                );
+              })
             )}
           </TabsContent>
 
@@ -736,6 +779,47 @@ function Field({ label, value, onChange, placeholder, type = 'text', multiline =
       ) : (
         <Input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder} className="mt-1 h-11 font-medium" />
       )}
+    </div>
+  );
+}
+
+// ─── Harambee Live Stats (for approved applications) ───
+function HarambeeLiveStats({ harambeeId, target }: { harambeeId: string; target: number }) {
+  const [raised, setRaised] = useState(0);
+  useEffect(() => {
+    supabase.from('chama_harambees').select('raised_amount').eq('id', harambeeId).single()
+      .then(({ data }) => { if (data) setRaised(data.raised_amount || 0); });
+  }, [harambeeId]);
+  const pct = target > 0 ? Math.min(100, Math.round((raised / target) * 100)) : 0;
+  return (
+    <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-lg p-3">
+      <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">Fundraising Progress</p>
+      <div className="flex justify-between text-xs mb-1">
+        <span className="font-bold text-emerald-600">KES {raised.toLocaleString()} raised</span>
+        <span className="text-muted-foreground">{pct}%</span>
+      </div>
+      <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+        <div className="h-full bg-emerald-500 rounded-full transition-all" style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  );
+}
+
+// ─── Harambee Public Link ───
+function HarambeeLink({ harambeeId }: { harambeeId: string }) {
+  const [orderNumber, setOrderNumber] = useState('');
+  useEffect(() => {
+    supabase.from('chama_harambees').select('order_number').eq('id', harambeeId).single()
+      .then(({ data }) => { if (data?.order_number) setOrderNumber(data.order_number); });
+  }, [harambeeId]);
+  if (!orderNumber) return null;
+  const url = `${window.location.origin}/harambee/${orderNumber}`;
+  return (
+    <div className="flex items-center gap-2">
+      <Input value={url} readOnly className="text-xs h-9 bg-muted/20" />
+      <Button variant="outline" size="sm" className="h-9 shrink-0 text-xs" onClick={() => { navigator.clipboard.writeText(url); }}>
+        Copy Link
+      </Button>
     </div>
   );
 }
