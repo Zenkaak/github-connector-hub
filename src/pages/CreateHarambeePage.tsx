@@ -782,3 +782,44 @@ function Field({ label, value, onChange, placeholder, type = 'text', multiline =
     </div>
   );
 }
+
+// ─── Harambee Live Stats (for approved applications) ───
+function HarambeeLiveStats({ harambeeId, target }: { harambeeId: string; target: number }) {
+  const [raised, setRaised] = useState(0);
+  useEffect(() => {
+    supabase.from('chama_harambees').select('raised_amount').eq('id', harambeeId).single()
+      .then(({ data }) => { if (data) setRaised(data.raised_amount || 0); });
+  }, [harambeeId]);
+  const pct = target > 0 ? Math.min(100, Math.round((raised / target) * 100)) : 0;
+  return (
+    <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-lg p-3">
+      <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">Fundraising Progress</p>
+      <div className="flex justify-between text-xs mb-1">
+        <span className="font-bold text-emerald-600">KES {raised.toLocaleString()} raised</span>
+        <span className="text-muted-foreground">{pct}%</span>
+      </div>
+      <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+        <div className="h-full bg-emerald-500 rounded-full transition-all" style={{ width: `${pct}%` }} />
+      </div>
+    </div>
+  );
+}
+
+// ─── Harambee Public Link ───
+function HarambeeLink({ harambeeId }: { harambeeId: string }) {
+  const [orderNumber, setOrderNumber] = useState('');
+  useEffect(() => {
+    supabase.from('chama_harambees').select('order_number').eq('id', harambeeId).single()
+      .then(({ data }) => { if (data?.order_number) setOrderNumber(data.order_number); });
+  }, [harambeeId]);
+  if (!orderNumber) return null;
+  const url = `${window.location.origin}/harambee/${orderNumber}`;
+  return (
+    <div className="flex items-center gap-2">
+      <Input value={url} readOnly className="text-xs h-9 bg-muted/20" />
+      <Button variant="outline" size="sm" className="h-9 shrink-0 text-xs" onClick={() => { navigator.clipboard.writeText(url); }}>
+        Copy Link
+      </Button>
+    </div>
+  );
+}
