@@ -241,89 +241,28 @@ export default function Index() {
         </div>
       </section>
 
-      {/* ───── ACTIVE HARAMBEES ───── */}
-      {activeHarambees.length > 0 && (
-        <section className="py-12 sm:py-16 px-4 bg-[hsl(213,72%,8%)] relative overflow-hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_hsl(0_80%_50%_/_0.04),_transparent_50%)]" />
-          <div className="container max-w-6xl relative z-10">
-            <motion.div className="text-center mb-6 sm:mb-8" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-              <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full bg-red-500/10 text-red-400 mb-3 animate-pulse">
-                <Heart size={11} className="fill-red-400" /> Urgent Appeals
-              </span>
-              <h2 className="font-display text-xl sm:text-2xl md:text-3xl font-bold mb-2 text-white">People Need Your Help</h2>
-              <p className="text-white/60 max-w-lg mx-auto text-xs sm:text-sm">Verified fundraisers from real Kenyans. Every shilling counts.</p>
-            </motion.div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {activeHarambees.map((h, i) => {
-                const progress = h.target_amount > 0 ? Math.min(100, Math.round((h.raised_amount / h.target_amount) * 100)) : 0;
-                const daysLeft = h.deadline ? Math.max(0, Math.ceil((new Date(h.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : null;
-                return (
-                  <motion.div key={h.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.06 }}>
-                    <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:border-red-500/20 transition-all duration-300 overflow-hidden flex flex-col h-full">
-                      <div className="p-4 flex-1 space-y-3">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="w-9 h-9 rounded-xl bg-red-500/10 flex items-center justify-center shrink-0">
-                            <Heart size={16} className="text-red-400" />
-                          </div>
-                          {daysLeft !== null && (
-                            <span className={cn(
-                              'text-[9px] font-bold px-2 py-0.5 rounded-full',
-                              daysLeft <= 3 ? 'bg-red-500/20 text-red-400' : 'bg-white/[0.06] text-white/70'
-                            )}>
-                              {daysLeft > 0 ? `${daysLeft}d left` : 'Ended'}
-                            </span>
-                          )}
-                        </div>
-                        <div>
-                          <h3 className="font-display font-bold text-sm text-white leading-snug">
-                            Harambee for <span className="text-accent">{h.beneficiary_name || h.title}</span>
-                          </h3>
-                          {h.description && (
-                            <p className="text-[11px] text-white/55 mt-1.5 line-clamp-3 whitespace-pre-line leading-relaxed">{h.description}</p>
-                          )}
-                        </div>
-                        <div className="space-y-1.5">
-                          <div className="flex justify-between text-[10px]">
-                            <span className="text-white/60">Raised</span>
-                            <span className="font-bold text-accent">{progress}%</span>
-                          </div>
-                          <Progress value={progress} className="h-2" />
-                          <div className="flex justify-between text-[10px]">
-                            <span className="text-white/70 font-semibold">KES {(h.raised_amount || 0).toLocaleString()}</span>
-                            <span className="text-white/50">of KES {(h.target_amount || 0).toLocaleString()}</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="px-4 py-3 bg-white/[0.02] border-t border-white/[0.06] flex gap-2">
-                        <Link to={`/harambee/${h.order_number}`} className="flex-1">
-                          <Button variant="outline" size="sm" className="w-full border-white/10 text-white hover:bg-white/[0.06] text-[11px] h-8">
-                            <Eye size={12} className="mr-1" /> Details
-                          </Button>
-                        </Link>
-                        <Link to={`/harambee/${h.order_number}`} className="flex-1">
-                          <Button variant="gold" size="sm" className="w-full shadow-gold text-[11px] h-8">
-                            <Heart size={12} className="mr-1" /> Contribute
-                          </Button>
-                        </Link>
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-
-            <div className="text-center mt-6">
-              <Link to="/signup">
-                <Button variant="hero" size="lg" className="shadow-gold-lg gap-2">
-                  <HeartHandshake size={16} /> Start Your Own Fundraiser <ArrowRight size={14} />
-                </Button>
-              </Link>
-              <p className="text-[10px] text-white/45 mt-2">Verified Harambees only · 3% platform fee on collected funds</p>
-            </div>
+      {/* ───── LIVE STATS BANNER ───── */}
+      <section className="py-10 sm:py-12 px-4 bg-[hsl(213,72%,12%)] relative overflow-hidden noise-overlay">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_hsl(42_92%_56%_/_0.06),_transparent_60%)]" />
+        <div className="container max-w-5xl relative z-10">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
+            {[
+              { value: liveStats.groups > 0 ? `${liveStats.groups}+` : '—', label: 'Chama Groups', icon: Users },
+              { value: liveStats.savings > 0 ? formatCompact(liveStats.savings) : '—', label: 'Total Savings', icon: PiggyBank },
+              { value: liveStats.members > 0 ? `${liveStats.members}+` : '—', label: 'Registered Users', icon: Award },
+              { value: '24/7', label: 'M-Pesa Access', icon: Clock },
+            ].map((stat, i) => (
+              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.06 }} className="text-center">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 mx-auto mb-2 rounded-xl bg-white/[0.06] flex items-center justify-center">
+                  <stat.icon size={16} className="text-accent" />
+                </div>
+                <p className="text-lg sm:text-xl md:text-2xl font-bold text-white font-display">{stat.value}</p>
+                <p className="text-[9px] sm:text-[10px] text-white/55 mt-0.5 uppercase tracking-[0.1em] font-semibold">{stat.label}</p>
+              </motion.div>
+            ))}
           </div>
-        </section>
-      )}
+        </div>
+      </section>
 
       {/* ───── FEATURES ───── */}
       <section id="features" className="py-12 sm:py-16 md:py-20 px-4 bg-[hsl(213,72%,10%)] relative">
@@ -470,81 +409,8 @@ export default function Index() {
         </div>
       </section>
 
-      {/* ───── CHAMA EXPLORER ───── */}
-      {publicChamas.length > 0 && (
-        <section className="py-12 sm:py-16 md:py-20 px-4 bg-[hsl(213,72%,8%)] relative">
-          <div className="container max-w-6xl">
-            <motion.div className="text-center mb-6 sm:mb-8" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-              <span className="inline-block text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full bg-accent/10 text-accent mb-3">Explore</span>
-              <h2 className="font-display text-xl sm:text-2xl md:text-3xl font-bold mb-2 text-white">Browse Public Chama Groups</h2>
-              <p className="text-white/60 max-w-lg mx-auto text-xs sm:text-sm">Discover active savings groups and request to join.</p>
-            </motion.div>
-
-            <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-              {publicChamas.slice(0, 6).map((chama, i) => (
-                <motion.div key={chama.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}
-                  className="p-3.5 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-accent/20 transition-all duration-300">
-                  <div className="flex items-center gap-3 mb-2.5">
-                    {chama.profile_image_url ? (
-                      <img src={chama.profile_image_url} alt={chama.name} className="w-9 h-9 rounded-lg object-cover" />
-                    ) : (
-                      <div className="w-9 h-9 rounded-lg bg-accent/10 flex items-center justify-center">
-                        <PiggyBank size={16} className="text-accent" />
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-display font-bold text-xs text-white truncate">{chama.name}</h3>
-                      {chama.description && <p className="text-[10px] text-white/50 truncate">{chama.description}</p>}
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between text-[10px] pt-2.5 border-t border-white/[0.06]">
-                    <span className="text-white/60">KES {chama.contribution_amount?.toLocaleString()} / {chama.contribution_frequency}</span>
-                    <Link to="/signup">
-                      <span className="text-accent font-bold hover:underline flex items-center gap-1 text-[10px]">
-                        Join <ArrowRight size={9} />
-                      </span>
-                    </Link>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-
-            <div className="text-center mt-5">
-              <Link to="/signup">
-                <Button variant="outline" size="sm" className="border-white/10 text-white hover:bg-white/[0.06]">
-                  View All Groups <ArrowRight size={14} />
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ───── LIVE STATS BANNER ───── */}
-      <section className="py-10 sm:py-12 px-4 bg-[hsl(213,72%,12%)] relative overflow-hidden noise-overlay">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_hsl(42_92%_56%_/_0.06),_transparent_60%)]" />
-        <div className="container max-w-5xl relative z-10">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-            {[
-              { value: liveStats.groups > 0 ? `${liveStats.groups}+` : '—', label: 'Chama Groups', icon: Users },
-              { value: liveStats.savings > 0 ? formatCompact(liveStats.savings) : '—', label: 'Total Savings', icon: PiggyBank },
-              { value: liveStats.members > 0 ? `${liveStats.members}+` : '—', label: 'Registered Users', icon: Award },
-              { value: '24/7', label: 'M-Pesa Access', icon: Clock },
-            ].map((stat, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.06 }} className="text-center">
-                <div className="w-9 h-9 sm:w-10 sm:h-10 mx-auto mb-2 rounded-xl bg-white/[0.06] flex items-center justify-center">
-                  <stat.icon size={16} className="text-accent" />
-                </div>
-                <p className="text-lg sm:text-xl md:text-2xl font-bold text-white font-display">{stat.value}</p>
-                <p className="text-[9px] sm:text-[10px] text-white/55 mt-0.5 uppercase tracking-[0.1em] font-semibold">{stat.label}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ───── LOANS ───── */}
-      <section id="loans" className="py-12 sm:py-16 md:py-20 px-4 bg-[hsl(213,72%,10%)]">
+      <section id="loans" className="py-12 sm:py-16 md:py-20 px-4 bg-[hsl(213,72%,8%)]">
         <div className="container max-w-5xl">
           <motion.div className="text-center mb-8 sm:mb-10" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <span className="inline-block text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full bg-accent/10 text-accent mb-3">Lending</span>
@@ -582,7 +448,7 @@ export default function Index() {
       </section>
 
       {/* ───── SECURITY ───── */}
-      <section className="py-12 sm:py-16 md:py-20 px-4 bg-[hsl(213,72%,8%)] relative">
+      <section className="py-12 sm:py-16 md:py-20 px-4 bg-[hsl(213,72%,10%)] relative">
         <div className="container max-w-5xl">
           <div className="grid md:grid-cols-2 gap-6 md:gap-10 items-center">
             <motion.div initial={{ opacity: 0, x: -30 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} transition={{ duration: 0.6 }}>
@@ -617,7 +483,7 @@ export default function Index() {
       </section>
 
       {/* ───── TESTIMONIALS ───── */}
-      <section className="py-12 sm:py-16 md:py-20 px-4 bg-[hsl(213,72%,10%)] relative">
+      <section className="py-12 sm:py-16 md:py-20 px-4 bg-[hsl(213,72%,8%)] relative">
         <div className="container max-w-6xl">
           <motion.div className="text-center mb-6 sm:mb-10" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <span className="inline-block text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full bg-accent/10 text-accent mb-3">Testimonials</span>
@@ -652,8 +518,143 @@ export default function Index() {
         </div>
       </section>
 
+      {/* ───── ACTIVE HARAMBEES ───── */}
+      {activeHarambees.length > 0 && (
+        <section className="py-12 sm:py-16 px-4 bg-[hsl(213,72%,10%)] relative overflow-hidden">
+          <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_hsl(0_80%_50%_/_0.04),_transparent_50%)]" />
+          <div className="container max-w-6xl relative z-10">
+            <motion.div className="text-center mb-6 sm:mb-8" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+              <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full bg-red-500/10 text-red-400 mb-3 animate-pulse">
+                <Heart size={11} className="fill-red-400" /> Urgent Appeals
+              </span>
+              <h2 className="font-display text-xl sm:text-2xl md:text-3xl font-bold mb-2 text-white">People Need Your Help</h2>
+              <p className="text-white/60 max-w-lg mx-auto text-xs sm:text-sm">Verified fundraisers from real Kenyans. Every shilling counts.</p>
+            </motion.div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {activeHarambees.map((h, i) => {
+                const progress = h.target_amount > 0 ? Math.min(100, Math.round((h.raised_amount / h.target_amount) * 100)) : 0;
+                const daysLeft = h.deadline ? Math.max(0, Math.ceil((new Date(h.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : null;
+                return (
+                  <motion.div key={h.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.06 }}>
+                    <div className="rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:border-red-500/20 transition-all duration-300 overflow-hidden flex flex-col h-full">
+                      <div className="p-4 flex-1 space-y-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="w-9 h-9 rounded-xl bg-red-500/10 flex items-center justify-center shrink-0">
+                            <Heart size={16} className="text-red-400" />
+                          </div>
+                          {daysLeft !== null && (
+                            <span className={cn(
+                              'text-[9px] font-bold px-2 py-0.5 rounded-full',
+                              daysLeft <= 3 ? 'bg-red-500/20 text-red-400' : 'bg-white/[0.06] text-white/70'
+                            )}>
+                              {daysLeft > 0 ? `${daysLeft}d left` : 'Ended'}
+                            </span>
+                          )}
+                        </div>
+                        <div>
+                          <h3 className="font-display font-bold text-sm text-white leading-snug">
+                            Harambee for <span className="text-accent">{h.beneficiary_name || h.title}</span>
+                          </h3>
+                          {h.description && (
+                            <p className="text-[11px] text-white/55 mt-1.5 line-clamp-3 whitespace-pre-line leading-relaxed">{h.description}</p>
+                          )}
+                        </div>
+                        <div className="space-y-1.5">
+                          <div className="flex justify-between text-[10px]">
+                            <span className="text-white/60">Raised</span>
+                            <span className="font-bold text-accent">{progress}%</span>
+                          </div>
+                          <Progress value={progress} className="h-2" />
+                          <div className="flex justify-between text-[10px]">
+                            <span className="text-white/70 font-semibold">KES {(h.raised_amount || 0).toLocaleString()}</span>
+                            <span className="text-white/50">of KES {(h.target_amount || 0).toLocaleString()}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="px-4 py-3 bg-white/[0.02] border-t border-white/[0.06] flex gap-2">
+                        <Link to={`/harambee/${h.order_number}`} className="flex-1">
+                          <Button variant="outline" size="sm" className="w-full border-white/10 text-white hover:bg-white/[0.06] text-[11px] h-8">
+                            <Eye size={12} className="mr-1" /> Details
+                          </Button>
+                        </Link>
+                        <Link to={`/harambee/${h.order_number}`} className="flex-1">
+                          <Button variant="gold" size="sm" className="w-full shadow-gold text-[11px] h-8">
+                            <Heart size={12} className="mr-1" /> Contribute
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            <div className="text-center mt-6">
+              <Link to="/signup">
+                <Button variant="hero" size="lg" className="shadow-gold-lg gap-2">
+                  <HeartHandshake size={16} /> Start Your Own Fundraiser <ArrowRight size={14} />
+                </Button>
+              </Link>
+              <p className="text-[10px] text-white/45 mt-2">Verified Harambees only · 3% platform fee on collected funds</p>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* ───── PUBLIC CHAMAS ───── */}
+      {publicChamas.length > 0 && (
+        <section className="py-12 sm:py-16 px-4 bg-[hsl(213,72%,8%)]">
+          <div className="container max-w-6xl">
+            <motion.div className="text-center mb-6 sm:mb-8" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
+              <span className="inline-block text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full bg-accent/10 text-accent mb-3">Community</span>
+              <h2 className="font-display text-xl sm:text-2xl md:text-3xl font-bold mb-2 text-white">Join a Public Chama</h2>
+              <p className="text-white/60 max-w-lg mx-auto text-xs sm:text-sm">Explore open savings groups and start your journey with like-minded savers.</p>
+            </motion.div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {publicChamas.map((chama, i) => (
+                <motion.div key={chama.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}
+                  className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-accent/20 transition-all">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-10 h-10 rounded-xl bg-accent/10 flex items-center justify-center shrink-0 overflow-hidden">
+                      {chama.profile_image_url ? (
+                        <img src={chama.profile_image_url} alt={chama.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <Users size={16} className="text-accent" />
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="font-display font-bold text-sm text-white truncate">{chama.name}</h3>
+                      {chama.max_members && <p className="text-[9px] text-white/50">Max {chama.max_members} members</p>}
+                    </div>
+                  </div>
+                  {chama.description && <p className="text-[10px] text-white/55 leading-relaxed mb-3 line-clamp-2">{chama.description}</p>}
+                  <div className="flex items-center justify-between text-[10px] pt-2.5 border-t border-white/[0.06]">
+                    <span className="text-white/60">KES {chama.contribution_amount?.toLocaleString()} / {chama.contribution_frequency}</span>
+                    <Link to="/signup">
+                      <span className="text-accent font-bold hover:underline flex items-center gap-1 text-[10px]">
+                        Join <ArrowRight size={9} />
+                      </span>
+                    </Link>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+
+            <div className="text-center mt-5">
+              <Link to="/signup">
+                <Button variant="outline" size="sm" className="border-white/10 text-white hover:bg-white/[0.06]">
+                  View All Groups <ArrowRight size={14} />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ───── FAQ ───── */}
-      <section id="faq" className="py-12 sm:py-16 md:py-20 px-4 bg-[hsl(213,72%,8%)]">
+      <section id="faq" className="py-12 sm:py-16 md:py-20 px-4 bg-[hsl(213,72%,10%)]">
         <div className="container max-w-3xl">
           <motion.div className="text-center mb-8 sm:mb-10" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <span className="inline-block text-[10px] font-bold uppercase tracking-[0.2em] px-3 py-1.5 rounded-full bg-accent/10 text-accent mb-3">FAQ</span>
@@ -682,7 +683,7 @@ export default function Index() {
 
       {/* ───── DOWNLOAD APP ───── */}
       {!isInstalled && (
-        <section className="py-10 sm:py-12 px-4 bg-[hsl(213,72%,10%)] relative overflow-hidden">
+        <section className="py-10 sm:py-12 px-4 bg-[hsl(213,72%,8%)] relative overflow-hidden">
           <div className="container max-w-3xl">
             <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
               className="rounded-2xl p-5 sm:p-8 text-center bg-gradient-to-br from-primary/20 via-primary/10 to-transparent border border-primary/20">
@@ -704,7 +705,7 @@ export default function Index() {
       )}
 
       {/* ───── CTA ───── */}
-      <section className="py-12 sm:py-16 px-4 bg-[hsl(213,72%,8%)]">
+      <section className="py-12 sm:py-16 px-4 bg-[hsl(213,72%,10%)]">
         <div className="container max-w-4xl">
           <motion.div initial={{ opacity: 0, scale: 0.97 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}
             className="rounded-2xl p-6 sm:p-8 md:p-12 text-center relative overflow-hidden bg-gradient-to-br from-accent/20 via-accent/10 to-transparent border border-accent/20">
