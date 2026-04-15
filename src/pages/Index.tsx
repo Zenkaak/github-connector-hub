@@ -14,6 +14,7 @@ import { Logo } from '@/components/Logo';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { useInstallPrompt } from '@/hooks/useInstallPrompt';
+import { cn } from '@/lib/utils';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
