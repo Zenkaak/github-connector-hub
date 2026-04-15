@@ -16,6 +16,7 @@ import { Progress } from '@/components/ui/progress';
 import { useInstallPrompt } from '@/hooks/useInstallPrompt';
 import { cn } from '@/lib/utils';
 
+/* ───── Animation Variants ───── */
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
   visible: (i: number) => ({
@@ -26,6 +27,7 @@ const fadeUp = {
 
 const stagger = { visible: { transition: { staggerChildren: 0.08 } } };
 
+/* ───── Static Data ───── */
 const faqs = [
   { q: 'What is a Chama?', a: 'A Chama is a traditional Kenyan savings group where members pool money together. DASNET VENTURES LTD digitizes this process, making it easier to manage contributions, track savings, and handle withdrawals securely.' },
   { q: 'How do I create a Chama group?', a: 'Sign up for a free account, navigate to Chama Groups, and click "New Group." You become the Chairperson automatically. Then search members by phone number and assign roles like Secretary and Treasurer.' },
@@ -45,6 +47,82 @@ const navLinks = [
   { label: 'FAQ', href: '#faq' },
 ];
 
+const features = [
+  { icon: PiggyBank, title: 'Smart Savings', desc: 'Daily, weekly, or monthly contributions via M-Pesa STK push.' },
+  { icon: Wallet, title: 'Digital Wallet', desc: 'Deposit, transfer, request money with full transaction history.' },
+  { icon: HandCoins, title: 'Secure Withdrawals', desc: 'Multi-level approval: leaders approve, Admin releases.' },
+  { icon: Heart, title: 'Harambee', desc: 'Create public fundraising campaigns via M-Pesa.' },
+  { icon: Landmark, title: 'Personal Loans', desc: 'Apply for Biashara, Elimu, or Youth Fund loans.' },
+  { icon: Users, title: 'Role Management', desc: 'Assign Chairperson, Secretary, and Treasurer.' },
+  { icon: Shield, title: 'Emergency Fund', desc: 'Automatic monthly emergency contributions.' },
+  { icon: Zap, title: 'Real-Time Alerts', desc: 'Instant notifications for payments and approvals.' },
+];
+
+const steps = [
+  { step: '01', icon: FileCheck, title: 'Create Account', desc: 'Sign up with your phone number and ID.' },
+  { step: '02', icon: Users, title: 'Create a Group', desc: 'Name your Chama and become Chairperson.' },
+  { step: '03', icon: UserPlus, title: 'Add Members', desc: 'Search by phone and assign roles.' },
+  { step: '04', icon: PiggyBank, title: 'Start Saving', desc: 'Members pay via M-Pesa STK push.' },
+];
+
+const walletFeatures = [
+  { icon: QrCode, title: 'M-Pesa Deposit', desc: 'Top up your wallet instantly via STK push' },
+  { icon: Send, title: 'Peer-to-Peer Transfers', desc: 'Send money to any registered member' },
+  { icon: ArrowDownUp, title: 'Money Requests', desc: 'Request payments from other users' },
+  { icon: TrendingUp, title: 'Transaction History', desc: 'Full audit trail of every transaction' },
+];
+
+const loanProducts = [
+  { name: 'Biashara Loan', desc: 'For business growth and expansion', rate: '10%', max: 'KES 500,000', icon: '🏪' },
+  { name: 'Elimu Loan', desc: 'Education financing for students', rate: '8%', max: 'KES 300,000', icon: '📚' },
+  { name: 'Youth Fund', desc: 'Empowering young entrepreneurs', rate: '8%', max: 'KES 200,000', icon: '🚀' },
+];
+
+const securityFeatures = [
+  { icon: Lock, title: 'End-to-End Encryption', desc: 'Data encrypted in transit and at rest' },
+  { icon: ShieldCheck, title: 'Multi-Level Approval', desc: '3-leader approval for withdrawals' },
+  { icon: BadgeCheck, title: 'KYC Verification', desc: 'ID and document verification' },
+  { icon: Eye, title: 'Full Audit Trail', desc: 'Every transaction timestamped' },
+  { icon: Shield, title: 'Row-Level Security', desc: 'Database policies isolate data' },
+  { icon: FileCheck, title: 'Digital Signatures', desc: 'Tamper-proof signed records' },
+];
+
+const testimonials = [
+  { name: 'Grace Wanjiru', role: 'Chairperson, Umoja Savings', text: 'We used to track contributions in a notebook. Now everything is digital—transparency and trust have never been higher.', rating: 5 },
+  { name: 'Peter Ochieng', role: 'Treasurer, Vijana Group', text: 'The withdrawal approval system is brilliant. No room for disputes, and M-Pesa integration makes collection effortless.', rating: 5 },
+  { name: 'Amina Hassan', role: 'Member, Baraka Chama', text: 'I love the wallet feature and instant notifications. The digital signature gives us real peace of mind.', rating: 5 },
+];
+
+const trustBadges = [
+  { icon: Lock, label: 'SSL Encrypted' },
+  { icon: ShieldCheck, label: 'Bank-Grade' },
+  { icon: Banknote, label: 'M-Pesa' },
+  { icon: BadgeCheck, label: 'KYC Verified' },
+  { icon: Eye, label: 'Transparent' },
+  { icon: Building2, label: 'Registered' },
+];
+
+const footerColumns = [
+  { title: 'Product', links: [
+    { label: 'Chama Groups', href: '/signup' },
+    { label: 'Digital Wallet', href: '/signup' },
+    { label: 'Personal Loans', href: '/signup' },
+    { label: 'Harambee', href: '/signup' },
+  ]},
+  { title: 'Company', links: [
+    { label: 'About Us', href: '/about' },
+    { label: 'Contact', href: '/contact' },
+    { label: 'Support', href: '/support' },
+    { label: 'Terms', href: '/terms' },
+  ]},
+  { title: 'Resources', links: [
+    { label: 'FAQ', href: '#faq' },
+    { label: 'Privacy Policy', href: '/privacy.html' },
+    { label: 'Explore Chamas', href: '/signup' },
+  ]},
+];
+
+/* ───── Component ───── */
 export default function Index() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -91,7 +169,10 @@ export default function Index() {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[hsl(213,72%,8%)]">
-      {/* ───── HEADER ───── */}
+
+      {/* ═══════════════════════════════════════════════════════════
+          HEADER
+      ═══════════════════════════════════════════════════════════ */}
       <header className="fixed top-0 left-0 right-0 z-50">
         <div className="mx-3 sm:mx-4 mt-3">
           <div className="glass-dark rounded-2xl shadow-lg max-w-6xl mx-auto border border-white/[0.06]">
@@ -120,7 +201,6 @@ export default function Index() {
           </div>
         </div>
 
-        {/* Mobile Menu */}
         <AnimatePresence>
           {mobileMenuOpen && (
             <motion.div
@@ -155,7 +235,9 @@ export default function Index() {
         </AnimatePresence>
       </header>
 
-      {/* ───── HERO ───── */}
+      {/* ═══════════════════════════════════════════════════════════
+          HERO
+      ═══════════════════════════════════════════════════════════ */}
       <section className="hero-gradient pt-28 pb-16 sm:pt-36 sm:pb-24 md:pt-44 md:pb-36 px-4 relative overflow-hidden noise-overlay">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_hsl(42_92%_56%_/_0.08),_transparent_50%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,_hsl(156_72%_38%_/_0.05),_transparent_50%)]" />
@@ -220,18 +302,13 @@ export default function Index() {
         </motion.div>
       </section>
 
-      {/* ───── TRUST BADGES ───── */}
+      {/* ═══════════════════════════════════════════════════════════
+          TRUST BADGES
+      ═══════════════════════════════════════════════════════════ */}
       <section className="py-6 sm:py-8 px-4 bg-[hsl(213,72%,6%)] border-y border-white/[0.04]">
         <div className="container max-w-5xl">
           <div className="grid grid-cols-3 sm:grid-cols-6 gap-3 sm:gap-6 items-center justify-center">
-            {[
-              { icon: Lock, label: 'SSL Encrypted' },
-              { icon: ShieldCheck, label: 'Bank-Grade' },
-              { icon: Banknote, label: 'M-Pesa' },
-              { icon: BadgeCheck, label: 'KYC Verified' },
-              { icon: Eye, label: 'Transparent' },
-              { icon: Building2, label: 'Registered' },
-            ].map((badge, i) => (
+            {trustBadges.map((badge, i) => (
               <div key={i} className="flex items-center justify-center gap-1.5 text-white/60">
                 <badge.icon size={12} className="text-accent/50 shrink-0" />
                 <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.1em]">{badge.label}</span>
@@ -241,30 +318,9 @@ export default function Index() {
         </div>
       </section>
 
-      {/* ───── LIVE STATS BANNER ───── */}
-      <section className="py-10 sm:py-12 px-4 bg-[hsl(213,72%,12%)] relative overflow-hidden noise-overlay">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_hsl(42_92%_56%_/_0.06),_transparent_60%)]" />
-        <div className="container max-w-5xl relative z-10">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-8">
-            {[
-              { value: liveStats.groups > 0 ? `${liveStats.groups}+` : '—', label: 'Chama Groups', icon: Users },
-              { value: liveStats.savings > 0 ? formatCompact(liveStats.savings) : '—', label: 'Total Savings', icon: PiggyBank },
-              { value: liveStats.members > 0 ? `${liveStats.members}+` : '—', label: 'Registered Users', icon: Award },
-              { value: '24/7', label: 'M-Pesa Access', icon: Clock },
-            ].map((stat, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.06 }} className="text-center">
-                <div className="w-9 h-9 sm:w-10 sm:h-10 mx-auto mb-2 rounded-xl bg-white/[0.06] flex items-center justify-center">
-                  <stat.icon size={16} className="text-accent" />
-                </div>
-                <p className="text-lg sm:text-xl md:text-2xl font-bold text-white font-display">{stat.value}</p>
-                <p className="text-[9px] sm:text-[10px] text-white/55 mt-0.5 uppercase tracking-[0.1em] font-semibold">{stat.label}</p>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ───── FEATURES ───── */}
+      {/* ═══════════════════════════════════════════════════════════
+          FEATURES
+      ═══════════════════════════════════════════════════════════ */}
       <section id="features" className="py-12 sm:py-16 md:py-20 px-4 bg-[hsl(213,72%,10%)] relative">
         <div className="container max-w-6xl">
           <motion.div className="text-center mb-6 sm:mb-10" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-80px' }} transition={{ duration: 0.5 }}>
@@ -276,16 +332,7 @@ export default function Index() {
           </motion.div>
 
           <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
-            {[
-              { icon: PiggyBank, title: 'Smart Savings', desc: 'Daily, weekly, or monthly contributions via M-Pesa STK push.' },
-              { icon: Wallet, title: 'Digital Wallet', desc: 'Deposit, transfer, request money with full transaction history.' },
-              { icon: HandCoins, title: 'Secure Withdrawals', desc: 'Multi-level approval: leaders approve, Admin releases.' },
-              { icon: Heart, title: 'Harambee', desc: 'Create public fundraising campaigns via M-Pesa.' },
-              { icon: Landmark, title: 'Personal Loans', desc: 'Apply for Biashara, Elimu, or Youth Fund loans.' },
-              { icon: Users, title: 'Role Management', desc: 'Assign Chairperson, Secretary, and Treasurer.' },
-              { icon: Shield, title: 'Emergency Fund', desc: 'Automatic monthly emergency contributions.' },
-              { icon: Zap, title: 'Real-Time Alerts', desc: 'Instant notifications for payments and approvals.' },
-            ].map((feature, i) => (
+            {features.map((feature, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, margin: '-50px' }} transition={{ delay: i * 0.04, duration: 0.5 }}
                 className="group p-3 sm:p-4 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-accent/20 transition-all duration-400">
                 <div className="w-9 h-9 sm:w-10 sm:h-10 mb-2.5 rounded-xl bg-accent/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
@@ -299,7 +346,9 @@ export default function Index() {
         </div>
       </section>
 
-      {/* ───── HOW IT WORKS ───── */}
+      {/* ═══════════════════════════════════════════════════════════
+          HOW IT WORKS
+      ═══════════════════════════════════════════════════════════ */}
       <section id="how-it-works" className="py-12 sm:py-16 md:py-20 px-4 bg-[hsl(213,72%,8%)] relative">
         <div className="container max-w-5xl">
           <motion.div className="text-center mb-8 sm:mb-12" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
@@ -310,12 +359,7 @@ export default function Index() {
 
           <div className="grid gap-4 sm:gap-6 grid-cols-2 md:grid-cols-4 relative">
             <div className="hidden md:block absolute top-[38px] left-[15%] right-[15%] h-[2px] bg-gradient-to-r from-white/[0.04] via-accent/20 to-white/[0.04]" />
-            {[
-              { step: '01', icon: FileCheck, title: 'Create Account', desc: 'Sign up with your phone number and ID.' },
-              { step: '02', icon: Users, title: 'Create a Group', desc: 'Name your Chama and become Chairperson.' },
-              { step: '03', icon: UserPlus, title: 'Add Members', desc: 'Search by phone and assign roles.' },
-              { step: '04', icon: PiggyBank, title: 'Start Saving', desc: 'Members pay via M-Pesa STK push.' },
-            ].map((item, i) => (
+            {steps.map((item, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.1, duration: 0.5 }} className="relative text-center">
                 <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 rounded-xl bg-accent flex items-center justify-center shadow-gold-lg relative z-10">
                   <item.icon className="text-accent-foreground" size={20} />
@@ -329,7 +373,9 @@ export default function Index() {
         </div>
       </section>
 
-      {/* ───── WALLET & TRANSFERS ───── */}
+      {/* ═══════════════════════════════════════════════════════════
+          WALLET & TRANSFERS
+      ═══════════════════════════════════════════════════════════ */}
       <section id="wallet" className="py-12 sm:py-16 md:py-20 px-4 bg-[hsl(213,72%,10%)] relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center_right,_hsl(156_72%_38%_/_0.06),_transparent_60%)]" />
         <div className="container max-w-5xl relative z-10">
@@ -343,12 +389,7 @@ export default function Index() {
                 A full-featured digital wallet powered by M-Pesa. Deposit, transfer to other members, request payments, and track every shilling.
               </p>
               <div className="space-y-2.5">
-                {[
-                  { icon: QrCode, title: 'M-Pesa Deposit', desc: 'Top up your wallet instantly via STK push' },
-                  { icon: Send, title: 'Peer-to-Peer Transfers', desc: 'Send money to any registered member' },
-                  { icon: ArrowDownUp, title: 'Money Requests', desc: 'Request payments from other users' },
-                  { icon: TrendingUp, title: 'Transaction History', desc: 'Full audit trail of every transaction' },
-                ].map((item, i) => (
+                {walletFeatures.map((item, i) => (
                   <motion.div key={i} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }}
                     className="flex items-start gap-3 p-3 rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-emerald-500/20 transition-colors">
                     <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
@@ -409,7 +450,9 @@ export default function Index() {
         </div>
       </section>
 
-      {/* ───── LOANS ───── */}
+      {/* ═══════════════════════════════════════════════════════════
+          LOANS
+      ═══════════════════════════════════════════════════════════ */}
       <section id="loans" className="py-12 sm:py-16 md:py-20 px-4 bg-[hsl(213,72%,8%)]">
         <div className="container max-w-5xl">
           <motion.div className="text-center mb-8 sm:mb-10" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
@@ -419,11 +462,7 @@ export default function Index() {
           </motion.div>
 
           <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
-            {[
-              { name: 'Biashara Loan', desc: 'For business growth and expansion', rate: '10%', max: 'KES 500,000', icon: '🏪' },
-              { name: 'Elimu Loan', desc: 'Education financing for students', rate: '8%', max: 'KES 300,000', icon: '📚' },
-              { name: 'Youth Fund', desc: 'Empowering young entrepreneurs', rate: '8%', max: 'KES 200,000', icon: '🚀' },
-            ].map((product, i) => (
+            {loanProducts.map((product, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.06, duration: 0.5 }}
                 className="rounded-xl bg-white/[0.03] border border-white/[0.06] hover:border-accent/20 transition-all overflow-hidden flex flex-col">
                 <div className="p-4 flex-1">
@@ -447,7 +486,9 @@ export default function Index() {
         </div>
       </section>
 
-      {/* ───── SECURITY ───── */}
+      {/* ═══════════════════════════════════════════════════════════
+          SECURITY
+      ═══════════════════════════════════════════════════════════ */}
       <section className="py-12 sm:py-16 md:py-20 px-4 bg-[hsl(213,72%,10%)] relative">
         <div className="container max-w-5xl">
           <div className="grid md:grid-cols-2 gap-6 md:gap-10 items-center">
@@ -462,14 +503,7 @@ export default function Index() {
             </motion.div>
 
             <div className="grid grid-cols-2 gap-2.5">
-              {[
-                { icon: Lock, title: 'End-to-End Encryption', desc: 'Data encrypted in transit and at rest' },
-                { icon: ShieldCheck, title: 'Multi-Level Approval', desc: '3-leader approval for withdrawals' },
-                { icon: BadgeCheck, title: 'KYC Verification', desc: 'ID and document verification' },
-                { icon: Eye, title: 'Full Audit Trail', desc: 'Every transaction timestamped' },
-                { icon: Shield, title: 'Row-Level Security', desc: 'Database policies isolate data' },
-                { icon: FileCheck, title: 'Digital Signatures', desc: 'Tamper-proof signed records' },
-              ].map((item, i) => (
+              {securityFeatures.map((item, i) => (
                 <motion.div key={i} initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}
                   className="p-3 rounded-xl bg-white/[0.03] border border-white/[0.06]">
                   <item.icon size={14} className="text-red-400 mb-1.5" />
@@ -482,7 +516,9 @@ export default function Index() {
         </div>
       </section>
 
-      {/* ───── TESTIMONIALS ───── */}
+      {/* ═══════════════════════════════════════════════════════════
+          TESTIMONIALS
+      ═══════════════════════════════════════════════════════════ */}
       <section className="py-12 sm:py-16 md:py-20 px-4 bg-[hsl(213,72%,8%)] relative">
         <div className="container max-w-6xl">
           <motion.div className="text-center mb-6 sm:mb-10" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
@@ -492,11 +528,7 @@ export default function Index() {
           </motion.div>
 
           <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
-            {[
-              { name: 'Grace Wanjiru', role: 'Chairperson, Umoja Savings', text: 'We used to track contributions in a notebook. Now everything is digital—transparency and trust have never been higher.', rating: 5 },
-              { name: 'Peter Ochieng', role: 'Treasurer, Vijana Group', text: 'The withdrawal approval system is brilliant. No room for disputes, and M-Pesa integration makes collection effortless.', rating: 5 },
-              { name: 'Amina Hassan', role: 'Member, Baraka Chama', text: 'I love the wallet feature and instant notifications. The digital signature gives us real peace of mind.', rating: 5 },
-            ].map((t, i) => (
+            {testimonials.map((t, i) => (
               <motion.div key={i} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.06 }}
                 className="p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
                 <div className="flex gap-0.5 mb-3">
@@ -518,7 +550,9 @@ export default function Index() {
         </div>
       </section>
 
-      {/* ───── ACTIVE HARAMBEES ───── */}
+      {/* ═══════════════════════════════════════════════════════════
+          ACTIVE HARAMBEES (dynamic)
+      ═══════════════════════════════════════════════════════════ */}
       {activeHarambees.length > 0 && (
         <section className="py-12 sm:py-16 px-4 bg-[hsl(213,72%,10%)] relative overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_hsl(0_80%_50%_/_0.04),_transparent_50%)]" />
@@ -602,7 +636,9 @@ export default function Index() {
         </section>
       )}
 
-      {/* ───── PUBLIC CHAMAS ───── */}
+      {/* ═══════════════════════════════════════════════════════════
+          PUBLIC CHAMAS (dynamic)
+      ═══════════════════════════════════════════════════════════ */}
       {publicChamas.length > 0 && (
         <section className="py-12 sm:py-16 px-4 bg-[hsl(213,72%,8%)]">
           <div className="container max-w-6xl">
@@ -653,7 +689,9 @@ export default function Index() {
         </section>
       )}
 
-      {/* ───── FAQ ───── */}
+      {/* ═══════════════════════════════════════════════════════════
+          FAQ
+      ═══════════════════════════════════════════════════════════ */}
       <section id="faq" className="py-12 sm:py-16 md:py-20 px-4 bg-[hsl(213,72%,10%)]">
         <div className="container max-w-3xl">
           <motion.div className="text-center mb-8 sm:mb-10" initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
@@ -681,7 +719,9 @@ export default function Index() {
         </div>
       </section>
 
-      {/* ───── DOWNLOAD APP ───── */}
+      {/* ═══════════════════════════════════════════════════════════
+          DOWNLOAD APP
+      ═══════════════════════════════════════════════════════════ */}
       {!isInstalled && (
         <section className="py-10 sm:py-12 px-4 bg-[hsl(213,72%,8%)] relative overflow-hidden">
           <div className="container max-w-3xl">
@@ -704,7 +744,9 @@ export default function Index() {
         </section>
       )}
 
-      {/* ───── CTA ───── */}
+      {/* ═══════════════════════════════════════════════════════════
+          CTA
+      ═══════════════════════════════════════════════════════════ */}
       <section className="py-12 sm:py-16 px-4 bg-[hsl(213,72%,10%)]">
         <div className="container max-w-4xl">
           <motion.div initial={{ opacity: 0, scale: 0.97 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }}
@@ -731,7 +773,9 @@ export default function Index() {
         </div>
       </section>
 
-      {/* ───── FOOTER ───── */}
+      {/* ═══════════════════════════════════════════════════════════
+          FOOTER
+      ═══════════════════════════════════════════════════════════ */}
       <footer className="bg-[hsl(213,72%,6%)] text-white pt-10 sm:pt-12 pb-6 px-4 relative border-t border-white/[0.04]">
         <div className="container max-w-6xl relative z-10">
           <div className="grid gap-6 sm:gap-8 grid-cols-2 md:grid-cols-4 mb-8">
@@ -749,25 +793,7 @@ export default function Index() {
               </div>
             </div>
 
-            {[
-              { title: 'Product', links: [
-                { label: 'Chama Groups', href: '/signup' },
-                { label: 'Digital Wallet', href: '/signup' },
-                { label: 'Personal Loans', href: '/signup' },
-                { label: 'Harambee', href: '/signup' },
-              ]},
-              { title: 'Company', links: [
-                { label: 'About Us', href: '/about' },
-                { label: 'Contact', href: '/contact' },
-                { label: 'Support', href: '/support' },
-                { label: 'Terms', href: '/terms' },
-              ]},
-              { title: 'Resources', links: [
-                { label: 'FAQ', href: '#faq' },
-                { label: 'Privacy Policy', href: '/privacy.html' },
-                { label: 'Explore Chamas', href: '/signup' },
-              ]},
-            ].map((col, i) => (
+            {footerColumns.map((col, i) => (
               <div key={i}>
                 <h4 className="text-[10px] font-bold text-white uppercase tracking-[0.15em] mb-3">{col.title}</h4>
                 <div className="space-y-2">
@@ -794,3 +820,4 @@ export default function Index() {
     </div>
   );
 }
+ 
