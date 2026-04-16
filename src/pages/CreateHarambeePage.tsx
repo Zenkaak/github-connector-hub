@@ -115,6 +115,60 @@ export default function CreateHarambeePage() {
     }
   }, [user, activeTab]);
 
+  useEffect(() => {
+    const harambeeIds = myApplications
+      .map(app => app.harambee_id)
+      .filter((id): id is string => Boolean(id));
+
+    if (!harambeeIds.length) {
+      setLinkedHarambees({});
+      return;
+    }
+
+    supabase
+      .from('chama_harambees')
+      .select('id, order_number, raised_amount, target_amount, status, deadline, description, beneficiary_name, image_urls')
+      .in('id', harambeeIds)
+      .then(({ data }) => {
+        const mapped = (data || []).reduce<Record<string, any>>((acc, item) => {
+          acc[item.id] = item;
+          return acc;
+        }, {});
+        setLinkedHarambees(mapped);
+      });
+  }, [myApplications]);
+
+  useEffect(() => {
+    if (!user || activeTab !== 'my_apps') return;
+
+    const channel = supabase
+      .channel(`harambee-applications-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'harambee_applications',
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          supabase
+            .from('harambee_applications')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false })
+            .then(({ data }) => {
+              if (data) setMyApplications(data);
+            });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, activeTab]);
+
   // Step 1
   const [category, setCategory] = useState('');
 
