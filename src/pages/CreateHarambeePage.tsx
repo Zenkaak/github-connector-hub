@@ -355,6 +355,33 @@ export default function CreateHarambeePage() {
     }
   };
 
+  const getApplicationLink = (app: any) => {
+    const linked = app.harambee_id ? linkedHarambees[app.harambee_id] : null;
+    if (!linked?.order_number) return null;
+    return `${window.location.origin}/harambee/${linked.order_number}`;
+  };
+
+  const openApplicationForEdit = (app: any) => {
+    setEditingApplicationId(app.id);
+    setActiveTab('create');
+    setStep(2);
+    setCategory(app.category || '');
+    setBeneficiaryName(app.beneficiary_name || '');
+    setBeneficiaryPhone(app.beneficiary_phone || '');
+    setRelationship(app.beneficiary_relationship || '');
+    setDescription(app.description || '');
+    setTargetAmount(app.target_amount ? String(app.target_amount) : '');
+    setDeadline(app.deadline ? new Date(app.deadline).toISOString().split('T')[0] : '');
+    setAnswers((app.category_answers as Record<string, string>) || {});
+    setPayoutMethod(app.payout_method || '');
+    setPayoutPhone(app.payout_phone || '');
+    setBankName(app.bank_name || '');
+    setBankAccountNumber(app.bank_account_number || '');
+    setBankAccountName(app.bank_account_name || '');
+    setBankBranch(app.bank_branch || '');
+    toast.info('Application loaded for editing. Update details and submit again to save changes.');
+  };
+
   // ─── Category-specific questions ───
   const renderCategoryQuestions = () => {
     switch (category) {
