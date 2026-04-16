@@ -281,30 +281,42 @@ export default function CreateHarambeePage() {
         return;
       }
 
-      const { data: app, error: appError } = await supabase
-        .from('harambee_applications')
-        .insert({
-          user_id: user.id,
-          category,
-          beneficiary_name: beneficiaryName.trim(),
-          beneficiary_phone: beneficiaryPhone.trim() || null,
-          beneficiary_relationship: relationship.trim(),
-          description: description.trim(),
-          target_amount: Number(targetAmount),
-          deadline: deadline || null,
-          category_answers: answers,
-          platform_fee_percent: 3,
-          is_public: true,
-          status: 'pending_review',
-          payout_method: payoutMethod,
-          payout_phone: payoutMethod === 'mpesa' ? payoutPhone : null,
-          bank_name: payoutMethod === 'bank' ? bankName : null,
-          bank_account_number: payoutMethod === 'bank' ? bankAccountNumber : null,
-          bank_account_name: payoutMethod === 'bank' ? bankAccountName : null,
-          bank_branch: payoutMethod === 'bank' ? bankBranch : null,
-        })
-        .select('id')
-        .single();
+      const payload = {
+        user_id: user.id,
+        category,
+        beneficiary_name: beneficiaryName.trim(),
+        beneficiary_phone: beneficiaryPhone.trim() || null,
+        beneficiary_relationship: relationship.trim(),
+        description: description.trim(),
+        target_amount: Number(targetAmount),
+        deadline: deadline || null,
+        category_answers: answers,
+        platform_fee_percent: 3,
+        is_public: true,
+        status: 'pending_review',
+        payout_method: payoutMethod,
+        payout_phone: payoutMethod === 'mpesa' ? payoutPhone : null,
+        bank_name: payoutMethod === 'bank' ? bankName : null,
+        bank_account_number: payoutMethod === 'bank' ? bankAccountNumber : null,
+        bank_account_name: payoutMethod === 'bank' ? bankAccountName : null,
+        bank_branch: payoutMethod === 'bank' ? bankBranch : null,
+      };
+
+      const appRequest = editingApplicationId
+        ? supabase
+            .from('harambee_applications')
+            .update({ ...payload, updated_at: new Date().toISOString(), harambee_id: null })
+            .eq('id', editingApplicationId)
+            .eq('user_id', user.id)
+            .select('id')
+            .single()
+        : supabase
+            .from('harambee_applications')
+            .insert(payload)
+            .select('id')
+            .single();
+
+      const { data: app, error: appError } = await appRequest;
 
       if (appError) throw appError;
 
@@ -313,20 +325,20 @@ export default function CreateHarambeePage() {
       for (const [docType, { file }] of docEntries) {
         const ext = file.name.split('.').pop();
         const path = `${user.id}/${app.id}/${docType}.${ext}`;
-        const { error: uploadError } = await supabase.storage.from('harambee-verification').upload(path, file);
+        const { error: uploadError } = await supabase.storage.from('harambee-verification').upload(path, file, { upsert: true });
         if (uploadError) {
           console.error(`Upload error for ${docType}:`, uploadError);
           continue;
         }
 
-        await supabase.from('harambee_application_documents').insert({
+        await supabase.from('harambee_application_documents').upsert({
           application_id: app.id,
           user_id: user.id,
           document_type: docType,
           file_path: path,
           file_name: file.name,
           file_size: file.size,
-        });
+        }, { onConflict: 'application_id,document_type' });
       }
 
       // 3. Notify admins
@@ -346,8 +358,33 @@ export default function CreateHarambeePage() {
         );
       }
 
-      toast.success('Fundraiser application submitted! It will be reviewed by our team within 24 hours.');
-      navigate('/dashboard');
+      toast.success(editingApplicationId ? 'Application updated successfully.' : 'Fundraiser application submitted! It will be reviewed by our team within 24 hours.');
+      setEditingApplicationId(null);
+      setActiveTab('my_apps');
+      setStep(1);
+      setCategory('');
+      setBeneficiaryName('');
+      setBeneficiaryPhone('');
+      setRelationship('');
+      setDescription('');
+      setTargetAmount('');
+      setDeadline('');
+      setAnswers({});
+      setPayoutMethod('');
+      setPayoutPhone('');
+      setBankName('');
+      setBankAccountNumber('');
+      setBankAccountName('');
+      setBankBranch('');
+      setUploadedDocs({});
+
+      const { data: applications } = await supabase
+        .from('harambee_applications')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (applications) setMyApplications(applications);
     } catch (error: any) {
       toast.error(error.message || 'Failed to submit application');
     } finally {
