@@ -39,6 +39,12 @@ interface HarambeeApp {
   approved_by: string | null;
   approved_at: string | null;
   created_at: string;
+  payout_method: string | null;
+  payout_phone: string | null;
+  bank_name: string | null;
+  bank_account_number: string | null;
+  bank_account_name: string | null;
+  bank_branch: string | null;
 }
 
 interface AppDocument {
@@ -157,9 +163,15 @@ export default function AdminHarambeeApplicationsPage() {
             deadline: selected.deadline,
             is_public: selected.is_public,
             created_by: selected.user_id,
-            group_id: '00000000-0000-0000-0000-000000000000', // Placeholder for standalone
+            group_id: '00000000-0000-0000-0000-000000000000',
             status: 'active',
             order_number: `HAR-${Date.now().toString(36).toUpperCase()}`,
+            payout_method: selected.payout_method || null,
+            payout_phone: selected.payout_phone || null,
+            bank_name: selected.bank_name || null,
+            bank_account_number: selected.bank_account_number || null,
+            bank_account_name: selected.bank_account_name || null,
+            bank_branch: selected.bank_branch || null,
           })
           .select('id')
           .single();
