@@ -279,10 +279,8 @@ export default function DashboardPage() {
     const total = applications.length;
     const approved = applications.filter((a) => a.status === 'approved' || a.status === 'disbursed').length;
     const pending = applications.filter((a) => a.status === 'pending').length;
-    const totalAmount = applications
-      .filter((a) => a.status === 'approved' || a.status === 'disbursed')
-      .reduce((sum, a) => sum + a.applied_amount, 0);
-    return { total, approved, pending, totalAmount };
+    const totalDisbursed = disbursements.reduce((sum, d) => sum + (d.disbursed_amount || 0), 0);
+    return { total, approved, pending, totalDisbursed };
   })();
 
   const firstName = profile?.full_name?.split(' ')[0] || 'there';
@@ -421,8 +419,8 @@ export default function DashboardPage() {
               <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-success/10 text-success flex items-center justify-center mb-1 group-hover:scale-110 transition-transform duration-300">
                 <Wallet size={16} />
               </div>
-              <p className="font-semibold text-[10px] sm:text-xs leading-tight">{formatCurrency(stats.totalAmount)}</p>
-              <p className="text-[9px] sm:text-[10px] text-muted-foreground mt-0.5 hidden sm:block">Total Disbursed</p>
+              <p className="font-semibold text-[10px] sm:text-xs leading-tight">{formatCurrency(stats.totalDisbursed)}</p>
+              <p className="text-[9px] sm:text-[10px] text-muted-foreground mt-0.5">Total Disbursed</p>
             </button>
           </div>
         </motion.div>
@@ -800,18 +798,16 @@ export default function DashboardPage() {
         })()}
 
         {/* Download App Banner */}
-        {!isInstalled && (
+        {!isInstalled && canInstall && (
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.31 }}>
             <button
-              onClick={() => {
-                if (canInstall) { promptInstall(); } else { toast.info('To install: tap your browser menu → "Add to Home Screen" or "Install App"'); }
-              }}
+              onClick={() => promptInstall()}
               className="w-full rounded-xl bg-accent text-accent-foreground p-2.5 flex items-center gap-2.5 shadow-gold hover:bg-accent/90 transition-colors cursor-pointer"
             >
               <Download size={16} className="shrink-0" />
               <div className="text-left flex-1 min-w-0">
                 <p className="font-bold text-xs">Download Dasnet App</p>
-                <p className="text-[10px] opacity-80">Install for faster access & notifications</p>
+                <p className="text-[10px] opacity-80">Tap to install — faster access & notifications</p>
               </div>
               <ArrowRight size={12} className="shrink-0 opacity-70" />
             </button>

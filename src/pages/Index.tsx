@@ -694,7 +694,7 @@ export default function Index() {
       </section>
 
       {/* ───── DOWNLOAD APP ───── */}
-      {!isInstalled && (
+      {!isInstalled && canInstall && (
         <section className="py-10 sm:py-12 px-4 bg-[hsl(213,72%,8%)] relative overflow-hidden">
           <div className="container max-w-3xl">
             <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
@@ -706,11 +706,7 @@ export default function Index() {
               <p className="text-white/55 max-w-md mx-auto mb-4 text-[11px] sm:text-xs leading-relaxed">
                 Install for a faster experience—offline support and instant notifications directly to your phone.
               </p>
-              {canInstall ? (
-                <Button variant="hero" size="default" onClick={promptInstall} className="shadow-gold-lg"><Smartphone size={16} /> Install App Now</Button>
-              ) : (
-                <Button variant="hero" size="default" onClick={() => alert('Open your browser menu and tap "Add to Home Screen" or "Install App" to install.')} className="shadow-gold-lg"><Smartphone size={16} /> Install App</Button>
-              )}
+              <Button variant="hero" size="default" onClick={promptInstall} className="shadow-gold-lg"><Smartphone size={16} /> Install App Now</Button>
             </motion.div>
           </div>
         </section>
