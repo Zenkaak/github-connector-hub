@@ -521,7 +521,7 @@ export default function CreateHarambeePage() {
       <div className="p-4 lg:p-8 max-w-2xl mx-auto space-y-6 animate-in fade-in duration-500">
         {/* Header */}
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" className="rounded-full" onClick={() => step > 1 ? setStep(step - 1) : navigate(-1)}>
+          <Button variant="ghost" size="icon" className="rounded-full" onClick={() => step > 1 ? setStep(step - 1) : window.history.back()}>
             <ArrowLeft size={18} />
           </Button>
           <div>
