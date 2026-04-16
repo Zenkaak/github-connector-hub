@@ -480,9 +480,14 @@ export default function CreateHarambeePage() {
                           <HarambeeLiveStats harambeeId={app.harambee_id} target={app.target_amount} />
                         )}
 
-                        {/* Link to public page */}
                         {isLive && app.harambee_id && (
                           <HarambeeLink harambeeId={app.harambee_id} />
+                        )}
+
+                        {isLive && !app.harambee_id && (
+                          <div className="bg-accent/5 border border-accent/20 rounded-lg p-3">
+                            <p className="text-xs text-accent font-medium">✅ Approved — your fundraiser is being set up. Refresh to see the link.</p>
+                          </div>
                         )}
 
                         {/* Admin notes */}
