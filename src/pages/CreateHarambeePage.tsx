@@ -93,6 +93,9 @@ export default function CreateHarambeePage() {
   const [myApplications, setMyApplications] = useState<any[]>([]);
   const [loadingApps, setLoadingApps] = useState(false);
   const [selectedApp, setSelectedApp] = useState<string | null>(null);
+  const [linkedHarambees, setLinkedHarambees] = useState<Record<string, any>>({});
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [editingApplicationId, setEditingApplicationId] = useState<string | null>(null);
 
   const [step, setStep] = useState(1);
   const [submitting, setSubmitting] = useState(false);
@@ -139,6 +142,11 @@ export default function CreateHarambeePage() {
   const [uploadedDocs, setUploadedDocs] = useState<Record<string, { file: File; preview: string }>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activeDocKey, setActiveDocKey] = useState('');
+
+  const selectedApplication = useMemo(
+    () => myApplications.find(app => app.id === selectedApp) || null,
+    [myApplications, selectedApp]
+  );
 
   const totalSteps = 4;
   const docs = getDocsForCategory(category, answers.student_type);
