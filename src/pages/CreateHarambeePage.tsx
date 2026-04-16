@@ -1,9 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   HeartHandshake, ArrowRight, ArrowLeft, Upload, X, Loader2, CheckCircle2,
   AlertCircle, FileText, Camera, User, Phone, Heart, GraduationCap, Stethoscope,
-  HelpCircle, Image as ImageIcon, Shield, Wallet, Eye, Plus, Clock, CheckCircle, XCircle
+  HelpCircle, Image as ImageIcon, Shield, Wallet, Eye, Plus, Clock, CheckCircle, XCircle,
+  Pencil, Copy, BadgeCheck, Link as LinkIcon
 } from 'lucide-react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
@@ -13,6 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
