@@ -39,6 +39,12 @@ interface HarambeeApp {
   approved_by: string | null;
   approved_at: string | null;
   created_at: string;
+  payout_method: string | null;
+  payout_phone: string | null;
+  bank_name: string | null;
+  bank_account_number: string | null;
+  bank_account_name: string | null;
+  bank_branch: string | null;
 }
 
 interface AppDocument {
