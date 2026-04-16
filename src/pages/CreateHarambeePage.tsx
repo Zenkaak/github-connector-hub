@@ -869,6 +869,113 @@ export default function CreateHarambeePage() {
         )}
           </TabsContent>
         </Tabs>
+
+        <Dialog open={detailsOpen} onOpenChange={setDetailsOpen}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            {selectedApplication && (() => {
+              const linkedHarambee = selectedApplication.harambee_id ? linkedHarambees[selectedApplication.harambee_id] : null;
+              const shareUrl = getApplicationLink(selectedApplication);
+              const canEdit = selectedApplication.status === 'pending_review' || selectedApplication.status === 'needs_info';
+              const isLive = Boolean(linkedHarambee && (selectedApplication.status === 'approved' || selectedApplication.status === 'active'));
+
+              return (
+                <>
+                  <DialogHeader>
+                    <DialogTitle className="font-display text-lg sm:text-xl">
+                      {selectedApplication.beneficiary_name}
+                    </DialogTitle>
+                  </DialogHeader>
+
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-3">
+                      <DetailItem label="Category" value={selectedApplication.category?.replace(/_/g, ' ')} />
+                      <DetailItem label="Relationship" value={selectedApplication.beneficiary_relationship} />
+                      <DetailItem label="Beneficiary Phone" value={selectedApplication.beneficiary_phone || 'Not provided'} />
+                      <DetailItem label="Target" value={`KES ${Number(selectedApplication.target_amount || 0).toLocaleString()}`} />
+                    </div>
+
+                    <div className="rounded-xl border border-border/30 bg-muted/10 p-4">
+                      <p className="text-[10px] font-bold uppercase text-muted-foreground mb-2">Description</p>
+                      <p className="text-sm leading-relaxed whitespace-pre-line text-foreground">{selectedApplication.description}</p>
+                    </div>
+
+                    {selectedApplication.category_answers && Object.keys(selectedApplication.category_answers).length > 0 && (
+                      <div className="rounded-xl border border-border/30 bg-muted/10 p-4 space-y-2">
+                        <p className="text-[10px] font-bold uppercase text-muted-foreground">Application Details</p>
+                        {Object.entries(selectedApplication.category_answers as Record<string, string>).map(([key, value]) => (
+                          <div key={key} className="flex items-start justify-between gap-3 text-sm border-b border-border/20 pb-2 last:border-0 last:pb-0">
+                            <span className="font-semibold text-foreground capitalize">{key.replace(/_/g, ' ')}</span>
+                            <span className="text-right text-muted-foreground whitespace-pre-line">{String(value || '—')}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {selectedApplication.payout_method && (
+                      <div className="rounded-xl border border-border/30 bg-muted/10 p-4">
+                        <p className="text-[10px] font-bold uppercase text-muted-foreground mb-2">Payout Details</p>
+                        <p className="text-sm text-foreground whitespace-pre-line">
+                          {selectedApplication.payout_method === 'mpesa'
+                            ? `M-Pesa: ${selectedApplication.payout_phone || 'N/A'}`
+                            : `Bank: ${selectedApplication.bank_name || ''}\nAccount: ${selectedApplication.bank_account_number || ''}\nName: ${selectedApplication.bank_account_name || ''}\nBranch: ${selectedApplication.bank_branch || ''}`
+                          }
+                        </p>
+                      </div>
+                    )}
+
+                    {linkedHarambee && <HarambeeLiveStats harambee={linkedHarambee} target={selectedApplication.target_amount} />}
+
+                    {shareUrl && <HarambeeLink url={shareUrl} />}
+
+                    {(selectedApplication.status === 'approved' || selectedApplication.status === 'active') && !linkedHarambee && (
+                      <div className="rounded-xl border border-accent/30 bg-accent/10 p-4">
+                        <p className="text-sm font-medium text-accent">Approved, but the live fundraiser is still being linked.</p>
+                        <p className="text-xs text-muted-foreground mt-1">Once the live record syncs, the shareable link and fundraising progress will appear here automatically.</p>
+                      </div>
+                    )}
+
+                    <div className="rounded-xl border border-border/30 bg-muted/10 p-4">
+                      <p className="text-[10px] font-bold uppercase text-muted-foreground mb-2">Images & Documents</p>
+                      <div className="flex flex-wrap gap-2">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-[11px] font-medium text-primary">
+                          <ImageIcon size={12} /> Add or replace images from Edit Details
+                        </span>
+                        <span className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-3 py-1 text-[11px] font-medium text-accent">
+                          <FileText size={12} /> Existing verification documents remain attached
+                        </span>
+                      </div>
+                    </div>
+
+                    {selectedApplication.admin_notes && (
+                      <div className="rounded-xl border border-border/30 bg-muted/10 p-4">
+                        <p className="text-[10px] font-bold uppercase text-muted-foreground mb-2">Admin Feedback</p>
+                        <p className="text-sm italic text-muted-foreground">{selectedApplication.admin_notes}</p>
+                      </div>
+                    )}
+
+                    <div className="flex flex-wrap gap-2">
+                      {canEdit && (
+                        <Button variant="outline" size="sm" onClick={() => { setDetailsOpen(false); openApplicationForEdit(selectedApplication); }}>
+                          <Pencil size={14} className="mr-1" /> Edit Application
+                        </Button>
+                      )}
+                      {shareUrl && (
+                        <Button variant="outline" size="sm" onClick={() => { navigator.clipboard.writeText(shareUrl); toast.success('Link copied'); }}>
+                          <Copy size={14} className="mr-1" /> Copy Link
+                        </Button>
+                      )}
+                      {isLive && linkedHarambee?.order_number && (
+                        <Button variant="outline" size="sm" onClick={() => window.open(`/harambee/${linkedHarambee.order_number}`, '_blank')}>
+                          <BadgeCheck size={14} className="mr-1" /> Open Live Fundraiser
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </>
+              );
+            })()}
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
