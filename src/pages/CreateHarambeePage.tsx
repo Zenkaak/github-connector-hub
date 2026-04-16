@@ -550,11 +550,17 @@ export default function CreateHarambeePage() {
               </Card>
             ) : (
               myApplications.map(app => {
-                const isLive = app.status === 'approved' || app.status === 'active';
+                const linkedHarambee = app.harambee_id ? linkedHarambees[app.harambee_id] : null;
+                const shareUrl = getApplicationLink(app);
+                const canEdit = app.status === 'pending_review' || app.status === 'needs_info';
+                const isLive = Boolean(linkedHarambee && (app.status === 'approved' || app.status === 'active'));
                 return (
                   <Card key={app.id} className="overflow-hidden">
                     <button
-                      onClick={() => setSelectedApp(selectedApp === app.id ? null : app.id)}
+                      onClick={() => {
+                        setSelectedApp(app.id);
+                        setDetailsOpen(true);
+                      }}
                       className="w-full text-left p-4 hover:bg-muted/20 transition-colors"
                     >
                       <div className="flex items-start justify-between mb-2">
@@ -570,7 +576,7 @@ export default function CreateHarambeePage() {
                           {app.status === 'pending_review' ? 'Under Review' : app.status?.replace('_', ' ')}
                         </span>
                       </div>
-                      <p className="text-xs text-muted-foreground line-clamp-2">{app.description}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-3 whitespace-pre-line">{app.description}</p>
                       <div className="flex items-center justify-between mt-3">
                         <p className="text-sm font-bold">KES {app.target_amount?.toLocaleString()}</p>
                         {app.deadline && (
@@ -579,54 +585,22 @@ export default function CreateHarambeePage() {
                           </p>
                         )}
                       </div>
-                    </button>
-
-                    {/* Expanded details */}
-                    {selectedApp === app.id && (
-                      <div className="px-4 pb-4 space-y-3 border-t border-border/30 pt-3">
-                        {/* Full description */}
-                        <div>
-                          <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">Full Description</p>
-                          <p className="text-xs text-muted-foreground whitespace-pre-line">{app.description}</p>
-                        </div>
-
-                        {/* Payout info */}
-                        {app.payout_method && (
-                          <div>
-                            <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">Payout Details</p>
-                            <p className="text-xs">
-                              {app.payout_method === 'mpesa'
-                                ? `M-Pesa: ${app.payout_phone || 'N/A'}`
-                                : `Bank: ${app.bank_name || ''} — Acc: ${app.bank_account_number || ''} (${app.bank_account_name || ''}), Branch: ${app.bank_branch || ''}`
-                              }
-                            </p>
-                          </div>
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-[10px] font-medium text-muted-foreground">
+                          <Eye size={12} /> View full details
+                        </span>
+                        {shareUrl && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-[10px] font-medium text-primary">
+                            <LinkIcon size={12} /> Link ready
+                          </span>
                         )}
-
-                        {/* Raised amount for live harambees */}
-                        {isLive && app.harambee_id && (
-                          <HarambeeLiveStats harambeeId={app.harambee_id} target={app.target_amount} />
-                        )}
-
-                        {isLive && app.harambee_id && (
-                          <HarambeeLink harambeeId={app.harambee_id} />
-                        )}
-
-                        {isLive && !app.harambee_id && (
-                          <div className="bg-accent/5 border border-accent/20 rounded-lg p-3">
-                            <p className="text-xs text-accent font-medium">✅ Approved — your fundraiser is being set up. Refresh to see the link.</p>
-                          </div>
-                        )}
-
-                        {/* Admin notes */}
-                        {app.admin_notes && (
-                          <div className="bg-muted/20 p-3 rounded-lg">
-                            <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">Admin Feedback</p>
-                            <p className="text-xs text-muted-foreground italic">{app.admin_notes}</p>
-                          </div>
+                        {canEdit && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-accent/10 px-2.5 py-1 text-[10px] font-medium text-accent">
+                            <Pencil size={12} /> Editable
+                          </span>
                         )}
                       </div>
-                    )}
+                    </button>
                   </Card>
                 );
               })
