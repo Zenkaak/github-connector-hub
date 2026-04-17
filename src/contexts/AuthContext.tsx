@@ -18,7 +18,6 @@ interface Profile {
   is_verified: boolean;
   disable_reason: string | null;
   created_at: string;
-  mpesa_account_code?: string | null;
 }
 
 interface AuthContextType {

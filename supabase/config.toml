@@ -13,19 +13,3 @@ project_id = "qtrubtfubdzodahsfacv"
     verify_jwt = false
   [functions.handle-email-suppression]
     verify_jwt = false
-  [functions.mpesa-validation]
-    verify_jwt = false
-  [functions.mpesa-confirmation]
-    verify_jwt = false
-  [functions.mpesa-b2c-result]
-    verify_jwt = false
-  [functions.mpesa-b2c-timeout]
-    verify_jwt = false
-  [functions.mpesa-b2c-request]
-    verify_jwt = true
-  [functions.mpesa-register-urls]
-    verify_jwt = true
-  [functions.mpesa-reversal]
-    verify_jwt = true
-  [functions.mpesa-status-query]
-    verify_jwt = true
