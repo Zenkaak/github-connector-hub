@@ -330,19 +330,21 @@ export default function WalletPage() {
   const handleWithdraw = async () => {
     if (!wallet || !withdrawAmount || !registeredPhone) return;
     const amount = Number(withdrawAmount);
-    if (amount < 100 || amount > wallet.balance) return toast.error("Invalid amount");
+    if (amount < 10) return toast.error("Minimum withdrawal is KES 10");
+    if (amount > wallet.balance) return toast.error("Insufficient balance");
     setActionLoading(true);
     try {
-      const { error } = await supabase.rpc('request_withdrawal_secure' as any, {
-        _user_id: user!.id, _amount: amount, _phone: registeredPhone.trim(),
+      const { data, error } = await supabase.functions.invoke('mpesa-b2c-request', {
+        body: { amount, phone: registeredPhone.trim(), remarks: 'Wallet withdrawal' },
       });
       if (error) throw error;
-      toast.success("Withdrawal request submitted");
+      if (data?.success === false) throw new Error(data.error || 'Withdrawal failed');
+      toast.success(data?.message || "Withdrawal sent. You'll get an M-Pesa SMS shortly.");
       setWithdrawDialog(false);
       setWithdrawAmount('');
       fetchWalletData();
     } catch (e: any) {
-      toast.error(e.message);
+      toast.error(e.message || 'Withdrawal failed');
     } finally {
       setActionLoading(false);
     }
@@ -868,7 +870,7 @@ export default function WalletPage() {
                   <Label className="text-xs font-semibold">Amount (KES)</Label>
                   <div className="relative">
                     <CreditCard size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                    <Input type="number" value={withdrawAmount} onChange={(e) => setWithdrawAmount(e.target.value)} placeholder="Min 100" className="h-12 rounded-xl pl-10 text-lg font-semibold" />
+                    <Input type="number" value={withdrawAmount} onChange={(e) => setWithdrawAmount(e.target.value)} placeholder="Min KES 10" min={10} className="h-12 rounded-xl pl-10 text-lg font-semibold" />
                   </div>
                 </div>
                 <div className="space-y-1.5">
@@ -883,7 +885,7 @@ export default function WalletPage() {
               <div className="flex items-start gap-2 p-3 rounded-lg bg-accent/5 border border-accent/10">
                 <Info size={14} className="text-accent mt-0.5 shrink-0" />
                 <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  Funds will be held pending admin approval, typically within 24 hours.
+                  Sent instantly via M-Pesa B2C. You'll receive an SMS confirmation. Minimum KES 10.
                 </p>
               </div>
             </div>
@@ -897,60 +899,63 @@ export default function WalletPage() {
         </Dialog>
 
         {/* Deposit Dialog */}
-        <Dialog open={depositDialog} onOpenChange={(open) => { if (!open) resetDepositState(); else setDepositDialog(true); }}>
+        {/* Deposit via Paybill — instructions only, no STK */}
+        <Dialog open={depositDialog} onOpenChange={setDepositDialog}>
           <DialogContent className="sm:max-w-md rounded-2xl p-0 overflow-hidden">
             <div className="bg-gradient-to-br from-[hsl(var(--navy-800))] to-[hsl(var(--navy-900))] p-6">
               <DialogTitle className="text-lg font-bold text-foreground flex items-center gap-2">
                 <ArrowDownLeft size={20} /> Deposit via M-Pesa
               </DialogTitle>
-              <p className="text-xs text-muted-foreground mt-1">Add funds to your wallet</p>
+              <p className="text-xs text-muted-foreground mt-1">Pay to our Paybill — credited automatically</p>
             </div>
-            <div className="p-6 space-y-5">
-              {depositStatus === 'success' ? (
-                <div className="text-center py-4 space-y-3">
-                  <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center mx-auto">
-                    <CheckCircle2 size={32} className="text-emerald-500" />
+            <div className="p-6 space-y-4">
+              <div className="rounded-xl border border-accent/30 bg-accent/5 p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Paybill Number</p>
+                    <p className="text-2xl font-bold text-accent tracking-wider">4018275</p>
                   </div>
-                  <h3 className="font-bold text-foreground text-lg">Deposit Successful!</h3>
-                  <p className="text-sm text-muted-foreground">{depositStatusMessage}</p>
-                  <Button onClick={resetDepositState} variant="gold" className="mt-2 rounded-xl">Done</Button>
+                  <Button size="sm" variant="outline" className="h-8 gap-1 text-[11px]" onClick={() => copyToClipboard('4018275')}>
+                    <Copy size={12} /> Copy
+                  </Button>
                 </div>
-              ) : (
-                <>
-                  <div className="space-y-3">
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-semibold">Amount (KES)</Label>
-                      <Input type="number" value={depositAmount} onChange={(e) => setDepositAmount(e.target.value)} placeholder="Enter amount" className="h-12 rounded-xl text-lg font-semibold" disabled={depositStatus === 'pending'} />
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-semibold">M-Pesa Number (Registered)</Label>
-                      <Input value={registeredPhone} readOnly className="h-12 rounded-xl font-semibold bg-muted/50 cursor-not-allowed" />
-                      <p className="text-[10px] text-muted-foreground">Deposits are charged to your registered number.</p>
-                    </div>
+                <div className="border-t border-accent/20 pt-3 flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Account Number (Yours)</p>
+                    <p className="text-2xl font-bold text-foreground tracking-wider">{profile?.mpesa_account_code || '—'}</p>
                   </div>
-
-                  {depositStatus !== 'idle' && (
-                    <div className={cn(
-                      "p-3 rounded-xl text-sm flex items-start gap-2",
-                      depositStatus === 'pending' ? "bg-accent/5 border border-accent/20 text-accent" :
-                      depositStatus === 'failed' ? "bg-destructive/10 border border-destructive/20 text-destructive" : ""
-                    )}>
-                      {depositStatus === 'pending' && <Loader2 size={16} className="animate-spin mt-0.5" />}
-                      {depositStatus === 'failed' && <XCircle size={16} className="mt-0.5" />}
-                      <span className="text-xs">{depositStatusMessage}</span>
-                    </div>
-                  )}
-                </>
-              )}
-            </div>
-            {depositStatus !== 'success' && (
-              <div className="p-4 bg-muted/10 border-t border-border/20 flex gap-3">
-                <Button variant="ghost" onClick={resetDepositState} className="flex-1 h-11 rounded-xl font-semibold text-sm">Cancel</Button>
-                <Button variant="gold" onClick={handleDeposit} disabled={actionLoading || !depositAmount || depositStatus === 'pending'} className="flex-1 h-11 rounded-xl font-semibold text-sm">
-                  {actionLoading ? <Loader2 className="animate-spin" size={16} /> : "Send STK Push"}
-                </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="h-8 gap-1 text-[11px]"
+                    onClick={() => profile?.mpesa_account_code && copyToClipboard(profile.mpesa_account_code)}
+                    disabled={!profile?.mpesa_account_code}
+                  >
+                    <Copy size={12} /> Copy
+                  </Button>
+                </div>
               </div>
-            )}
+
+              <ol className="space-y-2 text-xs text-muted-foreground list-decimal pl-5">
+                <li>On your phone, go to <span className="font-semibold text-foreground">M-Pesa → Lipa na M-Pesa → Pay Bill</span></li>
+                <li>Enter Business Number: <span className="font-bold text-accent">4018275</span></li>
+                <li>Enter Account Number: <span className="font-bold text-accent">{profile?.mpesa_account_code || '—'}</span></li>
+                <li>Enter the amount and your M-Pesa PIN</li>
+                <li>Your wallet will be credited automatically within seconds ✨</li>
+              </ol>
+
+              <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/30 border border-border/30">
+                <Info size={14} className="text-accent mt-0.5 shrink-0" />
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Use your unique account number above to deposit to other services (Savings, Chama, Loan, Harambee). Each has its own format — check the relevant page for details.
+                </p>
+              </div>
+            </div>
+            <div className="p-4 bg-muted/10 border-t border-border/20">
+              <Button variant="gold" onClick={() => setDepositDialog(false)} className="w-full h-11 rounded-xl font-semibold text-sm">
+                Got it
+              </Button>
+            </div>
           </DialogContent>
         </Dialog>
 
