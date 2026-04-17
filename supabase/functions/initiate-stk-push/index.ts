@@ -12,50 +12,23 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const body = await req.json().catch(() => {
-      throw new Error("Invalid JSON body");
-    });
+    const body = await req.json();
+    const mode = body.mode || "stk"; // 🔥 "stk" or "b2c"
 
-    console.log("RAW BODY:", body);
-
+    // =========================
+    // COMMON INPUTS
+    // =========================
     const phone = body.phone;
-    const amount = body.amount;
-    const purpose = body.purpose || body.metadata?.type || "harambee";
-    const userId = body.userId || body.metadata?.userId || null;
-    const groupId = body.groupId || body.metadata?.group_id || null;
-    const savingsId = body.savingsId || null;
-    const harambee_id = body.harambee_id || body.harambeeId || body.metadata?.harambee_id || null;
-    const loanId = body.loanId || body.loan_id || body.metadata?.loan_id || null;
-    const disbursementId = body.disbursementId || body.disbursement_id || null;
-    const contributorName = body.contributor_name || body.metadata?.contributor_name || null;
+    const amount = Number(body.amount);
 
-    // Validate phone and amount are present
-    if (!phone || amount === undefined || amount === null) {
-      console.error("Validation failed - phone:", phone, "amount:", amount);
+    if (!phone || !amount || amount <= 0) {
       return new Response(
-        JSON.stringify({ error: "Missing phone or amount" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: "Invalid phone or amount" }),
+        { status: 400, headers: corsHeaders }
       );
     }
 
-    // For harambee contributions, userId is optional (public contributors allowed)
-    const isHarambee = purpose === "harambee" || purpose === "harambee_contribution";
-    if (!userId && !isHarambee) {
-      console.error("Validation failed - userId required for purpose:", purpose);
-      return new Response(
-        JSON.stringify({ error: "User ID is required for this transaction type" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const numericAmount = Number(amount);
-    if (isNaN(numericAmount) || numericAmount <= 0) {
-      return new Response(
-        JSON.stringify({ error: "Invalid amount" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
+    // Normalize phone
     let formattedPhone = phone.replace(/\s/g, "").replace(/\+/g, "");
     if (formattedPhone.startsWith("0")) {
       formattedPhone = "254" + formattedPhone.slice(1);
@@ -63,29 +36,39 @@ Deno.serve(async (req) => {
       formattedPhone = "254" + formattedPhone;
     }
 
-    const consumerKey = Deno.env.get("MPESA_CONSUMER_KEY");
-    const consumerSecret = Deno.env.get("MPESA_CONSUMER_SECRET");
-    const shortcode = Deno.env.get("MPESA_SHORTCODE");
-    const passkey = Deno.env.get("MPESA_PASSKEY");
-    const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    // =========================
+    // ENV
+    // =========================
+    const consumerKey = Deno.env.get("MPESA_CONSUMER_KEY")!;
+    const consumerSecret = Deno.env.get("MPESA_CONSUMER_SECRET")!;
+    const shortcode = Deno.env.get("MPESA_SHORTCODE")!;
+    const passkey = Deno.env.get("MPESA_PASSKEY")!;
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    if (!consumerKey || !consumerSecret || !shortcode || !passkey || !supabaseUrl || !serviceRoleKey) {
-      throw new Error("Missing required environment variables");
-    }
+    const initiatorName = Deno.env.get("MPESA_INITIATOR_NAME")!;
+    const securityCredential = Deno.env.get("MPESA_SECURITY_CREDENTIAL")!;
 
-    const partyB = Deno.env.get("PARTY_B") || shortcode;
-
+    // =========================
+    // ACCESS TOKEN
+    // =========================
     const auth = btoa(`${consumerKey}:${consumerSecret}`);
+
     const tokenRes = await fetch(
       "https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
       { headers: { Authorization: `Basic ${auth}` } }
     );
+
     const tokenData = await tokenRes.json();
-    if (!tokenData.access_token) throw new Error("Failed to get M-Pesa access token");
     const accessToken = tokenData.access_token;
 
+    if (!accessToken) throw new Error("Failed to get access token");
+
+    // =========================
+    // TIMESTAMP + PASSWORD
+    // =========================
     const now = new Date();
+
     const timestamp =
       now.getFullYear().toString() +
       String(now.getMonth() + 1).padStart(2, "0") +
@@ -96,111 +79,146 @@ Deno.serve(async (req) => {
 
     const password = btoa(`${shortcode}${passkey}${timestamp}`);
 
-    const prefixMap: Record<string, string> = {
-      chama_savings: "CHAMA_",
-      personal_savings: "PSAV_",
-      loan_repayment: "REPAY_",
-      harambee: "HRB_",
-      harambee_contribution: "HRB_",
-      activation: "ACT_",
-      wallet_deposit: "DEP_",
-      chama_penalty: "PEN_",
-    };
-    const prefix = prefixMap[purpose] || "PAY";
-    const reference = `${prefix}${Date.now()}${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
-
-    const stkBody = {
-      BusinessShortCode: shortcode,
-      Password: password,
-      Timestamp: timestamp,
-      TransactionType: "CustomerBuyGoodsOnline",
-      Amount: Math.round(numericAmount),
-      PartyA: formattedPhone,
-      PartyB: partyB,
-      PhoneNumber: formattedPhone,
-      CallBackURL: `${supabaseUrl}/functions/v1/mpesa-callback`,
-      AccountReference: reference,
-      TransactionDesc: purpose,
-    };
-
-    console.log("Sending STK Push for purpose:", purpose, "isHarambee:", isHarambee, "userId:", userId);
-
-    const stkRes = await fetch(
-      "https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(stkBody),
-      }
-    );
-
-    const stkData = await stkRes.json();
-
-    if (stkData.ResponseCode !== "0") {
-      return new Response(
-        JSON.stringify({ success: false, error: stkData.CustomerMessage || "STK Push failed" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+    const reference =
+      `${mode.toUpperCase()}_${Date.now()}_${Math.random()
+        .toString(36)
+        .slice(2, 6)
+        .toUpperCase()}`;
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    if (isHarambee && !harambee_id) {
-      throw new Error("harambee_id is required for contributions");
+    // =====================================================
+    // 🔥 STK PUSH (DEPOSIT / WALLET / HARAMBEE)
+    // =====================================================
+    if (mode === "stk") {
+      const stkBody = {
+        BusinessShortCode: shortcode,
+        Password: password,
+        Timestamp: timestamp,
+
+        TransactionType: "CustomerPayBillOnline", // 🔥 IMPORTANT
+
+        Amount: Math.round(amount),
+        PartyA: formattedPhone,
+        PartyB: shortcode,
+        PhoneNumber: formattedPhone,
+
+        CallBackURL: `${supabaseUrl}/functions/v1/mpesa-callback`,
+        AccountReference: reference,
+        TransactionDesc: body.purpose || "wallet_deposit",
+      };
+
+      const stkRes = await fetch(
+        "https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(stkBody),
+        }
+      );
+
+      const stkData = await stkRes.json();
+
+      if (stkData.ResponseCode !== "0") {
+        return new Response(
+          JSON.stringify({ success: false, error: stkData.CustomerMessage }),
+          { status: 400, headers: corsHeaders }
+        );
+      }
+
+      await supabase.from("stk_transactions").insert({
+        phone: formattedPhone,
+        amount: Math.round(amount),
+        reference,
+        checkout_request_id: stkData.CheckoutRequestID,
+        merchant_request_id: stkData.MerchantRequestID,
+        status: "pending",
+        type: "stk",
+      });
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          mode: "stk",
+          reference,
+          message: "STK Push initiated",
+        }),
+        { headers: corsHeaders }
+      );
     }
 
-    const insertData: Record<string, any> = {
-      phone: formattedPhone,
-      amount: Math.round(numericAmount),
-      reference,
-      checkout_request_id: stkData.CheckoutRequestID,
-      merchant_request_id: stkData.MerchantRequestID,
-      status: "pending",
-      purpose: isHarambee ? "harambee" : purpose,
-      group_id: groupId,
-      harambee_id: harambee_id,
-      loan_id: loanId,
-      disbursement_id: disbursementId,
-      metadata: body.metadata || {},
-    };
+    // =====================================================
+    // 🔥 B2C (WITHDRAWAL / PAY USERS)
+    // =====================================================
+    if (mode === "b2c") {
+      const payload = {
+        InitiatorName: initiatorName,
+        SecurityCredential: securityCredential,
 
-    // userId is optional for harambee (public contributors)
-    if (userId) {
-      insertData.user_id = userId;
+        CommandID: "BusinessPayment", // 🔥 IMPORTANT
+
+        Amount: Math.round(amount),
+        PartyA: shortcode,
+        PartyB: formattedPhone,
+
+        Remarks: body.reason || "wallet_withdrawal",
+        QueueTimeOutURL: `${supabaseUrl}/functions/v1/b2c-timeout`,
+        ResultURL: `${supabaseUrl}/functions/v1/b2c-result`,
+
+        Occasion: body.reason || "withdrawal",
+      };
+
+      const b2cRes = await fetch(
+        "https://api.safaricom.co.ke/mpesa/b2c/v1/paymentrequest",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      const b2cData = await b2cRes.json();
+
+      await supabase.from("b2c_transactions").insert({
+        phone: formattedPhone,
+        amount: Math.round(amount),
+        reference,
+        status: "pending",
+        type: "b2c",
+        response: b2cData,
+      });
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          mode: "b2c",
+          reference,
+          message: "B2C request sent",
+        }),
+        { headers: corsHeaders }
+      );
     }
 
-    // Store contributor name for public harambee contributions
-    if (contributorName) {
-      insertData.contributor_name = contributorName;
-    }
-
-    if (savingsId) {
-      insertData.savings_id = savingsId;
-    }
-
-    console.log("Inserting stk_transaction:", JSON.stringify(insertData));
-
-    const { error: insertError } = await supabase.from("stk_transactions").insert(insertData);
-
-    if (insertError) {
-      console.error("Supabase insert error:", JSON.stringify(insertError));
-      throw new Error("Failed to save transaction: " + insertError.message);
-    }
-
+    // =========================
+    // INVALID MODE
+    // =========================
     return new Response(
-      JSON.stringify({ success: true, reference, message: "STK Push sent successfully." }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      JSON.stringify({ error: "Invalid mode. Use stk or b2c" }),
+      { status: 400, headers: corsHeaders }
     );
 
   } catch (error: any) {
-    console.error("STK Push error:", error);
+    console.error("🔥 ERROR:", error);
+
     return new Response(
       JSON.stringify({ error: error.message }),
-      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      { status: 500, headers: corsHeaders }
     );
   }
-});
- 
+}); 
