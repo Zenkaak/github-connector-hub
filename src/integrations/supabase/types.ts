@@ -1657,6 +1657,200 @@ export type Database = {
         }
         Relationships: []
       }
+      mpesa_b2c_requests: {
+        Row: {
+          amount: number
+          conversation_id: string | null
+          created_at: string
+          id: string
+          mpesa_receipt: string | null
+          occasion: string | null
+          originator_conversation_id: string | null
+          phone: string
+          receiver_party_public_name: string | null
+          refunded: boolean | null
+          refunded_at: string | null
+          remarks: string | null
+          request_payload: Json | null
+          result_code: string | null
+          result_desc: string | null
+          result_payload: Json | null
+          status: string
+          transaction_completed_date_time: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          mpesa_receipt?: string | null
+          occasion?: string | null
+          originator_conversation_id?: string | null
+          phone: string
+          receiver_party_public_name?: string | null
+          refunded?: boolean | null
+          refunded_at?: string | null
+          remarks?: string | null
+          request_payload?: Json | null
+          result_code?: string | null
+          result_desc?: string | null
+          result_payload?: Json | null
+          status?: string
+          transaction_completed_date_time?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          conversation_id?: string | null
+          created_at?: string
+          id?: string
+          mpesa_receipt?: string | null
+          occasion?: string | null
+          originator_conversation_id?: string | null
+          phone?: string
+          receiver_party_public_name?: string | null
+          refunded?: boolean | null
+          refunded_at?: string | null
+          remarks?: string | null
+          request_payload?: Json | null
+          result_code?: string | null
+          result_desc?: string | null
+          result_payload?: Json | null
+          status?: string
+          transaction_completed_date_time?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      mpesa_c2b_transactions: {
+        Row: {
+          bill_ref_number: string | null
+          business_short_code: string | null
+          created_at: string
+          first_name: string | null
+          id: string
+          invoice_number: string | null
+          last_name: string | null
+          middle_name: string | null
+          msisdn: string | null
+          org_account_balance: string | null
+          processed: boolean | null
+          processed_at: string | null
+          processing_error: string | null
+          raw_payload: Json
+          routing_type: string | null
+          target_resource_id: string | null
+          target_user_id: string | null
+          third_party_trans_id: string | null
+          trans_amount: number
+          trans_id: string
+          trans_time: string | null
+          trans_type: string | null
+        }
+        Insert: {
+          bill_ref_number?: string | null
+          business_short_code?: string | null
+          created_at?: string
+          first_name?: string | null
+          id?: string
+          invoice_number?: string | null
+          last_name?: string | null
+          middle_name?: string | null
+          msisdn?: string | null
+          org_account_balance?: string | null
+          processed?: boolean | null
+          processed_at?: string | null
+          processing_error?: string | null
+          raw_payload: Json
+          routing_type?: string | null
+          target_resource_id?: string | null
+          target_user_id?: string | null
+          third_party_trans_id?: string | null
+          trans_amount: number
+          trans_id: string
+          trans_time?: string | null
+          trans_type?: string | null
+        }
+        Update: {
+          bill_ref_number?: string | null
+          business_short_code?: string | null
+          created_at?: string
+          first_name?: string | null
+          id?: string
+          invoice_number?: string | null
+          last_name?: string | null
+          middle_name?: string | null
+          msisdn?: string | null
+          org_account_balance?: string | null
+          processed?: boolean | null
+          processed_at?: string | null
+          processing_error?: string | null
+          raw_payload?: Json
+          routing_type?: string | null
+          target_resource_id?: string | null
+          target_user_id?: string | null
+          third_party_trans_id?: string | null
+          trans_amount?: number
+          trans_id?: string
+          trans_time?: string | null
+          trans_type?: string | null
+        }
+        Relationships: []
+      }
+      mpesa_unmapped_payments: {
+        Row: {
+          amount: number
+          bill_ref_number: string
+          c2b_transaction_id: string
+          created_at: string
+          id: string
+          msisdn: string | null
+          reason: string
+          resolution_notes: string | null
+          resolved: boolean | null
+          resolved_at: string | null
+          resolved_by: string | null
+        }
+        Insert: {
+          amount: number
+          bill_ref_number: string
+          c2b_transaction_id: string
+          created_at?: string
+          id?: string
+          msisdn?: string | null
+          reason: string
+          resolution_notes?: string | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+        }
+        Update: {
+          amount?: number
+          bill_ref_number?: string
+          c2b_transaction_id?: string
+          created_at?: string
+          id?: string
+          msisdn?: string | null
+          reason?: string
+          resolution_notes?: string | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mpesa_unmapped_payments_c2b_transaction_id_fkey"
+            columns: ["c2b_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "mpesa_c2b_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notifications: {
         Row: {
           created_at: string
@@ -1808,6 +2002,7 @@ export type Database = {
           is_active: boolean
           is_admin: boolean | null
           is_verified: boolean
+          mpesa_account_code: string | null
           phone: string
           sub_county: string
           user_id: string
@@ -1826,6 +2021,7 @@ export type Database = {
           is_active?: boolean
           is_admin?: boolean | null
           is_verified?: boolean
+          mpesa_account_code?: string | null
           phone?: string
           sub_county?: string
           user_id: string
@@ -1844,6 +2040,7 @@ export type Database = {
           is_active?: boolean
           is_admin?: boolean | null
           is_verified?: boolean
+          mpesa_account_code?: string | null
           phone?: string
           sub_county?: string
           user_id?: string
@@ -2336,6 +2533,16 @@ export type Database = {
         Args: { p_group_id: string }
         Returns: undefined
       }
+      create_b2c_withdrawal: {
+        Args: {
+          _amount: number
+          _occasion?: string
+          _phone: string
+          _remarks?: string
+          _user_id: string
+        }
+        Returns: string
+      }
       credit_wallet_on_loan_approval: {
         Args: { _amount: number; _loan_id: string; _user_id: string }
         Returns: undefined
@@ -2348,6 +2555,7 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      generate_unique_mpesa_code: { Args: never; Returns: string }
       get_active_chama_member_count: {
         Args: { _group_id: string }
         Returns: number
@@ -2432,6 +2640,10 @@ export type Database = {
           msg_id: number
           read_ct: number
         }[]
+      }
+      refund_b2c_withdrawal: {
+        Args: { _reason?: string; _request_id: string }
+        Returns: undefined
       }
       request_chama_withdrawal_secure: {
         Args: {
