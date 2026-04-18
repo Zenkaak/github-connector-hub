@@ -74,8 +74,6 @@ Deno.serve(async (req) => {
       throw new Error("Missing required environment variables");
     }
 
-    const partyB = Deno.env.get("PARTY_B") || shortcode;
-
     const auth = btoa(`${consumerKey}:${consumerSecret}`);
     const tokenRes = await fetch(
       "https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
@@ -109,17 +107,26 @@ Deno.serve(async (req) => {
     const prefix = prefixMap[purpose] || "PAY";
     const reference = `${prefix}${Date.now()}${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
 
+    // Use the user's unique 4-digit account code as AccountReference when available
+    // (so STK payments route through the same C2B confirmation pipeline as manual Paybill payments)
+    let accountRef = reference;
+    if (userId) {
+      const tempSb = createClient(supabaseUrl, serviceRoleKey);
+      const { data: prof } = await tempSb.from("profiles").select("mpesa_account_code").eq("user_id", userId).maybeSingle();
+      if (prof?.mpesa_account_code) accountRef = prof.mpesa_account_code;
+    }
+
     const stkBody = {
       BusinessShortCode: shortcode,
       Password: password,
       Timestamp: timestamp,
-      TransactionType: "CustomerBuyGoodsOnline",
+      TransactionType: "CustomerPayBillOnline",
       Amount: Math.round(numericAmount),
       PartyA: formattedPhone,
-      PartyB: partyB,
+      PartyB: shortcode,
       PhoneNumber: formattedPhone,
       CallBackURL: `${supabaseUrl}/functions/v1/mpesa-callback`,
-      AccountReference: reference,
+      AccountReference: accountRef,
       TransactionDesc: purpose,
     };
 
