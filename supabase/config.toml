@@ -29,3 +29,7 @@ project_id = "qtrubtfubdzodahsfacv"
     verify_jwt = true
   [functions.mpesa-status-query]
     verify_jwt = true
+  [functions.payment-validation]
+    verify_jwt = false
+  [functions.payment-confirmation]
+    verify_jwt = false
