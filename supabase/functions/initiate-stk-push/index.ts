@@ -74,8 +74,6 @@ Deno.serve(async (req) => {
       throw new Error("Missing required environment variables");
     }
 
-    const partyB = Deno.env.get("PARTY_B") || shortcode;
-
     const auth = btoa(`${consumerKey}:${consumerSecret}`);
     const tokenRes = await fetch(
       "https://api.safaricom.co.ke/oauth/v1/generate?grant_type=client_credentials",
