@@ -898,64 +898,133 @@ export default function WalletPage() {
           </DialogContent>
         </Dialog>
 
-        {/* Deposit Dialog */}
-        {/* Deposit via Paybill — instructions only, no STK */}
-        <Dialog open={depositDialog} onOpenChange={setDepositDialog}>
-          <DialogContent className="sm:max-w-md rounded-2xl p-0 overflow-hidden">
+        {/* Deposit Dialog — STK Push (primary) + Paybill (backup) */}
+        <Dialog open={depositDialog} onOpenChange={(o) => { if (!o) resetDepositState(); else setDepositDialog(true); }}>
+          <DialogContent className="sm:max-w-md rounded-2xl p-0 overflow-hidden max-h-[90vh] overflow-y-auto">
             <div className="bg-gradient-to-br from-[hsl(var(--navy-800))] to-[hsl(var(--navy-900))] p-6">
               <DialogTitle className="text-lg font-bold text-foreground flex items-center gap-2">
-                <ArrowDownLeft size={20} /> Deposit via M-Pesa
+                <ArrowDownLeft size={20} /> Deposit to Wallet
               </DialogTitle>
-              <p className="text-xs text-muted-foreground mt-1">Pay to our Paybill — credited automatically</p>
+              <p className="text-xs text-muted-foreground mt-1">Get an M-Pesa prompt instantly, or pay via Paybill</p>
             </div>
-            <div className="p-6 space-y-4">
-              <div className="rounded-xl border border-accent/30 bg-accent/5 p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Paybill Number</p>
-                    <p className="text-2xl font-bold text-accent tracking-wider">4018275</p>
-                  </div>
-                  <Button size="sm" variant="outline" className="h-8 gap-1 text-[11px]" onClick={() => copyToClipboard('4018275')}>
-                    <Copy size={12} /> Copy
-                  </Button>
-                </div>
-                <div className="border-t border-accent/20 pt-3 flex items-center justify-between">
-                  <div>
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Account Number (Yours)</p>
-                    <p className="text-2xl font-bold text-foreground tracking-wider">{profile?.mpesa_account_code || '—'}</p>
-                  </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-8 gap-1 text-[11px]"
-                    onClick={() => profile?.mpesa_account_code && copyToClipboard(profile.mpesa_account_code)}
-                    disabled={!profile?.mpesa_account_code}
-                  >
-                    <Copy size={12} /> Copy
-                  </Button>
+
+            <Tabs defaultValue="stk" className="w-full">
+              <div className="px-6 pt-4">
+                <TabsList className="w-full h-9 bg-muted/40 rounded-lg p-0.5 grid grid-cols-2">
+                  <TabsTrigger value="stk" className="text-[11px] rounded-md h-8 data-[state=active]:bg-card font-semibold gap-1.5">
+                    <Smartphone size={12} /> STK Push
+                  </TabsTrigger>
+                  <TabsTrigger value="paybill" className="text-[11px] rounded-md h-8 data-[state=active]:bg-card font-semibold gap-1.5">
+                    <CreditCard size={12} /> Paybill (Backup)
+                  </TabsTrigger>
+                </TabsList>
+              </div>
+
+              {/* STK Push - Primary */}
+              <div className="p-6 pt-4 space-y-4" data-tab="stk">
+                <div data-state-content="stk">
+                  {depositStatus === 'idle' && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="depAmt" className="text-xs font-semibold">Amount (KES)</Label>
+                        <Input
+                          id="depAmt"
+                          type="number"
+                          inputMode="numeric"
+                          placeholder="e.g. 500"
+                          value={depositAmount}
+                          onChange={(e) => setDepositAmount(e.target.value)}
+                          className="h-11 rounded-xl text-base font-semibold"
+                          min={10}
+                        />
+                      </div>
+                      <div className="rounded-xl bg-muted/30 border border-border/30 p-3 text-[11px] text-muted-foreground space-y-1">
+                        <p><span className="font-semibold text-foreground">Phone:</span> {registeredPhone || '—'}</p>
+                        <p><span className="font-semibold text-foreground">Paybill:</span> 4018275</p>
+                        <p>You'll receive an M-Pesa prompt on your phone — enter your PIN to confirm.</p>
+                      </div>
+                      <Button
+                        variant="gold"
+                        onClick={handleDeposit}
+                        disabled={!depositAmount || Number(depositAmount) < 10 || actionLoading}
+                        className="w-full h-11 rounded-xl font-semibold text-sm"
+                      >
+                        {actionLoading ? <Loader2 className="animate-spin" size={16} /> : "Send M-Pesa Prompt"}
+                      </Button>
+                    </>
+                  )}
+
+                  {depositStatus === 'pending' && (
+                    <div className="py-6 text-center space-y-3">
+                      <Loader2 className="animate-spin text-accent mx-auto" size={32} />
+                      <p className="text-sm font-semibold text-foreground">Waiting for confirmation…</p>
+                      <p className="text-xs text-muted-foreground">{depositStatusMessage}</p>
+                    </div>
+                  )}
+
+                  {depositStatus === 'success' && (
+                    <div className="py-6 text-center space-y-3">
+                      <CheckCircle2 className="text-emerald-400 mx-auto" size={40} />
+                      <p className="text-sm font-bold text-foreground">Deposit Successful</p>
+                      <p className="text-xs text-muted-foreground">{depositStatusMessage}</p>
+                      <Button variant="gold" onClick={resetDepositState} className="w-full h-10 rounded-xl text-sm">Done</Button>
+                    </div>
+                  )}
+
+                  {depositStatus === 'failed' && (
+                    <div className="py-6 text-center space-y-3">
+                      <XCircle className="text-rose-400 mx-auto" size={40} />
+                      <p className="text-sm font-bold text-foreground">Deposit Failed</p>
+                      <p className="text-xs text-muted-foreground">{depositStatusMessage}</p>
+                      <Button variant="outline" onClick={() => { setDepositStatus('idle'); setDepositStatusMessage(''); }} className="w-full h-10 rounded-xl text-sm">Try Again</Button>
+                    </div>
+                  )}
                 </div>
               </div>
 
-              <ol className="space-y-2 text-xs text-muted-foreground list-decimal pl-5">
-                <li>On your phone, go to <span className="font-semibold text-foreground">M-Pesa → Lipa na M-Pesa → Pay Bill</span></li>
-                <li>Enter Business Number: <span className="font-bold text-accent">4018275</span></li>
-                <li>Enter Account Number: <span className="font-bold text-accent">{profile?.mpesa_account_code || '—'}</span></li>
-                <li>Enter the amount and your M-Pesa PIN</li>
-                <li>Your wallet will be credited automatically within seconds ✨</li>
-              </ol>
-
-              <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/30 border border-border/30">
-                <Info size={14} className="text-accent mt-0.5 shrink-0" />
-                <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  Use your unique account number above to deposit to other services (Savings, Chama, Loan, Harambee). Each has its own format — check the relevant page for details.
-                </p>
+              {/* Paybill - Backup */}
+              <div className="p-6 pt-4 space-y-4 hidden" data-tab="paybill">
+                <div className="rounded-xl border border-accent/30 bg-accent/5 p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Paybill Number</p>
+                      <p className="text-2xl font-bold text-accent tracking-wider">4018275</p>
+                    </div>
+                    <Button size="sm" variant="outline" className="h-8 gap-1 text-[11px]" onClick={() => copyToClipboard('4018275')}>
+                      <Copy size={12} /> Copy
+                    </Button>
+                  </div>
+                  <div className="border-t border-accent/20 pt-3 flex items-center justify-between">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">Account Number (Yours)</p>
+                      <p className="text-2xl font-bold text-foreground tracking-wider">{profile?.mpesa_account_code || '—'}</p>
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="h-8 gap-1 text-[11px]"
+                      onClick={() => profile?.mpesa_account_code && copyToClipboard(profile.mpesa_account_code)}
+                      disabled={!profile?.mpesa_account_code}
+                    >
+                      <Copy size={12} /> Copy
+                    </Button>
+                  </div>
+                </div>
+                <ol className="space-y-2 text-xs text-muted-foreground list-decimal pl-5">
+                  <li>Go to <span className="font-semibold text-foreground">M-Pesa → Lipa na M-Pesa → Pay Bill</span></li>
+                  <li>Business Number: <span className="font-bold text-accent">4018275</span></li>
+                  <li>Account Number: <span className="font-bold text-accent">{profile?.mpesa_account_code || '—'}</span></li>
+                  <li>Enter amount and your M-Pesa PIN</li>
+                  <li>Wallet credited automatically within seconds ✨</li>
+                </ol>
+                <div className="flex items-start gap-2 p-3 rounded-lg bg-muted/30 border border-border/30">
+                  <Info size={14} className="text-accent mt-0.5 shrink-0" />
+                  <p className="text-[11px] text-muted-foreground leading-relaxed">
+                    Use this when STK Push fails or your phone is unreachable.
+                  </p>
+                </div>
               </div>
-            </div>
-            <div className="p-4 bg-muted/10 border-t border-border/20">
-              <Button variant="gold" onClick={() => setDepositDialog(false)} className="w-full h-11 rounded-xl font-semibold text-sm">
-                Got it
-              </Button>
-            </div>
+            </Tabs>
           </DialogContent>
         </Dialog>
 
