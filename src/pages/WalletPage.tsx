@@ -921,69 +921,67 @@ export default function WalletPage() {
               </div>
 
               {/* STK Push - Primary */}
-              <div className="p-6 pt-4 space-y-4" data-tab="stk">
-                <div data-state-content="stk">
-                  {depositStatus === 'idle' && (
-                    <>
-                      <div className="space-y-2">
-                        <Label htmlFor="depAmt" className="text-xs font-semibold">Amount (KES)</Label>
-                        <Input
-                          id="depAmt"
-                          type="number"
-                          inputMode="numeric"
-                          placeholder="e.g. 500"
-                          value={depositAmount}
-                          onChange={(e) => setDepositAmount(e.target.value)}
-                          className="h-11 rounded-xl text-base font-semibold"
-                          min={10}
-                        />
-                      </div>
-                      <div className="rounded-xl bg-muted/30 border border-border/30 p-3 text-[11px] text-muted-foreground space-y-1">
-                        <p><span className="font-semibold text-foreground">Phone:</span> {registeredPhone || '—'}</p>
-                        <p><span className="font-semibold text-foreground">Paybill:</span> 4018275</p>
-                        <p>You'll receive an M-Pesa prompt on your phone — enter your PIN to confirm.</p>
-                      </div>
-                      <Button
-                        variant="gold"
-                        onClick={handleDeposit}
-                        disabled={!depositAmount || Number(depositAmount) < 10 || actionLoading}
-                        className="w-full h-11 rounded-xl font-semibold text-sm"
-                      >
-                        {actionLoading ? <Loader2 className="animate-spin" size={16} /> : "Send M-Pesa Prompt"}
-                      </Button>
-                    </>
-                  )}
-
-                  {depositStatus === 'pending' && (
-                    <div className="py-6 text-center space-y-3">
-                      <Loader2 className="animate-spin text-accent mx-auto" size={32} />
-                      <p className="text-sm font-semibold text-foreground">Waiting for confirmation…</p>
-                      <p className="text-xs text-muted-foreground">{depositStatusMessage}</p>
+              <TabsContent value="stk" className="p-6 pt-4 space-y-4 mt-0">
+                {depositStatus === 'idle' && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="depAmt" className="text-xs font-semibold">Amount (KES)</Label>
+                      <Input
+                        id="depAmt"
+                        type="number"
+                        inputMode="numeric"
+                        placeholder="e.g. 500"
+                        value={depositAmount}
+                        onChange={(e) => setDepositAmount(e.target.value)}
+                        className="h-11 rounded-xl text-base font-semibold"
+                        min={10}
+                      />
                     </div>
-                  )}
-
-                  {depositStatus === 'success' && (
-                    <div className="py-6 text-center space-y-3">
-                      <CheckCircle2 className="text-emerald-400 mx-auto" size={40} />
-                      <p className="text-sm font-bold text-foreground">Deposit Successful</p>
-                      <p className="text-xs text-muted-foreground">{depositStatusMessage}</p>
-                      <Button variant="gold" onClick={resetDepositState} className="w-full h-10 rounded-xl text-sm">Done</Button>
+                    <div className="rounded-xl bg-muted/30 border border-border/30 p-3 text-[11px] text-muted-foreground space-y-1">
+                      <p><span className="font-semibold text-foreground">Phone:</span> {registeredPhone || '—'}</p>
+                      <p><span className="font-semibold text-foreground">Paybill:</span> 4018275</p>
+                      <p>You'll receive an M-Pesa prompt on your phone — enter your PIN to confirm.</p>
                     </div>
-                  )}
+                    <Button
+                      variant="gold"
+                      onClick={handleDeposit}
+                      disabled={!depositAmount || Number(depositAmount) < 10 || actionLoading}
+                      className="w-full h-11 rounded-xl font-semibold text-sm"
+                    >
+                      {actionLoading ? <Loader2 className="animate-spin" size={16} /> : "Send M-Pesa Prompt"}
+                    </Button>
+                  </>
+                )}
 
-                  {depositStatus === 'failed' && (
-                    <div className="py-6 text-center space-y-3">
-                      <XCircle className="text-rose-400 mx-auto" size={40} />
-                      <p className="text-sm font-bold text-foreground">Deposit Failed</p>
-                      <p className="text-xs text-muted-foreground">{depositStatusMessage}</p>
-                      <Button variant="outline" onClick={() => { setDepositStatus('idle'); setDepositStatusMessage(''); }} className="w-full h-10 rounded-xl text-sm">Try Again</Button>
-                    </div>
-                  )}
-                </div>
-              </div>
+                {depositStatus === 'pending' && (
+                  <div className="py-6 text-center space-y-3">
+                    <Loader2 className="animate-spin text-accent mx-auto" size={32} />
+                    <p className="text-sm font-semibold text-foreground">Waiting for confirmation…</p>
+                    <p className="text-xs text-muted-foreground">{depositStatusMessage}</p>
+                  </div>
+                )}
+
+                {depositStatus === 'success' && (
+                  <div className="py-6 text-center space-y-3">
+                    <CheckCircle2 className="text-emerald-400 mx-auto" size={40} />
+                    <p className="text-sm font-bold text-foreground">Deposit Successful</p>
+                    <p className="text-xs text-muted-foreground">{depositStatusMessage}</p>
+                    <Button variant="gold" onClick={resetDepositState} className="w-full h-10 rounded-xl text-sm">Done</Button>
+                  </div>
+                )}
+
+                {depositStatus === 'failed' && (
+                  <div className="py-6 text-center space-y-3">
+                    <XCircle className="text-rose-400 mx-auto" size={40} />
+                    <p className="text-sm font-bold text-foreground">Deposit Failed</p>
+                    <p className="text-xs text-muted-foreground">{depositStatusMessage}</p>
+                    <Button variant="outline" onClick={() => { setDepositStatus('idle'); setDepositStatusMessage(''); }} className="w-full h-10 rounded-xl text-sm">Try Again</Button>
+                  </div>
+                )}
+              </TabsContent>
 
               {/* Paybill - Backup */}
-              <div className="p-6 pt-4 space-y-4 hidden" data-tab="paybill">
+              <TabsContent value="paybill" className="p-6 pt-4 space-y-4 mt-0">
                 <div className="rounded-xl border border-accent/30 bg-accent/5 p-4 space-y-3">
                   <div className="flex items-center justify-between">
                     <div>
@@ -1023,7 +1021,7 @@ export default function WalletPage() {
                     Use this when STK Push fails or your phone is unreachable.
                   </p>
                 </div>
-              </div>
+              </TabsContent>
             </Tabs>
           </DialogContent>
         </Dialog>
