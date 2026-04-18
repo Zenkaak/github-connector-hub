@@ -288,10 +288,14 @@ export default function DashboardPage() {
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
   const quickActions = [
-    { label: 'Deposit', icon: ArrowDownLeft, path: '/dashboard/wallet', color: 'bg-success/80 text-success-foreground', desc: 'Add funds' },
-    { label: 'Withdraw', icon: ArrowUpRight, path: '/dashboard/wallet', color: 'bg-accent text-accent-foreground', desc: 'Cash out' },
-    { label: 'Chama Groups', icon: Users, path: '/dashboard/chama', color: 'bg-primary text-primary-foreground', desc: 'My groups' },
-    { label: 'Create Fundraiser', icon: HeartHandshake, path: '/dashboard/create-fundraiser', color: 'bg-destructive/80 text-destructive-foreground', desc: 'Start a Harambee' },
+    { label: 'Deposit', icon: ArrowDownLeft, onClick: () => navigate('/dashboard/wallet'), color: 'bg-success/15 text-success', desc: 'Add funds' },
+    { label: 'Withdraw', icon: ArrowUpRight, onClick: () => navigate('/dashboard/wallet'), color: 'bg-accent/15 text-accent', desc: 'Cash out' },
+    { label: 'Send', icon: Send, onClick: () => setSendMoneyOpen(true), color: 'bg-primary/15 text-primary', desc: 'Transfer' },
+    { label: 'Request', icon: HandCoins, onClick: () => setRequestMoneyOpen(true), color: 'bg-accent/15 text-accent', desc: 'Ask money' },
+    { label: 'Savings', icon: PiggyBank, onClick: () => navigate('/dashboard/savings'), color: 'bg-success/15 text-success', desc: 'Goals' },
+    { label: 'Chamas', icon: Users, onClick: () => navigate('/dashboard/chama'), color: 'bg-primary/15 text-primary', desc: 'My groups' },
+    { label: 'Loan', icon: CreditCard, onClick: () => navigate('/dashboard/products'), color: 'bg-accent/15 text-accent', desc: 'Apply' },
+    { label: 'Harambee', icon: HeartHandshake, onClick: () => navigate('/dashboard/create-fundraiser'), color: 'bg-destructive/15 text-destructive', desc: 'Fundraise' },
   ];
 
   const profileCompletion = (() => {
@@ -360,13 +364,13 @@ export default function DashboardPage() {
           </motion.div>
         )}
 
-        {/* Quick Actions - 2x2 grid */}
+        {/* Quick Actions - unified 4-col grid (8 actions in 2 rows) */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}>
-          <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
+          <div className="grid grid-cols-4 gap-1.5 sm:gap-2">
             {quickActions.map((action, i) => (
               <button
                 key={i}
-                onClick={() => navigate(action.path)}
+                onClick={action.onClick}
                 className="group flex flex-col items-center text-center p-2 sm:p-2.5 rounded-xl bg-card border border-border/50 hover:border-accent/30 hover:shadow-md transition-all duration-300 active:scale-[0.97]"
               >
                 <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl ${action.color} flex items-center justify-center mb-1 group-hover:scale-110 transition-transform duration-300`}>
@@ -379,51 +383,25 @@ export default function DashboardPage() {
           </div>
         </motion.div>
 
-        {/* Send & Request Money + Stats - 2x2 grid */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
-          <div className="grid grid-cols-2 gap-1.5 sm:gap-2">
-            <button
-              onClick={() => setSendMoneyOpen(true)}
-              className="group flex flex-col items-center text-center p-2 sm:p-2.5 rounded-xl bg-card border border-border/50 hover:border-accent/30 hover:shadow-md transition-all duration-300 active:scale-[0.97]"
-            >
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-1 group-hover:scale-110 transition-transform duration-300">
-                <Send size={16} />
-              </div>
-              <p className="font-semibold text-[10px] sm:text-xs leading-tight">Send Money</p>
-              <p className="text-[9px] sm:text-[10px] text-muted-foreground mt-0.5 hidden sm:block">Free transfer</p>
-            </button>
-            <button
-              onClick={() => setRequestMoneyOpen(true)}
-              className="group flex flex-col items-center text-center p-2 sm:p-2.5 rounded-xl bg-card border border-border/50 hover:border-accent/30 hover:shadow-md transition-all duration-300 active:scale-[0.97]"
-            >
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-accent/10 text-accent flex items-center justify-center mb-1 group-hover:scale-110 transition-transform duration-300">
-                <HandCoins size={16} />
-              </div>
-              <p className="font-semibold text-[10px] sm:text-xs leading-tight">Request Money</p>
-              <p className="text-[9px] sm:text-[10px] text-muted-foreground mt-0.5 hidden sm:block">From users</p>
-            </button>
-            <button
-              onClick={() => navigate('/dashboard/savings')}
-              className="group flex flex-col items-center text-center p-2 sm:p-2.5 rounded-xl bg-card border border-border/50 hover:border-accent/30 hover:shadow-md transition-all duration-300 active:scale-[0.97]"
-            >
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-success/10 text-success flex items-center justify-center mb-1 group-hover:scale-110 transition-transform duration-300">
-                <PiggyBank size={16} />
-              </div>
-              <p className="font-semibold text-[10px] sm:text-xs leading-tight">My Savings</p>
-              <p className="text-[9px] sm:text-[10px] text-muted-foreground mt-0.5 hidden sm:block">Target & Lock savings</p>
-            </button>
-            <button
-              onClick={() => navigate('/dashboard/applications')}
-              className="group flex flex-col items-center text-center p-2 sm:p-2.5 rounded-xl bg-card border border-border/50 hover:border-accent/30 hover:shadow-md transition-all duration-300 active:scale-[0.97]"
-            >
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-success/10 text-success flex items-center justify-center mb-1 group-hover:scale-110 transition-transform duration-300">
-                <Wallet size={16} />
-              </div>
-              <p className="font-semibold text-[10px] sm:text-xs leading-tight">{formatCurrency(stats.totalDisbursed)}</p>
-              <p className="text-[9px] sm:text-[10px] text-muted-foreground mt-0.5">Total Disbursed</p>
-            </button>
-          </div>
-        </motion.div>
+        {/* Total Disbursed stat */}
+        {stats.totalDisbursed > 0 && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+            <Card className="border-border/50 cursor-pointer hover:border-accent/30 transition-colors" onClick={() => navigate('/dashboard/applications')}>
+              <CardContent className="p-2.5 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-9 h-9 rounded-xl bg-success/10 text-success flex items-center justify-center">
+                    <Wallet size={16} />
+                  </div>
+                  <div>
+                    <p className="text-[10px] text-muted-foreground">Total Disbursed</p>
+                    <p className="font-semibold text-sm">{formatCurrency(stats.totalDisbursed)}</p>
+                  </div>
+                </div>
+                <ChevronRight size={14} className="text-muted-foreground" />
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
 
         {/* Wallet Summary */}
         {walletBalance !== null && (
