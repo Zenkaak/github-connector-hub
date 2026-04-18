@@ -6,9 +6,10 @@ export const PAYBILL = "4018275";
 const PROJECT_REF = "qtrubtfubdzodahsfacv";
 export const SUPABASE_FN_BASE = `https://${PROJECT_REF}.supabase.co/functions/v1`;
 
+// Default callbacks use clean URLs (no "mpesa" in path — Safaricom rejects URLs containing "mpesa")
 export const CALLBACKS = {
-  validation: `${SUPABASE_FN_BASE}/mpesa-validation`,
-  confirmation: `${SUPABASE_FN_BASE}/mpesa-confirmation`,
+  validation: `${SUPABASE_FN_BASE}/payment-validation`,
+  confirmation: `${SUPABASE_FN_BASE}/payment-confirmation`,
   b2cResult: `${SUPABASE_FN_BASE}/mpesa-b2c-result`,
   b2cTimeout: `${SUPABASE_FN_BASE}/mpesa-b2c-timeout`,
 };
