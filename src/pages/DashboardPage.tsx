@@ -288,10 +288,14 @@ export default function DashboardPage() {
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
   const quickActions = [
-    { label: 'Deposit', icon: ArrowDownLeft, path: '/dashboard/wallet', color: 'bg-success/80 text-success-foreground', desc: 'Add funds' },
-    { label: 'Withdraw', icon: ArrowUpRight, path: '/dashboard/wallet', color: 'bg-accent text-accent-foreground', desc: 'Cash out' },
-    { label: 'Chama Groups', icon: Users, path: '/dashboard/chama', color: 'bg-primary text-primary-foreground', desc: 'My groups' },
-    { label: 'Create Fundraiser', icon: HeartHandshake, path: '/dashboard/create-fundraiser', color: 'bg-destructive/80 text-destructive-foreground', desc: 'Start a Harambee' },
+    { label: 'Deposit', icon: ArrowDownLeft, onClick: () => navigate('/dashboard/wallet'), color: 'bg-success/15 text-success', desc: 'Add funds' },
+    { label: 'Withdraw', icon: ArrowUpRight, onClick: () => navigate('/dashboard/wallet'), color: 'bg-accent/15 text-accent', desc: 'Cash out' },
+    { label: 'Send', icon: Send, onClick: () => setSendMoneyOpen(true), color: 'bg-primary/15 text-primary', desc: 'Transfer' },
+    { label: 'Request', icon: HandCoins, onClick: () => setRequestMoneyOpen(true), color: 'bg-accent/15 text-accent', desc: 'Ask money' },
+    { label: 'Savings', icon: PiggyBank, onClick: () => navigate('/dashboard/savings'), color: 'bg-success/15 text-success', desc: 'Goals' },
+    { label: 'Chamas', icon: Users, onClick: () => navigate('/dashboard/chama'), color: 'bg-primary/15 text-primary', desc: 'My groups' },
+    { label: 'Loan', icon: CreditCard, onClick: () => navigate('/dashboard/products'), color: 'bg-accent/15 text-accent', desc: 'Apply' },
+    { label: 'Harambee', icon: HeartHandshake, onClick: () => navigate('/dashboard/create-fundraiser'), color: 'bg-destructive/15 text-destructive', desc: 'Fundraise' },
   ];
 
   const profileCompletion = (() => {
