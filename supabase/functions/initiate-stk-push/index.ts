@@ -145,10 +145,18 @@ Deno.serve(async (req) => {
     );
 
     const stkData = await stkRes.json();
+    console.log("STK Daraja response:", JSON.stringify(stkData));
 
     if (stkData.ResponseCode !== "0") {
+      const errMsg =
+        stkData.errorMessage ||
+        stkData.CustomerMessage ||
+        stkData.ResponseDescription ||
+        stkData.ResultDesc ||
+        "STK Push failed";
+      console.error("STK Push rejected by Daraja:", errMsg, "Full:", JSON.stringify(stkData));
       return new Response(
-        JSON.stringify({ success: false, error: stkData.CustomerMessage || "STK Push failed" }),
+        JSON.stringify({ success: false, error: errMsg, daraja: stkData }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
