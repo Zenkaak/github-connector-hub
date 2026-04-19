@@ -22,7 +22,7 @@ project_id = "qtrubtfubdzodahsfacv"
   [functions.mpesa-b2c-timeout]
     verify_jwt = false
   [functions.mpesa-b2c-request]
-    verify_jwt = true
+    verify_jwt = false
   [functions.mpesa-register-urls]
     verify_jwt = true
   [functions.mpesa-reversal]
