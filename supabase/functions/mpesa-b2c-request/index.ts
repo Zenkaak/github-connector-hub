@@ -51,8 +51,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Service-role for the deduction RPC
-    const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    // (admin client already created above for auth)
 
     // Step 1: Deduct first via RPC (creates b2c request row)
     const { data: requestId, error: rpcErr } = await admin.rpc("create_b2c_withdrawal", {
