@@ -384,33 +384,44 @@ export function ChamaSavings({
 
       {/* DEPOSIT DIALOG */}
       <Dialog open={depositOpen} onOpenChange={setDepositOpen}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Deposit to Chama Fund</DialogTitle>
             <DialogDescription>
-              Enter the amount you wish to contribute. Any extra amount will automatically count toward your future periods.
+              Pay via M-Pesa STK push or directly via Paybill. Extra amount counts toward future periods.
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="custom-amount">Contribution Amount (KES)</Label>
-              <Input
-                id="custom-amount"
-                type="number"
-                value={customAmount}
-                onChange={(e) => setCustomAmount(e.target.value)}
-                className="text-xl font-bold h-12"
+          <Tabs defaultValue="stk" className="w-full">
+            <TabsList className="grid grid-cols-2 w-full mb-4">
+              <TabsTrigger value="stk" className="text-xs gap-1.5"><Smartphone size={12} /> STK Push</TabsTrigger>
+              <TabsTrigger value="paybill" className="text-xs gap-1.5"><CreditCard size={12} /> Paybill</TabsTrigger>
+            </TabsList>
+            <TabsContent value="stk" className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="custom-amount">Contribution Amount (KES)</Label>
+                <Input
+                  id="custom-amount"
+                  type="number"
+                  value={customAmount}
+                  onChange={(e) => setCustomAmount(e.target.value)}
+                  className="text-xl font-bold h-12"
+                />
+                <p className="text-[11px] text-muted-foreground flex items-center gap-1">
+                  <Info size={10} /> Min for this period: KES {group?.contribution_amount?.toLocaleString()}
+                </p>
+              </div>
+              <Button onClick={handleDeposit} disabled={depositing} className="w-full h-11">
+                {depositing ? "Awaiting M-Pesa..." : `Confirm: KES ${Number(customAmount).toLocaleString()}`}
+              </Button>
+            </TabsContent>
+            <TabsContent value="paybill">
+              <PaybillBox
+                accountRef={group?.order_number}
+                helperText={`Pay any amount directly to credit ${group?.name || 'this group'}.`}
+                compact
               />
-              <p className="text-[11px] text-muted-foreground flex items-center gap-1">
-                <Info size={10} /> Min required for this period: KES {group?.contribution_amount?.toLocaleString()}
-              </p>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button onClick={handleDeposit} disabled={depositing} className="w-full h-11">
-              {depositing ? "Awaiting M-Pesa..." : `Confirm Payment: KES ${Number(customAmount).toLocaleString()}`}
-            </Button>
-          </DialogFooter>
+            </TabsContent>
+          </Tabs>
         </DialogContent>
       </Dialog>
 

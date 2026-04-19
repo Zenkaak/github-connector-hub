@@ -21,6 +21,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { usePlatformSettings } from '@/contexts/PlatformSettingsContext';
 import { FeatureDisabled } from '@/components/FeatureDisabled';
+import { PaybillBox } from '@/components/PaybillBox';
 
 interface PersonalSavings {
   id: string;

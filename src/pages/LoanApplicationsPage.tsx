@@ -403,9 +403,14 @@ export default function LoanApplicationsPage() {
                 </div>
                 <div className="p-2.5 rounded-lg bg-muted/30 border border-border/30 text-[11px] space-y-1">
                   <p className="text-muted-foreground">STK Push to: <span className="text-foreground font-semibold">{profile?.phone || '—'}</span></p>
-                  <p className="text-muted-foreground">Manual Till: <span className="text-foreground font-semibold">8448104 (DASNET)</span></p>
                 </div>
+                <PaybillBox
+                  accountRef={profile?.mpesa_account_code ? `${profile.mpesa_account_code}L` : null}
+                  helperText="Or pay via Paybill — credits your active loan automatically."
+                  compact
+                />
                 <p className="text-[10px] text-muted-foreground text-center">Enter your M-Pesa PIN on your phone to complete.</p>
+
                 <div className="flex justify-end gap-2 pt-2">
                   <Button variant="outline" size="sm" onClick={handleRepayClose}>Cancel</Button>
                   <Button variant="gold" size="sm" onClick={handleRepayViaStk} disabled={repayLoading || !repayAmount || Number(repayAmount) <= 0}>Pay Now</Button>
