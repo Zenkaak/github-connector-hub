@@ -21,6 +21,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { usePlatformSettings } from '@/contexts/PlatformSettingsContext';
 import { FeatureDisabled } from '@/components/FeatureDisabled';
+import { PaybillBox } from '@/components/PaybillBox';
 
 interface PersonalSavings {
   id: string;
@@ -634,29 +635,50 @@ export default function SavingsPage() {
 
       {/* Deposit Dialog */}
       <Dialog open={depositOpen} onOpenChange={setDepositOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader><DialogTitle>Deposit to {selectedSavings?.name}</DialogTitle></DialogHeader>
-          <div className="space-y-4">
-            <Card className="p-3 bg-muted/40">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted-foreground">Current Balance</span>
-                <span className="font-bold">{formatCurrency(selectedSavings?.saved_amount || 0)}</span>
+          <Tabs defaultValue="stk" className="w-full">
+            <TabsList className="grid grid-cols-2 w-full mb-3">
+              <TabsTrigger value="stk" className="text-xs">📱 STK Push</TabsTrigger>
+              <TabsTrigger value="paybill" className="text-xs">💳 Paybill</TabsTrigger>
+            </TabsList>
+            <TabsContent value="stk" className="space-y-4">
+              <Card className="p-3 bg-muted/40">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Current Balance</span>
+                  <span className="font-bold">{formatCurrency(selectedSavings?.saved_amount || 0)}</span>
+                </div>
+                <div className="flex justify-between text-sm mt-1">
+                  <span className="text-muted-foreground">Target</span>
+                  <span className="font-medium">{formatCurrency(selectedSavings?.target_amount || 0)}</span>
+                </div>
+              </Card>
+              <div>
+                <Label>Amount (KES)</Label>
+                <Input type="number" placeholder="500" value={depositAmount} onChange={e => setDepositAmount(e.target.value)} />
+                <p className="text-xs text-muted-foreground mt-1">Min: KES 10 · STK to {profile?.phone}</p>
               </div>
-              <div className="flex justify-between text-sm mt-1">
-                <span className="text-muted-foreground">Target</span>
-                <span className="font-medium">{formatCurrency(selectedSavings?.target_amount || 0)}</span>
-              </div>
-            </Card>
-            <div>
-              <Label>Amount (KES)</Label>
-              <Input type="number" placeholder="500" value={depositAmount} onChange={e => setDepositAmount(e.target.value)} />
-              <p className="text-xs text-muted-foreground mt-1">Min: KES 10 · Payment via M-Pesa to {profile?.phone}</p>
-            </div>
-            <Button variant="gold" className="w-full" onClick={handleDeposit} disabled={submitting}>
-              {submitting ? <Loader2 className="animate-spin" size={16} /> : null}
-              Pay via M-Pesa
-            </Button>
-          </div>
+              <Button variant="gold" className="w-full" onClick={handleDeposit} disabled={submitting}>
+                {submitting ? <Loader2 className="animate-spin" size={16} /> : null}
+                Pay via M-Pesa
+              </Button>
+            </TabsContent>
+            <TabsContent value="paybill">
+              <PaybillBox
+                accountRef={(() => {
+                  if (!profile?.mpesa_account_code || !selectedSavings) return null;
+                  // Find 1-based index in ascending created_at order (matches classifier)
+                  const sortedAsc = [...savings].sort(
+                    (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+                  );
+                  const idx = sortedAsc.findIndex(s => s.id === selectedSavings.id);
+                  return idx >= 0 ? `${profile.mpesa_account_code}S${idx + 1}` : null;
+                })()}
+                helperText={`Pay any amount to credit "${selectedSavings?.name || 'this goal'}".`}
+                compact
+              />
+            </TabsContent>
+          </Tabs>
         </DialogContent>
       </Dialog>
 
