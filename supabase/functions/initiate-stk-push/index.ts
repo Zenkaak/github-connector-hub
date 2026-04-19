@@ -107,14 +107,53 @@ Deno.serve(async (req) => {
     const prefix = prefixMap[purpose] || "PAY";
     const reference = `${prefix}${Date.now()}${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
 
-    // Use the user's unique 4-digit account code as AccountReference when available
-    // (so STK payments route through the same C2B confirmation pipeline as manual Paybill payments)
-    let accountRef = reference;
+    // Build purpose-specific AccountReference matching the C2B classifier patterns
+    // in supabase/functions/_shared/mpesa.ts → classifyBillRef().
+    // This ensures the confirmation callback credits the RIGHT destination (not always wallet).
+    //   wallet_deposit / activation → 4-digit code         e.g. "3044"
+    //   personal_savings            → {code}S{index}        e.g. "3044S1"
+    //   chama_savings / chama_*     → group order_number    e.g. "0000123"
+    //   loan_repayment              → {code}L               e.g. "3044L"
+    //   harambee (logged-in user)   → {code}H{slug}         e.g. "3044H123"
+    //   harambee (public)           → H{slug}               e.g. "H123"
+    const tempSb = createClient(supabaseUrl, serviceRoleKey);
+
+    let userCode: string | null = null;
     if (userId) {
-      const tempSb = createClient(supabaseUrl, serviceRoleKey);
       const { data: prof } = await tempSb.from("profiles").select("mpesa_account_code").eq("user_id", userId).maybeSingle();
-      if (prof?.mpesa_account_code) accountRef = prof.mpesa_account_code;
+      userCode = prof?.mpesa_account_code ?? null;
     }
+
+    let accountRef = reference; // fallback
+    try {
+      if (purpose === "wallet_deposit" || purpose === "activation") {
+        if (userCode) accountRef = userCode;
+      } else if (purpose === "personal_savings" && savingsId && userId) {
+        // Find 1-based index of this savings goal for the user
+        const { data: list } = await tempSb
+          .from("personal_savings")
+          .select("id")
+          .eq("user_id", userId)
+          .order("created_at", { ascending: true });
+        const idx = (list || []).findIndex((r: any) => r.id === savingsId);
+        if (userCode && idx >= 0) accountRef = `${userCode}S${idx + 1}`;
+      } else if ((purpose === "chama_savings" || purpose === "chama_penalty" || purpose === "chama_joining_fee") && groupId) {
+        const { data: g } = await tempSb.from("chama_groups").select("order_number").eq("id", groupId).maybeSingle();
+        if (g?.order_number) accountRef = g.order_number;
+      } else if (purpose === "loan_repayment" && userCode) {
+        accountRef = `${userCode}L`;
+      } else if (isHarambee && harambee_id) {
+        const { data: h } = await tempSb.from("chama_harambees").select("order_number").eq("id", harambee_id).maybeSingle();
+        const slug = h?.order_number?.replace(/^H/i, "") ?? "";
+        if (slug) {
+          accountRef = userCode ? `${userCode}H${slug}` : `H${slug}`;
+        }
+      }
+    } catch (refErr) {
+      console.warn("AccountReference lookup failed, falling back to generated ref:", refErr);
+    }
+
+    console.log(`AccountReference for ${purpose}: ${accountRef}`);
 
     const stkBody = {
       BusinessShortCode: shortcode,
