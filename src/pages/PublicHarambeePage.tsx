@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { RealtimeChannel } from '@supabase/supabase-js';
+import { PaybillBox } from '@/components/PaybillBox';
 
 export default function PublicHarambeePage() {
   const { orderNumber } = useParams<{ orderNumber: string }>();
@@ -437,10 +438,22 @@ export default function PublicHarambeePage() {
                     <span className="text-xs">{statusMessage}</span>
                   </motion.div>
                 )}
+
+                {/* Paybill alternative */}
+                <div className="pt-2 border-t border-[hsl(213,30%,20%,0.5)]">
+                  <p className="text-[10px] text-[hsl(213,16%,58%)] uppercase tracking-wider font-semibold mb-2">
+                    Or pay directly via M-Pesa Paybill
+                  </p>
+                  <PaybillBox
+                    accountRef={harambee?.order_number || null}
+                    compact
+                  />
+                </div>
               </div>
             </Card>
           </motion.div>
         )}
+
 
         {/* Success Card */}
         {paymentStatus === 'success' && (
