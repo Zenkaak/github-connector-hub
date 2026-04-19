@@ -1,5 +1,5 @@
 // B2C Withdrawal — authenticated. Deducts wallet first, calls Daraja, refunds on failure.
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.103.3";
 import { corsHeaders, getAccessToken, MPESA_BASE, PAYBILL, CALLBACKS } from "../_shared/mpesa.ts";
 
 Deno.serve(async (req) => {
@@ -13,19 +13,21 @@ Deno.serve(async (req) => {
       });
     }
 
-    const userClient = createClient(
+    // Use service-role client + getUser(token) — works with HS256 AND ES256 signing keys
+    // (getClaims on older SDKs throws UNAUTHORIZED_UNSUPPORTED_TOKEN_ALGORITHM for ES256)
+    const admin = createClient(
       Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_ANON_KEY")!,
-      { global: { headers: { Authorization: authHeader } } }
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
     const token = authHeader.replace("Bearer ", "");
-    const { data: claims, error: authErr } = await userClient.auth.getClaims(token);
-    if (authErr || !claims?.claims?.sub) {
+    const { data: userData, error: authErr } = await admin.auth.getUser(token);
+    if (authErr || !userData?.user?.id) {
+      console.error("Auth failed:", authErr);
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const userId = claims.claims.sub;
+    const userId = userData.user.id;
 
     const { amount, phone, remarks = "Withdrawal", occasion = "Wallet withdrawal" } = await req.json();
     if (!amount || amount < 10) {
@@ -49,8 +51,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Service-role for the deduction RPC
-    const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    // (admin client already created above for auth)
 
     // Step 1: Deduct first via RPC (creates b2c request row)
     const { data: requestId, error: rpcErr } = await admin.rpc("create_b2c_withdrawal", {
