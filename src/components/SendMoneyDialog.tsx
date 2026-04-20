@@ -143,7 +143,13 @@ export function SendMoneyDialog({ open, onOpenChange, walletBalance, onSuccess }
 
       if (error) throw error;
 
-      // The RPC returns a transfer UUID on success - any non-error response means success
+      // Fetch latest balances + recipient phone for SMS
+      const [{ data: senderW }, { data: recvW }, { data: recvProf }] = await Promise.all([
+        supabase.from('wallets').select('balance').eq('user_id', user.id).maybeSingle(),
+        supabase.from('wallets').select('balance').eq('user_id', recipientId).maybeSingle(),
+        supabase.from('profiles').select('phone, full_name').eq('user_id', recipientId).maybeSingle(),
+      ]);
+
       await Promise.all([
         supabase.from('notifications').insert({
           user_id: recipientId,
@@ -156,6 +162,28 @@ export function SendMoneyDialog({ open, onOpenChange, walletBalance, onSuccess }
           message: `You sent ${formatCurrency(amt)} to ${recipientName} successfully.${reason ? ` Reason: ${reason}` : ''}`,
         }),
       ]);
+
+      // SMS — fire-and-forget, never block UI
+      const senderName = (profile?.full_name || 'Member').split(' ')[0];
+      const receiverFirst = (recvProf?.full_name || recipientName || 'Member').split(' ')[0];
+      const smsCalls: Promise<any>[] = [];
+      if (profile?.phone) {
+        smsCalls.push(supabase.functions.invoke('send-sms', {
+          body: {
+            phone: profile.phone,
+            message: `Dear ${senderName}, you sent KES ${amt.toLocaleString()} to ${recipientName}. New balance: KES ${Number(senderW?.balance || 0).toLocaleString()}. Thank you for banking with Dasnet.`,
+          },
+        }));
+      }
+      if (recvProf?.phone) {
+        smsCalls.push(supabase.functions.invoke('send-sms', {
+          body: {
+            phone: recvProf.phone,
+            message: `Dear ${receiverFirst}, you received KES ${amt.toLocaleString()} from ${profile?.full_name || 'a Dasnet user'}. New balance: KES ${Number(recvW?.balance || 0).toLocaleString()}.`,
+          },
+        }));
+      }
+      Promise.all(smsCalls).catch(err => console.warn('SMS dispatch failed:', err));
 
       toast.success(`${formatCurrency(amt)} sent successfully!`);
       onOpenChange(false);

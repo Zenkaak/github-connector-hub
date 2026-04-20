@@ -384,15 +384,16 @@ export default function AdminDashboardPage({ defaultTab = 'users' }: AdminDashbo
         }
       }
 
-      // Send SMS notification for loan status change
+      // Send SMS notification for loan status change (Africa's Talking)
       const loanUserProfile = profiles.find(p => p.user_id === selectedLoan.user_id);
       if (loanUserProfile?.phone) {
+        const firstName = (loanUserProfile.full_name || 'Member').split(' ')[0];
         const smsMessage = newStatus === 'approved'
-          ? `Dear ${loanUserProfile.full_name}, your loan of KES ${selectedLoan.applied_amount.toLocaleString()} has been approved and credited to your wallet. Log in to access your funds.`
+          ? `Dear ${firstName}, your loan of KES ${selectedLoan.applied_amount.toLocaleString()} has been approved and credited to your wallet. Thank you for banking with Dasnet.`
           : newStatus === 'rejected'
-          ? `Dear ${loanUserProfile.full_name}, your loan application for KES ${selectedLoan.applied_amount.toLocaleString()} was not approved.${adminMsg ? ' Reason: ' + adminMsg : ''} Contact support for assistance.`
-          : `Dear ${loanUserProfile.full_name}, your loan status has been updated to ${newStatus}. Log in for details.`;
-        
+          ? `Dear ${firstName}, your loan application for KES ${selectedLoan.applied_amount.toLocaleString()} was not approved.${adminMsg ? ' Reason: ' + adminMsg : ''} Contact support for assistance. — Dasnet`
+          : `Dear ${firstName}, your loan status has been updated to ${newStatus}. Log in for details.`;
+
         supabase.functions.invoke('send-sms', {
           body: { phone: loanUserProfile.phone, message: smsMessage },
         }).catch(err => console.error('SMS send failed:', err));
