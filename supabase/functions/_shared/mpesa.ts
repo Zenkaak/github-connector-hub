@@ -76,7 +76,8 @@ export async function classifyBillRef(supabase: any, billRef: string): Promise<R
   }
 
   // Chama (per-user letter): ^\d{4}[A-Z]$ or ^[A-Z]\d{4}$
-  // The letter = user's join order (A=1st chama, B=2nd, ...)
+  // The letter = user's join order (A=1st chama joined, B=2nd, ...)
+  // FALLBACK: if user code valid but no chama at that letter → credit wallet (don't fail).
   const cMatch = ref.match(/^(\d{4})([A-Z])$/) || (() => {
     const m = ref.match(/^([A-Z])(\d{4})$/);
     return m ? [m[0], m[2], m[1]] : null;
@@ -91,7 +92,11 @@ export async function classifyBillRef(supabase: any, billRef: string): Promise<R
       .from("chama_members").select("group_id, join_order")
       .eq("user_id", prof.user_id).eq("join_order", orderIdx).eq("is_active", true)
       .maybeSingle();
-    if (!member) return { type: "unmapped", reason: `User ${code} has no chama at position ${letter}` };
+    if (!member) {
+      // Graceful fallback: route to user's wallet so funds are never lost.
+      console.log(`[classifier] ${code}${letter}: no chama at position ${letter} → wallet fallback`);
+      return { type: "wallet", user_id: prof.user_id };
+    }
     return { type: "chama", group_id: member.group_id, user_id: prof.user_id };
   }
 

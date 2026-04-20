@@ -299,10 +299,12 @@ export default function PublicHarambeePage() {
               </div>
 
               {/* Meta info */}
-              <div className="flex items-center gap-4 text-[10px] text-[hsl(213,16%,58%)]">
+              <div className="flex items-center gap-2 text-[10px] text-[hsl(213,16%,58%)] flex-wrap">
                 <div className="flex items-center gap-1.5 bg-[hsl(213,30%,17%)] px-2.5 py-1 rounded-lg">
                   <Hash size={10} className="text-[hsl(42,92%,56%)]" />
-                  <span className="font-mono font-bold text-[hsl(210,40%,96%)]">{harambee.order_number}</span>
+                  <span className="font-mono font-bold text-[hsl(210,40%,96%)]">
+                    {harambee.short_code ? `H${harambee.short_code}` : harambee.order_number}
+                  </span>
                 </div>
                 {groupName && (
                   <div className="flex items-center gap-1.5 bg-[hsl(213,30%,17%)] px-2.5 py-1 rounded-lg">
@@ -445,7 +447,7 @@ export default function PublicHarambeePage() {
                     Or pay directly via M-Pesa Paybill
                   </p>
                   <PaybillBox
-                    accountRef={harambee?.order_number || null}
+                    accountRef={harambee?.short_code ? `H${harambee.short_code}` : harambee?.order_number || null}
                     compact
                   />
                 </div>

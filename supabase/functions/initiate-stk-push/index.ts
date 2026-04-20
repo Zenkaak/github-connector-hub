@@ -138,14 +138,30 @@ Deno.serve(async (req) => {
         const idx = (list || []).findIndex((r: any) => r.id === savingsId);
         if (userCode && idx >= 0) accountRef = `${userCode}S${idx + 1}`;
       } else if ((purpose === "chama_savings" || purpose === "chama_penalty" || purpose === "chama_joining_fee") && groupId) {
-        const { data: g } = await tempSb.from("chama_groups").select("order_number").eq("id", groupId).maybeSingle();
-        if (g?.order_number) accountRef = g.order_number;
+        // Per-user chama letter: 3044A = first chama joined by user 3044
+        if (userCode && userId) {
+          const { data: mem } = await tempSb.from("chama_members")
+            .select("join_order").eq("user_id", userId).eq("group_id", groupId).maybeSingle();
+          if (mem?.join_order && mem.join_order >= 1 && mem.join_order <= 26) {
+            const letter = String.fromCharCode(64 + mem.join_order);
+            accountRef = `${userCode}${letter}`;
+          }
+        }
+        // Fallback to legacy group order_number if letter unavailable
+        if (accountRef === reference) {
+          const { data: g } = await tempSb.from("chama_groups").select("order_number").eq("id", groupId).maybeSingle();
+          if (g?.order_number) accountRef = g.order_number;
+        }
       } else if (purpose === "loan_repayment" && userCode) {
         accountRef = `${userCode}L`;
       } else if (isHarambee && harambee_id) {
-        const { data: h } = await tempSb.from("chama_harambees").select("order_number").eq("id", harambee_id).maybeSingle();
-        const slug = h?.order_number?.replace(/^H/i, "") ?? "";
-        if (slug) {
+        // NEW: 4-digit short_code preferred, fallback to legacy order_number slug.
+        const { data: h } = await tempSb.from("chama_harambees")
+          .select("short_code, order_number").eq("id", harambee_id).maybeSingle();
+        if (h?.short_code) {
+          accountRef = userCode ? `${userCode}H${h.short_code}` : `H${h.short_code}`;
+        } else if (h?.order_number) {
+          const slug = h.order_number.replace(/^H/i, "");
           accountRef = userCode ? `${userCode}H${slug}` : `H${slug}`;
         }
       }

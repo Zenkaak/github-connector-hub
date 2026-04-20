@@ -83,13 +83,14 @@ export function ChamaSavings({
   onRefreshGroup,
 }: ChamaSavingsProps) {
 
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { toast } = useToast();
 
   const [savings, setSavings] = useState<any[]>([]);
   const [joiningFees, setJoiningFees] = useState<any[]>([]);
   const [platformFees, setPlatformFees] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [chamaLetter, setChamaLetter] = useState<string | null>(null);
 
   const [depositOpen, setDepositOpen] = useState(false);
   const [depositing, setDepositing] = useState(false);
@@ -100,6 +101,27 @@ export function ChamaSavings({
   const [savingsAmount, setSavingsAmount] = useState(group?.contribution_amount?.toString() || '0');
 
   const isChairperson = myRole === 'chairperson';
+
+  // Resolve this user's per-account chama letter (A=first joined, B=second, ...)
+  useEffect(() => {
+    (async () => {
+      if (!user) return;
+      const { data } = await supabase
+        .from('chama_members')
+        .select('join_order')
+        .eq('user_id', user.id)
+        .eq('group_id', groupId)
+        .maybeSingle();
+      const ord = data?.join_order;
+      if (ord && ord >= 1 && ord <= 26) {
+        setChamaLetter(String.fromCharCode(64 + ord));
+      }
+    })();
+  }, [user, groupId]);
+
+  const paybillAccountRef = profile?.mpesa_account_code && chamaLetter
+    ? `${profile.mpesa_account_code}${chamaLetter}`
+    : null;
 
   // -------------------------------------------------------------------------
   // 1. DATA FETCHING
@@ -416,8 +438,12 @@ export function ChamaSavings({
             </TabsContent>
             <TabsContent value="paybill">
               <PaybillBox
-                accountRef={group?.order_number}
-                helperText={`Pay any amount directly to credit ${group?.name || 'this group'}.`}
+                accountRef={paybillAccountRef}
+                helperText={
+                  paybillAccountRef
+                    ? `Pay any amount — credits your savings in ${group?.name || 'this group'}.`
+                    : 'Account reference unavailable. Use STK push instead, or contact support.'
+                }
                 compact
               />
             </TabsContent>
