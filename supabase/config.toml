@@ -23,6 +23,8 @@ project_id = "qtrubtfubdzodahsfacv"
     verify_jwt = false
   [functions.mpesa-b2c-request]
     verify_jwt = false
+  [functions.mpesa-b2c-retry]
+    verify_jwt = false
   [functions.mpesa-register-urls]
     verify_jwt = true
   [functions.mpesa-reversal]

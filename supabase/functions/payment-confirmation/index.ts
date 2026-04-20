@@ -2,6 +2,7 @@
 // Mirrors mpesa-confirmation logic exactly: dedup, classify, credit.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { corsHeaders, classifyBillRef } from "../_shared/mpesa.ts";
+import { sendUserSMS, SMS } from "../_shared/sms.ts";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -91,10 +92,11 @@ Deno.serve(async (req) => {
   try {
     if (route.type === "wallet") {
       const { data: w } = await supabase.from("wallets").select("user_id, balance").eq("user_id", route.user_id).maybeSingle();
+      const newBalance = (Number(w?.balance) || 0) + amount;
       if (!w) {
         await supabase.from("wallets").insert({ user_id: route.user_id, balance: amount });
       } else {
-        await supabase.from("wallets").update({ balance: (w.balance || 0) + amount }).eq("user_id", route.user_id);
+        await supabase.from("wallets").update({ balance: newBalance }).eq("user_id", route.user_id);
       }
       await supabase.from("wallet_transactions").insert({
         user_id: route.user_id, type: "deposit", amount,
@@ -104,10 +106,12 @@ Deno.serve(async (req) => {
         user_id: route.user_id, title: "Deposit Received",
         message: `KES ${amount.toLocaleString()} credited to your wallet. Receipt: ${transId}`, type: "payment",
       });
+      await sendUserSMS(supabase, route.user_id, SMS.walletDeposit("{name}", amount, newBalance, transId));
     } else if (route.type === "savings") {
-      const { data: s } = await supabase.from("personal_savings").select("saved_amount").eq("id", route.savings_id).maybeSingle();
+      const { data: s } = await supabase.from("personal_savings").select("saved_amount, name").eq("id", route.savings_id).maybeSingle();
+      const newTotal = (Number(s?.saved_amount) || 0) + amount;
       await supabase.from("personal_savings")
-        .update({ saved_amount: (s?.saved_amount || 0) + amount })
+        .update({ saved_amount: newTotal })
         .eq("id", route.savings_id);
       await supabase.from("personal_savings_deposits").insert({
         user_id: route.user_id, savings_id: route.savings_id, amount, stk_reference: transId,
@@ -116,9 +120,11 @@ Deno.serve(async (req) => {
         user_id: route.user_id, title: "Savings Deposit",
         message: `KES ${amount.toLocaleString()} added to your savings. Receipt: ${transId}`, type: "payment",
       });
+      await sendUserSMS(supabase, route.user_id, SMS.personalSavings("{name}", amount, newTotal, s?.name || "Savings"));
     } else if (route.type === "chama") {
-      let depositorUserId: string | null = null;
-      if (msisdn) {
+      // Prefer depositor identified by classifier (chama A/B/C ref); fall back to MSISDN match.
+      let depositorUserId: string | null = (route as any).user_id ?? null;
+      if (!depositorUserId && msisdn) {
         const variants = [msisdn, "0" + msisdn.slice(3), "+" + msisdn];
         const { data: prof } = await supabase.from("profiles").select("user_id").in("phone", variants).maybeSingle();
         depositorUserId = prof?.user_id ?? null;
@@ -127,23 +133,30 @@ Deno.serve(async (req) => {
         await supabase.from("chama_savings").insert({
           group_id: route.group_id, user_id: depositorUserId, amount, stk_reference: transId,
         });
+        const { data: g } = await supabase.from("chama_groups").select("name").eq("id", route.group_id).maybeSingle();
+        const { data: agg } = await supabase.from("chama_savings").select("amount").eq("group_id", route.group_id).eq("user_id", depositorUserId);
+        const total = (agg || []).reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
         await supabase.from("notifications").insert({
           user_id: depositorUserId, title: "Chama Contribution",
-          message: `KES ${amount.toLocaleString()} contributed to your chama. Receipt: ${transId}`, type: "payment",
+          message: `KES ${amount.toLocaleString()} contributed to ${g?.name || "your chama"}. Receipt: ${transId}`, type: "payment",
         });
+        await sendUserSMS(supabase, depositorUserId, SMS.chamaContribution("{name}", amount, g?.name || "your chama", total));
       } else {
         await supabase.from("mpesa_unmapped_payments").insert({
           c2b_transaction_id: c2bRow.id, bill_ref_number: billRef, amount, msisdn,
-          reason: "Chama deposit but depositor MSISDN not linked to any user",
+          reason: "Chama deposit but depositor not identified",
         });
       }
     } else if (route.type === "loan" && route.loan_id) {
       const { data: disb } = await supabase.from("loan_disbursements")
-        .select("id, outstanding_balance")
+        .select("id, outstanding_balance, disbursed_amount")
         .eq("loan_id", route.loan_id)
         .maybeSingle();
+      let newBal = 0;
+      let totalPaid = amount;
       if (disb) {
-        const newBal = Math.max(0, (disb.outstanding_balance || 0) - amount);
+        newBal = Math.max(0, (Number(disb.outstanding_balance) || 0) - amount);
+        totalPaid = (Number(disb.disbursed_amount) || 0) - newBal;
         await supabase.from("loan_disbursements")
           .update({ outstanding_balance: newBal, status: newBal === 0 ? "completed" : "active" })
           .eq("id", disb.id);
@@ -152,6 +165,7 @@ Deno.serve(async (req) => {
         user_id: route.user_id, title: "Loan Repayment Received",
         message: `KES ${amount.toLocaleString()} applied to your loan. Receipt: ${transId}`, type: "payment",
       });
+      await sendUserSMS(supabase, route.user_id, SMS.loanRepayment("{name}", amount, totalPaid, newBal));
     } else if (route.type === "harambee_user" || route.type === "harambee_public") {
       if (route.harambee_id) {
         const contributorName = [body.FirstName, body.MiddleName, body.LastName].filter(Boolean).join(" ").trim() || null;
@@ -162,6 +176,11 @@ Deno.serve(async (req) => {
           stk_reference: transId,
           user_id: route.type === "harambee_user" ? route.user_id : null,
         });
+        if (route.type === "harambee_user" && (route as any).user_id) {
+          const { data: h } = await supabase.from("chama_harambees").select("beneficiary_name, title").eq("id", route.harambee_id).maybeSingle();
+          await sendUserSMS(supabase, (route as any).user_id,
+            SMS.harambeeContribution("{name}", amount, h?.beneficiary_name || h?.title || "the cause"));
+        }
       } else {
         await supabase.from("mpesa_unmapped_payments").insert({
           c2b_transaction_id: c2bRow.id, bill_ref_number: billRef, amount, msisdn,

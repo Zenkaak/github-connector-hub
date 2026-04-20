@@ -1,6 +1,9 @@
-// B2C Withdrawal — authenticated. Deducts wallet first, calls Daraja, refunds on failure.
+// B2C Withdrawal — authenticated. Deducts wallet immediately, calls Daraja.
+// On failure (insufficient float, etc.) we DO NOT refund here — the b2c-result
+// or the retry worker handles it. User always sees "processing" UX.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.103.3";
 import { corsHeaders, getAccessToken, MPESA_BASE, PAYBILL, CALLBACKS } from "../_shared/mpesa.ts";
+import { sendUserSMS, SMS } from "../_shared/sms.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -8,13 +11,11 @@ Deno.serve(async (req) => {
   try {
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      return new Response(JSON.stringify({ error: "Please sign in to continue" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Use service-role client + getUser(token) — works with HS256 AND ES256 signing keys
-    // (getClaims on older SDKs throws UNAUTHORIZED_UNSUPPORTED_TOKEN_ALGORITHM for ES256)
     const admin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
@@ -22,8 +23,7 @@ Deno.serve(async (req) => {
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: authErr } = await admin.auth.getUser(token);
     if (authErr || !userData?.user?.id) {
-      console.error("Auth failed:", authErr);
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      return new Response(JSON.stringify({ error: "Please sign in to continue" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -36,12 +36,11 @@ Deno.serve(async (req) => {
       });
     }
     if (!phone) {
-      return new Response(JSON.stringify({ error: "Phone is required" }), {
+      return new Response(JSON.stringify({ error: "Phone number is required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Normalize phone to 2547XXXXXXXX
     let normalized = String(phone).replace(/\D/g, "");
     if (normalized.startsWith("0")) normalized = "254" + normalized.slice(1);
     if (normalized.startsWith("7") || normalized.startsWith("1")) normalized = "254" + normalized;
@@ -51,34 +50,32 @@ Deno.serve(async (req) => {
       });
     }
 
-    // (admin client already created above for auth)
-
-    // Step 1: Deduct first via RPC (creates b2c request row)
+    // Step 1: Deduct wallet via RPC (also creates b2c request row)
     const { data: requestId, error: rpcErr } = await admin.rpc("create_b2c_withdrawal", {
-      _user_id: userId,
-      _amount: amount,
-      _phone: normalized,
-      _remarks: remarks,
-      _occasion: occasion,
+      _user_id: userId, _amount: amount, _phone: normalized,
+      _remarks: remarks, _occasion: occasion,
     });
     if (rpcErr) {
-      console.error("RPC error:", rpcErr);
-      return new Response(JSON.stringify({ error: rpcErr.message }), {
+      // Only "Insufficient wallet balance" is a real user error — show it
+      const msg = rpcErr.message || "Withdrawal could not be initiated";
+      return new Response(JSON.stringify({ error: msg }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Get the originator_conversation_id we just generated
     const { data: reqRow } = await admin.from("mpesa_b2c_requests")
       .select("originator_conversation_id").eq("id", requestId).single();
     const origConv = reqRow?.originator_conversation_id;
 
-    // Step 2: Call Daraja B2C
-    try {
+    // Send "processing" SMS immediately
+    await sendUserSMS(admin, userId, SMS.walletWithdrawalInitiated("{name}", amount, normalized));
+
+    // Step 2: Try Daraja B2C
+    const tryDaraja = async (): Promise<{ ok: boolean; data: any }> => {
       const accessToken = await getAccessToken();
       const initiator = Deno.env.get("MPESA_INITIATOR_NAME");
       const securityCred = Deno.env.get("MPESA_SECURITY_CREDENTIAL");
-      if (!initiator || !securityCred) throw new Error("B2C initiator credentials not configured");
+      if (!initiator || !securityCred) throw new Error("B2C credentials not configured");
 
       const payload = {
         OriginatorConversationID: origConv,
@@ -93,50 +90,58 @@ Deno.serve(async (req) => {
         ResultURL: CALLBACKS.b2cResult,
         Occasion: (occasion || "").slice(0, 100),
       };
-
-      const darajaRes = await fetch(`${MPESA_BASE}/mpesa/b2c/v1/paymentrequest`, {
+      const res = await fetch(`${MPESA_BASE}/mpesa/b2c/v1/paymentrequest`, {
         method: "POST",
         headers: { Authorization: `Bearer ${accessToken}`, "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const darajaData = await darajaRes.json();
-      console.log("Daraja B2C response:", JSON.stringify(darajaData));
+      const data = await res.json();
+      console.log("Daraja B2C response:", JSON.stringify(data));
+      return { ok: data.ResponseCode === "0", data };
+    };
 
-      await admin.from("mpesa_b2c_requests")
-        .update({
-          conversation_id: darajaData.ConversationID || null,
-          request_payload: { request: payload, response: darajaData },
-          status: darajaData.ResponseCode === "0" ? "processing" : "failed",
-          result_code: darajaData.ResponseCode,
-          result_desc: darajaData.ResponseDescription,
-        })
-        .eq("id", requestId);
+    try {
+      const { ok, data } = await tryDaraja();
+      const nowIso = new Date().toISOString();
+      const nextRetry = new Date(Date.now() + 60_000).toISOString(); // 1 min
 
-      if (darajaData.ResponseCode !== "0") {
-        // Daraja rejected — refund immediately
-        await admin.rpc("refund_b2c_withdrawal", { _request_id: requestId, _reason: darajaData.ResponseDescription || "Daraja rejected" });
-        return new Response(JSON.stringify({
-          success: false,
-          error: darajaData.ResponseDescription || "Withdrawal rejected by M-Pesa",
-        }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
-      }
+      await admin.from("mpesa_b2c_requests").update({
+        conversation_id: data.ConversationID || null,
+        request_payload: { response: data },
+        status: ok ? "processing" : "retrying",
+        result_code: data.ResponseCode,
+        result_desc: data.ResponseDescription,
+        last_attempt_at: nowIso,
+        next_retry_at: ok ? null : nextRetry,
+        retry_count: ok ? 0 : 1,
+      }).eq("id", requestId);
+
+      // Always reply success-shaped to the client — actual outcome arrives via callback/SMS
+      return new Response(JSON.stringify({
+        success: true,
+        request_id: requestId,
+        message: "Withdrawal is being processed. You will receive an SMS shortly.",
+      }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    } catch (darajaErr) {
+      console.error("Daraja unreachable, scheduling retry:", darajaErr);
+      const nextRetry = new Date(Date.now() + 60_000).toISOString();
+      await admin.from("mpesa_b2c_requests").update({
+        status: "retrying",
+        result_desc: String(darajaErr),
+        last_attempt_at: new Date().toISOString(),
+        next_retry_at: nextRetry,
+        retry_count: 1,
+      }).eq("id", requestId);
 
       return new Response(JSON.stringify({
         success: true,
         request_id: requestId,
-        message: "Withdrawal request submitted. You'll receive a confirmation shortly.",
+        message: "Withdrawal is being processed. You will receive an SMS shortly.",
       }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
-    } catch (darajaErr) {
-      console.error("Daraja call failed, refunding:", darajaErr);
-      await admin.rpc("refund_b2c_withdrawal", { _request_id: requestId, _reason: String(darajaErr) });
-      return new Response(JSON.stringify({
-        success: false,
-        error: "Failed to reach M-Pesa. Your wallet has been refunded.",
-      }), { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
   } catch (err) {
     console.error("B2C request error:", err);
-    return new Response(JSON.stringify({ error: String(err) }), {
+    return new Response(JSON.stringify({ error: "Withdrawal could not be initiated. Please try again." }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }

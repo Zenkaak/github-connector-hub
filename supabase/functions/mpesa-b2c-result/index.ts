@@ -1,6 +1,7 @@
-// B2C Result callback — completion or failure
+// B2C Result callback — completion or failure with SMS notifications.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { corsHeaders } from "../_shared/mpesa.ts";
+import { sendUserSMS, SMS } from "../_shared/sms.ts";
 
 const ACK = { ResultCode: 0, ResultDesc: "Accepted" };
 const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -11,7 +12,6 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json();
     console.log("B2C Result:", JSON.stringify(body));
-
     const result = body?.Result;
     if (!result) return new Response(JSON.stringify(ACK), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
@@ -20,7 +20,6 @@ Deno.serve(async (req) => {
     const resultCode = String(result.ResultCode);
     const resultDesc = result.ResultDesc;
 
-    // Find the request
     const { data: reqRow } = await supabase.from("mpesa_b2c_requests")
       .select("*")
       .or(`originator_conversation_id.eq.${origConv},conversation_id.eq.${conversationId}`)
@@ -32,15 +31,15 @@ Deno.serve(async (req) => {
     }
 
     if (resultCode === "0") {
-      // Success — extract receipt + completion time + receiver name from ResultParameters
       const params: any[] = result.ResultParameters?.ResultParameter || [];
       const get = (k: string) => params.find((p) => p.Key === k)?.Value;
+      const receipt = get("TransactionReceipt") || "—";
 
       await supabase.from("mpesa_b2c_requests").update({
         status: "completed",
         result_code: resultCode,
         result_desc: resultDesc,
-        mpesa_receipt: get("TransactionReceipt") || null,
+        mpesa_receipt: receipt,
         transaction_completed_date_time: get("TransactionCompletedDateTime") || null,
         receiver_party_public_name: get("ReceiverPartyPublicName") || null,
         result_payload: body,
@@ -49,11 +48,14 @@ Deno.serve(async (req) => {
       await supabase.from("notifications").insert({
         user_id: reqRow.user_id,
         title: "Withdrawal Successful",
-        message: `KES ${reqRow.amount.toLocaleString()} sent to ${reqRow.phone}. Receipt: ${get("TransactionReceipt") || "—"}`,
+        message: `KES ${Number(reqRow.amount).toLocaleString()} sent to ${reqRow.phone}. Receipt: ${receipt}`,
         type: "payment",
       });
+
+      await sendUserSMS(supabase, reqRow.user_id,
+        SMS.walletWithdrawalSuccess("{name}", reqRow.amount, reqRow.phone, receipt));
     } else {
-      // Failure — refund
+      // Daraja failure — refund + notify
       await supabase.from("mpesa_b2c_requests").update({
         status: "failed", result_code: resultCode, result_desc: resultDesc, result_payload: body,
       }).eq("id", reqRow.id);
@@ -61,6 +63,9 @@ Deno.serve(async (req) => {
       if (!reqRow.refunded) {
         await supabase.rpc("refund_b2c_withdrawal", { _request_id: reqRow.id, _reason: resultDesc });
       }
+
+      await sendUserSMS(supabase, reqRow.user_id,
+        SMS.walletWithdrawalFailed("{name}", reqRow.amount, resultDesc || "M-Pesa rejected"));
     }
 
     return new Response(JSON.stringify(ACK), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

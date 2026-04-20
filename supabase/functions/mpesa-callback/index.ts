@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { sendUserSMS, SMS } from "../_shared/sms.ts";
 
 /**
  * M-PESA CALLBACK EDGE FUNCTION
@@ -456,6 +457,35 @@ Deno.serve(async (req) => {
         type: "payment",
       });
       if (notifErr) console.error("❌ Notification insert failed:", JSON.stringify(notifErr));
+
+      // --- SMS NOTIFICATION (Africa's Talking) ---
+      try {
+        let smsMsg = "";
+        if (purpose === "wallet_deposit" || purpose === "activation") {
+          const { data: w } = await supabase.from("wallets").select("balance").eq("user_id", txn.user_id).maybeSingle();
+          smsMsg = SMS.walletDeposit("{name}", actualAmount, Number(w?.balance || 0), mpesaReceipt);
+        } else if (purpose === "personal_savings" && txn.savings_id) {
+          const { data: ps } = await supabase.from("personal_savings").select("saved_amount, name").eq("id", txn.savings_id).maybeSingle();
+          smsMsg = SMS.personalSavings("{name}", actualAmount, Number(ps?.saved_amount || 0), ps?.name || "Savings");
+        } else if (purpose === "chama_savings" && txn.group_id) {
+          const { data: g } = await supabase.from("chama_groups").select("name").eq("id", txn.group_id).maybeSingle();
+          const { data: agg } = await supabase.from("chama_savings").select("amount").eq("group_id", txn.group_id).eq("user_id", txn.user_id);
+          const total = (agg || []).reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
+          smsMsg = SMS.chamaContribution("{name}", actualAmount, g?.name || "your chama", total);
+        } else if (purpose === "loan_repayment") {
+          const { data: d } = await supabase.from("loan_disbursements").select("outstanding_balance, disbursed_amount").eq("user_id", txn.user_id).order("created_at", { ascending: false }).limit(1).maybeSingle();
+          const bal = Number(d?.outstanding_balance || 0);
+          const paid = Number(d?.disbursed_amount || 0) - bal;
+          smsMsg = SMS.loanRepayment("{name}", actualAmount, paid, bal);
+        } else if (purpose === "harambee" && txn.harambee_id) {
+          const { data: h } = await supabase.from("chama_harambees").select("beneficiary_name, title").eq("id", txn.harambee_id).maybeSingle();
+          smsMsg = SMS.harambeeContribution("{name}", actualAmount, h?.beneficiary_name || h?.title || "the cause");
+        }
+        if (smsMsg) await sendUserSMS(supabase, txn.user_id, smsMsg);
+      } catch (smsErr) {
+        console.error("⚠️ SMS notification failed (non-fatal):", smsErr);
+      }
+
 
       // --- EMAIL NOTIFICATION ---
       try {
