@@ -448,6 +448,7 @@ export type Database = {
           payout_method: string | null
           payout_phone: string | null
           raised_amount: number
+          short_code: string | null
           status: string
           target_amount: number
           title: string
@@ -474,6 +475,7 @@ export type Database = {
           payout_method?: string | null
           payout_phone?: string | null
           raised_amount?: number
+          short_code?: string | null
           status?: string
           target_amount?: number
           title: string
@@ -500,6 +502,7 @@ export type Database = {
           payout_method?: string | null
           payout_phone?: string | null
           raised_amount?: number
+          short_code?: string | null
           status?: string
           target_amount?: number
           title?: string
@@ -844,6 +847,7 @@ export type Database = {
           group_id: string
           id: string
           is_active: boolean
+          join_order: number | null
           joined_at: string | null
           role: string
           user_id: string
@@ -854,6 +858,7 @@ export type Database = {
           group_id: string
           id?: string
           is_active?: boolean
+          join_order?: number | null
           joined_at?: string | null
           role?: string
           user_id: string
@@ -864,6 +869,7 @@ export type Database = {
           group_id?: string
           id?: string
           is_active?: boolean
+          join_order?: number | null
           joined_at?: string | null
           role?: string
           user_id?: string
@@ -1663,7 +1669,9 @@ export type Database = {
           conversation_id: string | null
           created_at: string
           id: string
+          last_attempt_at: string | null
           mpesa_receipt: string | null
+          next_retry_at: string | null
           occasion: string | null
           originator_conversation_id: string | null
           phone: string
@@ -1675,6 +1683,7 @@ export type Database = {
           result_code: string | null
           result_desc: string | null
           result_payload: Json | null
+          retry_count: number
           status: string
           transaction_completed_date_time: string | null
           updated_at: string
@@ -1685,7 +1694,9 @@ export type Database = {
           conversation_id?: string | null
           created_at?: string
           id?: string
+          last_attempt_at?: string | null
           mpesa_receipt?: string | null
+          next_retry_at?: string | null
           occasion?: string | null
           originator_conversation_id?: string | null
           phone: string
@@ -1697,6 +1708,7 @@ export type Database = {
           result_code?: string | null
           result_desc?: string | null
           result_payload?: Json | null
+          retry_count?: number
           status?: string
           transaction_completed_date_time?: string | null
           updated_at?: string
@@ -1707,7 +1719,9 @@ export type Database = {
           conversation_id?: string | null
           created_at?: string
           id?: string
+          last_attempt_at?: string | null
           mpesa_receipt?: string | null
+          next_retry_at?: string | null
           occasion?: string | null
           originator_conversation_id?: string | null
           phone?: string
@@ -1719,6 +1733,7 @@ export type Database = {
           result_code?: string | null
           result_desc?: string | null
           result_payload?: Json | null
+          retry_count?: number
           status?: string
           transaction_completed_date_time?: string | null
           updated_at?: string
@@ -2555,6 +2570,7 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      generate_unique_harambee_code: { Args: never; Returns: string }
       generate_unique_mpesa_code: { Args: never; Returns: string }
       get_active_chama_member_count: {
         Args: { _group_id: string }
