@@ -2,7 +2,9 @@
 // Mirrors mpesa-confirmation logic exactly: dedup, classify, credit.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { corsHeaders, classifyBillRef } from "../_shared/mpesa.ts";
-import { sendUserSMS, SMS } from "../_shared/sms.ts";
+import { sendUserSMS, sendSMS, SMS, fmt } from "../_shared/sms.ts";
+
+const ADMIN_PHONE = "0751414437";
 
 const supabase = createClient(
   Deno.env.get("SUPABASE_URL")!,
@@ -176,6 +178,11 @@ Deno.serve(async (req) => {
           stk_reference: transId,
           user_id: route.type === "harambee_user" ? route.user_id : null,
         });
+        // Update raised_amount on the harambee itself
+        const { data: hRow } = await supabase.from("chama_harambees").select("raised_amount").eq("id", route.harambee_id).maybeSingle();
+        await supabase.from("chama_harambees")
+          .update({ raised_amount: (Number(hRow?.raised_amount) || 0) + amount })
+          .eq("id", route.harambee_id);
         if (route.type === "harambee_user" && (route as any).user_id) {
           const { data: h } = await supabase.from("chama_harambees").select("beneficiary_name, title").eq("id", route.harambee_id).maybeSingle();
           await sendUserSMS(supabase, (route as any).user_id,
@@ -186,12 +193,29 @@ Deno.serve(async (req) => {
           c2b_transaction_id: c2bRow.id, bill_ref_number: billRef, amount, msisdn,
           reason: `Harambee not found for slug ${billRef}`,
         });
+        await sendSMS(ADMIN_PHONE, `[Dasnet ALERT] Unmapped harambee payment: ${billRef} ${fmt(amount)} from ${msisdn}. Please reconcile.`);
       }
+    } else if ((route as any).type === "mgr") {
+      const r: any = route;
+      // Insert MGR contribution
+      await supabase.from("chama_mgr_contributions").insert({
+        cycle_id: r.cycle_id, group_id: r.group_id, user_id: r.user_id,
+        amount, payment_method: "paybill", reference: transId,
+      });
+      const { data: g } = await supabase.from("chama_groups").select("name").eq("id", r.group_id).maybeSingle();
+      await supabase.from("notifications").insert({
+        user_id: r.user_id, title: "Merry-Go-Round Payment",
+        message: `KES ${amount.toLocaleString()} contributed to merry-go-round in ${g?.name || "your chama"}. Receipt: ${transId}`, type: "payment",
+      });
+      await sendUserSMS(supabase, r.user_id, SMS.chamaContribution("{name}", amount, `${g?.name || "your chama"} (Merry-go-round)`, amount));
     } else {
       await supabase.from("mpesa_unmapped_payments").insert({
         c2b_transaction_id: c2bRow.id, bill_ref_number: billRef, amount, msisdn,
         reason: route.type === "unmapped" ? route.reason : "Unhandled route",
       });
+      // Notify admin via SMS
+      const reason = route.type === "unmapped" ? route.reason : "Unhandled route";
+      await sendSMS(ADMIN_PHONE, `[Dasnet ALERT] Unmapped payment ${billRef} ${fmt(amount)} from ${msisdn}. Reason: ${reason}. Please reconcile.`);
     }
 
     await supabase.from("mpesa_c2b_transactions")

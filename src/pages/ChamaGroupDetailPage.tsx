@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Users, Crown, Search, UserPlus, ArrowLeft, BookOpen, Coins, MessageSquare, Wallet, FileText, AlertTriangle, TrendingUp, Calendar, PiggyBank, Settings, Megaphone, Landmark, LogOut, UserCheck, Receipt, Vote, HandCoins, HeadphonesIcon, Camera, Loader2, CalendarDays, Download, Shield, MoreHorizontal } from 'lucide-react';
+import { Users, Crown, Search, UserPlus, ArrowLeft, BookOpen, Coins, MessageSquare, Wallet, FileText, AlertTriangle, TrendingUp, Calendar, PiggyBank, Settings, Megaphone, Landmark, LogOut, UserCheck, Receipt, Vote, HandCoins, HeadphonesIcon, Camera, Loader2, CalendarDays, Download, Shield, MoreHorizontal, RefreshCw } from 'lucide-react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -32,6 +32,7 @@ import { ChamaMeetings } from '@/components/chama/ChamaMeetings';
 import { ChamaReports } from '@/components/chama/ChamaReports';
 import { ChamaPenalties } from '@/components/chama/ChamaPenalties';
 import { ChamaEmergencyFund } from '@/components/chama/ChamaEmergencyFund';
+import { ChamaMerryGoRound } from '@/components/chama/ChamaMerryGoRound';
 import { cn } from '@/lib/utils';
 
 interface Member {
@@ -377,96 +378,42 @@ export default function ChamaGroupDetailPage() {
         </motion.div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-        {/* Tabs — primary visible + "More" dropdown for less-used */}
-        {(() => {
-          const primaryTabs = [
-            { value: 'members', icon: Users, label: 'Members' },
-            { value: 'savings', icon: Wallet, label: 'Savings' },
-            { value: 'loans', icon: Landmark, label: 'Loans' },
-            { value: 'withdrawals', icon: Coins, label: 'Withdraw' },
-            { value: 'chat', icon: MessageSquare, label: 'Chat' },
-            { value: 'announcements', icon: Megaphone, label: 'Notices' },
-            { value: 'harambee', icon: HandCoins, label: 'Harambee' },
-          ] as const;
-          const moreTabs = [
-            { value: 'meetings', icon: CalendarDays, label: 'Meetings' },
-            { value: 'transactions', icon: Receipt, label: 'Transactions' },
-            { value: 'votes', icon: Vote, label: 'Votes' },
-            { value: 'arrears', icon: AlertTriangle, label: 'Arrears' },
-            { value: 'penalties', icon: Shield, label: 'Penalties' },
-            { value: 'emergency', icon: Shield, label: 'Emergency Fund' },
-            { value: 'reports', icon: Download, label: 'Reports' },
-            { value: 'support', icon: HeadphonesIcon, label: 'Support' },
-            ...(isLeader ? [{ value: 'requests', icon: UserCheck, label: 'Join Requests' }] : []),
-            { value: 'terms', icon: FileText, label: 'Terms' },
-            { value: 'leave', icon: LogOut, label: 'Leave Group' },
-            ...(isChair ? [{ value: 'settings', icon: Settings, label: 'Settings' }] : []),
-          ] as const;
-
-          const activeMoreTab = moreTabs.find(t => t.value === activeTab);
-
-          return (
-            <div className="overflow-x-auto no-scrollbar">
-              <TabsList className="inline-flex w-auto h-auto p-1 gap-1 flex-nowrap">
-                {primaryTabs.map((tab) => (
-                  <TabsTrigger
-                    key={tab.value}
-                    value={tab.value}
-                    title={tab.label}
-                    className="flex flex-col items-center gap-1 text-[11px] py-2 px-3 min-w-[60px]"
-                  >
-                    <tab.icon size={18} className="shrink-0" />
-                    <span className="truncate leading-tight">{tab.label}</span>
-                  </TabsTrigger>
-                ))}
-
-                {/* More dropdown */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <button
-                      type="button"
-                      className={cn(
-                        'flex flex-col items-center gap-1 text-[11px] py-2 px-3 min-w-[60px] rounded-md transition-colors',
-                        activeMoreTab
-                          ? 'bg-background text-foreground shadow-sm'
-                          : 'text-muted-foreground hover:bg-muted/50'
-                      )}
-                      title="More options"
-                    >
-                      {activeMoreTab ? (
-                        <activeMoreTab.icon size={18} className="shrink-0" />
-                      ) : (
-                        <MoreHorizontal size={18} className="shrink-0" />
-                      )}
-                      <span className="truncate leading-tight">
-                        {activeMoreTab ? activeMoreTab.label : 'More'}
-                      </span>
-                    </button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56 max-h-[70vh] overflow-y-auto">
-                    <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-muted-foreground">
-                      More options
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    {moreTabs.map((tab) => (
-                      <DropdownMenuItem
-                        key={tab.value}
-                        onClick={() => setActiveTab(tab.value)}
-                        className={cn(
-                          'gap-2.5 cursor-pointer',
-                          activeTab === tab.value && 'bg-accent/10 text-accent font-semibold'
-                        )}
-                      >
-                        <tab.icon size={16} className="shrink-0" />
-                        <span>{tab.label}</span>
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </TabsList>
-            </div>
-          );
-        })()}
+          {/* Restored: flat scrollable tabs (original layout) */}
+          <div className="overflow-x-auto no-scrollbar">
+            <TabsList className="inline-flex w-auto h-auto p-1 gap-1 flex-nowrap">
+              {[
+                { value: 'members', icon: Users, label: 'Members' },
+                { value: 'savings', icon: Wallet, label: 'Savings' },
+                { value: 'loans', icon: Landmark, label: 'Loans' },
+                { value: 'withdrawals', icon: Coins, label: 'Withdraw' },
+                { value: 'mgr', icon: RefreshCw, label: 'Merry-Go-Round' },
+                { value: 'chat', icon: MessageSquare, label: 'Chat' },
+                { value: 'announcements', icon: Megaphone, label: 'Notices' },
+                { value: 'meetings', icon: CalendarDays, label: 'Meetings' },
+                { value: 'transactions', icon: Receipt, label: 'Transactions' },
+                { value: 'votes', icon: Vote, label: 'Votes' },
+                { value: 'arrears', icon: AlertTriangle, label: 'Arrears' },
+                { value: 'penalties', icon: Shield, label: 'Penalties' },
+                { value: 'emergency', icon: Shield, label: 'Emergency' },
+                { value: 'reports', icon: Download, label: 'Reports' },
+                { value: 'support', icon: HeadphonesIcon, label: 'Support' },
+                ...(isLeader ? [{ value: 'requests', icon: UserCheck, label: 'Requests' }] : []),
+                { value: 'terms', icon: FileText, label: 'Terms' },
+                { value: 'leave', icon: LogOut, label: 'Leave' },
+                ...(isChair ? [{ value: 'settings', icon: Settings, label: 'Settings' }] : []),
+              ].map((tab) => (
+                <TabsTrigger
+                  key={tab.value}
+                  value={tab.value}
+                  title={tab.label}
+                  className="flex flex-col items-center gap-1 text-[11px] py-2 px-3 min-w-[60px]"
+                >
+                  <tab.icon size={18} className="shrink-0" />
+                  <span className="truncate leading-tight">{tab.label}</span>
+                </TabsTrigger>
+              ))}
+            </TabsList>
+          </div>
 
           <TabsContent value="members" className="mt-4">
             <div className="mb-3">
@@ -609,8 +556,8 @@ export default function ChamaGroupDetailPage() {
             <ChamaVotes groupId={groupId!} members={members} myRole={myRole} />
           </TabsContent>
 
-          <TabsContent value="harambee" className="mt-4">
-            <ChamaHarambee groupId={groupId!} group={group} members={members} myRole={myRole} />
+          <TabsContent value="mgr" className="mt-4">
+            <ChamaMerryGoRound groupId={groupId!} group={group} members={members} myRole={myRole} />
           </TabsContent>
 
           <TabsContent value="support" className="mt-4">

@@ -155,7 +155,7 @@ Deno.serve(async (req) => {
       } else if (purpose === "loan_repayment" && userCode) {
         accountRef = `${userCode}L`;
       } else if (isHarambee && harambee_id) {
-        // NEW: 4-digit short_code preferred, fallback to legacy order_number slug.
+        // 3-digit short_code preferred, fallback to legacy order_number slug.
         const { data: h } = await tempSb.from("chama_harambees")
           .select("short_code, order_number").eq("id", harambee_id).maybeSingle();
         if (h?.short_code) {
@@ -164,6 +164,8 @@ Deno.serve(async (req) => {
           const slug = h.order_number.replace(/^H/i, "");
           accountRef = userCode ? `${userCode}H${slug}` : `H${slug}`;
         }
+      } else if (purpose === "merry_go_round" && userCode && body.cycle_number) {
+        accountRef = `${userCode}M${body.cycle_number}`;
       }
     } catch (refErr) {
       console.warn("AccountReference lookup failed, falling back to generated ref:", refErr);

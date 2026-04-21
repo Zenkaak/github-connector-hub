@@ -919,6 +919,106 @@ export type Database = {
           },
         ]
       }
+      chama_mgr_contributions: {
+        Row: {
+          amount: number
+          cycle_id: string
+          group_id: string
+          id: string
+          paid_at: string
+          payment_method: string
+          reference: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          cycle_id: string
+          group_id: string
+          id?: string
+          paid_at?: string
+          payment_method?: string
+          reference?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          cycle_id?: string
+          group_id?: string
+          id?: string
+          paid_at?: string
+          payment_method?: string
+          reference?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chama_mgr_contributions_cycle_id_fkey"
+            columns: ["cycle_id"]
+            isOneToOne: false
+            referencedRelation: "chama_mgr_cycles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      chama_mgr_cycles: {
+        Row: {
+          contribution_amount: number
+          created_at: string
+          created_by: string
+          cycle_number: number
+          deadline: string
+          group_id: string
+          id: string
+          payout_amount: number | null
+          payout_date: string
+          payout_processed_at: string | null
+          penalty_amount: number
+          recipient_id: string
+          recipient_name: string | null
+          status: string
+        }
+        Insert: {
+          contribution_amount: number
+          created_at?: string
+          created_by: string
+          cycle_number: number
+          deadline: string
+          group_id: string
+          id?: string
+          payout_amount?: number | null
+          payout_date: string
+          payout_processed_at?: string | null
+          penalty_amount?: number
+          recipient_id: string
+          recipient_name?: string | null
+          status?: string
+        }
+        Update: {
+          contribution_amount?: number
+          created_at?: string
+          created_by?: string
+          cycle_number?: number
+          deadline?: string
+          group_id?: string
+          id?: string
+          payout_amount?: number | null
+          payout_date?: string
+          payout_processed_at?: string | null
+          penalty_amount?: number
+          recipient_id?: string
+          recipient_name?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chama_mgr_cycles_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "chama_groups"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       chama_notifications: {
         Row: {
           created_at: string | null
@@ -2006,6 +2106,7 @@ export type Database = {
       profiles: {
         Row: {
           address: string
+          avatar_url: string | null
           county: string
           created_at: string
           date_of_birth: string
@@ -2025,6 +2126,7 @@ export type Database = {
         }
         Insert: {
           address?: string
+          avatar_url?: string | null
           county?: string
           created_at?: string
           date_of_birth?: string
@@ -2044,6 +2146,7 @@ export type Database = {
         }
         Update: {
           address?: string
+          avatar_url?: string | null
           county?: string
           created_at?: string
           date_of_birth?: string
@@ -2570,6 +2673,7 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      generate_harambee_short_code: { Args: never; Returns: string }
       generate_unique_harambee_code: { Args: never; Returns: string }
       generate_unique_mpesa_code: { Args: never; Returns: string }
       get_active_chama_member_count: {
