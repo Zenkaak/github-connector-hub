@@ -210,6 +210,7 @@ export function ChamaSupportChat({ groupId, members, myRole }: Props) {
 
       const { error } = await supabase.from('chama_support_messages').insert({
         group_id: groupId,
+        user_id: user.id,
         sender_id: user.id,
         receiver_id: selectedMember,
         message: messageText,
@@ -439,6 +440,7 @@ export function ChamaSupportChat({ groupId, members, myRole }: Props) {
                     try {
                       await supabase.from('chama_support_messages').insert({
                         group_id: groupId,
+                        user_id: user.id,
                         sender_id: user.id,
                         receiver_id: selectedMember,
                         message: reqMsg,

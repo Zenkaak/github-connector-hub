@@ -60,6 +60,21 @@ export async function classifyBillRef(supabase: any, billRef: string): Promise<R
     return { type: "wallet", user_id: data.user_id };
   }
 
+  // ⭐ HARAMBEE PUBLIC: ^H\d{4}$ — MUST come before any \d{4}+letter pattern
+  // so refs like "H1212" are recognised as harambees, not as user-code 1212 + chama-letter H.
+  if (/^H\d{4}$/.test(ref)) {
+    const code = ref.slice(1);
+    const { data: h } = await supabase.from("chama_harambees").select("id").eq("short_code", code).maybeSingle();
+    if (h) return { type: "harambee_public", harambee_id: h.id, slug: ref };
+    return { type: "unmapped", reason: `Harambee with code ${code} not found` };
+  }
+  if (/^\d{4}H$/.test(ref)) {
+    const code = ref.slice(0, 4);
+    const { data: h } = await supabase.from("chama_harambees").select("id").eq("short_code", code).maybeSingle();
+    if (h) return { type: "harambee_public", harambee_id: h.id, slug: ref };
+    return { type: "unmapped", reason: `Harambee with code ${code} not found` };
+  }
+
   // Savings: ^\d{4}S\d+$ or ^S\d+\d{4}$ (reverse)
   let sMatch = ref.match(/^(\d{4})S(\d+)$/) || ref.match(/^S(\d+)(\d{4})$/)?.slice(0).map((_, i, a) => i === 1 ? a[2] : i === 2 ? a[1] : a[0]);
   if (sMatch) {
@@ -122,19 +137,6 @@ export async function classifyBillRef(supabase: any, billRef: string): Promise<R
     return { type: "loan", user_id: prof.user_id, loan_id: loan?.loan_id ?? null };
   }
 
-  // Harambee 4-digit short_code (NEW): ^H\d{4}$ or ^\d{4}H$ or just ^\d{4}H\d{4}$ (user+harambee)
-  // ^H\d{4}$ — direct harambee short code
-  if (/^H\d{4}$/.test(ref)) {
-    const code = ref.slice(1);
-    const { data: h } = await supabase.from("chama_harambees").select("id").eq("short_code", code).maybeSingle();
-    return { type: "harambee_public", harambee_id: h?.id ?? null, slug: ref };
-  }
-  // ^\d{4}H$ also accepted (just harambee, no user)
-  if (/^\d{4}H$/.test(ref)) {
-    const code = ref.slice(0, 4);
-    const { data: h } = await supabase.from("chama_harambees").select("id").eq("short_code", code).maybeSingle();
-    return { type: "harambee_public", harambee_id: h?.id ?? null, slug: ref };
-  }
   // ^\d{4}H\d{4}$ — user code + harambee short code
   const hUserNew = ref.match(/^(\d{4})H(\d{4})$/);
   if (hUserNew) {
@@ -158,6 +160,18 @@ export async function classifyBillRef(supabase: any, billRef: string): Promise<R
   if (/^H\d{3}$/.test(ref)) {
     const { data: h } = await supabase.from("chama_harambees").select("id").eq("order_number", ref).maybeSingle();
     return { type: "harambee_public", harambee_id: h?.id ?? null, slug: ref };
+  }
+
+  // FINAL FALLBACK: if the ref STARTS with a valid 4-digit user code,
+  // route to that user's wallet so funds are never lost.
+  // (Covers cases like "3044C", "3044X9", "3044-savings", etc.)
+  const userCodePrefix = ref.match(/^(\d{4})/);
+  if (userCodePrefix) {
+    const { data: prof } = await supabase.from("profiles").select("user_id").eq("mpesa_account_code", userCodePrefix[1]).maybeSingle();
+    if (prof) {
+      console.log(`[classifier] ${ref}: unrecognised suffix → wallet fallback for user ${userCodePrefix[1]}`);
+      return { type: "wallet", user_id: prof.user_id };
+    }
   }
 
   return { type: "unmapped", reason: `Account format not recognised: ${ref}` };

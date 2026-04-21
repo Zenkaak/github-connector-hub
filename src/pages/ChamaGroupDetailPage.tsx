@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Users, Crown, Search, UserPlus, ArrowLeft, BookOpen, Coins, MessageSquare, Wallet, FileText, AlertTriangle, TrendingUp, Calendar, PiggyBank, Settings, Megaphone, Landmark, LogOut, UserCheck, Receipt, Vote, HandCoins, HeadphonesIcon, Camera, Loader2, CalendarDays, Download, Shield } from 'lucide-react';
+import { Users, Crown, Search, UserPlus, ArrowLeft, BookOpen, Coins, MessageSquare, Wallet, FileText, AlertTriangle, TrendingUp, Calendar, PiggyBank, Settings, Megaphone, Landmark, LogOut, UserCheck, Receipt, Vote, HandCoins, HeadphonesIcon, Camera, Loader2, CalendarDays, Download, Shield, MoreHorizontal } from 'lucide-react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -209,19 +210,15 @@ export default function ChamaGroupDetailPage() {
     setRemoving(true);
     try {
       const removedMember = members.find(m => m.id === removeMemberId);
-      const chairProfile = members.find(m => m.user_id === user.id)?.profile;
+      if (!removedMember?.user_id) throw new Error('Member not found');
 
-      // Submit removal request to admin instead of directly removing
-      const { error } = await supabase.from('chama_member_removal_requests' as any).insert({
+      // Submit removal request to admin (matches actual schema)
+      const { error } = await supabase.from('chama_member_removal_requests').insert({
         group_id: groupId,
-        member_user_id: removedMember?.user_id,
-        chairperson_user_id: user.id,
-        chairperson_name: chairProfile?.full_name || null,
-        chairperson_phone: chairProfile?.phone || null,
-        member_name: removedMember?.profile?.full_name || null,
-        member_phone: removedMember?.profile?.phone || null,
+        member_id: removedMember.user_id,
+        requested_by: user.id,
         reason: removeReason.trim(),
-      } as any);
+      });
       if (error) throw error;
 
       toast({ title: 'Removal Request Submitted', description: `Your request to remove ${removeMemberName} has been sent to admin for review.` });
@@ -379,43 +376,97 @@ export default function ChamaGroupDetailPage() {
           </Card>
         </motion.div>
 
-        {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <div className="overflow-x-auto no-scrollbar">
-            <TabsList className="inline-flex w-auto h-auto p-1 gap-1 flex-wrap">
-              {([
-                { value: 'members', icon: Users, label: 'Members' },
-                { value: 'savings', icon: Wallet, label: 'Savings' },
-                { value: 'chat', icon: MessageSquare, label: 'Chat' },
-                { value: 'announcements', icon: Megaphone, label: 'Notices' },
-                { value: 'loans', icon: Landmark, label: 'Loans' },
-                { value: 'withdrawals', icon: Coins, label: 'Withdraw' },
-                { value: 'arrears', icon: AlertTriangle, label: 'Arrears' },
-                { value: 'terms', icon: FileText, label: 'Terms' },
-                { value: 'transactions', icon: Receipt, label: 'Txns' },
-                { value: 'votes', icon: Vote, label: 'Votes' },
-                { value: 'harambee', icon: HandCoins, label: 'Harambee' },
-                { value: 'meetings', icon: CalendarDays, label: 'Meetings' },
-                { value: 'penalties', icon: Shield, label: 'Penalties' },
-                { value: 'emergency', icon: Shield, label: 'Emergency' },
-                { value: 'reports', icon: Download, label: 'Reports' },
-                { value: 'support', icon: HeadphonesIcon, label: 'Support' },
-                ...(isLeader ? [{ value: 'requests', icon: UserCheck, label: 'Requests' }] : []),
-                { value: 'leave', icon: LogOut, label: 'Leave' },
-                ...(isChair ? [{ value: 'settings', icon: Settings, label: 'Settings' }] : []),
-              ] as const).map((tab) => (
-                <TabsTrigger
-                  key={tab.value}
-                  value={tab.value}
-                  title={tab.label}
-                  className="flex flex-col items-center gap-1 text-[11px] py-2 px-3 min-w-[60px]"
-                >
-                  <tab.icon size={18} className="shrink-0" />
-                  <span className="truncate leading-tight">{tab.label}</span>
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </div>
+        {/* Tabs — primary visible + "More" dropdown for less-used */}
+        {(() => {
+          const primaryTabs = [
+            { value: 'members', icon: Users, label: 'Members' },
+            { value: 'savings', icon: Wallet, label: 'Savings' },
+            { value: 'loans', icon: Landmark, label: 'Loans' },
+            { value: 'withdrawals', icon: Coins, label: 'Withdraw' },
+            { value: 'chat', icon: MessageSquare, label: 'Chat' },
+            { value: 'announcements', icon: Megaphone, label: 'Notices' },
+            { value: 'harambee', icon: HandCoins, label: 'Harambee' },
+          ] as const;
+          const moreTabs = [
+            { value: 'meetings', icon: CalendarDays, label: 'Meetings' },
+            { value: 'transactions', icon: Receipt, label: 'Transactions' },
+            { value: 'votes', icon: Vote, label: 'Votes' },
+            { value: 'arrears', icon: AlertTriangle, label: 'Arrears' },
+            { value: 'penalties', icon: Shield, label: 'Penalties' },
+            { value: 'emergency', icon: Shield, label: 'Emergency Fund' },
+            { value: 'reports', icon: Download, label: 'Reports' },
+            { value: 'support', icon: HeadphonesIcon, label: 'Support' },
+            ...(isLeader ? [{ value: 'requests', icon: UserCheck, label: 'Join Requests' }] : []),
+            { value: 'terms', icon: FileText, label: 'Terms' },
+            { value: 'leave', icon: LogOut, label: 'Leave Group' },
+            ...(isChair ? [{ value: 'settings', icon: Settings, label: 'Settings' }] : []),
+          ] as const;
+
+          const activeMoreTab = moreTabs.find(t => t.value === activeTab);
+
+          return (
+            <div className="overflow-x-auto no-scrollbar">
+              <TabsList className="inline-flex w-auto h-auto p-1 gap-1 flex-nowrap">
+                {primaryTabs.map((tab) => (
+                  <TabsTrigger
+                    key={tab.value}
+                    value={tab.value}
+                    title={tab.label}
+                    className="flex flex-col items-center gap-1 text-[11px] py-2 px-3 min-w-[60px]"
+                  >
+                    <tab.icon size={18} className="shrink-0" />
+                    <span className="truncate leading-tight">{tab.label}</span>
+                  </TabsTrigger>
+                ))}
+
+                {/* More dropdown */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      className={cn(
+                        'flex flex-col items-center gap-1 text-[11px] py-2 px-3 min-w-[60px] rounded-md transition-colors',
+                        activeMoreTab
+                          ? 'bg-background text-foreground shadow-sm'
+                          : 'text-muted-foreground hover:bg-muted/50'
+                      )}
+                      title="More options"
+                    >
+                      {activeMoreTab ? (
+                        <activeMoreTab.icon size={18} className="shrink-0" />
+                      ) : (
+                        <MoreHorizontal size={18} className="shrink-0" />
+                      )}
+                      <span className="truncate leading-tight">
+                        {activeMoreTab ? activeMoreTab.label : 'More'}
+                      </span>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56 max-h-[70vh] overflow-y-auto">
+                    <DropdownMenuLabel className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                      More options
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    {moreTabs.map((tab) => (
+                      <DropdownMenuItem
+                        key={tab.value}
+                        onClick={() => setActiveTab(tab.value)}
+                        className={cn(
+                          'gap-2.5 cursor-pointer',
+                          activeTab === tab.value && 'bg-accent/10 text-accent font-semibold'
+                        )}
+                      >
+                        <tab.icon size={16} className="shrink-0" />
+                        <span>{tab.label}</span>
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </TabsList>
+            </div>
+          );
+        })()}
 
           <TabsContent value="members" className="mt-4">
             <div className="mb-3">
