@@ -376,6 +376,7 @@ export default function ChamaGroupDetailPage() {
           </Card>
         </motion.div>
 
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
         {/* Tabs — primary visible + "More" dropdown for less-used */}
         {(() => {
           const primaryTabs = [
