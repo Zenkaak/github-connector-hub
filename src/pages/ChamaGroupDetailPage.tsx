@@ -1,16 +1,21 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Users, Crown, Search, UserPlus, ArrowLeft, BookOpen, Coins, MessageSquare, Wallet, FileText, AlertTriangle, TrendingUp, Calendar, PiggyBank, Settings, Megaphone, Landmark, LogOut, UserCheck, Receipt, Vote, HandCoins, HeadphonesIcon, Camera, Loader2, CalendarDays, Download, Shield, MoreHorizontal, RefreshCw } from 'lucide-react';
+import {
+  Users, Crown, Search, UserPlus, ArrowLeft, BookOpen, Coins, MessageSquare, Wallet,
+  FileText, AlertTriangle, TrendingUp, Calendar, PiggyBank, Settings, Megaphone,
+  Landmark, LogOut, UserCheck, Receipt, Vote, HandCoins, HeadphonesIcon, Camera,
+  Loader2, CalendarDays, Download, Shield, RefreshCw, ArrowDownLeft, ArrowUpRight,
+  Eye, EyeOff, ChevronRight, Bell, Grid3x3, History, Home,
+} from 'lucide-react';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuLabel, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -26,7 +31,6 @@ import { ChamaLeaveRequest } from '@/components/chama/ChamaLeaveRequest';
 import { ChamaJoinRequests } from '@/components/chama/ChamaJoinRequests';
 import { ChamaTransactions } from '@/components/chama/ChamaTransactions';
 import { ChamaVotes } from '@/components/chama/ChamaVotes';
-import { ChamaHarambee } from '@/components/chama/ChamaHarambee';
 import { ChamaSupportChat } from '@/components/chama/ChamaSupportChat';
 import { ChamaMeetings } from '@/components/chama/ChamaMeetings';
 import { ChamaReports } from '@/components/chama/ChamaReports';
@@ -45,6 +49,42 @@ interface Member {
   profile?: { full_name: string; phone: string; email: string; county?: string; sub_county?: string; ward?: string };
 }
 
+const roleLabels: Record<string, string> = { chairperson: 'Chairperson', secretary: 'Secretary', treasurer: 'Treasurer', member: 'Member' };
+const roleIcons: Record<string, typeof Crown> = { chairperson: Crown, secretary: BookOpen, treasurer: Coins, member: Users };
+const roleColors: Record<string, string> = {
+  chairperson: 'bg-amber-400/15 text-amber-200 border-amber-300/30',
+  secretary: 'bg-sky-400/15 text-sky-200 border-sky-300/30',
+  treasurer: 'bg-emerald-400/15 text-emerald-200 border-emerald-300/30',
+  member: 'bg-white/5 text-slate-300 border-white/10',
+};
+
+type TabDef = { value: string; icon: typeof Users; label: string };
+
+const bottomTabs: TabDef[] = [
+  { value: 'home', icon: Home, label: 'Home' },
+  { value: 'savings', icon: Wallet, label: 'Savings' },
+  { value: 'loans', icon: HandCoins, label: 'Loans' },
+  { value: 'members', icon: Users, label: 'Members' },
+];
+
+const primaryActions: TabDef[] = [
+  { value: 'savings', icon: ArrowDownLeft, label: 'Deposit' },
+  { value: 'withdrawals', icon: ArrowUpRight, label: 'Withdraw' },
+  { value: 'loans', icon: HandCoins, label: 'Borrow' },
+  { value: 'mgr', icon: RefreshCw, label: 'Merry-Go' },
+];
+
+const secondaryActions: TabDef[] = [
+  { value: 'transactions', icon: History, label: 'Statement' },
+  { value: 'chat', icon: MessageSquare, label: 'Chat' },
+  { value: 'announcements', icon: Megaphone, label: 'Notices' },
+  { value: 'meetings', icon: CalendarDays, label: 'Meetings' },
+  { value: 'votes', icon: Vote, label: 'Votes' },
+  { value: 'arrears', icon: AlertTriangle, label: 'Arrears' },
+  { value: 'penalties', icon: Shield, label: 'Penalties' },
+  { value: 'reports', icon: Download, label: 'Reports' },
+];
+
 export default function ChamaGroupDetailPage() {
   const { groupId } = useParams<{ groupId: string }>();
   const { user } = useAuth();
@@ -56,7 +96,10 @@ export default function ChamaGroupDetailPage() {
   const [allMembers, setAllMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [myRole, setMyRole] = useState<string>('member');
-  const [activeTab, setActiveTab] = useState('members');
+  const [activeTab, setActiveTab] = useState('home');
+  const [showBalance, setShowBalance] = useState(true);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const [totalSavings, setTotalSavings] = useState(0);
   const [totalJoiningFees, setTotalJoiningFees] = useState(0);
   const [mySavings, setMySavings] = useState(0);
@@ -141,12 +184,8 @@ export default function ChamaGroupDetailPage() {
         setMySavings(savingsRes.data.filter(s => s.user_id === user.id).reduce((s, r) => s + r.amount, 0));
         setSavingsCount(savingsRes.data.length);
       }
-      if (feesRes.data) {
-        setTotalJoiningFees(feesRes.data.reduce((s, r) => s + r.amount, 0));
-      }
-      if (platformFeesRes.data) {
-        setTotalPlatformFees(platformFeesRes.data.reduce((s, r) => s + r.amount, 0));
-      }
+      if (feesRes.data) setTotalJoiningFees(feesRes.data.reduce((s, r) => s + r.amount, 0));
+      if (platformFeesRes.data) setTotalPlatformFees(platformFeesRes.data.reduce((s, r) => s + r.amount, 0));
     } catch (error) {
       console.error('Error fetching group:', error);
     } finally {
@@ -212,8 +251,6 @@ export default function ChamaGroupDetailPage() {
     try {
       const removedMember = members.find(m => m.id === removeMemberId);
       if (!removedMember?.user_id) throw new Error('Member not found');
-
-      // Submit removal request to admin (matches actual schema)
       const { error } = await supabase.from('chama_member_removal_requests').insert({
         group_id: groupId,
         member_id: removedMember.user_id,
@@ -221,7 +258,6 @@ export default function ChamaGroupDetailPage() {
         reason: removeReason.trim(),
       });
       if (error) throw error;
-
       toast({ title: 'Removal Request Submitted', description: `Your request to remove ${removeMemberName} has been sent to admin for review.` });
       setRemoveDialogOpen(false);
     } catch (error: any) {
@@ -242,9 +278,26 @@ export default function ChamaGroupDetailPage() {
     }
   };
 
-  const roleLabels: Record<string, string> = { chairperson: 'Chairperson', secretary: 'Secretary', treasurer: 'Treasurer', member: 'Member' };
-  const roleIcons: Record<string, typeof Crown> = { chairperson: Crown, secretary: BookOpen, treasurer: Coins, member: Users };
-  const roleColors: Record<string, string> = { chairperson: 'bg-accent/10 text-accent', secretary: 'bg-blue-500/10 text-blue-500', treasurer: 'bg-emerald-500/10 text-emerald-500', member: 'bg-muted text-muted-foreground' };
+  const drawerSections = useMemo(() => ([
+    { id: 'governance', label: 'Governance', items: [
+      { value: 'terms', icon: FileText, label: 'Terms & Rules' },
+      ...(isLeader ? [{ value: 'requests', icon: UserCheck, label: 'Join Requests' }] : []),
+      ...(isChair ? [{ value: 'settings', icon: Settings, label: 'Group Settings' }] : []),
+      { value: 'leave', icon: LogOut, label: 'Leave Group' },
+    ]},
+    { id: 'more', label: 'More', items: [
+      { value: 'emergency', icon: Shield, label: 'Emergency Fund' },
+      { value: 'support', icon: HeadphonesIcon, label: 'Support' },
+    ]},
+  ]), [isLeader, isChair]);
+
+  const allTabs: TabDef[] = useMemo(() => ([
+    ...bottomTabs, ...primaryActions, ...secondaryActions,
+    ...drawerSections.flatMap(s => s.items),
+  ]), [drawerSections]);
+
+  const activeTabMeta = useMemo(() => allTabs.find(t => t.value === activeTab), [allTabs, activeTab]);
+  const isBottomTab = bottomTabs.some(t => t.value === activeTab);
 
   if (loading) {
     return (
@@ -262,356 +315,436 @@ export default function ChamaGroupDetailPage() {
   if (!group) return null;
 
   const myRoleLabel = roleLabels[myRole] || 'Member';
-  const MyRoleIcon = roleIcons[myRole] || Users;
-
-  return (
-    <DashboardLayout>
-      <div className="p-4 lg:p-8 max-w-4xl mx-auto">
-        <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard/chama')} className="mb-3 -ml-2 text-muted-foreground gap-1">
-          <ArrowLeft size={16} /> Back to Groups
-        </Button>
-
-        {/* Group Header */}
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          <Card className="border-border/50 mb-5 overflow-hidden">
-            <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-5">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="relative group">
-                    {group.profile_image_url ? (
-                      <img src={group.profile_image_url} alt={group.name} className="w-12 h-12 rounded-2xl object-cover" />
-                    ) : (
-                      <div className="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center">
-                        <PiggyBank size={24} className="text-primary" />
-                      </div>
-                    )}
-                    {isChair && (
-                      <>
-                        <input ref={profilePicRef} type="file" accept="image/*" className="hidden" onChange={handleProfilePicUpload} />
-                        <button
-                          onClick={() => profilePicRef.current?.click()}
-                          disabled={uploadingPic}
-                          className="absolute inset-0 rounded-2xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
-                        >
-                          {uploadingPic ? <Loader2 size={16} className="text-white animate-spin" /> : <Camera size={16} className="text-white" />}
-                        </button>
-                      </>
-                    )}
+  const renderHome = () => (
+    <div className="space-y-4">
+      <Card className="overflow-hidden border border-white/10 bg-gradient-to-br from-teal-700 via-emerald-700 to-emerald-800 text-white shadow-xl shadow-emerald-950/40">
+        <div className="p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="relative group">
+                {group.profile_image_url ? (
+                  <img src={group.profile_image_url} alt={group.name} className="w-12 h-12 rounded-2xl object-cover border border-white/20" />
+                ) : (
+                  <div className="w-12 h-12 rounded-2xl bg-white/15 flex items-center justify-center border border-white/20">
+                    <PiggyBank size={22} className="text-white" />
                   </div>
-                  <div>
-                    <h1 className="text-xl lg:text-2xl font-display font-bold">{group.name}</h1>
-                    {group.description && <p className="text-sm text-muted-foreground mt-0.5">{group.description}</p>}
-                    <div className="flex items-center gap-2 mt-1.5">
-                      <span className={cn('text-[11px] px-2.5 py-1 rounded-full font-semibold flex items-center gap-1', roleColors[myRole])}>
-                        <MyRoleIcon size={12} /> {myRoleLabel}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-                {isLeader && (
-                  <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button size="sm" className="gap-1.5"><UserPlus size={14} /> Add</Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader><DialogTitle>Add Member</DialogTitle></DialogHeader>
-                      <div className="space-y-4 mt-2">
-                        <div>
-                          <Label>Search by Phone</Label>
-                          <div className="flex gap-2 mt-1">
-                            <Input value={searchPhone} onChange={e => setSearchPhone(e.target.value)} placeholder="0712345678" maxLength={15} />
-                            <Button onClick={handleSearchUser} disabled={searching || !searchPhone.trim()} variant="secondary"><Search size={16} /></Button>
-                          </div>
-                        </div>
-                        {searchResult && (
-                          <Card className="p-4 bg-muted/50">
-                            <div className="flex items-center gap-3 mb-3">
-                              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
-                                {searchResult.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-                              </div>
-                              <div>
-                                <p className="font-semibold text-sm">{searchResult.full_name}</p>
-                                <p className="text-xs text-muted-foreground">{searchResult.phone}</p>
-                              </div>
-                            </div>
-                            <div className="mb-3">
-                              <Label>Role</Label>
-                              <Select value={selectedRole} onValueChange={setSelectedRole}>
-                                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="member">Member</SelectItem>
-                                  <SelectItem value="treasurer">Treasurer</SelectItem>
-                                  <SelectItem value="secretary">Secretary</SelectItem>
-                                  <SelectItem value="chairperson">Chairperson</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <Button onClick={handleAddMember} disabled={adding} className="w-full">
-                              {adding ? 'Adding...' : `Add ${searchResult.full_name}`}
-                            </Button>
-                          </Card>
-                        )}
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                )}
+                {isChair && (
+                  <>
+                    <input ref={profilePicRef} type="file" accept="image/*" className="hidden" onChange={handleProfilePicUpload} />
+                    <button
+                      onClick={() => profilePicRef.current?.click()}
+                      disabled={uploadingPic}
+                      className="absolute inset-0 rounded-2xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
+                    >
+                      {uploadingPic ? <Loader2 size={16} className="text-white animate-spin" /> : <Camera size={16} className="text-white" />}
+                    </button>
+                  </>
                 )}
               </div>
+              <div className="min-w-0">
+                <p className="text-[11px] uppercase tracking-wider text-emerald-100/80 font-medium">Group Balance</p>
+                <p className="text-2xl font-bold tracking-tight mt-0.5">
+                  {showBalance ? `KES ${totalSavings.toLocaleString()}` : 'KES •••••••'}
+                </p>
+              </div>
             </div>
-
-            <div className="grid grid-cols-3 sm:grid-cols-6 divide-x border-t">
-              {[
-                { label: 'Savings Wallet', value: `KES ${totalSavings.toLocaleString()}`, icon: TrendingUp, color: 'text-primary' },
-                { label: 'Joining Fees', value: `KES ${totalJoiningFees.toLocaleString()}`, icon: Coins, color: 'text-accent' },
-                { label: 'Platform Fees', value: `KES ${totalPlatformFees.toLocaleString()}`, icon: Shield, color: 'text-pink-500' },
-                { label: 'My Savings', value: `KES ${mySavings.toLocaleString()}`, icon: Wallet, color: 'text-emerald-500' },
-                { label: 'Members', value: members.length, icon: Users, color: 'text-blue-500' },
-                { label: 'Deposits', value: savingsCount, icon: Calendar, color: 'text-accent' },
-              ].map((stat, i) => (
-                <div key={i} className="p-3 lg:p-4 text-center">
-                  <stat.icon size={16} className={cn('mx-auto mb-1', stat.color)} />
-                  <p className="text-sm lg:text-base font-bold">{stat.value}</p>
-                  <p className="text-[10px] text-muted-foreground">{stat.label}</p>
-                </div>
-              ))}
-            </div>
-          </Card>
-        </motion.div>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          {/* Restored: flat scrollable tabs (original layout) */}
-          <div className="overflow-x-auto no-scrollbar">
-            <TabsList className="inline-flex w-auto h-auto p-1 gap-1 flex-nowrap">
-              {[
-                { value: 'members', icon: Users, label: 'Members' },
-                { value: 'savings', icon: Wallet, label: 'Savings' },
-                { value: 'loans', icon: Landmark, label: 'Loans' },
-                { value: 'withdrawals', icon: Coins, label: 'Withdraw' },
-                { value: 'mgr', icon: RefreshCw, label: 'Merry-Go-Round' },
-                { value: 'chat', icon: MessageSquare, label: 'Chat' },
-                { value: 'announcements', icon: Megaphone, label: 'Notices' },
-                { value: 'meetings', icon: CalendarDays, label: 'Meetings' },
-                { value: 'transactions', icon: Receipt, label: 'Transactions' },
-                { value: 'votes', icon: Vote, label: 'Votes' },
-                { value: 'arrears', icon: AlertTriangle, label: 'Arrears' },
-                { value: 'penalties', icon: Shield, label: 'Penalties' },
-                { value: 'emergency', icon: Shield, label: 'Emergency' },
-                { value: 'reports', icon: Download, label: 'Reports' },
-                { value: 'support', icon: HeadphonesIcon, label: 'Support' },
-                ...(isLeader ? [{ value: 'requests', icon: UserCheck, label: 'Requests' }] : []),
-                { value: 'terms', icon: FileText, label: 'Terms' },
-                { value: 'leave', icon: LogOut, label: 'Leave' },
-                ...(isChair ? [{ value: 'settings', icon: Settings, label: 'Settings' }] : []),
-              ].map((tab) => (
-                <TabsTrigger
-                  key={tab.value}
-                  value={tab.value}
-                  title={tab.label}
-                  className="flex flex-col items-center gap-1 text-[11px] py-2 px-3 min-w-[60px]"
-                >
-                  <tab.icon size={18} className="shrink-0" />
-                  <span className="truncate leading-tight">{tab.label}</span>
-                </TabsTrigger>
-              ))}
-            </TabsList>
+            <button onClick={() => setShowBalance(v => !v)} className="p-2 rounded-full bg-white/15 hover:bg-white/25 transition shrink-0">
+              {showBalance ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
           </div>
-
-          <TabsContent value="members" className="mt-4">
-            <div className="mb-3">
-              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Active Members ({members.length})</h2>
+          <div className="grid grid-cols-3 gap-px mt-3 bg-white/15 rounded-lg overflow-hidden">
+            <div className="bg-emerald-800/70 px-2 py-2">
+              <p className="text-[9px] text-emerald-100/70 uppercase">My Savings</p>
+              <p className="text-xs font-bold mt-0.5">{showBalance ? `KES ${(mySavings/1000).toFixed(1)}K` : '•••'}</p>
             </div>
-            {/* Leaders section */}
-            {(() => {
-              const leaders = members.filter(m => ['chairperson', 'secretary', 'treasurer'].includes(m.role));
-              const regularMembers = members.filter(m => !['chairperson', 'secretary', 'treasurer'].includes(m.role));
+            <div className="bg-emerald-800/70 px-2 py-2">
+              <p className="text-[9px] text-emerald-100/70 uppercase">Joining Fees</p>
+              <p className="text-xs font-bold mt-0.5">{showBalance ? `KES ${(totalJoiningFees/1000).toFixed(1)}K` : '•••'}</p>
+            </div>
+            <div className="bg-emerald-800/70 px-2 py-2">
+              <p className="text-[9px] text-emerald-100/70 uppercase">Deposits</p>
+              <p className="text-xs font-bold mt-0.5">{savingsCount}</p>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      <Card className="p-3 bg-white/[0.04] border-white/10 backdrop-blur-sm">
+        <div className="grid grid-cols-4 gap-2">
+          {primaryActions.map(a => {
+            const Icon = a.icon;
+            return (
+              <button
+                key={a.value}
+                onClick={() => setActiveTab(a.value)}
+                className="flex flex-col items-center gap-1.5 py-3 rounded-xl hover:bg-white/5 active:bg-white/10 transition-colors"
+              >
+                <div className="w-11 h-11 rounded-full bg-gradient-to-br from-emerald-400/25 to-teal-500/15 border border-emerald-300/20 flex items-center justify-center shadow-inner">
+                  <Icon size={20} className="text-emerald-200" />
+                </div>
+                <span className="text-[10px] font-semibold text-slate-100 leading-tight text-center">{a.label}</span>
+              </button>
+            );
+          })}
+        </div>
+      </Card>
+
+      <div>
+        <div className="flex items-center justify-between mb-2 px-1">
+          <h3 className="text-xs font-bold uppercase tracking-wider text-slate-300">Group Services</h3>
+          <button onClick={() => setDrawerOpen(true)} className="text-[11px] text-emerald-300 font-semibold flex items-center gap-0.5 hover:text-emerald-200">
+            All <ChevronRight size={12} />
+          </button>
+        </div>
+        <Card className="p-3 bg-white/[0.04] border-white/10 backdrop-blur-sm">
+          <div className="grid grid-cols-4 gap-2">
+            {secondaryActions.map(a => {
+              const Icon = a.icon;
               return (
-                <>
-                  {leaders.length > 0 && (
-                    <div className="mb-3">
-                      <p className="text-[11px] font-bold text-primary uppercase tracking-wider mb-2">👑 Leaders</p>
-                      <div className="space-y-2">
-                        {leaders.map(member => {
-                          const RoleIcon = roleIcons[member.role] || Users;
-                          const isMe = member.user_id === user?.id;
-                          return (
-                            <Card key={member.id} className={cn("p-4 border-primary/20", isChair && !isMe && "cursor-pointer hover:border-accent/30 transition-colors")} onClick={() => { if (isChair && !isMe) setViewMember(member); }}>
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
-                                    {member.profile?.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || '??'}
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="font-medium text-sm">
-                                      {member.profile?.full_name || 'Unknown'}
-                                      {isMe && <span className="text-xs text-muted-foreground ml-1">(You)</span>}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground">{member.profile?.phone}</p>
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  {isChair && !isMe ? (
-                                    <>
-                                      <Select value={member.role} onValueChange={val => handleUpdateRole(member.id, val)}>
-                                        <SelectTrigger className="h-8 text-xs w-[120px]" onClick={e => e.stopPropagation()}><SelectValue /></SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="member">Member</SelectItem>
-                                          <SelectItem value="treasurer">Treasurer</SelectItem>
-                                          <SelectItem value="secretary">Secretary</SelectItem>
-                                          <SelectItem value="chairperson">Chairperson</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={(e) => { e.stopPropagation(); openRemoveDialog(member.id, member.profile?.full_name || 'member'); }}>
-                                        <LogOut size={14} />
-                                      </Button>
-                                    </>
-                                  ) : (
-                                    <span className={`text-[11px] px-2.5 py-1 rounded-full font-medium flex items-center gap-1 ${roleColors[member.role]}`}>
-                                      <RoleIcon size={12} /> {roleLabels[member.role]}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            </Card>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
+                <button
+                  key={a.value}
+                  onClick={() => setActiveTab(a.value)}
+                  className="flex flex-col items-center gap-1.5 py-2.5 rounded-lg hover:bg-white/5 active:bg-white/10 transition-colors"
+                >
+                  <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+                    <Icon size={18} className="text-slate-200" />
+                  </div>
+                  <span className="text-[10px] font-medium text-slate-300 leading-tight text-center">{a.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+
+  const renderMembers = () => {
+    const q = searchQuery.trim().toLowerCase();
+    const filtered = q
+      ? members.filter(m => (m.profile?.full_name || '').toLowerCase().includes(q) || (m.profile?.phone || '').toLowerCase().includes(q))
+      : members;
+    const leaders = filtered.filter(m => ['chairperson', 'secretary', 'treasurer'].includes(m.role));
+    const regulars = filtered.filter(m => !['chairperson', 'secretary', 'treasurer'].includes(m.role));
+
+    const MemberCard = ({ member }: { member: Member }) => {
+      const RoleIcon = roleIcons[member.role] || Users;
+      const isMe = member.user_id === user?.id;
+      return (
+        <div
+          className={cn('p-3 flex items-center justify-between gap-2', isChair && !isMe && 'cursor-pointer hover:bg-white/5')}
+          onClick={() => { if (isChair && !isMe) setViewMember(member); }}
+        >
+          <div className="flex items-center gap-3 min-w-0 flex-1">
+            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400/30 to-teal-600/15 border border-emerald-300/20 flex items-center justify-center text-emerald-200 font-bold text-xs shrink-0">
+              {member.profile?.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || '??'}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-sm truncate text-slate-100">
+                {member.profile?.full_name || 'Unknown'}
+                {isMe && <span className="text-[10px] text-slate-400 ml-1 font-normal">(You)</span>}
+              </p>
+              <p className="text-[11px] text-slate-400 truncate">{member.profile?.phone}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {isChair && !isMe ? (
+              <>
+                <Select value={member.role} onValueChange={val => handleUpdateRole(member.id, val)}>
+                  <SelectTrigger className="h-8 text-xs w-[110px] bg-white/5 border-white/15 text-slate-100" onClick={e => e.stopPropagation()}><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="member">Member</SelectItem>
+                    <SelectItem value="treasurer">Treasurer</SelectItem>
+                    <SelectItem value="secretary">Secretary</SelectItem>
+                    <SelectItem value="chairperson">Chairperson</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-red-300 hover:text-red-200 hover:bg-white/10" onClick={(e) => { e.stopPropagation(); openRemoveDialog(member.id, member.profile?.full_name || 'member'); }}>
+                  <LogOut size={14} />
+                </Button>
+              </>
+            ) : (
+              <span className={cn('text-[10px] px-2 py-0.5 rounded-full font-medium border flex items-center gap-1', roleColors[member.role])}>
+                <RoleIcon size={11} /> {roleLabels[member.role]}
+              </span>
+            )}
+          </div>
+        </div>
+      );
+    };
+
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-bold text-white">Members ({members.length})</h2>
+          {isLeader && (
+            <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+              <DialogTrigger asChild>
+                <Button size="sm" className="gap-1.5 bg-emerald-500 hover:bg-emerald-400 text-emerald-950 border-0"><UserPlus size={14} /> Add</Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader><DialogTitle>Add Member</DialogTitle></DialogHeader>
+                <div className="space-y-4 mt-2">
                   <div>
-                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Members ({regularMembers.length})</p>
-                    <div className="space-y-2">
-                      {regularMembers.map(member => {
-                        const RoleIcon = roleIcons[member.role] || Users;
-                        const isMe = member.user_id === user?.id;
-                        return (
-                          <Card key={member.id} className={cn("p-4", isChair && !isMe && "cursor-pointer hover:border-accent/30 transition-colors")} onClick={() => { if (isChair && !isMe) setViewMember(member); }}>
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
-                                  {member.profile?.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || '??'}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-medium text-sm">
-                                    {member.profile?.full_name || 'Unknown'}
-                                    {isMe && <span className="text-xs text-muted-foreground ml-1">(You)</span>}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">{member.profile?.phone}</p>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                {isChair && !isMe ? (
-                                  <>
-                                    <Select value={member.role} onValueChange={val => handleUpdateRole(member.id, val)}>
-                                      <SelectTrigger className="h-8 text-xs w-[120px]" onClick={e => e.stopPropagation()}><SelectValue /></SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="member">Member</SelectItem>
-                                        <SelectItem value="treasurer">Treasurer</SelectItem>
-                                        <SelectItem value="secretary">Secretary</SelectItem>
-                                        <SelectItem value="chairperson">Chairperson</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={(e) => { e.stopPropagation(); openRemoveDialog(member.id, member.profile?.full_name || 'member'); }}>
-                                      <LogOut size={14} />
-                                    </Button>
-                                  </>
-                                ) : (
-                                  <span className={`text-[11px] px-2.5 py-1 rounded-full font-medium flex items-center gap-1 ${roleColors[member.role]}`}>
-                                    <RoleIcon size={12} /> {roleLabels[member.role]}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </Card>
-                        );
-                      })}
+                    <Label>Search by Phone</Label>
+                    <div className="flex gap-2 mt-1">
+                      <Input value={searchPhone} onChange={e => setSearchPhone(e.target.value)} placeholder="0712345678" maxLength={15} />
+                      <Button onClick={handleSearchUser} disabled={searching || !searchPhone.trim()} variant="secondary"><Search size={16} /></Button>
                     </div>
                   </div>
-                </>
+                  {searchResult && (
+                    <Card className="p-4 bg-muted/50">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
+                          {searchResult.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                        </div>
+                        <div>
+                          <p className="font-semibold text-sm">{searchResult.full_name}</p>
+                          <p className="text-xs text-muted-foreground">{searchResult.phone}</p>
+                        </div>
+                      </div>
+                      <div className="mb-3">
+                        <Label>Role</Label>
+                        <Select value={selectedRole} onValueChange={setSelectedRole}>
+                          <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="member">Member</SelectItem>
+                            <SelectItem value="treasurer">Treasurer</SelectItem>
+                            <SelectItem value="secretary">Secretary</SelectItem>
+                            <SelectItem value="chairperson">Chairperson</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <Button onClick={handleAddMember} disabled={adding} className="w-full">
+                        {adding ? 'Adding...' : `Add ${searchResult.full_name}`}
+                      </Button>
+                    </Card>
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
+        </div>
+
+        {leaders.length > 0 && (
+          <div>
+            <p className="text-[10px] font-bold text-amber-300 uppercase tracking-wider flex items-center gap-1 mb-1.5 px-1">
+              <Crown size={11} /> Leadership
+            </p>
+            <Card className="divide-y divide-white/10 bg-white/[0.04] border-white/10 backdrop-blur-sm">
+              {leaders.map(m => <MemberCard key={m.id} member={m} />)}
+            </Card>
+          </div>
+        )}
+
+        <div>
+          <p className="text-[10px] font-bold text-slate-300 uppercase tracking-wider mb-1.5 px-1">
+            Members ({regulars.length})
+          </p>
+          <Card className="divide-y divide-white/10 bg-white/[0.04] border-white/10 backdrop-blur-sm">
+            {regulars.length === 0 ? (
+              <div className="p-6 text-center text-sm text-slate-400">No members match your search.</div>
+            ) : regulars.map(m => <MemberCard key={m.id} member={m} />)}
+          </Card>
+        </div>
+      </div>
+    );
+  };
+
+  const renderFeature = () => {
+    if (!groupId) return null;
+    switch (activeTab) {
+      case 'savings': return <ChamaSavings groupId={groupId} group={group} members={members} myRole={myRole} onRefreshGroup={fetchGroupData} />;
+      case 'withdrawals': return <ChamaWithdrawals groupId={groupId} members={members} myRole={myRole} savings={totalSavings} />;
+      case 'loans': return <ChamaLoans groupId={groupId} group={group} members={members} myRole={myRole} />;
+      case 'mgr': return <ChamaMerryGoRound groupId={groupId} group={group} members={members} myRole={myRole} />;
+      case 'transactions': return <ChamaTransactions groupId={groupId} members={members} />;
+      case 'chat': return <Card className="overflow-hidden bg-white/[0.04] border-white/10"><ChamaChat groupId={groupId} members={members} myRole={myRole} /></Card>;
+      case 'announcements': return <ChamaAnnouncements groupId={groupId} members={members} myRole={myRole} />;
+      case 'meetings': return <ChamaMeetings groupId={groupId} group={group} members={members} myRole={myRole} />;
+      case 'votes': return <ChamaVotes groupId={groupId} members={members} myRole={myRole} />;
+      case 'arrears': return <ChamaArrears groupId={groupId} group={group} members={members} />;
+      case 'penalties': return <ChamaPenalties groupId={groupId} group={group} members={members} myRole={myRole} />;
+      case 'reports': return <ChamaReports groupId={groupId} group={group} members={members} />;
+      case 'emergency': return <ChamaEmergencyFund groupId={groupId} members={members} />;
+      case 'support': return <Card className="overflow-hidden bg-white/[0.04] border-white/10"><ChamaSupportChat groupId={groupId} members={members} myRole={myRole} /></Card>;
+      case 'terms': return <ChamaTerms groupId={groupId} group={group} members={members} myRole={myRole} onRefreshGroup={fetchGroupData} />;
+      case 'requests': return isLeader ? <ChamaJoinRequests groupId={groupId} group={group} members={members} myRole={myRole} onRefreshGroup={fetchGroupData} /> : null;
+      case 'settings': return isChair ? <ChamaSettings groupId={groupId} group={group} members={members} onRefreshGroup={fetchGroupData} /> : null;
+      case 'leave': return <ChamaLeaveRequest groupId={groupId} group={group} members={members} myRole={myRole} mySavings={mySavings} onRefreshGroup={fetchGroupData} />;
+      default: return null;
+    }
+  };
+
+  const renderContent = () => {
+    if (activeTab === 'home') return renderHome();
+    if (activeTab === 'members') return renderMembers();
+    return (
+      <div className="space-y-3">
+        {activeTabMeta && <h2 className="text-base font-bold text-white">{activeTabMeta.label}</h2>}
+        <div>{renderFeature()}</div>
+      </div>
+    );
+  };
+  return (
+    <DashboardLayout>
+      <div className="min-h-screen pb-24 bg-gradient-to-b from-emerald-950 via-emerald-900 to-slate-900 text-slate-100 -m-4 lg:-m-8">
+        <header className="sticky top-0 z-30 bg-emerald-950/85 backdrop-blur-md border-b border-white/10">
+          <div className="max-w-2xl mx-auto px-3 py-2.5 flex items-center gap-2.5">
+            <button onClick={() => navigate('/dashboard/chama')} className="p-1.5 -ml-1 rounded-lg hover:bg-white/10 text-slate-100">
+              <ArrowLeft size={18} />
+            </button>
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-400/40 to-emerald-600/20 flex items-center justify-center shrink-0 border border-white/10 overflow-hidden">
+              {group.profile_image_url ? (
+                <img src={group.profile_image_url} alt={group.name} className="w-full h-full object-cover" />
+              ) : (
+                <PiggyBank size={17} className="text-emerald-200" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h1 className="text-base font-extrabold tracking-tight uppercase truncate leading-tight text-white">{group.name}</h1>
+              <div className="flex items-center gap-1.5 mt-1">
+                <span className={cn('text-[9px] px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide border', roleColors[myRole])}>
+                  {myRoleLabel}
+                </span>
+                <span className="text-[10px] text-slate-300 font-medium">{members.length} members</span>
+              </div>
+            </div>
+            <button className="p-2 rounded-lg hover:bg-white/10 relative text-slate-100">
+              <Bell size={17} />
+              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-red-400" />
+            </button>
+          </div>
+          <div className="max-w-2xl mx-auto px-3 pb-3">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-white/10 border border-white/10 focus-within:bg-white/15 focus-within:border-emerald-300/40 transition">
+              <Search size={15} className="text-slate-300 shrink-0" />
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Search members, transactions, loans…"
+                className="flex-1 bg-transparent outline-none text-sm text-white placeholder:text-slate-400"
+              />
+            </div>
+          </div>
+        </header>
+
+        <main className="max-w-2xl mx-auto px-3 py-3">{renderContent()}</main>
+
+        <nav className="fixed bottom-0 left-0 right-0 z-30 bg-emerald-950/90 backdrop-blur-md border-t border-white/10 shadow-[0_-4px_24px_rgba(0,0,0,0.4)]">
+          <div className="max-w-2xl mx-auto grid grid-cols-5">
+            {bottomTabs.map(t => {
+              const Icon = t.icon;
+              const isActive = activeTab === t.value;
+              return (
+                <button
+                  key={t.value}
+                  onClick={() => setActiveTab(t.value)}
+                  className={cn(
+                    'relative flex flex-col items-center gap-0.5 py-2.5 transition-colors',
+                    isActive ? 'text-emerald-300' : 'text-slate-400 hover:text-slate-200',
+                  )}
+                >
+                  {isActive && <span className="absolute top-0 w-8 h-0.5 bg-emerald-300 rounded-full" />}
+                  <Icon size={18} />
+                  <span className="text-[9px] font-bold uppercase tracking-wide">{t.label}</span>
+                </button>
               );
-            })()}
-          </TabsContent>
+            })}
 
-          <TabsContent value="chat" className="mt-4">
-            <Card className="overflow-hidden">
-              <ChamaChat groupId={groupId!} members={members} myRole={myRole} />
-            </Card>
-          </TabsContent>
+            <Sheet open={drawerOpen} onOpenChange={setDrawerOpen}>
+              <SheetTrigger asChild>
+                <button
+                  className={cn(
+                    'relative flex flex-col items-center gap-0.5 py-2.5 transition-colors',
+                    !isBottomTab ? 'text-emerald-300' : 'text-slate-400 hover:text-slate-200',
+                  )}
+                >
+                  {!isBottomTab && <span className="absolute top-0 w-8 h-0.5 bg-emerald-300 rounded-full" />}
+                  <Grid3x3 size={18} />
+                  <span className="text-[9px] font-bold uppercase tracking-wide">Menu</span>
+                </button>
+              </SheetTrigger>
+              <SheetContent side="bottom" className="h-[85vh] overflow-y-auto rounded-t-2xl bg-gradient-to-b from-emerald-950 to-slate-900 border-t border-white/10 text-slate-100">
+                <SheetHeader>
+                  <SheetTitle className="text-left text-white">All Services</SheetTitle>
+                </SheetHeader>
 
-          <TabsContent value="savings" className="mt-4">
-            <ChamaSavings groupId={groupId!} group={group} members={members} myRole={myRole} onRefreshGroup={fetchGroupData} />
-          </TabsContent>
+                <div className="mt-4">
+                  <p className="text-[10px] font-bold text-emerald-300 uppercase tracking-wider mb-2">Quick Actions</p>
+                  <div className="grid grid-cols-4 gap-2">
+                    {primaryActions.map(a => {
+                      const Icon = a.icon;
+                      return (
+                        <button
+                          key={a.value}
+                          onClick={() => { setActiveTab(a.value); setDrawerOpen(false); }}
+                          className="flex flex-col items-center gap-1.5 py-3 rounded-xl bg-white/[0.04] border border-white/10 hover:bg-white/10 transition"
+                        >
+                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400/25 to-teal-500/15 border border-emerald-300/20 flex items-center justify-center">
+                            <Icon size={18} className="text-emerald-200" />
+                          </div>
+                          <span className="text-[10px] font-semibold text-slate-100 leading-tight text-center">{a.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
 
-          <TabsContent value="withdrawals" className="mt-4">
-            <ChamaWithdrawals groupId={groupId!} members={members} myRole={myRole} savings={totalSavings} />
-          </TabsContent>
+                <div className="mt-5">
+                  <p className="text-[10px] font-bold text-slate-300 uppercase tracking-wider mb-2">Group Services</p>
+                  <div className="grid grid-cols-4 gap-2">
+                    {secondaryActions.map(a => {
+                      const Icon = a.icon;
+                      const isActive = activeTab === a.value;
+                      return (
+                        <button
+                          key={a.value}
+                          onClick={() => { setActiveTab(a.value); setDrawerOpen(false); }}
+                          className={cn(
+                            'flex flex-col items-center gap-1.5 py-3 rounded-xl border transition',
+                            isActive ? 'bg-emerald-400/15 border-emerald-300/30' : 'bg-white/[0.03] border-white/10 hover:bg-white/10',
+                          )}
+                        >
+                          <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+                            <Icon size={18} className={cn(isActive ? 'text-emerald-200' : 'text-slate-200')} />
+                          </div>
+                          <span className="text-[10px] font-medium text-slate-200 leading-tight text-center">{a.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
 
-          <TabsContent value="terms" className="mt-4">
-            <ChamaTerms groupId={groupId!} group={group} members={members} myRole={myRole} onRefreshGroup={fetchGroupData} />
-          </TabsContent>
+                {drawerSections.map(sec => (
+                  <div key={sec.id} className="mt-5">
+                    <p className="text-[10px] font-bold text-slate-300 uppercase tracking-wider mb-2">{sec.label}</p>
+                    <Card className="divide-y divide-white/10 bg-white/[0.04] border-white/10">
+                      {sec.items.map(item => {
+                        const Icon = item.icon;
+                        return (
+                          <button
+                            key={item.value}
+                            onClick={() => { setActiveTab(item.value); setDrawerOpen(false); }}
+                            className="w-full px-3 py-3 flex items-center gap-3 hover:bg-white/5 text-left"
+                          >
+                            <div className="w-9 h-9 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
+                              <Icon size={16} className="text-slate-200" />
+                            </div>
+                            <span className="flex-1 text-sm font-medium text-slate-100">{item.label}</span>
+                            <ChevronRight size={14} className="text-slate-400" />
+                          </button>
+                        );
+                      })}
+                    </Card>
+                  </div>
+                ))}
+              </SheetContent>
+            </Sheet>
+          </div>
+        </nav>
 
-          <TabsContent value="transactions" className="mt-4">
-            <ChamaTransactions groupId={groupId!} members={members} />
-          </TabsContent>
-
-          <TabsContent value="votes" className="mt-4">
-            <ChamaVotes groupId={groupId!} members={members} myRole={myRole} />
-          </TabsContent>
-
-          <TabsContent value="mgr" className="mt-4">
-            <ChamaMerryGoRound groupId={groupId!} group={group} members={members} myRole={myRole} />
-          </TabsContent>
-
-          <TabsContent value="support" className="mt-4">
-            <Card className="overflow-hidden">
-              <ChamaSupportChat groupId={groupId!} members={members} myRole={myRole} />
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="meetings" className="mt-4">
-            <ChamaMeetings groupId={groupId!} group={group} members={members} myRole={myRole} />
-          </TabsContent>
-
-          <TabsContent value="reports" className="mt-4">
-            <ChamaReports groupId={groupId!} group={group} members={members} />
-          </TabsContent>
-
-          <TabsContent value="penalties" className="mt-4">
-            <ChamaPenalties groupId={groupId!} group={group} members={members} myRole={myRole} />
-          </TabsContent>
-
-          <TabsContent value="emergency" className="mt-4">
-            <ChamaEmergencyFund groupId={groupId!} members={members} />
-          </TabsContent>
-
-          <TabsContent value="arrears" className="mt-4">
-            <ChamaArrears groupId={groupId!} group={group} members={members} />
-          </TabsContent>
-
-          <TabsContent value="announcements" className="mt-4">
-            <ChamaAnnouncements groupId={groupId!} members={members} myRole={myRole} />
-          </TabsContent>
-
-          <TabsContent value="loans" className="mt-4">
-            <ChamaLoans groupId={groupId!} group={group} members={members} myRole={myRole} />
-          </TabsContent>
-
-          <TabsContent value="leave" className="mt-4">
-            <ChamaLeaveRequest groupId={groupId!} group={group} members={members} myRole={myRole} mySavings={mySavings} onRefreshGroup={fetchGroupData} />
-          </TabsContent>
-
-          {isLeader && (
-            <TabsContent value="requests" className="mt-4">
-              <ChamaJoinRequests groupId={groupId!} group={group} members={members} myRole={myRole} onRefreshGroup={fetchGroupData} />
-            </TabsContent>
-          )}
-
-          {isChair && (
-            <TabsContent value="settings" className="mt-4">
-              <ChamaSettings groupId={groupId!} group={group} members={members} onRefreshGroup={fetchGroupData} />
-            </TabsContent>
-          )}
-        </Tabs>
-
-        {/* Remove Member Dialog */}
         <Dialog open={removeDialogOpen} onOpenChange={setRemoveDialogOpen}>
           <DialogContent>
             <DialogHeader><DialogTitle>Remove Member</DialogTitle></DialogHeader>
@@ -631,12 +764,9 @@ export default function ChamaGroupDetailPage() {
           </DialogContent>
         </Dialog>
 
-        {/* View Member Detail Dialog (Read-only for Chairperson) */}
         <Dialog open={!!viewMember} onOpenChange={(open) => { if (!open) setViewMember(null); }}>
           <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Member Details</DialogTitle>
-            </DialogHeader>
+            <DialogHeader><DialogTitle>Member Details</DialogTitle></DialogHeader>
             {viewMember && (
               <div className="space-y-4 mt-2">
                 <div className="flex items-center gap-3">
