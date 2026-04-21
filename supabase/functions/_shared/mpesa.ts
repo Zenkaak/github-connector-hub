@@ -43,6 +43,7 @@ export type RouteResult =
   | { type: "wallet"; user_id: string }
   | { type: "savings"; user_id: string; savings_id: string }
   | { type: "chama"; group_id: string; user_id?: string }
+  | { type: "mgr"; group_id: string; cycle_id: string; user_id: string }
   | { type: "loan"; user_id: string; loan_id: string | null }
   | { type: "harambee_user"; user_id: string; harambee_id: string | null }
   | { type: "harambee_public"; harambee_id: string | null; slug: string }
@@ -60,19 +61,38 @@ export async function classifyBillRef(supabase: any, billRef: string): Promise<R
     return { type: "wallet", user_id: data.user_id };
   }
 
-  // ⭐ HARAMBEE PUBLIC: ^H\d{4}$ — MUST come before any \d{4}+letter pattern
-  // so refs like "H1212" are recognised as harambees, not as user-code 1212 + chama-letter H.
-  if (/^H\d{4}$/.test(ref)) {
+  // ⭐ HARAMBEE PUBLIC: ^H\d{3}$ (new 3-digit format — distinct from 4-digit user codes)
+  if (/^H\d{3}$/.test(ref)) {
     const code = ref.slice(1);
     const { data: h } = await supabase.from("chama_harambees").select("id").eq("short_code", code).maybeSingle();
     if (h) return { type: "harambee_public", harambee_id: h.id, slug: ref };
     return { type: "unmapped", reason: `Harambee with code ${code} not found` };
   }
-  if (/^\d{4}H$/.test(ref)) {
-    const code = ref.slice(0, 4);
-    const { data: h } = await supabase.from("chama_harambees").select("id").eq("short_code", code).maybeSingle();
-    if (h) return { type: "harambee_public", harambee_id: h.id, slug: ref };
-    return { type: "unmapped", reason: `Harambee with code ${code} not found` };
+  // ⭐ MERRY-GO-ROUND: ^\d{4}M\d+$ — user code + cycle number
+  const mgrMatch = ref.match(/^(\d{4})M(\d+)$/);
+  if (mgrMatch) {
+    const [, code, cycleNumStr] = mgrMatch;
+    const cycleNum = parseInt(cycleNumStr, 10);
+    const { data: prof } = await supabase.from("profiles").select("user_id").eq("mpesa_account_code", code).maybeSingle();
+    if (!prof) return { type: "unmapped", reason: `MGR: no user with code ${code}` };
+    // Find an open cycle in any chama where this user is a member, by cycle_number
+    const { data: memberships } = await supabase.from("chama_members").select("group_id").eq("user_id", prof.user_id).eq("is_active", true);
+    const groupIds = (memberships || []).map((m: any) => m.group_id);
+    if (groupIds.length === 0) {
+      return { type: "wallet", user_id: prof.user_id }; // fallback
+    }
+    const { data: cyc } = await supabase
+      .from("chama_mgr_cycles")
+      .select("id, group_id")
+      .in("group_id", groupIds)
+      .eq("cycle_number", cycleNum)
+      .eq("status", "open")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (cyc) return { type: "mgr", group_id: cyc.group_id, cycle_id: cyc.id, user_id: prof.user_id } as any;
+    // No open cycle → wallet fallback so funds are not lost
+    return { type: "wallet", user_id: prof.user_id };
   }
 
   // Savings: ^\d{4}S\d+$ or ^S\d+\d{4}$ (reverse)
@@ -137,29 +157,13 @@ export async function classifyBillRef(supabase: any, billRef: string): Promise<R
     return { type: "loan", user_id: prof.user_id, loan_id: loan?.loan_id ?? null };
   }
 
-  // ^\d{4}H\d{4}$ — user code + harambee short code
-  const hUserNew = ref.match(/^(\d{4})H(\d{4})$/);
+  // ^\d{4}H\d{3}$ — user code + 3-digit harambee short code
+  const hUserNew = ref.match(/^(\d{4})H(\d{3})$/);
   if (hUserNew) {
     const [, code, hCode] = hUserNew;
     const { data: prof } = await supabase.from("profiles").select("user_id").eq("mpesa_account_code", code).maybeSingle();
     const { data: h } = await supabase.from("chama_harambees").select("id").eq("short_code", hCode).maybeSingle();
     if (prof && h) return { type: "harambee_user", user_id: prof.user_id, harambee_id: h.id };
-  }
-
-  // Legacy harambee user-linked: ^\d{4}H\d{3}$
-  const hMatch = ref.match(/^(\d{4})H(\d{3})$/);
-  if (hMatch) {
-    const [, code, slug] = hMatch;
-    const { data: prof } = await supabase.from("profiles").select("user_id").eq("mpesa_account_code", code).maybeSingle();
-    if (!prof) return { type: "unmapped", reason: `Harambee: no user with code ${code}` };
-    const { data: h } = await supabase.from("chama_harambees").select("id").eq("order_number", `H${slug}`).maybeSingle();
-    return { type: "harambee_user", user_id: prof.user_id, harambee_id: h?.id ?? null };
-  }
-
-  // Legacy harambee public: ^H\d{3}$
-  if (/^H\d{3}$/.test(ref)) {
-    const { data: h } = await supabase.from("chama_harambees").select("id").eq("order_number", ref).maybeSingle();
-    return { type: "harambee_public", harambee_id: h?.id ?? null, slug: ref };
   }
 
   // FINAL FALLBACK: if the ref STARTS with a valid 4-digit user code,
