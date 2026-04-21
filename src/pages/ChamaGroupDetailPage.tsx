@@ -209,19 +209,15 @@ export default function ChamaGroupDetailPage() {
     setRemoving(true);
     try {
       const removedMember = members.find(m => m.id === removeMemberId);
-      const chairProfile = members.find(m => m.user_id === user.id)?.profile;
+      if (!removedMember?.user_id) throw new Error('Member not found');
 
-      // Submit removal request to admin instead of directly removing
-      const { error } = await supabase.from('chama_member_removal_requests' as any).insert({
+      // Submit removal request to admin (matches actual schema)
+      const { error } = await supabase.from('chama_member_removal_requests').insert({
         group_id: groupId,
-        member_user_id: removedMember?.user_id,
-        chairperson_user_id: user.id,
-        chairperson_name: chairProfile?.full_name || null,
-        chairperson_phone: chairProfile?.phone || null,
-        member_name: removedMember?.profile?.full_name || null,
-        member_phone: removedMember?.profile?.phone || null,
+        member_id: removedMember.user_id,
+        requested_by: user.id,
         reason: removeReason.trim(),
-      } as any);
+      });
       if (error) throw error;
 
       toast({ title: 'Removal Request Submitted', description: `Your request to remove ${removeMemberName} has been sent to admin for review.` });
