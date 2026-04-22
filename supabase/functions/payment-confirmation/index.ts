@@ -237,9 +237,11 @@ Deno.serve(async (req) => {
         c2b_transaction_id: c2bRow.id, bill_ref_number: billRef, amount, msisdn,
         reason: route.type === "unmapped" ? route.reason : "Unhandled route",
       });
-      // Notify admin via SMS
       const reason = route.type === "unmapped" ? route.reason : "Unhandled route";
-      await sendSMS(ADMIN_PHONE, `[Dasnet ALERT] Unmapped payment ${billRef} ${fmt(amount)} from ${msisdn}. Reason: ${reason}. Please reconcile.`);
+      const payerName = [body.FirstName, body.MiddleName, body.LastName].filter(Boolean).join(" ").trim() || "Unknown";
+      const ts = new Date().toLocaleString("en-KE", { timeZone: "Africa/Nairobi" });
+      await sendSMS(ADMIN_PHONE,
+        `[Dasnet ALERT] Unmapped payment ${fmt(amount)} from ${payerName} (${msisdn}) at ${ts}. Ref: ${billRef}. Reason: ${reason}.`);
     }
 
     await supabase.from("mpesa_c2b_transactions")
