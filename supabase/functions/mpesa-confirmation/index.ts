@@ -33,7 +33,7 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify(ACK), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
-  // 1. Dedup check
+  // 1. Dedup against existing C2B row
   const { data: existing } = await supabase
     .from("mpesa_c2b_transactions")
     .select("id, processed")
@@ -43,6 +43,30 @@ Deno.serve(async (req) => {
   if (existing) {
     console.log(`Duplicate TransID ${transId} ignored`);
     return new Response(JSON.stringify(ACK), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+
+  // 1b. STK-origin dedup — if STK callback already credited this receipt, skip
+  if (transId) {
+    const { data: stkAlready } = await supabase
+      .from("stk_transactions")
+      .select("id")
+      .eq("mpesa_receipt", transId)
+      .eq("status", "success")
+      .maybeSingle();
+    if (stkAlready) {
+      console.log(`Receipt ${transId} already credited via STK; skipping.`);
+      await supabase.from("mpesa_c2b_transactions").insert({
+        trans_id: transId,
+        trans_amount: amount,
+        bill_ref_number: billRef,
+        msisdn,
+        routing_type: "stk_already_credited",
+        raw_payload: body,
+        processed: true,
+        processed_at: new Date().toISOString(),
+      });
+      return new Response(JSON.stringify(ACK), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
   }
 
   // 2. Classify
