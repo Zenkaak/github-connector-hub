@@ -322,9 +322,9 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
                 </TabsContent>
                 <TabsContent value="paybill" className="pt-3">
                   <PaybillBox
-                    paybillNumber="4018275"
-                    accountReference={userCode ? `${userCode}M${payOpen.cycle.cycle_number}` : '—'}
-                    amount={payOpen.cycle.contribution_amount}
+                    accountRef={userCode ? `${userCode}M${payOpen.cycle.cycle_number}` : '—'}
+                    helperText={`Pay ${fmt(payOpen.cycle.contribution_amount)} for cycle #${payOpen.cycle.cycle_number}`}
+                    compact
                   />
                   <p className="text-[11px] text-muted-foreground mt-2">
                     After paying, contribution will be auto-recorded from M-Pesa callback.

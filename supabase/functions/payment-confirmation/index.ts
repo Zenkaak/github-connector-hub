@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify(ACK), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
-  // 1. Dedup
+  // 1. Dedup against existing C2B row
   const { data: existing } = await supabase
     .from("mpesa_c2b_transactions")
     .select("id, processed")
@@ -46,6 +46,30 @@ Deno.serve(async (req) => {
   if (existing) {
     console.log(`Duplicate TransID ${transId} ignored`);
     return new Response(JSON.stringify(ACK), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+
+  // 1b. STK-origin dedup — if STK callback already credited this receipt, skip
+  if (transId) {
+    const { data: stkAlready } = await supabase
+      .from("stk_transactions")
+      .select("id")
+      .eq("mpesa_receipt", transId)
+      .eq("status", "success")
+      .maybeSingle();
+    if (stkAlready) {
+      console.log(`Receipt ${transId} already credited via STK; skipping business logic.`);
+      await supabase.from("mpesa_c2b_transactions").insert({
+        trans_id: transId,
+        trans_amount: amount,
+        bill_ref_number: billRef,
+        msisdn,
+        routing_type: "stk_already_credited",
+        raw_payload: body,
+        processed: true,
+        processed_at: new Date().toISOString(),
+      });
+      return new Response(JSON.stringify(ACK), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
   }
 
   // 2. Classify
@@ -213,9 +237,11 @@ Deno.serve(async (req) => {
         c2b_transaction_id: c2bRow.id, bill_ref_number: billRef, amount, msisdn,
         reason: route.type === "unmapped" ? route.reason : "Unhandled route",
       });
-      // Notify admin via SMS
       const reason = route.type === "unmapped" ? route.reason : "Unhandled route";
-      await sendSMS(ADMIN_PHONE, `[Dasnet ALERT] Unmapped payment ${billRef} ${fmt(amount)} from ${msisdn}. Reason: ${reason}. Please reconcile.`);
+      const payerName = [body.FirstName, body.MiddleName, body.LastName].filter(Boolean).join(" ").trim() || "Unknown";
+      const ts = new Date().toLocaleString("en-KE", { timeZone: "Africa/Nairobi" });
+      await sendSMS(ADMIN_PHONE,
+        `[Dasnet ALERT] Unmapped payment ${fmt(amount)} from ${payerName} (${msisdn}) at ${ts}. Ref: ${billRef}. Reason: ${reason}.`);
     }
 
     await supabase.from("mpesa_c2b_transactions")

@@ -81,8 +81,11 @@ export const SMS = {
   walletWithdrawalSuccess: (name: string, amount: number, phone: string, receipt: string) =>
     `Dear ${name}, your withdrawal of ${fmt(amount)} to ${phone} was successful. M-Pesa receipt: ${receipt}. Thank you for banking with Dasnet.`,
 
-  walletWithdrawalFailed: (name: string, amount: number, reason: string) =>
-    `Dear ${name}, your withdrawal of ${fmt(amount)} could not be completed (${reason}). The amount has been refunded to your wallet.`,
+  walletWithdrawalFailed: (name: string, amount: number, _reason: string) =>
+    `Dear ${name}, we are experiencing delays processing your withdrawal of ${fmt(amount)}. If it is not completed within 30 minutes, the full amount will be refunded to your wallet automatically. — Dasnet.`,
+
+  walletWithdrawalRefunded: (name: string, amount: number) =>
+    `Dear ${name}, your withdrawal of ${fmt(amount)} could not be completed and has been refunded to your wallet. — Dasnet.`,
 
   loanRepayment: (name: string, amount: number, totalPaid: number, balance: number) =>
     `Dear ${name}, your loan repayment of ${fmt(amount)} has been received. Total paid: ${fmt(totalPaid)}. Balance: ${fmt(balance)}. Thank you for banking with Dasnet.`,
