@@ -131,12 +131,7 @@ Deno.serve(async (req) => {
         description: `M-Pesa deposit · ${transId}`,
         reference_id: transId,
       });
-      await supabase.from("notifications").insert({
-        user_id: route.user_id,
-        title: "Deposit Received",
-        message: `KES ${amount.toLocaleString()} credited to your wallet. Receipt: ${transId}`,
-        type: "payment",
-      });
+      // Note: notification handled centrally below to avoid duplicates
     } else if (route.type === "savings") {
       const { data: s } = await supabase.from("personal_savings").select("saved_amount").eq("id", route.savings_id).maybeSingle();
       await supabase.from("personal_savings")
