@@ -354,7 +354,8 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
                 </TabsContent>
               </Tabs>
             </div>
-          )}
+            );
+          })()}
           <DialogFooter>
             <Button variant="outline" onClick={() => setPayOpen(null)}>Close</Button>
             {payMethod !== 'paybill' && (
