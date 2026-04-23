@@ -140,7 +140,8 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
     const paid = new Set(cyContribs.map(c => c.user_id));
     const total = cyContribs.reduce((s, c) => s + Number(c.amount), 0);
     const haveIPaid = !!user && paid.has(user.id);
-    const unpaid = members.filter(m => !paid.has(m.user_id) && m.user_id !== cycle.recipient_id);
+    // Everyone (including recipient) must pay
+    const unpaid = members.filter(m => !paid.has(m.user_id));
     return { paid, total, haveIPaid, unpaid, count: cyContribs.length };
   };
 
