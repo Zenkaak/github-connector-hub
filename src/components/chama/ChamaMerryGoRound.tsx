@@ -88,41 +88,39 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
     const { cycle } = payOpen;
     setPaying(true);
     try {
+      const isLate = new Date() > new Date(cycle.deadline);
+      const penalty = isLate ? Number(cycle.penalty_amount || 0) : 0;
+      const totalDue = Number(cycle.contribution_amount) + penalty;
+
       if (payMethod === 'wallet') {
-        // Atomic wallet debit + record contribution via RPC pattern (use direct ops)
-        const { data: w } = await supabase.from('wallets').select('balance').eq('user_id', user.id).maybeSingle();
-        const bal = Number(w?.balance) || 0;
-        if (bal < cycle.contribution_amount) {
-          throw new Error(`Insufficient wallet balance. You have ${fmt(bal)}.`);
-        }
-        const newBal = bal - cycle.contribution_amount;
-        const { error: wErr } = await supabase.from('wallets').update({ balance: newBal }).eq('user_id', user.id);
-        if (wErr) throw wErr;
-        await supabase.from('wallet_transactions').insert({
-          user_id: user.id, type: 'debit', amount: cycle.contribution_amount,
-          description: `Merry-go-round contribution · cycle #${cycle.cycle_number}`,
+        // Atomic wallet debit + contribution via security-definer RPC
+        const { data, error: rpcErr } = await supabase.rpc('pay_mgr_from_wallet' as any, {
+          _user_id: user.id,
+          _cycle_id: cycle.id,
         });
-        const { error: cErr } = await supabase.from('chama_mgr_contributions' as any).insert({
-          cycle_id: cycle.id, group_id: groupId, user_id: user.id,
-          amount: cycle.contribution_amount, payment_method: 'wallet',
-        });
-        if (cErr) throw cErr;
-        // Send SMS via edge function
-        await supabase.functions.invoke('send-sms', {
+        if (rpcErr) throw rpcErr;
+        const result: any = data || {};
+        // SMS confirmation (fire-and-forget)
+        supabase.functions.invoke('send-sms', {
           body: {
             phone: profile?.phone,
-            message: `Dear ${profile?.full_name?.split(' ')[0] || 'Member'}, you have contributed ${fmt(cycle.contribution_amount)} from your wallet to merry-go-round cycle #${cycle.cycle_number} in ${group?.name}. New wallet balance: ${fmt(newBal)}. Thank you for banking with Dasnet.`,
+            message: `Dear ${profile?.full_name?.split(' ')[0] || 'Member'}, you contributed ${fmt(result.amount_charged || totalDue)} from wallet to merry-go-round cycle #${cycle.cycle_number}${result.late ? ` (incl. ${fmt(result.penalty)} late penalty)` : ''}. Balance: ${fmt(result.new_balance || 0)}. Thank you for using Dasnet.`,
           },
+        }).catch(() => {});
+        toast({
+          title: 'Payment successful',
+          description: result.late
+            ? `${fmt(result.amount_charged)} charged (incl. ${fmt(result.penalty)} late penalty).`
+            : `${fmt(result.amount_charged)} debited from wallet.`,
         });
-        toast({ title: 'Payment successful', description: `${fmt(cycle.contribution_amount)} debited from wallet.` });
         setPayOpen(null); fetchData();
       } else if (payMethod === 'stk') {
         const { error } = await supabase.functions.invoke('initiate-stk-push', {
           body: {
-            phone: stkPhone, amount: cycle.contribution_amount,
+            phone: stkPhone, amount: totalDue,
             purpose: 'merry_go_round', userId: user.id, groupId,
             cycle_number: cycle.cycle_number,
-            metadata: { type: 'merry_go_round', cycle_id: cycle.id, cycle_number: cycle.cycle_number },
+            metadata: { type: 'merry_go_round', cycle_id: cycle.id, cycle_number: cycle.cycle_number, penalty },
           },
         });
         if (error) throw error;
@@ -313,11 +311,24 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
       <Dialog open={!!payOpen} onOpenChange={(o) => !o && setPayOpen(null)}>
         <DialogContent>
           <DialogHeader><DialogTitle>Pay Cycle #{payOpen?.cycle.cycle_number}</DialogTitle></DialogHeader>
-          {payOpen && (
+          {payOpen && (() => {
+            const isLate = new Date() > new Date(payOpen.cycle.deadline);
+            const pen = isLate ? Number(payOpen.cycle.penalty_amount || 0) : 0;
+            const total = Number(payOpen.cycle.contribution_amount) + pen;
+            return (
             <div className="space-y-3">
-              <p className="text-sm">
-                Amount: <strong>{fmt(payOpen.cycle.contribution_amount)}</strong>
-              </p>
+              <div className="rounded-lg bg-muted/30 p-3 text-sm space-y-1">
+                <div className="flex justify-between"><span>Contribution</span><strong>{fmt(payOpen.cycle.contribution_amount)}</strong></div>
+                {isLate && pen > 0 && (
+                  <div className="flex justify-between text-destructive"><span>Late penalty</span><strong>+ {fmt(pen)}</strong></div>
+                )}
+                <div className="flex justify-between border-t pt-1 mt-1"><span className="font-semibold">Total to pay</span><strong className="text-primary">{fmt(total)}</strong></div>
+                {isLate && (
+                  <p className="text-[11px] text-destructive flex items-center gap-1 mt-1">
+                    <AlertTriangle size={11} /> Payment is past the deadline — late penalty applies.
+                  </p>
+                )}
+              </div>
               <Tabs value={payMethod} onValueChange={(v) => setPayMethod(v as any)}>
                 <TabsList className="grid grid-cols-3">
                   <TabsTrigger value="wallet"><Wallet size={12} className="mr-1" /> Wallet</TabsTrigger>
