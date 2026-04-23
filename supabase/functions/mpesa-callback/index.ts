@@ -181,6 +181,17 @@ Deno.serve(async (req) => {
         .eq("checkout_request_id", CheckoutRequestID);
     }
 
+    const { data: existingC2B } = await supabase
+      .from("mpesa_c2b_transactions")
+      .select("id")
+      .eq("trans_id", mpesaReceipt)
+      .maybeSingle();
+
+    if (existingC2B) {
+      console.log("⏭️ Matching C2B confirmation already exists; skipping STK credit logic:", mpesaReceipt);
+      return jsonResponse({ ResultCode: 0, ResultDesc: "Accepted" });
+    }
+
     const purpose = txn.purpose;
     userName = userName || txn.contributor_name || "Member";
 

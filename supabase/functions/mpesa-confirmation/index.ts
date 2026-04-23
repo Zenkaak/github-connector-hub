@@ -111,6 +111,25 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify(ACK), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
+  const { data: stkWonRace } = await supabase
+    .from("stk_transactions")
+    .select("id")
+    .eq("mpesa_receipt", transId)
+    .eq("status", "success")
+    .maybeSingle();
+
+  if (stkWonRace) {
+    console.log(`Receipt ${transId} was credited by STK during C2B processing; skipping business logic.`);
+    await supabase.from("mpesa_c2b_transactions")
+      .update({
+        processed: true,
+        processed_at: new Date().toISOString(),
+        routing_type: "stk_already_credited",
+      })
+      .eq("id", c2bRow.id);
+    return new Response(JSON.stringify(ACK), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+
   // 4. Process based on routing
   try {
     if (route.type === "wallet") {
