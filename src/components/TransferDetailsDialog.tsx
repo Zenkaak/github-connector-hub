@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { ArrowRight, Clock, CheckCircle, XCircle, AlertTriangle, Send, User, MessageSquare, Calendar, Hash, Loader2 } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ArrowRight, Clock, CheckCircle, XCircle, AlertTriangle, Send, User, MessageSquare, Calendar, Hash, Loader2, Phone } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -34,6 +34,21 @@ export function TransferDetailsDialog({ transfer, onClose, onRefresh }: Transfer
   const [reportReason, setReportReason] = useState('');
   const [reportLoading, setReportLoading] = useState(false);
   const [cancelLoading, setCancelLoading] = useState(false);
+  const [senderPhone, setSenderPhone] = useState<string>('');
+  const [receiverPhone, setReceiverPhone] = useState<string>('');
+
+  useEffect(() => {
+    if (!transfer) return;
+    (async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('user_id, phone')
+        .in('user_id', [transfer.sender_id, transfer.receiver_id]);
+      const map = Object.fromEntries((data || []).map((p: any) => [p.user_id, p.phone || '']));
+      setSenderPhone(map[transfer.sender_id] || '');
+      setReceiverPhone(map[transfer.receiver_id] || '');
+    })();
+  }, [transfer]);
 
   if (!transfer) return null;
 
