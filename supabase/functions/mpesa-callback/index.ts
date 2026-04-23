@@ -181,6 +181,17 @@ Deno.serve(async (req) => {
         .eq("checkout_request_id", CheckoutRequestID);
     }
 
+    const { data: existingC2B } = await supabase
+      .from("mpesa_c2b_transactions")
+      .select("id")
+      .eq("trans_id", mpesaReceipt)
+      .maybeSingle();
+
+    if (existingC2B) {
+      console.log("⏭️ Matching C2B confirmation already exists; skipping STK credit logic:", mpesaReceipt);
+      return jsonResponse({ ResultCode: 0, ResultDesc: "Accepted" });
+    }
+
     const purpose = txn.purpose;
     userName = userName || txn.contributor_name || "Member";
 
@@ -292,41 +303,26 @@ Deno.serve(async (req) => {
 
     // ---------------- HARAMBEE ----------------
     if (purpose === "harambee" && txn.harambee_id) {
-      const { data: h } = await supabase
-        .from("chama_harambees")
-        .select("raised_amount")
-        .eq("id", txn.harambee_id)
-        .maybeSingle();
+      const contributionRecord: Record<string, any> = {
+        harambee_id: txn.harambee_id,
+        amount: actualAmount,
+        stk_reference: mpesaReceipt,
+      };
 
-      if (h) {
-        await supabase
-          .from("chama_harambees")
-          .update({
-            raised_amount: (h.raised_amount || 0) + actualAmount,
-          })
-          .eq("id", txn.harambee_id);
+      if (txn.user_id) {
+        contributionRecord.user_id = txn.user_id;
+      }
 
-        const contributionRecord: Record<string, any> = {
-          harambee_id: txn.harambee_id,
-          amount: actualAmount,
-          stk_reference: mpesaReceipt,
-        };
+      if (txn.contributor_name) {
+        contributionRecord.contributor_name = txn.contributor_name;
+      }
 
-        if (txn.user_id) {
-          contributionRecord.user_id = txn.user_id;
-        }
+      const { error: contribError } = await supabase
+        .from("chama_harambee_contributions")
+        .insert(contributionRecord);
 
-        if (txn.contributor_name) {
-          contributionRecord.contributor_name = txn.contributor_name;
-        }
-
-        const { error: contribError } = await supabase
-          .from("chama_harambee_contributions")
-          .insert(contributionRecord);
-
-        if (contribError) {
-          console.error("❌ Harambee contribution insert failed:", JSON.stringify(contribError));
-        }
+      if (contribError) {
+        console.error("❌ Harambee contribution insert failed:", JSON.stringify(contribError));
       }
     }
 

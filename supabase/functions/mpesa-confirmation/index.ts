@@ -111,6 +111,45 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify(ACK), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
 
+  const { data: stkWonRace } = await supabase
+    .from("stk_transactions")
+    .select("id")
+    .eq("mpesa_receipt", transId)
+    .eq("status", "success")
+    .maybeSingle();
+
+  if (stkWonRace) {
+    console.log(`Receipt ${transId} was credited by STK during C2B processing; skipping business logic.`);
+    await supabase.from("mpesa_c2b_transactions")
+      .update({
+        processed: true,
+        processed_at: new Date().toISOString(),
+        routing_type: "stk_already_credited",
+      })
+      .eq("id", c2bRow.id);
+    return new Response(JSON.stringify(ACK), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+
+  const { data: firstC2BRow } = await supabase
+    .from("mpesa_c2b_transactions")
+    .select("id")
+    .eq("trans_id", transId)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (firstC2BRow && firstC2BRow.id !== c2bRow.id) {
+    console.log(`Receipt ${transId} already has an earlier C2B row; skipping duplicate confirmation.`);
+    await supabase.from("mpesa_c2b_transactions")
+      .update({
+        processed: true,
+        processed_at: new Date().toISOString(),
+        routing_type: "duplicate_c2b_confirmation",
+      })
+      .eq("id", c2bRow.id);
+    return new Response(JSON.stringify(ACK), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+  }
+
   // 4. Process based on routing
   try {
     if (route.type === "wallet") {
@@ -192,7 +231,6 @@ Deno.serve(async (req) => {
           stk_reference: transId,
           user_id: route.type === "harambee_user" ? route.user_id : null,
         });
-        // raised_amount auto-updated by trigger
       } else {
         await supabase.from("mpesa_unmapped_payments").insert({
           c2b_transaction_id: c2bRow.id, bill_ref_number: billRef, amount, msisdn,
