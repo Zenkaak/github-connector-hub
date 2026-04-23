@@ -132,19 +132,21 @@ export function TransferDetailsDialog({ transfer, onClose, onRefresh }: Transfer
 
           {/* Sender → Recipient */}
           <div className="flex items-center justify-center gap-3 p-3 rounded-xl bg-muted/30 border border-border/40">
-            <div className="text-center flex-1">
+            <div className="text-center flex-1 min-w-0">
               <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-1">
                 <User size={16} className="text-primary" />
               </div>
               <p className="text-xs font-medium truncate">{transfer.sender_name || 'Unknown'}</p>
+              {senderPhone && <p className="text-[10px] text-muted-foreground truncate">{senderPhone}</p>}
               <p className="text-[10px] text-muted-foreground">{isSender ? '(You)' : 'Sender'}</p>
             </div>
             <ArrowRight size={18} className="text-muted-foreground shrink-0" />
-            <div className="text-center flex-1">
+            <div className="text-center flex-1 min-w-0">
               <div className="w-10 h-10 rounded-full bg-accent/10 flex items-center justify-center mx-auto mb-1">
                 <User size={16} className="text-accent" />
               </div>
               <p className="text-xs font-medium truncate">{transfer.receiver_name || 'Unknown'}</p>
+              {receiverPhone && <p className="text-[10px] text-muted-foreground truncate">{receiverPhone}</p>}
               <p className="text-[10px] text-muted-foreground">{!isSender ? '(You)' : 'Recipient'}</p>
             </div>
           </div>
@@ -152,6 +154,8 @@ export function TransferDetailsDialog({ transfer, onClose, onRefresh }: Transfer
           {/* Details */}
           <div className="space-y-3 bg-muted/30 rounded-xl p-4">
             {[
+              { icon: Phone, label: 'Sender Mobile', value: senderPhone || '—' },
+              { icon: Phone, label: 'Recipient Mobile', value: receiverPhone || '—' },
               { icon: MessageSquare, label: 'Reason', value: transfer.reason || 'No reason provided' },
               { icon: Calendar, label: 'Date', value: formatDate(transfer.created_at) },
               { icon: Hash, label: 'Transfer ID', value: transfer.id.slice(0, 16) + '...' },
