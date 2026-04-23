@@ -181,17 +181,8 @@ Deno.serve(async (req) => {
         .eq("checkout_request_id", CheckoutRequestID);
     }
 
-    const { data: existingC2B } = await supabase
-      .from("mpesa_c2b_transactions")
-      .select("id")
-      .eq("trans_id", mpesaReceipt)
-      .maybeSingle();
-
-    if (existingC2B) {
-      console.log("⏭️ Matching C2B confirmation already exists; skipping STK credit logic:", mpesaReceipt);
-      return jsonResponse({ ResultCode: 0, ResultDesc: "Accepted" });
-    }
-
+    // STK is the source of truth for STK-initiated payments. C2B confirmation
+    // checks `stk_transactions.status='success'` and defers to us. We always credit.
     const purpose = txn.purpose;
     userName = userName || txn.contributor_name || "Member";
 

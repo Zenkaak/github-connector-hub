@@ -140,7 +140,8 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
     const paid = new Set(cyContribs.map(c => c.user_id));
     const total = cyContribs.reduce((s, c) => s + Number(c.amount), 0);
     const haveIPaid = !!user && paid.has(user.id);
-    const unpaid = members.filter(m => !paid.has(m.user_id) && m.user_id !== cycle.recipient_id);
+    // Everyone (including recipient) must pay
+    const unpaid = members.filter(m => !paid.has(m.user_id));
     return { paid, total, haveIPaid, unpaid, count: cyContribs.length };
   };
 
@@ -180,8 +181,10 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
           {cycles.map((cycle) => {
             const { paid, total, haveIPaid, unpaid, count } = cycleStats(cycle);
             const isOverdue = new Date(cycle.deadline) < new Date() && cycle.status === 'open';
-            const expectedTotal = cycle.contribution_amount * (members.length - 1);
+            // Everyone contributes including recipient
+            const expectedTotal = cycle.contribution_amount * members.length;
             const recipMember = members.find(m => m.user_id === cycle.recipient_id);
+            const isRecipient = user?.id === cycle.recipient_id;
             return (
               <motion.div key={cycle.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
                 <Card className="p-4">
@@ -215,18 +218,29 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
                     <div className="h-1.5 bg-muted rounded-full overflow-hidden">
                       <div className="h-full bg-emerald-500" style={{ width: `${Math.min(100, (total / expectedTotal) * 100)}%` }} />
                     </div>
-                    <p className="text-[10px] text-muted-foreground mt-1">{count}/{members.length - 1} members paid</p>
+                    <p className="text-[10px] text-muted-foreground mt-1">{count}/{members.length} members paid</p>
                   </div>
 
-                  {/* Member status */}
+                  {/* If I'm recipient — show payout summary */}
+                  {isRecipient && (
+                    <div className="bg-accent/10 border border-accent/30 rounded-lg p-2.5 mb-3">
+                      <p className="text-[11px] font-semibold text-accent mb-1">🎉 You receive this cycle</p>
+                      <p className="text-[11px]">Expected payout: <strong>{fmt(expectedTotal)}</strong> on {new Date(cycle.payout_date).toLocaleDateString()}</p>
+                      <p className="text-[10px] text-muted-foreground">Payout will be sent automatically to your registered M-Pesa.</p>
+                    </div>
+                  )}
+
+                  {/* Member status — show ALL members */}
                   <div className="space-y-1 mb-3 max-h-40 overflow-y-auto">
-                    {members.filter(m => m.user_id !== cycle.recipient_id).map(m => {
+                    {members.map(m => {
                       const hasPaid = paid.has(m.user_id);
+                      const isThisRecipient = m.user_id === cycle.recipient_id;
                       return (
                         <div key={m.user_id} className="flex items-center justify-between text-[11px] py-1 border-b border-border/30 last:border-0">
                           <span className="flex items-center gap-1.5">
                             <UserIcon size={10} className="text-muted-foreground" />
                             {m.profile?.full_name || 'Unknown'}
+                            {isThisRecipient && <Badge variant="outline" className="text-[9px] py-0 px-1">Recipient</Badge>}
                           </span>
                           {hasPaid ? (
                             <span className="text-emerald-500 flex items-center gap-1"><CheckCircle2 size={11} /> Paid</span>
@@ -238,7 +252,7 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
                     })}
                   </div>
 
-                  {!haveIPaid && cycle.status === 'open' && user?.id !== cycle.recipient_id && (
+                  {!haveIPaid && cycle.status === 'open' && (
                     <Button onClick={() => { setPayOpen({ cycle }); setPayMethod('wallet'); }} className="w-full gap-1.5" size="sm">
                       <Wallet size={14} /> Pay {fmt(cycle.contribution_amount)}
                     </Button>
@@ -247,9 +261,6 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
                     <p className="text-center text-[11px] text-emerald-500 flex items-center justify-center gap-1">
                       <CheckCircle2 size={11} /> You have paid this cycle
                     </p>
-                  )}
-                  {user?.id === cycle.recipient_id && (
-                    <p className="text-center text-[11px] text-accent">🎉 You are this cycle's recipient — payout scheduled for {new Date(cycle.payout_date).toLocaleDateString()}</p>
                   )}
                 </Card>
               </motion.div>
