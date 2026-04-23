@@ -2745,6 +2745,10 @@ export type Database = {
         }
         Returns: number
       }
+      pay_mgr_from_wallet: {
+        Args: { _cycle_id: string; _user_id: string }
+        Returns: Json
+      }
       process_chama_withdrawal_action: {
         Args: { p_withdrawal_id: string }
         Returns: undefined
