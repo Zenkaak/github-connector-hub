@@ -2397,6 +2397,30 @@ export type Database = {
         }
         Relationships: []
       }
+      transactions: {
+        Row: {
+          amount: number | null
+          created_at: string | null
+          id: number
+          recipient_number: string | null
+          sender_id: number | null
+        }
+        Insert: {
+          amount?: number | null
+          created_at?: string | null
+          id?: number
+          recipient_number?: string | null
+          sender_id?: number | null
+        }
+        Update: {
+          amount?: number | null
+          created_at?: string | null
+          id?: number
+          recipient_number?: string | null
+          sender_id?: number | null
+        }
+        Relationships: []
+      }
       user_documents: {
         Row: {
           admin_notes: string | null
@@ -2451,6 +2475,24 @@ export type Database = {
         }
         Relationships: []
       }
+      users: {
+        Row: {
+          id: number
+          mobile_number: string | null
+          name: string | null
+        }
+        Insert: {
+          id?: number
+          mobile_number?: string | null
+          name?: string | null
+        }
+        Update: {
+          id?: number
+          mobile_number?: string | null
+          name?: string | null
+        }
+        Relationships: []
+      }
       wallet_transactions: {
         Row: {
           amount: number
@@ -2493,8 +2535,10 @@ export type Database = {
           reason: string | null
           receiver_id: string
           receiver_name: string | null
+          recipient_number: string | null
           sender_id: string
           sender_name: string | null
+          sender_number: string | null
           status: string
         }
         Insert: {
@@ -2505,8 +2549,10 @@ export type Database = {
           reason?: string | null
           receiver_id: string
           receiver_name?: string | null
+          recipient_number?: string | null
           sender_id: string
           sender_name?: string | null
+          sender_number?: string | null
           status?: string
         }
         Update: {
@@ -2517,8 +2563,10 @@ export type Database = {
           reason?: string | null
           receiver_id?: string
           receiver_name?: string | null
+          recipient_number?: string | null
           sender_id?: string
           sender_name?: string | null
+          sender_number?: string | null
           status?: string
         }
         Relationships: []
