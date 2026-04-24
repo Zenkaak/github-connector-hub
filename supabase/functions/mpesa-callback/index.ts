@@ -411,6 +411,52 @@ Deno.serve(async (req) => {
       }
     }
 
+    // ---------------- MERRY-GO-ROUND ----------------
+    if (purpose === "merry_go_round" && txn.user_id && txn.group_id) {
+      const cycleId = txn.metadata?.cycle_id;
+      if (cycleId) {
+        // Idempotency: skip if a contribution with this receipt already exists
+        const { data: existing } = await supabase
+          .from("chama_mgr_contributions")
+          .select("id")
+          .eq("reference", mpesaReceipt)
+          .maybeSingle();
+
+        if (!existing) {
+          const { error: mgrErr } = await supabase
+            .from("chama_mgr_contributions")
+            .insert({
+              cycle_id: cycleId,
+              group_id: txn.group_id,
+              user_id: txn.user_id,
+              amount: actualAmount,
+              payment_method: "stk",
+              reference: mpesaReceipt,
+            });
+          if (mgrErr) {
+            console.error("❌ MGR contribution insert failed:", JSON.stringify(mgrErr));
+          } else {
+            // Notify the recipient that someone paid
+            const { data: cycle } = await supabase
+              .from("chama_mgr_cycles")
+              .select("recipient_id, cycle_number")
+              .eq("id", cycleId)
+              .maybeSingle();
+            if (cycle?.recipient_id && cycle.recipient_id !== txn.user_id) {
+              await supabase.from("notifications").insert({
+                user_id: cycle.recipient_id,
+                title: "💰 Merry-Go-Round Contribution",
+                message: `${userName} contributed KES ${actualAmount.toLocaleString()} to cycle #${cycle.cycle_number}.`,
+                type: "mgr_payment",
+              });
+            }
+          }
+        }
+      } else {
+        console.warn("⚠️ MGR STK without cycle_id in metadata:", txn.id);
+      }
+    }
+
     // ---------------- CHAMA JOIN ----------------
     if (purpose === "chama_joining_fee" || purpose === "chama_join") {
       if (txn.group_id && txn.user_id) {

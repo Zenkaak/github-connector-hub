@@ -223,8 +223,24 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
                   {isRecipient && (
                     <div className="bg-accent/10 border border-accent/30 rounded-lg p-2.5 mb-3">
                       <p className="text-[11px] font-semibold text-accent mb-1">🎉 You receive this cycle</p>
-                      <p className="text-[11px]">Expected payout: <strong>{fmt(expectedTotal)}</strong> on {new Date(cycle.payout_date).toLocaleDateString()}</p>
-                      <p className="text-[10px] text-muted-foreground">Payout will be sent automatically to your registered M-Pesa.</p>
+                      {isOverdue && total < expectedTotal ? (
+                        <>
+                          <p className="text-[11px]">
+                            You have received <strong className="text-emerald-600">{fmt(total)}</strong> so far.
+                            Outstanding balance: <strong className="text-destructive">{fmt(expectedTotal - total)}</strong>.
+                          </p>
+                          <p className="text-[10px] text-muted-foreground mt-1">
+                            Late payments + penalties will be sent to your M-Pesa as they arrive.
+                          </p>
+                        </>
+                      ) : cycle.status === 'paid_out' ? (
+                        <p className="text-[11px]">Paid out: <strong>{fmt(cycle.payout_amount || total)}</strong> on {new Date(cycle.payout_processed_at || cycle.payout_date).toLocaleDateString()}</p>
+                      ) : (
+                        <>
+                          <p className="text-[11px]">Expected payout: <strong>{fmt(expectedTotal)}</strong> on {new Date(cycle.payout_date).toLocaleDateString()}</p>
+                          <p className="text-[10px] text-muted-foreground">Payout will be sent automatically to your registered M-Pesa.</p>
+                        </>
+                      )}
                     </div>
                   )}
 
