@@ -26,6 +26,7 @@ import { Button } from '@/components/ui/button';
 import { MobileBottomNav } from '@/components/MobileBottomNav';
 import { cn } from '@/lib/utils';
 import { AccountDisabledBanner } from '@/components/AccountDisabledBanner';
+import { KycPromptModal } from '@/components/KycPromptModal';
 
 function AnnouncementBanner() {
   const { getSetting } = usePlatformSettings();
@@ -278,6 +279,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
       {/* Mobile Bottom Navigation */}
       <MobileBottomNav />
+
+      {/* KYC verification prompt (soft) */}
+      <KycPromptModal />
     </div>
   );
 }

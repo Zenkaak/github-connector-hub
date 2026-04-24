@@ -1614,6 +1614,42 @@ export type Database = {
           },
         ]
       }
+      kyc_documents: {
+        Row: {
+          created_at: string
+          document_type: string
+          file_path: string
+          id: string
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          document_type: string
+          file_path: string
+          id?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          document_type?: string
+          file_path?: string
+          id?: string
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       loan_applications: {
         Row: {
           admin_message: string | null
