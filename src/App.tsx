@@ -137,20 +137,20 @@ function AppRoutes() {
       {/* ADMIN */}
       <Route path="/dashboard/admin" element={<ProtectedRoute requireAdmin><AdminDashboardPage /></ProtectedRoute>} />
       <Route path="/dashboard/admin/users" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="users" /></ProtectedRoute>} />
+      <Route path="/dashboard/admin/kyc" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="kyc" /></ProtectedRoute>} />
       <Route path="/dashboard/admin/loans" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="loans" /></ProtectedRoute>} />
-      <Route path="/dashboard/admin/transactions" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="transactions" /></ProtectedRoute>} />
-      <Route path="/dashboard/admin/messages" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="messages" /></ProtectedRoute>} />
-      <Route path="/dashboard/admin/withdrawals" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="withdrawals" /></ProtectedRoute>} />
-      <Route path="/dashboard/admin/audit" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="audit" /></ProtectedRoute>} />
       <Route path="/dashboard/admin/transfers" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="transfers" /></ProtectedRoute>} />
-      <Route path="/dashboard/admin/savings" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="savings" /></ProtectedRoute>} />
-      <Route path="/dashboard/admin/reports" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="reports" /></ProtectedRoute>} />
-      <Route path="/dashboard/admin/removals" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="removals" /></ProtectedRoute>} />
-      <Route path="/dashboard/admin/harambees" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="harambees" /></ProtectedRoute>} />
-      <Route path="/dashboard/admin/notifications" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="notifications" /></ProtectedRoute>} />
-      <Route path="/dashboard/admin/settings" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="settings" /></ProtectedRoute>} />
+      <Route path="/dashboard/admin/mpesa" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="mpesa" /></ProtectedRoute>} />
+      <Route path="/dashboard/admin/transactions" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="mpesa" /></ProtectedRoute>} />
+      <Route path="/dashboard/admin/withdrawals" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="withdrawals" /></ProtectedRoute>} />
+      <Route path="/dashboard/admin/mgr" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="mgr" /></ProtectedRoute>} />
+      <Route path="/dashboard/admin/audit" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="audit" /></ProtectedRoute>} />
+      <Route path="/dashboard/admin/wallets" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="users" /></ProtectedRoute>} />
+      <Route path="/dashboard/admin/messages" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="users" /></ProtectedRoute>} />
+      <Route path="/dashboard/admin/savings" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="withdrawals" /></ProtectedRoute>} />
+      <Route path="/dashboard/admin/settings" element={<ProtectedRoute requireAdmin><AdminSettingsPage /></ProtectedRoute>} />
       <Route path="/dashboard/admin/harambee-applications" element={<ProtectedRoute requireAdmin><AdminHarambeeApplicationsPage /></ProtectedRoute>} />
-      <Route path="/dashboard/admin/chama" element={<ProtectedRoute requireAdmin><AdminChamaPage /></ProtectedRoute>} />
+      <Route path="/dashboard/admin/chama" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="chama" /></ProtectedRoute>} />
 
       <Route path="*" element={<NotFound />} />
     </Routes>
