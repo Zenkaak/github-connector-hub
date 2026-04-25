@@ -1,13 +1,13 @@
 import { Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, FileText, Heart, Settings } from 'lucide-react';
+import { LayoutDashboard, Users, ShieldCheck, FileText, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const navItems = [
   { label: 'Overview', icon: LayoutDashboard, path: '/dashboard/admin' },
   { label: 'Users', icon: Users, path: '/dashboard/admin/users' },
+  { label: 'KYC', icon: ShieldCheck, path: '/dashboard/admin/kyc' },
   { label: 'Loans', icon: FileText, path: '/dashboard/admin/loans' },
-  { label: 'Harambee', icon: Heart, path: '/dashboard/admin/harambee-applications' },
-  { label: 'More', icon: Settings, path: '/dashboard/admin/settings' },
+  { label: 'Settings', icon: Settings, path: '/dashboard/admin/settings' },
 ];
 
 export function AdminBottomNav() {

@@ -5,7 +5,7 @@ import {
   LayoutDashboard,
   Users,
   FileText,
-  MessageSquare,
+  ShieldCheck,
   ClipboardList,
   LogOut,
   Menu,
@@ -17,6 +17,8 @@ import {
   PiggyBank,
   Settings,
   Bell,
+  Activity,
+  Heart,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -31,14 +33,14 @@ interface AdminLayoutProps {
 const adminNavItems = [
   { label: 'Overview', icon: LayoutDashboard, path: '/dashboard/admin' },
   { label: 'Users', icon: Users, path: '/dashboard/admin/users' },
+  { label: 'KYC Reviews', icon: ShieldCheck, path: '/dashboard/admin/kyc' },
   { label: 'Loans', icon: FileText, path: '/dashboard/admin/loans' },
-  { label: 'Harambee Apps', icon: Bell, path: '/dashboard/admin/harambee-applications' },
-  { label: 'M-Pesa', icon: Wallet, path: '/dashboard/admin/transactions' },
   { label: 'Transfers', icon: Send, path: '/dashboard/admin/transfers' },
-  { label: 'Savings', icon: PiggyBank, path: '/dashboard/admin/savings' },
-  { label: 'Messages', icon: MessageSquare, path: '/dashboard/admin/messages' },
-  { label: 'Withdrawals', icon: Shield, path: '/dashboard/admin/withdrawals' },
-  { label: 'Chama', icon: Users, path: '/dashboard/admin/chama' },
+  { label: 'M-Pesa', icon: Wallet, path: '/dashboard/admin/mpesa' },
+  { label: 'Withdrawals', icon: PiggyBank, path: '/dashboard/admin/withdrawals' },
+  { label: 'Chamas', icon: Users, path: '/dashboard/admin/chama' },
+  { label: 'MGR Cycles', icon: Activity, path: '/dashboard/admin/mgr' },
+  { label: 'Harambee Apps', icon: Heart, path: '/dashboard/admin/harambee-applications' },
   { label: 'Audit Logs', icon: ClipboardList, path: '/dashboard/admin/audit' },
   { label: 'Settings', icon: Settings, path: '/dashboard/admin/settings' },
 ];
