@@ -2829,6 +2829,7 @@ export type Database = {
         }
         Returns: number
       }
+      normalize_phone: { Args: { _phone: string }; Returns: string }
       pay_mgr_from_wallet: {
         Args: { _cycle_id: string; _user_id: string }
         Returns: Json
