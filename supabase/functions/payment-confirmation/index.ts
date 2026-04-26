@@ -251,7 +251,12 @@ Deno.serve(async (req) => {
           c2b_transaction_id: c2bRow.id, bill_ref_number: billRef, amount, msisdn,
           reason: `Harambee not found for slug ${billRef}`,
         });
-        await sendSMS(ADMIN_PHONE, `[Dasnet ALERT] Unmapped harambee payment: ${billRef} ${fmt(amount)} from ${msisdn}. Please reconcile.`);
+        {
+          const payerName = [body.FirstName, body.MiddleName, body.LastName].filter(Boolean).join(" ").trim() || "Unknown payer";
+          const ts = new Date().toLocaleString("en-KE", { timeZone: "Africa/Nairobi", dateStyle: "short", timeStyle: "short" });
+          await sendSMS(ADMIN_PHONE,
+            `Dear Admin, you have an unmapped harambee payment of ${fmt(amount)} from ${payerName} (${msisdn || "no phone"}) at ${ts}. Please reconcile in the admin dashboard. — Dasnet`);
+        }
       }
     } else if ((route as any).type === "mgr") {
       const r: any = route;
@@ -271,11 +276,10 @@ Deno.serve(async (req) => {
         c2b_transaction_id: c2bRow.id, bill_ref_number: billRef, amount, msisdn,
         reason: route.type === "unmapped" ? route.reason : "Unhandled route",
       });
-      const reason = route.type === "unmapped" ? route.reason : "Unhandled route";
-      const payerName = [body.FirstName, body.MiddleName, body.LastName].filter(Boolean).join(" ").trim() || "Unknown";
-      const ts = new Date().toLocaleString("en-KE", { timeZone: "Africa/Nairobi" });
+      const payerName = [body.FirstName, body.MiddleName, body.LastName].filter(Boolean).join(" ").trim() || "Unknown payer";
+      const ts = new Date().toLocaleString("en-KE", { timeZone: "Africa/Nairobi", dateStyle: "short", timeStyle: "short" });
       await sendSMS(ADMIN_PHONE,
-        `[Dasnet ALERT] Unmapped payment ${fmt(amount)} from ${payerName} (${msisdn}) at ${ts}. Ref: ${billRef}. Reason: ${reason}.`);
+        `Dear Admin, you have an unmapped payment of ${fmt(amount)} from ${payerName} (${msisdn || "no phone"}) at ${ts}. Please reconcile in the admin dashboard. — Dasnet`);
     }
 
     await supabase.from("mpesa_c2b_transactions")
