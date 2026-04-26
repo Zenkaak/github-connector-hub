@@ -57,7 +57,7 @@ import { FeatureDisabled } from '@/components/FeatureDisabled';
 interface WalletData { id: string; balance: number; }
 interface WalletTransaction { id: string; type: string; amount: number; description: string | null; reference_id: string | null; created_at: string; status?: string; }
 interface WithdrawalRequest { id: string; amount: number; phone: string; status: 'pending' | 'completed' | 'rejected'; admin_reason: string | null; created_at: string; }
-interface Transfer { id: string; sender_id: string; receiver_id: string; amount: number; reason: string | null; sender_name: string | null; receiver_name: string | null; status: string; created_at: string; cancelled_at: string | null; }
+interface Transfer { id: string; sender_id: string; receiver_id: string; amount: number; reason: string | null; sender_name: string | null; receiver_name: string | null; sender_number: string | null; recipient_number: string | null; status: string; created_at: string; cancelled_at: string | null; }
 
 export default function WalletPage() {
   const { user, profile } = useAuth();
