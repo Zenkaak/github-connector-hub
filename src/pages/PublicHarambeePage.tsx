@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { PaybillBox } from '@/components/PaybillBox';
+import { ProseText } from '@/components/ProseText';
 
 export default function PublicHarambeePage() {
   const { orderNumber } = useParams<{ orderNumber: string }>();
