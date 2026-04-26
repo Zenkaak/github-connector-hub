@@ -764,6 +764,51 @@ export default function WalletPage() {
               </CardContent>
             </Card>
 
+            {/* P2P Transfers */}
+            <Card className="border-border/40">
+              <CardHeader className="p-4 border-b border-border/30 flex flex-row items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Send size={13} className="text-accent" />
+                  <CardTitle className="text-sm font-bold">Recent Transfers</CardTitle>
+                </div>
+                <Badge variant="outline" className="text-[10px] font-semibold h-5 min-w-[20px] justify-center">{transfers.length}</Badge>
+              </CardHeader>
+              <CardContent className="p-0 max-h-[280px] overflow-y-auto">
+                {transfers.length === 0 ? (
+                  <p className="p-6 text-center text-[10px] text-muted-foreground">No transfers yet</p>
+                ) : (
+                  <div className="divide-y divide-border/15">
+                    {transfers.map((tr) => (
+                      <div key={tr.id} onClick={() => setSelectedTransfer(tr)} className="p-3.5 flex items-center justify-between hover:bg-muted/20 transition-colors cursor-pointer">
+                        <div className="flex items-center gap-3">
+                          <div className={cn(
+                            "w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold",
+                            tr.sender_id === user?.id ? "bg-rose-500/10 text-rose-400" : "bg-emerald-500/10 text-emerald-400"
+                          )}>
+                            {(tr.sender_id === user?.id ? tr.receiver_name : tr.sender_name || 'U')?.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <p className="text-xs font-semibold text-foreground">
+                              {tr.sender_id === user?.id ? tr.receiver_name : tr.sender_name}
+                            </p>
+                            <p className="text-[10px] text-muted-foreground">
+                              {tr.sender_id === user?.id ? (tr.recipient_number || '') : (tr.sender_number || '')}
+                            </p>
+                            <p className="text-[9px] text-muted-foreground">
+                              {tr.sender_id === user?.id ? 'Sent' : 'Received'} · {new Date(tr.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+                            </p>
+                          </div>
+                        </div>
+                        <p className={cn("text-xs font-bold", tr.sender_id === user?.id ? "text-rose-400" : "text-emerald-400")}>
+                          {tr.sender_id === user?.id ? '-' : '+'}{formatCurrency(tr.amount)}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
             {/* Pending Withdrawals */}
             <Card className="border-border/40">
               <CardHeader className="p-4 border-b border-border/30 flex flex-row items-center justify-between">
@@ -800,48 +845,6 @@ export default function WalletPage() {
                         <div className="w-full bg-border/30 h-1 rounded-full overflow-hidden">
                           <motion.div initial={{ width: 0 }} animate={{ width: '60%' }} transition={{ duration: 1.5 }} className="bg-accent h-full rounded-full" />
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* P2P Transfers */}
-            <Card className="border-border/40">
-              <CardHeader className="p-4 border-b border-border/30 flex flex-row items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Send size={13} className="text-accent" />
-                  <CardTitle className="text-sm font-bold">Recent Transfers</CardTitle>
-                </div>
-                <Badge variant="outline" className="text-[10px] font-semibold h-5 min-w-[20px] justify-center">{transfers.length}</Badge>
-              </CardHeader>
-              <CardContent className="p-0 max-h-[280px] overflow-y-auto">
-                {transfers.length === 0 ? (
-                  <p className="p-6 text-center text-[10px] text-muted-foreground">No transfers yet</p>
-                ) : (
-                  <div className="divide-y divide-border/15">
-                    {transfers.map((tr) => (
-                      <div key={tr.id} onClick={() => setSelectedTransfer(tr)} className="p-3.5 flex items-center justify-between hover:bg-muted/20 transition-colors cursor-pointer">
-                        <div className="flex items-center gap-3">
-                          <div className={cn(
-                            "w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold",
-                            tr.sender_id === user?.id ? "bg-rose-500/10 text-rose-400" : "bg-emerald-500/10 text-emerald-400"
-                          )}>
-                            {(tr.sender_id === user?.id ? tr.receiver_name : tr.sender_name || 'U')?.charAt(0).toUpperCase()}
-                          </div>
-                          <div>
-                            <p className="text-xs font-semibold text-foreground">
-                              {tr.sender_id === user?.id ? tr.receiver_name : tr.sender_name}
-                            </p>
-                            <p className="text-[9px] text-muted-foreground">
-                              {tr.sender_id === user?.id ? 'Sent' : 'Received'} · {new Date(tr.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
-                            </p>
-                          </div>
-                        </div>
-                        <p className={cn("text-xs font-bold", tr.sender_id === user?.id ? "text-rose-400" : "text-emerald-400")}>
-                          {tr.sender_id === user?.id ? '-' : '+'}{formatCurrency(tr.amount)}
-                        </p>
                       </div>
                     ))}
                   </div>
