@@ -60,7 +60,7 @@ export function AdminMpesaModule() {
                   </div>
                   <div className="text-right shrink-0">
                     <p className="font-bold tabular-nums">KES {Number(u.amount).toLocaleString()}</p>
-                    <Button variant="outline" size="sm" className="mt-1" onClick={() => setResolving(u)}>Resolve</Button>
+                    <Button variant="outline" size="sm" className="mt-1" onClick={() => setReconciling(u)}><Link2 size={12} /> Reconcile</Button>
                   </div>
                 </div>
               ))}
