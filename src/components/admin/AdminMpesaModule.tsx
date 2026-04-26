@@ -16,8 +16,7 @@ export function AdminMpesaModule() {
   const [b2c, setB2c] = useState<any[]>([]);
   const [c2b, setC2b] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [resolving, setResolving] = useState<any>(null);
-  const [notes, setNotes] = useState('');
+  const [reconciling, setReconciling] = useState<any>(null);
 
   const load = async () => {
     setLoading(true);
@@ -31,16 +30,6 @@ export function AdminMpesaModule() {
   };
 
   useEffect(() => { load(); }, []);
-
-  const resolve = async () => {
-    if (!resolving) return;
-    const { data: { user } } = await supabase.auth.getUser();
-    const { error } = await supabase.from('mpesa_unmapped_payments').update({
-      resolved: true, resolved_at: new Date().toISOString(), resolved_by: user!.id, resolution_notes: notes,
-    }).eq('id', resolving.id);
-    if (error) toast.error(error.message);
-    else { toast.success('Marked resolved'); setResolving(null); setNotes(''); load(); }
-  };
 
   const retryB2c = async (req: any) => {
     const { error } = await supabase.functions.invoke('mpesa-b2c-retry', { body: { request_id: req.id } });
