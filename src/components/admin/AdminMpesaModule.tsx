@@ -1,14 +1,13 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Wallet, Loader2, AlertTriangle, Check, RefreshCw } from 'lucide-react';
+import { Wallet, Loader2, AlertTriangle, Check, RefreshCw, Link2 } from 'lucide-react';
 import { AdminSectionHeader } from './AdminSectionHeader';
 import { AdminEmptyState } from './AdminEmptyState';
+import { AdminReconcileDialog } from './AdminReconcileDialog';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
@@ -17,8 +16,7 @@ export function AdminMpesaModule() {
   const [b2c, setB2c] = useState<any[]>([]);
   const [c2b, setC2b] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [resolving, setResolving] = useState<any>(null);
-  const [notes, setNotes] = useState('');
+  const [reconciling, setReconciling] = useState<any>(null);
 
   const load = async () => {
     setLoading(true);
@@ -32,16 +30,6 @@ export function AdminMpesaModule() {
   };
 
   useEffect(() => { load(); }, []);
-
-  const resolve = async () => {
-    if (!resolving) return;
-    const { data: { user } } = await supabase.auth.getUser();
-    const { error } = await supabase.from('mpesa_unmapped_payments').update({
-      resolved: true, resolved_at: new Date().toISOString(), resolved_by: user!.id, resolution_notes: notes,
-    }).eq('id', resolving.id);
-    if (error) toast.error(error.message);
-    else { toast.success('Marked resolved'); setResolving(null); setNotes(''); load(); }
-  };
 
   const retryB2c = async (req: any) => {
     const { error } = await supabase.functions.invoke('mpesa-b2c-retry', { body: { request_id: req.id } });
@@ -72,7 +60,7 @@ export function AdminMpesaModule() {
                   </div>
                   <div className="text-right shrink-0">
                     <p className="font-bold tabular-nums">KES {Number(u.amount).toLocaleString()}</p>
-                    <Button variant="outline" size="sm" className="mt-1" onClick={() => setResolving(u)}>Resolve</Button>
+                    <Button variant="outline" size="sm" className="mt-1" onClick={() => setReconciling(u)}><Link2 size={12} /> Reconcile</Button>
                   </div>
                 </div>
               ))}
@@ -121,23 +109,7 @@ export function AdminMpesaModule() {
         </TabsContent>
       </Tabs>
 
-      <Dialog open={!!resolving} onOpenChange={(o) => !o && setResolving(null)}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Resolve Unmapped Payment</DialogTitle></DialogHeader>
-          {resolving && (
-            <div className="space-y-3 text-sm">
-              <div><strong>Ref:</strong> {resolving.bill_ref_number}</div>
-              <div><strong>Amount:</strong> KES {Number(resolving.amount).toLocaleString()}</div>
-              <div><strong>Phone:</strong> {resolving.msisdn}</div>
-              <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Resolution notes…" rows={3} />
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setResolving(null)}>Cancel</Button>
-            <Button onClick={resolve}>Mark Resolved</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <AdminReconcileDialog payment={reconciling} onClose={() => setReconciling(null)} onResolved={load} />
     </div>
   );
 }

@@ -1085,12 +1085,15 @@ export default function WalletPage() {
                       <div className="p-4 rounded-xl bg-muted/30 border border-border/30">
                         <div className="flex items-center justify-between">
                           {/* Sender */}
-                          <div className="flex flex-col items-center gap-1.5 flex-1">
+                          <div className="flex flex-col items-center gap-1.5 flex-1 min-w-0">
                             <div className="w-10 h-10 rounded-full bg-rose-500/10 flex items-center justify-center">
                               <User size={16} className="text-rose-400" />
                             </div>
                             <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Sender</p>
-                            <p className="text-xs font-bold text-foreground text-center">{selectedTxExtra.sender_name || 'Unknown'}</p>
+                            <p className="text-xs font-bold text-foreground text-center truncate w-full">{selectedTxExtra.sender_name || 'Unknown'}</p>
+                            {selectedTxExtra.sender_number && (
+                              <p className="text-[10px] text-muted-foreground tabular-nums">{selectedTxExtra.sender_number}</p>
+                            )}
                           </div>
                           {/* Arrow */}
                           <div className="px-2">
@@ -1099,12 +1102,15 @@ export default function WalletPage() {
                             </div>
                           </div>
                           {/* Receiver */}
-                          <div className="flex flex-col items-center gap-1.5 flex-1">
+                          <div className="flex flex-col items-center gap-1.5 flex-1 min-w-0">
                             <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
                               <User size={16} className="text-emerald-400" />
                             </div>
                             <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Receiver</p>
-                            <p className="text-xs font-bold text-foreground text-center">{selectedTxExtra.receiver_name || 'Unknown'}</p>
+                            <p className="text-xs font-bold text-foreground text-center truncate w-full">{selectedTxExtra.receiver_name || 'Unknown'}</p>
+                            {selectedTxExtra.recipient_number && (
+                              <p className="text-[10px] text-muted-foreground tabular-nums">{selectedTxExtra.recipient_number}</p>
+                            )}
                           </div>
                         </div>
                         {selectedTxExtra.reason && (
