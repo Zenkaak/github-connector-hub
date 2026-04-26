@@ -20,6 +20,7 @@ import { EmptyState } from '@/components/EmptyState';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
+import { ProseText } from '@/components/ProseText';
 
 interface HarambeeApp {
   id: string;
@@ -403,8 +404,8 @@ export default function AdminHarambeeApplicationsPage() {
                     </div>
                     <Separator />
                     <div>
-                      <p className="text-muted-foreground mb-1">Description:</p>
-                      <p className="text-sm">{selected.description}</p>
+                      <p className="text-muted-foreground mb-2 text-xs uppercase tracking-wider font-semibold">Description</p>
+                      <ProseText text={selected.description} className="text-sm text-foreground" />
                     </div>
                   </CardContent>
                 </Card>

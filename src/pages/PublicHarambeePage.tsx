@@ -12,6 +12,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { RealtimeChannel } from '@supabase/supabase-js';
 import { PaybillBox } from '@/components/PaybillBox';
+import { ProseText } from '@/components/ProseText';
 
 export default function PublicHarambeePage() {
   const { orderNumber } = useParams<{ orderNumber: string }>();
@@ -294,7 +295,7 @@ export default function PublicHarambeePage() {
                   Harambee for <span className="text-[hsl(42,92%,56%)]">{harambee.beneficiary_name}</span>
                 </h2>
                 {harambee.description && (
-                  <p className="text-sm text-[hsl(213,16%,68%)] mt-3 leading-relaxed whitespace-pre-line">{harambee.description}</p>
+                  <ProseText text={harambee.description} className="text-sm text-[hsl(213,16%,68%)] mt-3" />
                 )}
               </div>
 
