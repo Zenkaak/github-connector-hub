@@ -730,6 +730,8 @@ export default function WalletPage() {
 
           {/* Side Panel */}
           <div className="lg:col-span-4 space-y-4">
+            <MoneyRequestsSection walletBalance={wallet?.balance || 0} onRefresh={fetchWalletData} />
+
             {/* Quick Info */}
             <Card className="border-border/40 overflow-hidden">
               <div className="bg-gradient-to-br from-accent/5 to-transparent p-4">
@@ -804,8 +806,6 @@ export default function WalletPage() {
                 )}
               </CardContent>
             </Card>
-
-            <MoneyRequestsSection walletBalance={wallet?.balance || 0} onRefresh={fetchWalletData} />
 
             {/* P2P Transfers */}
             <Card className="border-border/40">
