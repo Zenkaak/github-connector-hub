@@ -167,12 +167,11 @@ export function AdminReconcileDialog({ payment, onClose, onResolved }: Props) {
           month: new Date().toISOString().slice(0, 7), stk_reference: ref,
         });
       } else if (tab === 'group') {
-        const { data: w } = await supabase.from('wallets').select('balance').eq('group_id', selected.id).maybeSingle();
-        if (w) {
-          await supabase.from('wallets').update({ balance: Number(w.balance) + amount }).eq('group_id', selected.id);
-        } else {
-          await supabase.from('wallets').insert({ group_id: selected.id, balance: amount });
-        }
+        // Credit as a group-level deposit attributed to the admin reconciler
+        await supabase.from('chama_savings').insert({
+          group_id: selected.id, user_id: user!.id, amount,
+          month: new Date().toISOString().slice(0, 7), stk_reference: ref,
+        });
       }
 
       // Mark unmapped payment resolved
