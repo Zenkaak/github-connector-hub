@@ -109,23 +109,7 @@ export function AdminMpesaModule() {
         </TabsContent>
       </Tabs>
 
-      <Dialog open={!!resolving} onOpenChange={(o) => !o && setResolving(null)}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Resolve Unmapped Payment</DialogTitle></DialogHeader>
-          {resolving && (
-            <div className="space-y-3 text-sm">
-              <div><strong>Ref:</strong> {resolving.bill_ref_number}</div>
-              <div><strong>Amount:</strong> KES {Number(resolving.amount).toLocaleString()}</div>
-              <div><strong>Phone:</strong> {resolving.msisdn}</div>
-              <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Resolution notes…" rows={3} />
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setResolving(null)}>Cancel</Button>
-            <Button onClick={resolve}>Mark Resolved</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <AdminReconcileDialog payment={reconciling} onClose={() => setReconciling(null)} onResolved={load} />
     </div>
   );
 }
