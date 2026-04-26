@@ -538,10 +538,13 @@ export default function TransactionsPage() {
                                   }
                                 </div>
                                 <div className="min-w-0">
-                                  <p className="font-medium text-sm">
+                                  <p className="font-medium text-sm truncate">
                                     {isSender ? `To ${tr.receiver_name || 'Unknown'}` : `From ${tr.sender_name || 'Unknown'}`}
                                   </p>
-                                  <p className="text-xs text-muted-foreground truncate">
+                                  <p className="text-[11px] text-muted-foreground truncate">
+                                    {isSender ? (tr.recipient_number || '—') : (tr.sender_number || '—')}
+                                  </p>
+                                  <p className="text-[10px] text-muted-foreground/80 truncate">
                                     {tr.reason || 'No reason'} · {formatTime(tr.created_at)}
                                   </p>
                                 </div>
