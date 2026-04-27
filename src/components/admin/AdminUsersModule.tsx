@@ -85,6 +85,9 @@ export function AdminUsersModule() {
   const [adjustAmount, setAdjustAmount] = useState('');
   const [adjustType, setAdjustType] = useState<'credit' | 'debit'>('credit');
   const [adjustReason, setAdjustReason] = useState('');
+  const [transactions, setTransactions] = useState<UnifiedTx[]>([]);
+  const [txFilter, setTxFilter] = useState<'all' | 'wallet' | 'mpesa_in' | 'mpesa_out' | 'loan' | 'savings' | 'chama'>('all');
+  const [loadingTx, setLoadingTx] = useState(false);
 
   const load = async () => {
     setLoading(true);
