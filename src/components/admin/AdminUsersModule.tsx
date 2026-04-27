@@ -120,13 +120,21 @@ export function AdminUsersModule() {
     setEditing({ ...u });
     setStats(EMPTY_STATS);
     setChamas([]);
-    // Load detailed financial activity
-    const [tx, loans, savings, chamaMembers, harambees] = await Promise.all([
-      supabase.from('wallet_transactions').select('type, amount').eq('user_id', u.user_id),
+    setTransactions([]);
+    setLoadingTx(true);
+
+    // Load detailed financial activity + full transaction history
+    const [tx, loans, savings, chamaMembers, harambees, mpesaIn, mpesaOut, loanDisb, savingsDep, chamaSav] = await Promise.all([
+      supabase.from('wallet_transactions').select('id, type, amount, description, reference_id, created_at, status').eq('user_id', u.user_id).order('created_at', { ascending: false }).limit(200),
       supabase.from('loan_disbursements').select('outstanding_balance, status').eq('user_id', u.user_id).eq('status', 'active'),
       supabase.from('personal_savings').select('saved_amount').eq('user_id', u.user_id),
       supabase.from('chama_members').select('group_id, role, is_active, chama_groups(name)').eq('user_id', u.user_id).eq('is_active', true),
       supabase.from('chama_harambees').select('id', { count: 'exact', head: true }).eq('created_by', u.user_id),
+      u.phone ? supabase.from('mpesa_c2b_transactions').select('id, trans_id, trans_amount, msisdn, first_name, last_name, bill_ref_number, created_at, processed').eq('msisdn', u.phone).order('created_at', { ascending: false }).limit(50) : Promise.resolve({ data: [] }),
+      supabase.from('mpesa_b2c_requests').select('id, amount, phone, mpesa_receipt, status, created_at, result_desc').eq('user_id', u.user_id).order('created_at', { ascending: false }).limit(50),
+      supabase.from('loan_disbursements').select('id, loan_id, disbursed_amount, outstanding_balance, status, disbursed_at, created_at').eq('user_id', u.user_id).order('created_at', { ascending: false }).limit(50),
+      supabase.from('personal_savings_deposits').select('id, savings_id, amount, stk_reference, created_at').eq('user_id', u.user_id).order('created_at', { ascending: false }).limit(50),
+      supabase.from('chama_savings').select('id, group_id, amount, stk_reference, month, created_at, chama_groups(name)').eq('user_id', u.user_id).order('created_at', { ascending: false }).limit(50),
     ]);
     const txs = tx.data || [];
     setStats({
@@ -140,6 +148,47 @@ export function AdminUsersModule() {
       harambeeCount: harambees.count || 0,
     });
     setChamas(chamaMembers.data || []);
+
+    // Build unified transaction stream
+    const unified: UnifiedTx[] = [];
+    txs.forEach((t: any) => unified.push({
+      id: `w-${t.id}`, source: 'wallet', type: t.type,
+      amount: Number(t.amount), description: t.description || '—',
+      reference: t.reference_id, counterparty: null, date: t.created_at, status: t.status || 'completed',
+    }));
+    (mpesaIn.data || []).forEach((t: any) => unified.push({
+      id: `mi-${t.id}`, source: 'mpesa_in', type: 'mpesa_deposit',
+      amount: Number(t.trans_amount),
+      description: `M-Pesa deposit from ${[t.first_name, t.last_name].filter(Boolean).join(' ') || t.msisdn}`,
+      reference: t.trans_id, counterparty: t.msisdn, date: t.created_at,
+      status: t.processed ? 'completed' : 'pending',
+    }));
+    (mpesaOut.data || []).forEach((t: any) => unified.push({
+      id: `mo-${t.id}`, source: 'mpesa_out', type: 'mpesa_payout',
+      amount: Number(t.amount),
+      description: `Payout to ${t.phone}${t.result_desc ? ` — ${t.result_desc}` : ''}`,
+      reference: t.mpesa_receipt, counterparty: t.phone, date: t.created_at, status: t.status,
+    }));
+    (loanDisb.data || []).forEach((t: any) => unified.push({
+      id: `l-${t.id}`, source: 'loan', type: 'loan_disbursement',
+      amount: Number(t.disbursed_amount),
+      description: `Loan disbursed (Outstanding KES ${Number(t.outstanding_balance).toLocaleString()})`,
+      reference: t.loan_id, counterparty: null, date: t.disbursed_at || t.created_at, status: t.status,
+    }));
+    (savingsDep.data || []).forEach((t: any) => unified.push({
+      id: `s-${t.id}`, source: 'savings', type: 'savings_deposit',
+      amount: Number(t.amount), description: 'Personal savings deposit',
+      reference: t.stk_reference, counterparty: null, date: t.created_at, status: 'completed',
+    }));
+    (chamaSav.data || []).forEach((t: any) => unified.push({
+      id: `c-${t.id}`, source: 'chama', type: 'chama_contribution',
+      amount: Number(t.amount),
+      description: `Chama contribution — ${t.chama_groups?.name || 'Group'}${t.month ? ` (${t.month})` : ''}`,
+      reference: t.stk_reference, counterparty: null, date: t.created_at, status: 'completed',
+    }));
+    unified.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    setTransactions(unified);
+    setLoadingTx(false);
   };
 
   const filtered = users.filter((u) => {
