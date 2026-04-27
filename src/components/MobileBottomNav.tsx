@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { LayoutDashboard, CreditCard, Users, User, Wallet } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
 
 const navItems = [
   { label: 'Home', icon: LayoutDashboard, path: '/dashboard' },
@@ -12,6 +13,8 @@ const navItems = [
 
 export function MobileBottomNav() {
   const location = useLocation();
+  const { isAdmin } = useAuth();
+  if (isAdmin) return null;
 
   return (
     <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-primary border-t border-white/[0.06] z-50 safe-area-bottom shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.25)]">
