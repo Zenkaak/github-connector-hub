@@ -234,40 +234,42 @@ export function AdminReconcileDialog({ payment, onClose, onResolved }: Props) {
           </div>
         </div>
 
-        <Tabs value={tab} onValueChange={(v) => setTab(v as TargetType)}>
-          <TabsList className="grid grid-cols-3 sm:grid-cols-6 h-auto">
+        <div className="px-5 pt-4">
+          <Tabs value={tab} onValueChange={(v) => setTab(v as TargetType)}>
+            <TabsList className="grid grid-cols-3 sm:grid-cols-6 h-auto w-full gap-1 bg-muted/40 p-1">
+              {TABS.map((t) => (
+                <TabsTrigger key={t.value} value={t.value} className="flex flex-col gap-1 py-2 text-[10px] data-[state=active]:bg-card">
+                  <t.icon size={14} /> {t.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+
             {TABS.map((t) => (
-              <TabsTrigger key={t.value} value={t.value} className="flex flex-col gap-1 py-2 text-[10px]">
-                <t.icon size={14} /> {t.label}
-              </TabsTrigger>
+              <TabsContent key={t.value} value={t.value} className="space-y-3 mt-4">
+                <p className="text-xs text-muted-foreground">{t.hint}</p>
+                <div className="relative">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name, phone, code, or title…" className="pl-9" />
+                </div>
+
+                {loading ? (
+                  <div className="flex justify-center py-8"><Loader2 className="animate-spin text-accent" size={18} /></div>
+                ) : results.length === 0 ? (
+                  <p className="text-center text-xs text-muted-foreground py-8">No matches found.</p>
+                ) : (
+                  <div className="space-y-2 max-h-64 overflow-y-auto pr-1">{results.map(renderResultRow)}</div>
+                )}
+              </TabsContent>
             ))}
-          </TabsList>
+          </Tabs>
+        </div>
 
-          {TABS.map((t) => (
-            <TabsContent key={t.value} value={t.value} className="space-y-3 mt-3">
-              <p className="text-xs text-muted-foreground">{t.hint}</p>
-              <div className="relative">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name, phone, code, or title…" className="pl-9" />
-              </div>
-
-              {loading ? (
-                <div className="flex justify-center py-8"><Loader2 className="animate-spin text-accent" /></div>
-              ) : results.length === 0 ? (
-                <p className="text-center text-xs text-muted-foreground py-8">No matches found.</p>
-              ) : (
-                <div className="space-y-2 max-h-64 overflow-y-auto">{results.map(renderResultRow)}</div>
-              )}
-            </TabsContent>
-          ))}
-        </Tabs>
-
-        <div className="space-y-2">
+        <div className="px-5 pt-4 space-y-2">
           <Label className="text-xs">Resolution notes (optional)</Label>
           <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} placeholder="Why this assignment…" />
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="px-5 py-4 border-t mt-4 gap-2 sm:gap-2">
           <Button variant="outline" onClick={onClose}>Cancel</Button>
           <Button onClick={submit} disabled={!selected || submitting}>
             {submitting ? <Loader2 className="animate-spin" size={14} /> : 'Reconcile & Credit'}
@@ -275,5 +277,18 @@ export function AdminReconcileDialog({ payment, onClose, onResolved }: Props) {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function Row({ label, value, bold, mono, accent }: { label: string; value: string; bold?: boolean; mono?: boolean; accent?: boolean }) {
+  return (
+    <div className="flex items-start justify-between gap-3 min-w-0">
+      <span className="text-muted-foreground text-xs shrink-0">{label}</span>
+      <span
+        className={`text-right text-xs break-all min-w-0 ${bold ? 'font-bold text-sm' : ''} ${mono ? 'font-mono' : ''} ${accent ? 'text-amber-600' : ''}`}
+      >
+        {value}
+      </span>
+    </div>
   );
 }
