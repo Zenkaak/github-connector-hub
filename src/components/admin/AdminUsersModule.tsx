@@ -507,6 +507,74 @@ export function AdminUsersModule() {
                   </div>
                 </TabsContent>
 
+                {/* TRANSACTIONS — unified */}
+                <TabsContent value="transactions" className="space-y-3 mt-4">
+                  <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
+                    {([
+                      ['all', `All (${transactions.length})`],
+                      ['wallet', 'Wallet'],
+                      ['mpesa_in', 'M-Pesa In'],
+                      ['mpesa_out', 'Payouts'],
+                      ['loan', 'Loans'],
+                      ['savings', 'Savings'],
+                      ['chama', 'Chama'],
+                    ] as const).map(([k, label]) => (
+                      <button
+                        key={k}
+                        onClick={() => setTxFilter(k as any)}
+                        className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors ${
+                          txFilter === k ? 'bg-accent text-accent-foreground' : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {loadingTx ? (
+                    <div className="flex justify-center py-10"><Loader2 className="animate-spin text-accent" size={18} /></div>
+                  ) : (() => {
+                    const list = txFilter === 'all' ? transactions : transactions.filter((t) => t.source === txFilter);
+                    if (list.length === 0) {
+                      return <p className="text-center text-xs text-muted-foreground py-10">No activity in this category.</p>;
+                    }
+                    return (
+                      <Card className="divide-y divide-border overflow-hidden">
+                        {list.slice(0, 100).map((t) => {
+                          const isCredit = ['credit', 'deposit', 'mpesa_deposit', 'transfer_in', 'loan_disbursement'].includes(t.type);
+                          const sign = isCredit ? '+' : '−';
+                          const color = isCredit ? 'text-emerald-600' : 'text-rose-600';
+                          const sourceLabel = {
+                            wallet: 'Wallet', mpesa_in: 'M-Pesa', mpesa_out: 'Payout',
+                            loan: 'Loan', savings: 'Savings', chama: 'Chama',
+                          }[t.source];
+                          return (
+                            <div key={t.id} className="p-3 flex items-start gap-3">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <Badge variant="outline" className="text-[9px] px-1.5 py-0">{sourceLabel}</Badge>
+                                  <span className="text-[10px] text-muted-foreground capitalize">{t.type.replace(/_/g, ' ')}</span>
+                                  {t.status && t.status !== 'completed' && (
+                                    <Badge variant={t.status === 'failed' ? 'destructive' : 'secondary'} className="text-[9px] px-1.5 py-0">{t.status}</Badge>
+                                  )}
+                                </div>
+                                <p className="text-xs text-foreground mt-0.5 truncate">{t.description}</p>
+                                <p className="text-[10px] text-muted-foreground truncate">
+                                  {format(new Date(t.date), 'MMM d, yyyy HH:mm')}
+                                  {t.reference ? ` • ${t.reference}` : ''}
+                                </p>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <p className={`text-sm font-bold tabular-nums ${color}`}>{sign}{fmt(t.amount)}</p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </Card>
+                    );
+                  })()}
+                </TabsContent>
+
                 {/* GROUPS */}
                 <TabsContent value="groups" className="space-y-3 mt-4">
                   <div className="grid grid-cols-2 gap-2 mb-3">
