@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Wallet, Loader2, AlertTriangle, Check, RefreshCw, Link2 } from 'lucide-react';
+import {
+  Wallet, Loader2, AlertTriangle, Check, RefreshCw, Link2, Zap
+} from 'lucide-react';
 import { AdminSectionHeader } from './AdminSectionHeader';
 import { AdminEmptyState } from './AdminEmptyState';
 import { AdminReconcileDialog } from './AdminReconcileDialog';
@@ -20,47 +22,166 @@ export function AdminMpesaModule() {
 
   const load = async () => {
     setLoading(true);
+
     const [u, b, c] = await Promise.all([
-      supabase.from('mpesa_unmapped_payments').select('*').eq('resolved', false).order('created_at', { ascending: false }).limit(50),
-      supabase.from('mpesa_b2c_requests').select('*').order('created_at', { ascending: false }).limit(50),
-      supabase.from('mpesa_c2b_transactions').select('*').order('created_at', { ascending: false }).limit(50),
+      supabase.from('mpesa_unmapped_payments').select('*').eq('resolved', false),
+      supabase.from('mpesa_b2c_requests').select('*'),
+      supabase.from('mpesa_c2b_transactions').select('*'),
     ]);
-    setUnmapped(u.data || []); setB2c(b.data || []); setC2b(c.data || []);
+
+    setUnmapped((u.data || []).sort((a, b) => b.amount - a.amount));
+    setB2c(b.data || []);
+    setC2b(c.data || []);
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+
+    const channel = supabase
+      .channel('mpesa-live')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'mpesa_unmapped_payments' }, load)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'mpesa_b2c_requests' }, load)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'mpesa_c2b_transactions' }, load)
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
   const retryB2c = async (req: any) => {
-    const { error } = await supabase.functions.invoke('mpesa-b2c-retry', { body: { request_id: req.id } });
-    if (error) toast.error(error.message); else { toast.success('Retry queued'); load(); }
+    const { error } = await supabase.functions.invoke('mpesa-b2c-retry', {
+      body: { request_id: req.id },
+    });
+
+    if (error) toast.error(error.message);
+    else {
+      toast.success('Retry queued');
+      load();
+    }
   };
+
+  // 🔥 AUTO RECONCILIATION LOGIC
+  const autoReconcile = async () => {
+    let matched = 0;
+
+    for (const payment of unmapped) {
+      const match = c2b.find(
+        (t) =>
+          !t.processed &&
+          Number(t.trans_amount) === Number(payment.amount) &&
+          t.msisdn === payment.msisdn
+      );
+
+      if (match) {
+        await supabase
+          .from('mpesa_unmapped_payments')
+          .update({ resolved: true })
+          .eq('id', payment.id);
+
+        await supabase
+          .from('mpesa_c2b_transactions')
+          .update({ processed: true })
+          .eq('id', match.id);
+
+        matched++;
+      }
+    }
+
+    toast.success(`${matched} payments auto-matched`);
+    load();
+  };
+
+  const totalUnmapped = unmapped.length;
+  const failedB2c = b2c.filter(r => r.status === 'failed').length;
+  const pendingC2b = c2b.filter(t => !t.processed).length;
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-24">
+        <Loader2 className="animate-spin text-accent" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5">
-      <AdminSectionHeader title="M-Pesa Operations" description="Monitor payments, payouts, and resolve issues" icon={Wallet} />
+
+      <AdminSectionHeader
+        title="M-Pesa Operations"
+        description="Realtime payments, reconciliation & payout monitoring"
+        icon={Wallet}
+      />
+
+      {/* KPI */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <Card className="p-3">
+          <p className="text-xs">Unmapped</p>
+          <p className="text-lg font-bold text-amber-600">{totalUnmapped}</p>
+        </Card>
+        <Card className="p-3">
+          <p className="text-xs">Failed Payouts</p>
+          <p className="text-lg font-bold text-red-600">{failedB2c}</p>
+        </Card>
+        <Card className="p-3">
+          <p className="text-xs">Pending C2B</p>
+          <p className="text-lg font-bold">{pendingC2b}</p>
+        </Card>
+        <Card className="p-3">
+          <p className="text-xs">Volume</p>
+          <p className="text-lg font-bold">
+            KES {[...b2c, ...c2b].reduce((s, x: any) => s + Number(x.amount || x.trans_amount || 0), 0).toLocaleString()}
+          </p>
+        </Card>
+      </div>
+
+      {/* ALERT */}
+      {failedB2c > 5 && (
+        <Card className="p-3 border-red-500/30 bg-red-500/5">
+          ⚠ High failed payout rate detected
+        </Card>
+      )}
+
+      {/* AUTO BUTTON */}
+      <Button onClick={autoReconcile} className="gap-2">
+        <Zap size={14} /> Auto Reconcile
+      </Button>
 
       <Tabs defaultValue="unmapped">
         <TabsList>
           <TabsTrigger value="unmapped">Unmapped ({unmapped.length})</TabsTrigger>
-          <TabsTrigger value="b2c">Payouts (B2C)</TabsTrigger>
-          <TabsTrigger value="c2b">Incoming (C2B)</TabsTrigger>
+          <TabsTrigger value="b2c">B2C</TabsTrigger>
+          <TabsTrigger value="c2b">C2B</TabsTrigger>
         </TabsList>
 
         <TabsContent value="unmapped" className="mt-4">
-          {loading ? <div className="flex justify-center py-16"><Loader2 className="animate-spin text-accent" /></div> :
-           unmapped.length === 0 ? <AdminEmptyState icon={Check} title="All payments mapped" description="No unmapped M-Pesa payments." /> : (
-            <Card className="divide-y divide-border">
+          {unmapped.length === 0 ? (
+            <AdminEmptyState icon={Check} title="All payments mapped" />
+          ) : (
+            <Card className="divide-y">
               {unmapped.map((u) => (
-                <div key={u.id} className="p-4 flex items-center gap-3">
-                  <div className="h-9 w-9 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center"><AlertTriangle size={16} /></div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-sm">{u.bill_ref_number}</p>
-                    <p className="text-xs text-muted-foreground">{u.msisdn || '—'} • {u.reason}</p>
+                <div key={u.id} className="p-4 flex justify-between">
+                  <div>
+                    <p className="font-semibold">{u.bill_ref_number}</p>
+                    <p className="text-xs">{u.msisdn}</p>
                   </div>
-                  <div className="text-right shrink-0">
-                    <p className="font-bold tabular-nums">KES {Number(u.amount).toLocaleString()}</p>
-                    <Button variant="outline" size="sm" className="mt-1" onClick={() => setReconciling(u)}><Link2 size={12} /> Reconcile</Button>
+
+                  <div className="text-right">
+                    <p className="font-bold">KES {Number(u.amount).toLocaleString()}</p>
+
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        if (!u.msisdn) {
+                          toast.error("Missing phone");
+                          return;
+                        }
+                        setReconciling(u);
+                      }}
+                    >
+                      <Link2 size={12} /> Reconcile
+                    </Button>
                   </div>
                 </div>
               ))}
@@ -69,47 +190,65 @@ export function AdminMpesaModule() {
         </TabsContent>
 
         <TabsContent value="b2c" className="mt-4">
-          <Card className="divide-y divide-border">
+          <Card className="divide-y">
             {b2c.map((r) => (
-              <div key={r.id} className="p-4 flex items-center gap-3">
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm">{r.phone} {r.receiver_party_public_name && `(${r.receiver_party_public_name})`}</p>
-                  <p className="text-xs text-muted-foreground">{r.mpesa_receipt || r.result_desc || '—'}</p>
+              <div key={r.id} className="p-4 flex justify-between">
+                <div>
+                  <p>{r.phone}</p>
+                  <p className="text-xs">{r.result_desc}</p>
                 </div>
-                <div className="text-right shrink-0 flex flex-col items-end gap-1">
-                  <p className="font-bold tabular-nums">KES {Number(r.amount).toLocaleString()}</p>
-                  <Badge variant={r.status === 'completed' ? 'secondary' : r.status === 'failed' ? 'destructive' : 'outline'} className="text-[10px]">{r.status}</Badge>
-                  {r.status === 'failed' && !r.refunded && (
-                    <Button variant="outline" size="sm" onClick={() => retryB2c(r)}><RefreshCw size={12} /> Retry</Button>
+
+                <div className="text-right">
+                  <p>KES {Number(r.amount).toLocaleString()}</p>
+
+                  <Badge variant={
+                    r.status === 'completed'
+                      ? 'secondary'
+                      : r.status === 'failed'
+                      ? 'destructive'
+                      : 'outline'
+                  }>
+                    {r.status}
+                  </Badge>
+
+                  {r.status === 'failed' && (
+                    <Button size="sm" onClick={() => retryB2c(r)}>
+                      <RefreshCw size={12} /> Retry
+                    </Button>
                   )}
                 </div>
               </div>
             ))}
-            {b2c.length === 0 && <AdminEmptyState icon={Wallet} title="No payouts yet" />}
           </Card>
         </TabsContent>
 
         <TabsContent value="c2b" className="mt-4">
-          <Card className="divide-y divide-border">
+          <Card className="divide-y">
             {c2b.map((t) => (
-              <div key={t.id} className="p-4 flex items-center gap-3">
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm">{t.first_name} {t.last_name}</p>
-                  <p className="text-xs text-muted-foreground">{t.msisdn} • Ref: {t.bill_ref_number || '—'}</p>
+              <div key={t.id} className="p-4 flex justify-between">
+                <div>
+                  <p>{t.first_name} {t.last_name}</p>
+                  <p className="text-xs">{t.msisdn}</p>
                 </div>
-                <div className="text-right shrink-0">
-                  <p className="font-bold tabular-nums">KES {Number(t.trans_amount).toLocaleString()}</p>
-                  <Badge variant={t.processed ? 'secondary' : 'outline'} className="text-[10px]">{t.processed ? 'Processed' : 'Pending'}</Badge>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">{format(new Date(t.created_at), 'MMM d, HH:mm')}</p>
+
+                <div className="text-right">
+                  <p>KES {Number(t.trans_amount).toLocaleString()}</p>
+                  <Badge>{t.processed ? 'Processed' : 'Pending'}</Badge>
                 </div>
               </div>
             ))}
-            {c2b.length === 0 && <AdminEmptyState icon={Wallet} title="No incoming payments" />}
           </Card>
         </TabsContent>
       </Tabs>
 
-      <AdminReconcileDialog payment={reconciling} onClose={() => setReconciling(null)} onResolved={load} />
+      {reconciling && (
+        <AdminReconcileDialog
+          payment={reconciling}
+          open={!!reconciling}
+          onClose={() => setReconciling(null)}
+          onSuccess={load}
+        />
+      )}
     </div>
   );
-}
+                   }
