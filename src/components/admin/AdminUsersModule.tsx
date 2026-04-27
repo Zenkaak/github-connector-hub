@@ -430,11 +430,12 @@ export function AdminUsersModule() {
               </SheetHeader>
 
               <Tabs defaultValue="profile" className="p-5">
-                <TabsList className="grid grid-cols-4 w-full">
-                  <TabsTrigger value="profile">Profile</TabsTrigger>
-                  <TabsTrigger value="finance">Finance</TabsTrigger>
-                  <TabsTrigger value="groups">Groups</TabsTrigger>
-                  <TabsTrigger value="actions">Actions</TabsTrigger>
+                <TabsList className="grid grid-cols-5 w-full">
+                  <TabsTrigger value="profile" className="text-[11px]">Profile</TabsTrigger>
+                  <TabsTrigger value="finance" className="text-[11px]">Finance</TabsTrigger>
+                  <TabsTrigger value="transactions" className="text-[11px]">Activity</TabsTrigger>
+                  <TabsTrigger value="groups" className="text-[11px]">Groups</TabsTrigger>
+                  <TabsTrigger value="actions" className="text-[11px]">Actions</TabsTrigger>
                 </TabsList>
 
                 {/* PROFILE */}
