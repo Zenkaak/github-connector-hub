@@ -1,16 +1,16 @@
-import { useRouter } from 'next/router';
-import { AdminLayout } from '@/components/AdminLayout';
+import { useSearchParams } from "react-router-dom";
+import { AdminLayout } from "@/components/AdminLayout";
 
-import { AdminOverviewModule } from '@/components/admin/AdminOverviewModule';
-import { AdminUsersModule } from '@/components/admin/AdminUsersModule';
-import { AdminKycModule } from '@/components/admin/AdminKycModule';
-import { AdminLoansModule } from '@/components/admin/AdminLoansModule';
-import { AdminTransfersModule } from '@/components/admin/AdminTransfersModule';
-import { AdminMpesaModule } from '@/components/admin/AdminMpesaModule';
-import { AdminChamasModule } from '@/components/admin/AdminChamasModule';
-import { AdminMgrModule } from '@/components/admin/AdminMgrModule';
-import { AdminWithdrawalsModule } from '@/components/admin/AdminWithdrawalsModule';
-import { AdminAuditModule } from '@/components/admin/AdminAuditModule';
+import { AdminOverviewModule } from "@/components/admin/AdminOverviewModule";
+import { AdminUsersModule } from "@/components/admin/AdminUsersModule";
+import { AdminKycModule } from "@/components/admin/AdminKycModule";
+import { AdminLoansModule } from "@/components/admin/AdminLoansModule";
+import { AdminTransfersModule } from "@/components/admin/AdminTransfersModule";
+import { AdminMpesaModule } from "@/components/admin/AdminMpesaModule";
+import { AdminChamasModule } from "@/components/admin/AdminChamasModule";
+import { AdminMgrModule } from "@/components/admin/AdminMgrModule";
+import { AdminWithdrawalsModule } from "@/components/admin/AdminWithdrawalsModule";
+import { AdminAuditModule } from "@/components/admin/AdminAuditModule";
 
 const moduleMap = {
   overview: AdminOverviewModule,
@@ -26,8 +26,9 @@ const moduleMap = {
 };
 
 export default function AdminDashboardPage() {
-  const router = useRouter();
-  const { tab } = router.query;
+  const [searchParams] = useSearchParams();
+
+  const tab = searchParams.get("tab") || "overview";
 
   const ActiveModule =
     moduleMap[tab as keyof typeof moduleMap] || AdminOverviewModule;
@@ -39,4 +40,4 @@ export default function AdminDashboardPage() {
       </div>
     </AdminLayout>
   );
-}
+  }
