@@ -51,6 +51,18 @@ interface UserStats {
   harambeeCount: number;
 }
 
+interface UnifiedTx {
+  id: string;
+  source: 'wallet' | 'mpesa_in' | 'mpesa_out' | 'loan' | 'savings' | 'chama';
+  type: string;
+  amount: number;
+  description: string;
+  reference: string | null;
+  counterparty: string | null;
+  date: string;
+  status: string;
+}
+
 const EMPTY_STATS: UserStats = {
   totalDeposits: 0, totalWithdrawals: 0, totalSent: 0, totalReceived: 0,
   activeLoans: 0, totalSaved: 0, chamaCount: 0, harambeeCount: 0,
