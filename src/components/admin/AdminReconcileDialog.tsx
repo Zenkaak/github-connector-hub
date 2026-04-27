@@ -220,16 +220,18 @@ export function AdminReconcileDialog({ payment, onClose, onResolved }: Props) {
 
   return (
     <Dialog open={!!payment} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Reconcile M-Pesa Payment</DialogTitle>
+      <DialogContent className="max-w-2xl max-h-[92vh] overflow-y-auto p-0 gap-0">
+        <DialogHeader className="px-5 pt-5 pb-3 border-b">
+          <DialogTitle className="text-base">Reconcile M-Pesa Payment</DialogTitle>
         </DialogHeader>
 
-        <div className="rounded-lg bg-muted/40 p-3 text-sm space-y-1">
-          <div className="flex justify-between"><span className="text-muted-foreground">Amount</span><span className="font-bold">KES {Number(payment.amount).toLocaleString()}</span></div>
-          <div className="flex justify-between"><span className="text-muted-foreground">From</span><span>{payment.msisdn || '—'}</span></div>
-          <div className="flex justify-between"><span className="text-muted-foreground">Bill Ref</span><span className="font-mono text-xs">{payment.bill_ref_number}</span></div>
-          <div className="flex justify-between"><span className="text-muted-foreground">Reason</span><span className="text-xs text-amber-600">{payment.reason}</span></div>
+        <div className="px-5 pt-4">
+          <div className="rounded-xl bg-muted/40 border border-border p-3 text-sm space-y-2">
+            <Row label="Amount" value={`KES ${Number(payment.amount).toLocaleString()}`} bold />
+            <Row label="From" value={payment.msisdn || '—'} />
+            <Row label="Bill Ref" value={payment.bill_ref_number || '—'} mono />
+            <Row label="Reason" value={payment.reason || '—'} accent />
+          </div>
         </div>
 
         <Tabs value={tab} onValueChange={(v) => setTab(v as TargetType)}>
