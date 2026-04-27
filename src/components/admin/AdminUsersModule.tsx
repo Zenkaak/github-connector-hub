@@ -51,6 +51,18 @@ interface UserStats {
   harambeeCount: number;
 }
 
+interface UnifiedTx {
+  id: string;
+  source: 'wallet' | 'mpesa_in' | 'mpesa_out' | 'loan' | 'savings' | 'chama';
+  type: string;
+  amount: number;
+  description: string;
+  reference: string | null;
+  counterparty: string | null;
+  date: string;
+  status: string;
+}
+
 const EMPTY_STATS: UserStats = {
   totalDeposits: 0, totalWithdrawals: 0, totalSent: 0, totalReceived: 0,
   activeLoans: 0, totalSaved: 0, chamaCount: 0, harambeeCount: 0,
@@ -73,6 +85,9 @@ export function AdminUsersModule() {
   const [adjustAmount, setAdjustAmount] = useState('');
   const [adjustType, setAdjustType] = useState<'credit' | 'debit'>('credit');
   const [adjustReason, setAdjustReason] = useState('');
+  const [transactions, setTransactions] = useState<UnifiedTx[]>([]);
+  const [txFilter, setTxFilter] = useState<'all' | 'wallet' | 'mpesa_in' | 'mpesa_out' | 'loan' | 'savings' | 'chama'>('all');
+  const [loadingTx, setLoadingTx] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -105,13 +120,21 @@ export function AdminUsersModule() {
     setEditing({ ...u });
     setStats(EMPTY_STATS);
     setChamas([]);
-    // Load detailed financial activity
-    const [tx, loans, savings, chamaMembers, harambees] = await Promise.all([
-      supabase.from('wallet_transactions').select('type, amount').eq('user_id', u.user_id),
+    setTransactions([]);
+    setLoadingTx(true);
+
+    // Load detailed financial activity + full transaction history
+    const [tx, loans, savings, chamaMembers, harambees, mpesaIn, mpesaOut, loanDisb, savingsDep, chamaSav] = await Promise.all([
+      supabase.from('wallet_transactions').select('id, type, amount, description, reference_id, created_at, status').eq('user_id', u.user_id).order('created_at', { ascending: false }).limit(200),
       supabase.from('loan_disbursements').select('outstanding_balance, status').eq('user_id', u.user_id).eq('status', 'active'),
       supabase.from('personal_savings').select('saved_amount').eq('user_id', u.user_id),
       supabase.from('chama_members').select('group_id, role, is_active, chama_groups(name)').eq('user_id', u.user_id).eq('is_active', true),
       supabase.from('chama_harambees').select('id', { count: 'exact', head: true }).eq('created_by', u.user_id),
+      u.phone ? supabase.from('mpesa_c2b_transactions').select('id, trans_id, trans_amount, msisdn, first_name, last_name, bill_ref_number, created_at, processed').eq('msisdn', u.phone).order('created_at', { ascending: false }).limit(50) : Promise.resolve({ data: [] }),
+      supabase.from('mpesa_b2c_requests').select('id, amount, phone, mpesa_receipt, status, created_at, result_desc').eq('user_id', u.user_id).order('created_at', { ascending: false }).limit(50),
+      supabase.from('loan_disbursements').select('id, loan_id, disbursed_amount, outstanding_balance, status, disbursed_at, created_at').eq('user_id', u.user_id).order('created_at', { ascending: false }).limit(50),
+      supabase.from('personal_savings_deposits').select('id, savings_id, amount, stk_reference, created_at').eq('user_id', u.user_id).order('created_at', { ascending: false }).limit(50),
+      supabase.from('chama_savings').select('id, group_id, amount, stk_reference, month, created_at, chama_groups(name)').eq('user_id', u.user_id).order('created_at', { ascending: false }).limit(50),
     ]);
     const txs = tx.data || [];
     setStats({
@@ -125,6 +148,47 @@ export function AdminUsersModule() {
       harambeeCount: harambees.count || 0,
     });
     setChamas(chamaMembers.data || []);
+
+    // Build unified transaction stream
+    const unified: UnifiedTx[] = [];
+    txs.forEach((t: any) => unified.push({
+      id: `w-${t.id}`, source: 'wallet', type: t.type,
+      amount: Number(t.amount), description: t.description || '—',
+      reference: t.reference_id, counterparty: null, date: t.created_at, status: t.status || 'completed',
+    }));
+    (mpesaIn.data || []).forEach((t: any) => unified.push({
+      id: `mi-${t.id}`, source: 'mpesa_in', type: 'mpesa_deposit',
+      amount: Number(t.trans_amount),
+      description: `M-Pesa deposit from ${[t.first_name, t.last_name].filter(Boolean).join(' ') || t.msisdn}`,
+      reference: t.trans_id, counterparty: t.msisdn, date: t.created_at,
+      status: t.processed ? 'completed' : 'pending',
+    }));
+    (mpesaOut.data || []).forEach((t: any) => unified.push({
+      id: `mo-${t.id}`, source: 'mpesa_out', type: 'mpesa_payout',
+      amount: Number(t.amount),
+      description: `Payout to ${t.phone}${t.result_desc ? ` — ${t.result_desc}` : ''}`,
+      reference: t.mpesa_receipt, counterparty: t.phone, date: t.created_at, status: t.status,
+    }));
+    (loanDisb.data || []).forEach((t: any) => unified.push({
+      id: `l-${t.id}`, source: 'loan', type: 'loan_disbursement',
+      amount: Number(t.disbursed_amount),
+      description: `Loan disbursed (Outstanding KES ${Number(t.outstanding_balance).toLocaleString()})`,
+      reference: t.loan_id, counterparty: null, date: t.disbursed_at || t.created_at, status: t.status,
+    }));
+    (savingsDep.data || []).forEach((t: any) => unified.push({
+      id: `s-${t.id}`, source: 'savings', type: 'savings_deposit',
+      amount: Number(t.amount), description: 'Personal savings deposit',
+      reference: t.stk_reference, counterparty: null, date: t.created_at, status: 'completed',
+    }));
+    (chamaSav.data || []).forEach((t: any) => unified.push({
+      id: `c-${t.id}`, source: 'chama', type: 'chama_contribution',
+      amount: Number(t.amount),
+      description: `Chama contribution — ${t.chama_groups?.name || 'Group'}${t.month ? ` (${t.month})` : ''}`,
+      reference: t.stk_reference, counterparty: null, date: t.created_at, status: 'completed',
+    }));
+    unified.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    setTransactions(unified);
+    setLoadingTx(false);
   };
 
   const filtered = users.filter((u) => {
@@ -366,11 +430,12 @@ export function AdminUsersModule() {
               </SheetHeader>
 
               <Tabs defaultValue="profile" className="p-5">
-                <TabsList className="grid grid-cols-4 w-full">
-                  <TabsTrigger value="profile">Profile</TabsTrigger>
-                  <TabsTrigger value="finance">Finance</TabsTrigger>
-                  <TabsTrigger value="groups">Groups</TabsTrigger>
-                  <TabsTrigger value="actions">Actions</TabsTrigger>
+                <TabsList className="grid grid-cols-5 w-full">
+                  <TabsTrigger value="profile" className="text-[11px]">Profile</TabsTrigger>
+                  <TabsTrigger value="finance" className="text-[11px]">Finance</TabsTrigger>
+                  <TabsTrigger value="transactions" className="text-[11px]">Activity</TabsTrigger>
+                  <TabsTrigger value="groups" className="text-[11px]">Groups</TabsTrigger>
+                  <TabsTrigger value="actions" className="text-[11px]">Actions</TabsTrigger>
                 </TabsList>
 
                 {/* PROFILE */}
@@ -440,6 +505,74 @@ export function AdminUsersModule() {
                     <StatBox label="Active loans" value={fmt(stats.activeLoans)} icon={FileText} />
                     <StatBox label="Total saved" value={fmt(stats.totalSaved)} icon={PiggyBank} />
                   </div>
+                </TabsContent>
+
+                {/* TRANSACTIONS — unified */}
+                <TabsContent value="transactions" className="space-y-3 mt-4">
+                  <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
+                    {([
+                      ['all', `All (${transactions.length})`],
+                      ['wallet', 'Wallet'],
+                      ['mpesa_in', 'M-Pesa In'],
+                      ['mpesa_out', 'Payouts'],
+                      ['loan', 'Loans'],
+                      ['savings', 'Savings'],
+                      ['chama', 'Chama'],
+                    ] as const).map(([k, label]) => (
+                      <button
+                        key={k}
+                        onClick={() => setTxFilter(k as any)}
+                        className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors ${
+                          txFilter === k ? 'bg-accent text-accent-foreground' : 'bg-muted/50 text-muted-foreground hover:bg-muted'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+
+                  {loadingTx ? (
+                    <div className="flex justify-center py-10"><Loader2 className="animate-spin text-accent" size={18} /></div>
+                  ) : (() => {
+                    const list = txFilter === 'all' ? transactions : transactions.filter((t) => t.source === txFilter);
+                    if (list.length === 0) {
+                      return <p className="text-center text-xs text-muted-foreground py-10">No activity in this category.</p>;
+                    }
+                    return (
+                      <Card className="divide-y divide-border overflow-hidden">
+                        {list.slice(0, 100).map((t) => {
+                          const isCredit = ['credit', 'deposit', 'mpesa_deposit', 'transfer_in', 'loan_disbursement'].includes(t.type);
+                          const sign = isCredit ? '+' : '−';
+                          const color = isCredit ? 'text-emerald-600' : 'text-rose-600';
+                          const sourceLabel = {
+                            wallet: 'Wallet', mpesa_in: 'M-Pesa', mpesa_out: 'Payout',
+                            loan: 'Loan', savings: 'Savings', chama: 'Chama',
+                          }[t.source];
+                          return (
+                            <div key={t.id} className="p-3 flex items-start gap-3">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <Badge variant="outline" className="text-[9px] px-1.5 py-0">{sourceLabel}</Badge>
+                                  <span className="text-[10px] text-muted-foreground capitalize">{t.type.replace(/_/g, ' ')}</span>
+                                  {t.status && t.status !== 'completed' && (
+                                    <Badge variant={t.status === 'failed' ? 'destructive' : 'secondary'} className="text-[9px] px-1.5 py-0">{t.status}</Badge>
+                                  )}
+                                </div>
+                                <p className="text-xs text-foreground mt-0.5 truncate">{t.description}</p>
+                                <p className="text-[10px] text-muted-foreground truncate">
+                                  {format(new Date(t.date), 'MMM d, yyyy HH:mm')}
+                                  {t.reference ? ` • ${t.reference}` : ''}
+                                </p>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <p className={`text-sm font-bold tabular-nums ${color}`}>{sign}{fmt(t.amount)}</p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </Card>
+                    );
+                  })()}
                 </TabsContent>
 
                 {/* GROUPS */}

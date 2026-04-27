@@ -220,52 +220,56 @@ export function AdminReconcileDialog({ payment, onClose, onResolved }: Props) {
 
   return (
     <Dialog open={!!payment} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Reconcile M-Pesa Payment</DialogTitle>
+      <DialogContent className="max-w-2xl max-h-[92vh] overflow-y-auto p-0 gap-0">
+        <DialogHeader className="px-5 pt-5 pb-3 border-b">
+          <DialogTitle className="text-base">Reconcile M-Pesa Payment</DialogTitle>
         </DialogHeader>
 
-        <div className="rounded-lg bg-muted/40 p-3 text-sm space-y-1">
-          <div className="flex justify-between"><span className="text-muted-foreground">Amount</span><span className="font-bold">KES {Number(payment.amount).toLocaleString()}</span></div>
-          <div className="flex justify-between"><span className="text-muted-foreground">From</span><span>{payment.msisdn || '—'}</span></div>
-          <div className="flex justify-between"><span className="text-muted-foreground">Bill Ref</span><span className="font-mono text-xs">{payment.bill_ref_number}</span></div>
-          <div className="flex justify-between"><span className="text-muted-foreground">Reason</span><span className="text-xs text-amber-600">{payment.reason}</span></div>
+        <div className="px-5 pt-4">
+          <div className="rounded-xl bg-muted/40 border border-border p-3 text-sm space-y-2">
+            <Row label="Amount" value={`KES ${Number(payment.amount).toLocaleString()}`} bold />
+            <Row label="From" value={payment.msisdn || '—'} />
+            <Row label="Bill Ref" value={payment.bill_ref_number || '—'} mono />
+            <Row label="Reason" value={payment.reason || '—'} accent />
+          </div>
         </div>
 
-        <Tabs value={tab} onValueChange={(v) => setTab(v as TargetType)}>
-          <TabsList className="grid grid-cols-3 sm:grid-cols-6 h-auto">
+        <div className="px-5 pt-4">
+          <Tabs value={tab} onValueChange={(v) => setTab(v as TargetType)}>
+            <TabsList className="grid grid-cols-3 sm:grid-cols-6 h-auto w-full gap-1 bg-muted/40 p-1">
+              {TABS.map((t) => (
+                <TabsTrigger key={t.value} value={t.value} className="flex flex-col gap-1 py-2 text-[10px] data-[state=active]:bg-card">
+                  <t.icon size={14} /> {t.label}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+
             {TABS.map((t) => (
-              <TabsTrigger key={t.value} value={t.value} className="flex flex-col gap-1 py-2 text-[10px]">
-                <t.icon size={14} /> {t.label}
-              </TabsTrigger>
+              <TabsContent key={t.value} value={t.value} className="space-y-3 mt-4">
+                <p className="text-xs text-muted-foreground">{t.hint}</p>
+                <div className="relative">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                  <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name, phone, code, or title…" className="pl-9" />
+                </div>
+
+                {loading ? (
+                  <div className="flex justify-center py-8"><Loader2 className="animate-spin text-accent" size={18} /></div>
+                ) : results.length === 0 ? (
+                  <p className="text-center text-xs text-muted-foreground py-8">No matches found.</p>
+                ) : (
+                  <div className="space-y-2 max-h-64 overflow-y-auto pr-1">{results.map(renderResultRow)}</div>
+                )}
+              </TabsContent>
             ))}
-          </TabsList>
+          </Tabs>
+        </div>
 
-          {TABS.map((t) => (
-            <TabsContent key={t.value} value={t.value} className="space-y-3 mt-3">
-              <p className="text-xs text-muted-foreground">{t.hint}</p>
-              <div className="relative">
-                <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name, phone, code, or title…" className="pl-9" />
-              </div>
-
-              {loading ? (
-                <div className="flex justify-center py-8"><Loader2 className="animate-spin text-accent" /></div>
-              ) : results.length === 0 ? (
-                <p className="text-center text-xs text-muted-foreground py-8">No matches found.</p>
-              ) : (
-                <div className="space-y-2 max-h-64 overflow-y-auto">{results.map(renderResultRow)}</div>
-              )}
-            </TabsContent>
-          ))}
-        </Tabs>
-
-        <div className="space-y-2">
+        <div className="px-5 pt-4 space-y-2">
           <Label className="text-xs">Resolution notes (optional)</Label>
           <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} placeholder="Why this assignment…" />
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="px-5 py-4 border-t mt-4 gap-2 sm:gap-2">
           <Button variant="outline" onClick={onClose}>Cancel</Button>
           <Button onClick={submit} disabled={!selected || submitting}>
             {submitting ? <Loader2 className="animate-spin" size={14} /> : 'Reconcile & Credit'}
@@ -273,5 +277,18 @@ export function AdminReconcileDialog({ payment, onClose, onResolved }: Props) {
         </DialogFooter>
       </DialogContent>
     </Dialog>
+  );
+}
+
+function Row({ label, value, bold, mono, accent }: { label: string; value: string; bold?: boolean; mono?: boolean; accent?: boolean }) {
+  return (
+    <div className="flex items-start justify-between gap-3 min-w-0">
+      <span className="text-muted-foreground text-xs shrink-0">{label}</span>
+      <span
+        className={`text-right text-xs break-all min-w-0 ${bold ? 'font-bold text-sm' : ''} ${mono ? 'font-mono' : ''} ${accent ? 'text-amber-600' : ''}`}
+      >
+        {value}
+      </span>
+    </div>
   );
 }
