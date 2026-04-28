@@ -40,3 +40,6 @@ project_id = "qtrubtfubdzodahsfacv"
 
 [functions.pin-login]
 verify_jwt = false
+
+[functions.password-recovery-otp]
+verify_jwt = false
