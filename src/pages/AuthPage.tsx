@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+{ useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -51,43 +51,58 @@ setIsLoading(true);
 try {
 let email = data.identifier;
 
-if (loginMethod === 'phone') {  
-    let phone = data.identifier.trim();  
-    if (phone.startsWith('0')) phone = '+254' + phone.slice(1);  
-    else if (phone.startsWith('254')) phone = '+' + phone;  
-    else if (!phone.startsWith('+254')) phone = '+254' + phone;  
+if (loginMethod === 'phone') {
+let phone = data.identifier.trim();
+if (phone.startsWith('0')) phone = '+254' + phone.slice(1);
+else if (phone.startsWith('254')) phone = '+' + phone;
+else if (!phone.startsWith('+254')) phone = '+254' + phone;
 
-    let { data: profile } = await supabase  
-      .from('profiles').select('email, phone').eq('phone', phone).maybeSingle();  
-    if (!profile) {  
-      const { data: alt } = await supabase  
-        .from('profiles').select('email, phone')  
-        .or(`phone.eq.${phone},phone.eq.${phone.replace('+254', '0')}`).limit(1).maybeSingle();  
-      if (alt) profile = alt;  
-    }  
-    if (!profile) throw new Error('Phone not registered');  
-    email = profile.email;  
-  }  
+let { data: profile } = await supabase    
+  .from('profiles').select('email, phone').eq('phone', phone).maybeSingle();    
+if (!profile) {    
+  const { data: alt } = await supabase    
+    .from('profiles').select('email, phone')    
+    .or(`phone.eq.${phone},phone.eq.${phone.replace('+254', '0')}`).limit(1).maybeSingle();    
+  if (alt) profile = alt;    
+}    
+if (!profile) throw new Error('Phone not registered');    
+email = profile.email;
 
-  const { data: profileCheck } = await supabase  
-    .from('profiles').select('is_active, disable_reason').eq('email', email).maybeSingle();  
-  if (profileCheck && profileCheck.is_active === false) {  
-    toast.error(`Account Disabled: ${profileCheck.disable_reason || 'Contact support.'}`);  
-    setIsLoading(false);  
-    return;  
-  }  
+}
 
-  const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password: data.password });  
-  if (error) throw error;  
-  if (!authData.user) throw new Error('Login failed');  
+const { data: profileCheck } = await supabase
+.from('profiles').select('is_active, disable_reason').eq('email', email).maybeSingle();
+if (profileCheck && profileCheck.is_active === false) {
+toast.error(Account Disabled: ${profileCheck.disable_reason || 'Contact support.'}, { duration: 8000 });
+setIsLoading(false);
+return;
+}
 
-  toast.success('Welcome back!');  
+const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password: data.password });
+if (error) throw error;
+if (!authData.user) throw new Error('Login failed');
 
-  await redirectAfterAuth(authData.user.id);  
-} catch (error: any) {  
-  toast.error(error.message || 'Failed to sign in');  
-} finally {  
-  setIsLoading(false);  
+toast.success('Welcome back!');
+
+// Mark needs-PIN flag if user doesn't have one
+const { data: pinRow } = await supabase
+.from('user_pins' as any).select('id').eq('user_id', authData.user.id).maybeSingle();
+if (!pinRow) sessionStorage.setItem('promptPinSetup', '1');
+else try { localStorage.setItem('hasPin', '1'); } catch {}
+
+// Fingerprint setup
+if (isWebAuthnSupported() && !hasSavedCredential()) {
+// skip auto prompt to avoid overlap with PIN prompt
+} else if (isWebAuthnSupported()) {
+syncFingerprintPassword(authData.user.id, authData.user.email || email, data.password);
+}
+
+await redirectAfterAuth(authData.user.id);
+} catch (error: any) {
+console.error(error);
+toast.error(error.message?.includes('Invalid login') ? 'Invalid email/phone or password' : (error.message || 'Failed to sign in'));
+} finally {
+setIsLoading(false);
 }
 
 };
@@ -97,23 +112,28 @@ e.preventDefault();
 if (pin.length !== 4 || !pinIdentifier.trim()) return;
 setIsLoading(true);
 try {
-const { data, error } = await supabase.functions.invoke('pin-login', { body: { identifier: pinIdentifier, pin } });
-if (error) throw error;
+let identifier = pinIdentifier.trim();
+if (/^0\d{9}$/.test(identifier)) identifier = '+254' + identifier.slice(1);
 
-const { email, token_hash } = data;  
-  const { data: vData, error: vErr } = await supabase.auth.verifyOtp({  
-    type: 'magiclink', token_hash, email,  
-  });  
-  if (vErr) throw vErr;  
-  if (!vData.user) throw new Error('Sign-in failed');  
+const { data, error } = await supabase.functions.invoke('pin-login', {
+body: { identifier, pin },
+});
+if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message || 'PIN login failed');
 
-  toast.success('Welcome back!');  
-  await redirectAfterAuth(vData.user.id);  
-} catch (error: any) {  
-  toast.error(error.message || 'PIN login failed');  
-  setPin('');  
-} finally {  
-  setIsLoading(false);  
+const { email, token_hash } = data as { email: string; token_hash: string };
+const { data: vData, error: vErr } = await supabase.auth.verifyOtp({
+type: 'magiclink', token_hash, email,
+});
+if (vErr) throw vErr;
+if (!vData.user) throw new Error('Sign-in failed');
+
+toast.success('Welcome back!');
+await redirectAfterAuth(vData.user.id);
+} catch (error: any) {
+toast.error(error.message || 'PIN login failed');
+setPin('');
+} finally {
+setIsLoading(false);
 }
 
 };
@@ -122,85 +142,153 @@ const handleFingerprintLogin = async () => {
 setFingerprintLoading(true);
 try {
 const result = await authenticateWithFingerprint();
-if (!result) return toast.error('Fingerprint failed');
-
-const { email, password } = result;  
-  const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });  
-  if (error) throw error;  
-
-  toast.success('Welcome back!');  
-  await redirectAfterAuth(authData.user.id);  
-} catch {  
-  toast.error('Fingerprint login failed');  
-} finally {  
-  setFingerprintLoading(false);  
+if (!result) { toast.error('Fingerprint failed'); return; }
+const { email, password } = result;
+if (!password) { toast.error('Sign in with password to refresh fingerprint'); return; }
+const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
+if (error) {
+if (error.message?.includes('Invalid login')) {
+removeFingerprint(); setFingerprintAvailable(false);
+toast.error('Fingerprint expired'); return;
 }
-
+throw error;
+}
+if (authData.user) {
+toast.success('Welcome back!');
+await redirectAfterAuth(authData.user.id);
+}
+} catch (e: any) {
+toast.error('Fingerprint login failed');
+} finally { setFingerprintLoading(false); }
 };
 
 return (
-<div className="min-h-screen flex bg-[#F4F6F8]">
 
-{/* LEFT PANEL */}
-<div className="hidden lg:flex lg:w-[45%] bg-[#0B1220] text-white p-10 flex-col justify-between">
-  <Logo variant="white" size="lg" />
-  <div>
-    <h2 className="text-3xl font-bold">
-      Welcome back<br />
-      <span className="text-[#FFB800]">Dasnet Ventures</span>
-    </h2>
-    <p className="text-white/60 mt-4">
-      Securely manage your wallet, loans and groups.
-    </p>
-  </div>
-</div>
+<div className="min-h-screen flex">  
+{/* Left brand panel */}  
+<div className="hidden lg:flex lg:w-[45%] hero-gradient relative overflow-hidden flex-col justify-between p-10">  
+<div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_hsl(42_92%_56%_/_0.1),_transparent_50%)]" />  
+<div className="relative z-10"><Link to="/"><Logo variant="white" size="lg" /></Link></div>  
+<div className="relative z-10 space-y-6">  
+<h2 className="font-display text-3xl font-bold text-white leading-tight">  
+Welcome back to<br />  
+<span className="bg-gradient-to-r from-accent to-gold-300 bg-clip-text text-transparent">DASNET VENTURES</span>  
+</h2>  
+<p className="text-white/50 leading-relaxed max-w-sm">  
+Sign in with your password or 4-digit PIN to manage your wallet, loans, and chama groups.  
+</p>  
+<div className="flex items-center gap-6 pt-4">  
+<div className="flex items-center gap-2 text-white/40 text-sm"><Shield size={16} className="text-accent" /><span>256-bit Encrypted</span></div>  
+<div className="flex items-center gap-2 text-white/40 text-sm"><Star size={16} className="text-accent" /><span>CBK Regulated</span></div>  
+</div>  
+</div>  
+<div className="relative z-10"><p className="text-xs text-white/20">© {new Date().getFullYear()} DASNET VENTURES LTD</p></div>  
+</div>  {/* Right form panel */}
 
-{/* RIGHT PANEL */}
-<div className="flex-1 flex items-center justify-center px-4">
+  <div className="flex-1 flex flex-col items-center justify-center px-4 py-8 bg-background relative">    
+    <motion.div className="w-full max-w-[400px] relative z-10" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>    
+      <div className="lg:hidden mb-8"><Link to="/"><Logo size="lg" /></Link></div>    <div className="mb-6">    
+    <h1 className="font-display text-2xl font-bold mb-1.5">Sign In</h1>    
+    <p className="text-sm text-muted-foreground">Choose how you'd like to sign in</p>    
+  </div>    
 
-<motion.div className="w-full max-w-md">
+  {/* Mode switch */}    
+  <div className="grid grid-cols-2 gap-2 p-1 bg-muted/40 rounded-xl mb-5">    
+    <button    
+      type="button" onClick={() => setMode('password')}    
+      className={`flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition ${    
+        mode === 'password' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground'    
+      }`}    
+    ><Lock size={14} /> Password</button>    
+    <button    
+      type="button" onClick={() => setMode('pin')}    
+      className={`flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition ${    
+        mode === 'pin' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground'    
+      }`}    
+    ><KeyRound size={14} /> PIN</button>    
+  </div>    
 
-<div className="text-center mb-6">
-  <Logo size="lg" />
-  <h1 className="text-2xl font-bold mt-4 text-[#0B1220]">Sign In</h1>
-</div>
+  <div className="bg-card rounded-2xl border border-border/50 shadow-md p-6">    
+    {mode === 'password' ? (    
+      <Tabs value={loginMethod} onValueChange={(v) => setLoginMethod(v as any)}>    
+        <TabsList className="grid w-full grid-cols-2 mb-6 bg-muted/50 p-1 rounded-xl">    
+          <TabsTrigger value="email" className="flex items-center gap-2 text-xs rounded-lg"><Mail size={14} /> Email</TabsTrigger>    
+          <TabsTrigger value="phone" className="flex items-center gap-2 text-xs rounded-lg"><Phone size={14} /> Phone</TabsTrigger>    
+        </TabsList>    
 
-<div className="bg-white p-6 rounded-2xl border border-gray-200">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">    
+          <TabsContent value="email" className="mt-0">    
+            <Label className="text-xs uppercase tracking-wider text-muted-foreground">Email Address</Label>    
+            <Input type="email" placeholder="john@example.com" {...register('identifier')}    
+              className={`mt-2 h-12 rounded-xl ${errors.identifier ? 'border-destructive' : ''}`} />    
+            {errors.identifier && <p className="text-xs text-destructive mt-1.5">{errors.identifier.message}</p>}    
+          </TabsContent>    
+          <TabsContent value="phone" className="mt-0">    
+            <Label className="text-xs uppercase tracking-wider text-muted-foreground">Phone Number</Label>    
+            <Input type="tel" placeholder="0712345678" {...register('identifier')}    
+              className={`mt-2 h-12 rounded-xl ${errors.identifier ? 'border-destructive' : ''}`} />    
+            {errors.identifier && <p className="text-xs text-destructive mt-1.5">{errors.identifier.message}</p>}    
+          </TabsContent>    
 
-{mode === 'password' && (
-<form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+          <div>    
+            <Label className="text-xs uppercase tracking-wider text-muted-foreground">Password</Label>    
+            <div className="relative mt-2">    
+              <Input type={showPassword ? 'text' : 'password'} placeholder="Enter your password"    
+                {...register('password')}    
+                className={`h-12 rounded-xl pr-10 ${errors.password ? 'border-destructive' : ''}`} />    
+              <button type="button" onClick={() => setShowPassword(!showPassword)}    
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">    
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}    
+              </button>    
+            </div>    
+            {errors.password && <p className="text-xs text-destructive mt-1.5">{errors.password.message}</p>}    
+          </div>    
 
-<Input
-  placeholder="Email or Phone"
-  {...register('identifier')}
-  className="h-12 rounded-xl bg-[#0B1220] text-white border-none"
-/>
+          <Button type="submit" variant="gold" className="w-full h-12" disabled={isLoading}>    
+            {isLoading ? <><Loader2 className="animate-spin" size={18} /> Signing In…</> : <>Sign In <ArrowRight size={18} /></>}    
+          </Button>    
+        </form>    
+      </Tabs>    
+    ) : (    
+      <form onSubmit={handlePinLogin} className="space-y-5">    
+        <div>    
+          <Label className="text-xs uppercase tracking-wider text-muted-foreground">Email or Phone</Label>    
+          <Input value={pinIdentifier} onChange={(e) => setPinIdentifier(e.target.value)}    
+            placeholder="john@example.com or 0712345678" className="mt-2 h-12 rounded-xl" required />    
+        </div>    
+        <div>    
+          <Label className="text-xs uppercase tracking-wider text-muted-foreground block mb-3">Enter your 4-digit PIN</Label>    
+          <PinPad value={pin} onChange={setPin} autoFocus disabled={isLoading} />    
+        </div>    
+        <Button type="submit" variant="gold" className="w-full h-12"    
+          disabled={isLoading || pin.length !== 4 || !pinIdentifier.trim()}>    
+          {isLoading ? <><Loader2 className="animate-spin" size={18} /> Verifying…</> : <>Sign In with PIN <ArrowRight size={18} /></>}    
+        </Button>    
+        <p className="text-xs text-muted-foreground text-center">    
+          No PIN yet? Sign in with your password once and we'll prompt you to create one.    
+        </p>    
+      </form>    
+    )}    
+  </div>    
 
-<div className="relative">
-  <Input
-    type={showPassword ? 'text' : 'password'}
-    placeholder="Password"
-    {...register('password')}
-    className="h-12 rounded-xl bg-[#0B1220] text-white border-none pr-10"
-  />
-  <button type="button"
-    onClick={() => setShowPassword(!showPassword)}
-    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
-    {showPassword ? <EyeOff size={18}/> : <Eye size={18}/>}
-  </button>
-</div>
-
-<Button className="w-full h-12 bg-[#FFB800] text-black font-semibold">
-{isLoading ? <Loader2 className="animate-spin"/> : "Sign In"}
-</Button>
-
-</form>
-)}
-
-</div>
-
+  <div className="text-center mt-6 space-y-3">    
+    {fingerprintAvailable && (    
+      <Button variant="outline" className="w-full h-12 gap-2 border-accent/30 text-accent hover:bg-accent/10"    
+        onClick={handleFingerprintLogin} disabled={fingerprintLoading}>    
+        {fingerprintLoading ? <Loader2 size={18} className="animate-spin" /> : <Fingerprint size={20} />}    
+        Sign in with Fingerprint    
+      </Button>    
+    )}    
+    <p className="text-sm text-muted-foreground">    
+      Don't have an account?{' '}    
+      <Link to="/signup" className="text-accent font-semibold hover:underline">Create Account</Link>    
+    </p>    
+    <Link to="/forgot-password" className="text-xs text-accent/70 hover:text-accent transition-colors block">    
+      Forgot your password?    
+    </Link>    
+  </div>    
 </motion.div>
-</div>
-</div>
-);
-         }
+
+  </div>    
+</div>  );
+}
