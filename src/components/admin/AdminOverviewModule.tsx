@@ -127,10 +127,10 @@ export function AdminOverviewModule() {
 
       {/* 💰 Core Financial KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <AdminStatCard label="Wallet Balance" value={fmt(stats.totalWalletBalance)} icon={Wallet} tone="success" />
-        <AdminStatCard label="Transfers Today" value={fmt(stats.totalTransfersToday)} icon={TrendingUp} tone="accent" />
-        <AdminStatCard label="Active Users" value={stats.totalUsers} icon={Users} />
-        <AdminStatCard label="New Today" value={stats.newUsersToday} icon={Users} />
+        <AdminStatCard label="Wallet Balance" value={fmt(stats.totalWalletBalance)} icon={Wallet} tone="success" onClick={() => navigate('/dashboard/admin/users')} />
+        <AdminStatCard label="Transfers Today" value={fmt(stats.totalTransfersToday)} icon={TrendingUp} tone="accent" onClick={() => navigate('/dashboard/admin/transfers')} />
+        <AdminStatCard label="Active Users" value={stats.totalUsers} icon={Users} onClick={() => navigate('/dashboard/admin/users')} />
+        <AdminStatCard label="New Today" value={stats.newUsersToday} icon={Users} onClick={() => navigate('/dashboard/admin/users')} />
       </div>
 
       {/* ⚠️ Pending Actions */}
@@ -139,10 +139,10 @@ export function AdminOverviewModule() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
           <AdminStatCard label="KYC" value={stats.pendingKyc} icon={ShieldAlert} tone="warning" onClick={() => navigate('/dashboard/admin/kyc')} />
           <AdminStatCard label="Loans" value={stats.pendingLoans} icon={FileText} tone="warning" onClick={() => navigate('/dashboard/admin/loans')} />
-          <AdminStatCard label="Harambee" value={stats.pendingHarambees} icon={Heart} tone="warning" />
-          <AdminStatCard label="Withdrawals" value={stats.pendingWithdrawals} icon={PiggyBank} tone="warning" />
-          <AdminStatCard label="Unmapped" value={stats.unmappedMpesa} icon={AlertTriangle} tone="danger" />
-          <AdminStatCard label="Failed Payouts" value={stats.failedB2c} icon={Send} tone="danger" />
+          <AdminStatCard label="Harambee" value={stats.pendingHarambees} icon={Heart} tone="warning" onClick={() => navigate('/dashboard/admin/harambee-applications')} />
+          <AdminStatCard label="Withdrawals" value={stats.pendingWithdrawals} icon={PiggyBank} tone="warning" onClick={() => navigate('/dashboard/admin/withdrawals')} />
+          <AdminStatCard label="Unmapped" value={stats.unmappedMpesa} icon={AlertTriangle} tone="danger" onClick={() => navigate('/dashboard/admin/mpesa')} />
+          <AdminStatCard label="Failed Payouts" value={stats.failedB2c} icon={Send} tone="danger" onClick={() => navigate('/dashboard/admin/mpesa')} />
         </div>
       </div>
 
