@@ -1,18 +1,7 @@
 /// <reference types="npm:@types/react@18.3.1" />
-
 import * as React from 'npm:react@18.3.1'
-
-import {
-  Body,
-  Button,
-  Container,
-  Head,
-  Heading,
-  Html,
-  Link,
-  Preview,
-  Text,
-} from 'npm:@react-email/components@0.0.22'
+import { Text, Link } from 'npm:@react-email/components@0.0.22'
+import { BrandLayout, styles } from './_brand.tsx'
 
 interface EmailChangeEmailProps {
   siteName: string
@@ -21,68 +10,21 @@ interface EmailChangeEmailProps {
   confirmationUrl: string
 }
 
-export const EmailChangeEmail = ({
-  siteName,
-  email,
-  newEmail,
-  confirmationUrl,
-}: EmailChangeEmailProps) => (
-  <Html lang="en" dir="ltr">
-    <Head />
-    <Preview>Confirm your email change for {siteName}</Preview>
-    <Body style={main}>
-      <Container style={container}>
-        <Heading style={h1}>Confirm your email change</Heading>
-        <Text style={text}>
-          You requested to change your email address for {siteName} from{' '}
-          <Link href={`mailto:${email}`} style={link}>
-            {email}
-          </Link>{' '}
-          to{' '}
-          <Link href={`mailto:${newEmail}`} style={link}>
-            {newEmail}
-          </Link>
-          .
-        </Text>
-        <Text style={text}>
-          Click the button below to confirm this change:
-        </Text>
-        <Button style={button} href={confirmationUrl}>
-          Confirm Email Change
-        </Button>
-        <Text style={footer}>
-          If you didn't request this change, please secure your account
-          immediately.
-        </Text>
-      </Container>
-    </Body>
-  </Html>
+export const EmailChangeEmail = ({ siteName, email, newEmail, confirmationUrl }: EmailChangeEmailProps) => (
+  <BrandLayout preview={`Confirm your new email for ${siteName}`}>
+    <Text style={styles.h1}>Confirm your new email</Text>
+    <Text style={styles.text}>
+      A request was made to change the email on your <strong>{siteName}</strong> account
+      from <strong>{email}</strong> to <strong>{newEmail}</strong>.
+    </Text>
+    <Text style={styles.text}>
+      Click below to confirm this change.
+    </Text>
+    <Link href={confirmationUrl} style={styles.button}>Confirm New Email</Link>
+    <Text style={styles.muted}>
+      🔒 Didn't request this? Contact support@dasnett.site immediately.
+    </Text>
+  </BrandLayout>
 )
 
 export default EmailChangeEmail
-
-const main = { backgroundColor: '#ffffff', fontFamily: "'DM Sans', Arial, sans-serif" }
-const container = { padding: '32px 28px', maxWidth: '480px', margin: '0 auto' }
-const h1 = {
-  fontSize: '24px',
-  fontWeight: 'bold' as const,
-  color: 'hsl(213, 72%, 18%)',
-  margin: '0 0 20px',
-}
-const text = {
-  fontSize: '15px',
-  color: 'hsl(213, 16%, 40%)',
-  lineHeight: '1.6',
-  margin: '0 0 24px',
-}
-const link = { color: 'hsl(213, 72%, 18%)', textDecoration: 'underline' }
-const button = {
-  backgroundColor: 'hsl(42, 92%, 56%)',
-  color: 'hsl(213, 72%, 12%)',
-  fontSize: '15px',
-  fontWeight: 'bold' as const,
-  borderRadius: '12px',
-  padding: '14px 28px',
-  textDecoration: 'none',
-}
-const footer = { fontSize: '12px', color: '#999999', margin: '32px 0 0' }
