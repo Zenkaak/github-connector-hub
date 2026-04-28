@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from 'wouter';
+import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowRight, Shield, Users, CheckCircle, Star, Zap, MapPin,
@@ -223,12 +223,12 @@ export default function Index() {
                 ))}
               </nav>
               <div className="flex items-center gap-1 sm:gap-1.5">
-                <Link href="/auth" className="hidden sm:inline-flex">
+                <Link to="/auth" className="hidden sm:inline-flex">
                   <Button variant="ghost" size="sm" className="text-[13px] font-medium text-white/70 hover:text-white hover:bg-white/[0.04] rounded-full px-3.5 h-8">
                     Sign in
                   </Button>
                 </Link>
-                <Link href="/signup" className="hidden sm:inline-flex">
+                <Link to="/signup" className="hidden sm:inline-flex">
                   <Button
                     variant="gold"
                     size="sm"
@@ -270,12 +270,12 @@ export default function Index() {
                   </a>
                 ))}
                 <div className="pt-2 mt-1.5 border-t border-white/[0.06] flex gap-2 px-1 pb-1">
-                  <Link href="/auth" onClick={() => setMobileMenuOpen(false)} className="flex-1">
+                  <Link to="/auth" onClick={() => setMobileMenuOpen(false)} className="flex-1">
                     <Button variant="ghost" size="sm" className="w-full text-white/85 hover:bg-white/[0.05] rounded-full">
                       Sign in
                     </Button>
                   </Link>
-                  <Link href="/signup" onClick={() => setMobileMenuOpen(false)} className="flex-1">
+                  <Link to="/signup" onClick={() => setMobileMenuOpen(false)} className="flex-1">
                     <Button variant="gold" size="sm" className="w-full rounded-full !shadow-none font-semibold">
                       Get started
                     </Button>
@@ -286,8 +286,7 @@ export default function Index() {
           )}
         </AnimatePresence>
       </header>
-
-      {/* ───── HERO ───── */}
+            {/* ───── HERO ───── */}
       <section className="relative pt-28 pb-20 sm:pt-36 sm:pb-28 md:pt-52 md:pb-36 px-4 overflow-hidden bg-[hsl(218,55%,6%)]">
         <div className="absolute inset-0" style={{ backgroundImage: `url(${bgHero})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
         <div className="absolute inset-0 bg-gradient-to-b from-[hsl(218,55%,6%)]/85 via-[hsl(218,55%,6%)]/75 to-[hsl(218,55%,6%)]/95" />
@@ -328,7 +327,7 @@ export default function Index() {
             custom={3}
             className="flex flex-col sm:flex-row items-center justify-center gap-2.5 px-4 sm:px-0"
           >
-            <Link href="/signup" className="w-full sm:w-auto">
+            <Link to="/signup" className="w-full sm:w-auto">
               <Button
                 variant="gold"
                 size="lg"
@@ -337,7 +336,7 @@ export default function Index() {
                 Open free account <ArrowRight size={16} />
               </Button>
             </Link>
-            <Link href="/auth" className="w-full sm:w-auto">
+            <Link to="/auth" className="w-full sm:w-auto">
               <Button
                 variant="ghost"
                 size="lg"
@@ -350,7 +349,7 @@ export default function Index() {
 
           <motion.div variants={fadeUp} custom={4} className="mt-5">
             <Link
-              href="/signup"
+              to="/signup"
               className="inline-flex items-center gap-1.5 text-[13px] text-white/55 hover:text-accent transition-colors"
             >
               <HeartHandshake size={14} /> or start a fundraiser
@@ -382,7 +381,8 @@ export default function Index() {
           </motion.div>
         </motion.div>
       </section>
-            {/* ───── TRUST BAR ───── */}
+
+      {/* ───── TRUST BAR ───── */}
       <section className="py-7 sm:py-8 px-4 bg-[hsl(218,55%,5%)] border-y border-white/[0.04]">
         <div className="container max-w-5xl">
           <div className="flex flex-wrap items-center justify-center gap-x-8 sm:gap-x-12 gap-y-3">
@@ -421,7 +421,7 @@ export default function Index() {
                 Verified fundraisers from real Kenyans. Every contribution counts.
               </p>
             </div>
-            <Link href="/signup" className="hidden sm:inline-flex">
+            <Link to="/signup" className="hidden sm:inline-flex">
               <Button variant="ghost" size="sm" className="text-white/65 hover:text-accent hover:bg-transparent gap-1 -mr-2 text-[13px]">
                 View all <ArrowRight size={13} />
               </Button>
@@ -476,12 +476,12 @@ export default function Index() {
                       </div>
                     </div>
                     <div className="px-5 py-3 bg-white/[0.015] border-t border-white/[0.04] flex gap-2">
-                      <Link href="/signup" className="flex-1">
+                      <Link to="/signup" className="flex-1">
                         <Button variant="gold" size="sm" className="w-full text-[12px] h-8 !shadow-none font-semibold">
                           Contribute
                         </Button>
                       </Link>
-                      <Link href="/signup" className="flex-1">
+                      <Link to="/signup" className="flex-1">
                         <Button variant="ghost" size="sm" className="w-full text-[12px] h-8 bg-white/[0.03] text-white/70 hover:bg-white/[0.06] border border-white/[0.05]">
                           Share
                         </Button>
@@ -494,7 +494,7 @@ export default function Index() {
           </div>
           
           <div className="mt-8 text-center sm:hidden">
-            <Link href="/signup">
+            <Link to="/signup">
               <Button variant="ghost" size="sm" className="text-white/65 hover:text-accent gap-1 text-[13px]">
                 View all appeals <ArrowRight size={13} />
               </Button>
@@ -562,7 +562,7 @@ export default function Index() {
                 Looking for a group to join? Browse publicly listed savings groups looking for new members.
               </p>
             </div>
-            <Link href="/signup" className="hidden sm:inline-flex">
+            <Link to="/signup" className="hidden sm:inline-flex">
               <Button variant="ghost" size="sm" className="text-white/65 hover:text-accent hover:bg-transparent gap-1 -mr-2 text-[13px]">
                 Explore all groups <ArrowRight size={13} />
               </Button>
@@ -578,7 +578,7 @@ export default function Index() {
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.05 }}
               >
-                <Link href={`/signup`} className="block group h-full">
+                <Link to={`/signup`} className="block group h-full">
                   <div className="p-5 sm:p-6 rounded-xl bg-white/[0.02] border border-white/[0.06] group-hover:border-white/[0.15] group-hover:bg-white/[0.04] transition-all duration-300 flex flex-col h-full">
                     <div className="flex justify-between items-start mb-4">
                       <div className="w-12 h-12 rounded-xl bg-[hsl(218,55%,12%)] border border-white/[0.08] flex items-center justify-center shrink-0">
@@ -620,7 +620,7 @@ export default function Index() {
           </div>
 
           <div className="mt-8 text-center sm:hidden">
-            <Link href="/signup">
+            <Link to="/signup">
               <Button variant="ghost" size="sm" className="text-white/65 hover:text-accent gap-1 text-[13px]">
                 Explore all groups <ArrowRight size={13} />
               </Button>
@@ -665,7 +665,7 @@ export default function Index() {
               </div>
 
               <div className="mt-10">
-                <Link href="/signup">
+                <Link to="/signup">
                   <Button variant="gold" className="rounded-full !shadow-none font-semibold px-6">
                     Create Wallet
                   </Button>
@@ -793,7 +793,7 @@ export default function Index() {
                   </div>
                 </div>
 
-                <Link href="/signup" className="block">
+                <Link to="/signup" className="block">
                   <Button variant="outline" className="w-full text-white/70 hover:text-white border-white/[0.1] hover:bg-white/[0.05]">
                     Apply Now
                   </Button>
@@ -1092,8 +1092,8 @@ export default function Index() {
                 Kenya's premier digital banking platform for Chamas, personal loans, wallets, and Harambee fundraising. Built for trust.
               </p>
               <div className="mt-6 flex items-center gap-4 text-white/40">
-                <a href="mailto:support@dasnet.co.ke" className="hover:text-white transition-colors" aria-label="Email Support"><Mail size={18} /></a>
-                <a href="tel:+254700000000" className="hover:text-white transition-colors" aria-label="Phone Support"><Phone size={18} /></a>
+                <a href="mailto:support@dasnett.site" className="hover:text-white transition-colors" aria-label="Email Support"><Mail size={18} /></a>
+                <a href="tel:+254751414437" className="hover:text-white transition-colors" aria-label="Phone Support"><Phone size={18} /></a>
               </div>
             </div>
 
