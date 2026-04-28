@@ -25,6 +25,7 @@ import { SendMoneyDialog } from '@/components/SendMoneyDialog';
 import { RequestMoneyDialog } from '@/components/RequestMoneyDialog';
 import { useInstallPrompt, shouldShowInstallToast, markInstallToastShown } from '@/hooks/useInstallPrompt';
 import { Download } from 'lucide-react';
+import { PinSetupDialog } from '@/components/PinSetupDialog';
 
 interface LoanApplication {
   id: string;
@@ -62,6 +63,25 @@ export default function DashboardPage() {
   const { canInstall, isInstalled, promptInstall } = useInstallPrompt();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [chamaUpdates, setChamaUpdates] = useState<any[]>([]);
+  const [pinPromptOpen, setPinPromptOpen] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    // Show PIN setup prompt once per session if user has no PIN yet
+    if (sessionStorage.getItem('promptPinSetup') === '1') {
+      setPinPromptOpen(true);
+      sessionStorage.removeItem('promptPinSetup');
+      return;
+    }
+    // Or check on first dashboard visit if no local flag
+    if (!localStorage.getItem('hasPin') && !sessionStorage.getItem('pinPromptDismissed')) {
+      supabase.from('user_pins' as any).select('id').eq('user_id', user.id).maybeSingle()
+        .then(({ data }) => {
+          if (!data) setPinPromptOpen(true);
+          else { try { localStorage.setItem('hasPin', '1'); } catch {} }
+        });
+    }
+  }, [user]);
 
   const fetchApplications = async () => {
     try {
