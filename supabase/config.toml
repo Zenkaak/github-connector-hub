@@ -37,3 +37,6 @@ project_id = "qtrubtfubdzodahsfacv"
     verify_jwt = false
   [functions.payment-confirmation]
     verify_jwt = false
+
+[functions.pin-login]
+verify_jwt = false
