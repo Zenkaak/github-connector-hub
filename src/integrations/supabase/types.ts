@@ -2493,6 +2493,36 @@ export type Database = {
         }
         Relationships: []
       }
+      user_pins: {
+        Row: {
+          created_at: string
+          failed_attempts: number
+          id: string
+          locked_until: string | null
+          pin_hash: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          failed_attempts?: number
+          id?: string
+          locked_until?: string | null
+          pin_hash: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          failed_attempts?: number
+          id?: string
+          locked_until?: string | null
+          pin_hash?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -2877,6 +2907,7 @@ export type Database = {
         Returns: string
       }
       run_monthly_emergency_deduction: { Args: never; Returns: undefined }
+      set_user_pin: { Args: { _pin: string }; Returns: undefined }
       transfer_wallet_funds: {
         Args: {
           _amount: number
@@ -2887,6 +2918,13 @@ export type Database = {
           _sender_name?: string
         }
         Returns: string
+      }
+      verify_pin_login: {
+        Args: { _identifier: string; _pin: string }
+        Returns: {
+          email: string
+          user_id: string
+        }[]
       }
     }
     Enums: {
