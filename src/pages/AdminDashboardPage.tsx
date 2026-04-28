@@ -1,4 +1,4 @@
-import { useSearchParams } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 import { AdminLayout } from "@/components/AdminLayout";
 
 import { AdminOverviewModule } from "@/components/admin/AdminOverviewModule";
@@ -25,19 +25,43 @@ const moduleMap = {
   audit: AdminAuditModule,
 };
 
-export default function AdminDashboardPage() {
+interface Props {
+  defaultTab?: keyof typeof moduleMap;
+}
+
+// Map URL paths to tabs (source of truth — query string is fallback)
+const PATH_TAB: Record<string, keyof typeof moduleMap> = {
+  "/dashboard/admin": "overview",
+  "/dashboard/admin/users": "users",
+  "/dashboard/admin/wallets": "users",
+  "/dashboard/admin/messages": "users",
+  "/dashboard/admin/kyc": "kyc",
+  "/dashboard/admin/loans": "loans",
+  "/dashboard/admin/transfers": "transfers",
+  "/dashboard/admin/mpesa": "mpesa",
+  "/dashboard/admin/transactions": "mpesa",
+  "/dashboard/admin/withdrawals": "withdrawals",
+  "/dashboard/admin/savings": "withdrawals",
+  "/dashboard/admin/mgr": "mgr",
+  "/dashboard/admin/chama": "chama",
+  "/dashboard/admin/audit": "audit",
+};
+
+export default function AdminDashboardPage({ defaultTab }: Props) {
+  const location = useLocation();
   const [searchParams] = useSearchParams();
 
-  const tab = searchParams.get("tab") || "overview";
+  const fromPath = PATH_TAB[location.pathname];
+  const fromQuery = searchParams.get("tab") as keyof typeof moduleMap | null;
+  const tab = fromPath || fromQuery || defaultTab || "overview";
 
-  const ActiveModule =
-    moduleMap[tab as keyof typeof moduleMap] || AdminOverviewModule;
+  const ActiveModule = moduleMap[tab] || AdminOverviewModule;
 
   return (
     <AdminLayout>
-      <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+      <div className="p-4 sm:p-6 lg:p-8 max-w-[1400px] mx-auto">
         <ActiveModule />
       </div>
     </AdminLayout>
   );
-  }
+}

@@ -244,9 +244,8 @@ export function AdminMpesaModule() {
       {reconciling && (
         <AdminReconcileDialog
           payment={reconciling}
-          open={!!reconciling}
           onClose={() => setReconciling(null)}
-          onSuccess={load}
+          onResolved={load}
         />
       )}
     </div>
