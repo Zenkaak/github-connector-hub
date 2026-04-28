@@ -2032,6 +2032,33 @@ export type Database = {
         }
         Relationships: []
       }
+      password_recovery_codes: {
+        Row: {
+          attempts: number
+          code_hash: string
+          created_at: string
+          email: string
+          expires_at: string
+          used: boolean
+        }
+        Insert: {
+          attempts?: number
+          code_hash: string
+          created_at?: string
+          email: string
+          expires_at: string
+          used?: boolean
+        }
+        Update: {
+          attempts?: number
+          code_hash?: string
+          created_at?: string
+          email?: string
+          expires_at?: string
+          used?: boolean
+        }
+        Relationships: []
+      }
       personal_savings: {
         Row: {
           created_at: string
