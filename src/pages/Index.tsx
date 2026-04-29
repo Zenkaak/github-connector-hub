@@ -625,6 +625,13 @@ export default function Index() {
             </Link>
           </motion.div>
 
+          {publicChamas.length === 0 ? (
+            <div className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-10 text-center">
+              <Users size={28} className="text-white/30 mx-auto mb-3" />
+              <p className="text-white/60 text-[14px] font-medium">No public chamas listed yet</p>
+              <p className="text-white/35 text-[12px] mt-1">Be the first — sign up and create your group.</p>
+            </div>
+          ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {publicChamas.map((group, i) => (
               <motion.div
@@ -642,7 +649,7 @@ export default function Index() {
                       </div>
                       <div className="flex flex-col items-end">
                         <span className="text-[14px] font-semibold text-white">
-                          KES {group.contribution_amount.toLocaleString()}
+                          KES {Number(group.contribution_amount || 0).toLocaleString()}
                         </span>
                         <span className="text-[10px] text-white/40 uppercase tracking-wider font-medium">
                           per {group.contribution_frequency}
@@ -674,6 +681,7 @@ export default function Index() {
               </motion.div>
             ))}
           </div>
+          )}
 
           <div className="mt-8 text-center sm:hidden">
             <Link to="/signup">
