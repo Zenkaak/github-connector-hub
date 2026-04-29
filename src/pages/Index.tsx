@@ -475,10 +475,18 @@ export default function Index() {
             </Link>
           </motion.div>
 
+          {activeHarambees.length === 0 ? (
+            <div className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-10 text-center">
+              <Heart size={28} className="text-white/30 mx-auto mb-3" />
+              <p className="text-white/60 text-[14px] font-medium">No active public harambees right now</p>
+              <p className="text-white/35 text-[12px] mt-1">Check back soon — new fundraisers are listed as they get verified.</p>
+            </div>
+          ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {activeHarambees.map((h, i) => {
               const progress = h.target_amount > 0 ? Math.min(100, Math.round((h.raised_amount / h.target_amount) * 100)) : 0;
               const daysLeft = h.deadline ? Math.max(0, Math.ceil((new Date(h.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : null;
+              const publicHref = h.order_number ? `/harambee/${h.order_number}` : '/signup';
               return (
                 <motion.div
                   key={h.id}
@@ -504,7 +512,7 @@ export default function Index() {
                       </div>
                       <div>
                         <h3 className="font-display font-semibold text-[15px] text-white leading-snug tracking-[-0.01em]">
-                          Harambee for {h.beneficiary_name || h.title}
+                          {h.title || `Harambee for ${h.beneficiary_name}`}
                         </h3>
                         {h.description && (
                           <p className="text-[12.5px] text-white/50 mt-2 line-clamp-2 leading-relaxed">{h.description}</p>
@@ -523,14 +531,14 @@ export default function Index() {
                       </div>
                     </div>
                     <div className="px-5 py-3 bg-white/[0.015] border-t border-white/[0.04] flex gap-2">
-                      <Link to="/signup" className="flex-1">
+                      <Link to={publicHref} className="flex-1">
                         <Button variant="gold" size="sm" className="w-full text-[12px] h-8 !shadow-none font-semibold">
                           Contribute
                         </Button>
                       </Link>
-                      <Link to="/signup" className="flex-1">
+                      <Link to={publicHref} className="flex-1">
                         <Button variant="ghost" size="sm" className="w-full text-[12px] h-8 bg-white/[0.03] text-white/70 hover:bg-white/[0.06] border border-white/[0.05]">
-                          Share
+                          View
                         </Button>
                       </Link>
                     </div>
@@ -539,6 +547,7 @@ export default function Index() {
               );
             })}
           </div>
+          )}
           
           <div className="mt-8 text-center sm:hidden">
             <Link to="/signup">
