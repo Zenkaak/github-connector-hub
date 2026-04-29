@@ -231,18 +231,18 @@ export default function SignupPage() {
           transition={{ duration: 0.5, ease: "easeOut" }}
         >
           {/* Header Section */}
-          <div className="text-center mb-10">
-            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-foreground mb-3">
+          <div className="text-center mb-6">
+            <h1 className="text-xl md:text-2xl font-extrabold tracking-tight text-foreground mb-1.5">
               Start Your Journey
             </h1>
-            <p className="text-muted-foreground text-sm md:text-base max-w-md mx-auto">
+            <p className="text-muted-foreground text-xs md:text-sm max-w-md mx-auto">
               Create an account with DASNET VENTURES to access premium financial services and community savings.
             </p>
           </div>
 
           {/* Multi-Step Indicator */}
-          <div className="flex items-center justify-center mb-12 relative">
-            <div className="absolute top-5 left-1/2 -translate-x-1/2 w-2/3 h-[2px] bg-muted -z-10" />
+          <div className="flex items-center justify-center mb-8 relative">
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 w-2/3 h-[2px] bg-muted -z-10" />
             {stepInfo.map((s, i) => {
               const stepNum = i + 1;
               const isActive = stepNum === step;
@@ -250,7 +250,7 @@ export default function SignupPage() {
               return (
                 <div key={i} className="flex flex-col items-center flex-1">
                   <div
-                    className={`w-11 h-11 rounded-2xl flex items-center justify-center text-sm font-bold transition-all duration-500 ${
+                    className={`w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold transition-all duration-500 ${
                       isCompleted
                         ? 'bg-success text-white scale-110 shadow-lg shadow-success/20'
                         : isActive
@@ -258,9 +258,9 @@ export default function SignupPage() {
                         : 'bg-card border-2 border-muted text-muted-foreground'
                     }`}
                   >
-                    {isCompleted ? <CheckCircle size={22} /> : <s.icon size={20} />}
+                    {isCompleted ? <CheckCircle size={16} /> : <s.icon size={15} />}
                   </div>
-                  <span className={`text-[10px] md:text-[11px] mt-2.5 font-bold uppercase tracking-widest ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>
+                  <span className={`text-[9px] md:text-[10px] mt-2 font-bold uppercase tracking-widest ${isActive ? 'text-foreground' : 'text-muted-foreground'}`}>
                     {s.label}
                   </span>
                 </div>
@@ -269,23 +269,23 @@ export default function SignupPage() {
           </div>
 
           {/* Form Container */}
-          <div className="bg-card rounded-[2rem] border border-border/50 shadow-2xl shadow-black/5 overflow-hidden">
-            <div className="p-6 md:p-10 border-b border-border/40 bg-muted/10 flex items-center justify-between">
+          <div className="bg-card rounded-2xl border border-border/50 shadow-xl shadow-black/5 overflow-hidden">
+            <div className="p-4 md:p-6 border-b border-border/40 bg-muted/10 flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-bold text-foreground">
+                <h2 className="text-sm md:text-base font-bold text-foreground">
                   {stepInfo[step - 1].desc}
                 </h2>
-                <p className="text-xs text-muted-foreground mt-1 font-medium">
+                <p className="text-[11px] text-muted-foreground mt-0.5 font-medium">
                   Please provide accurate information for verification.
                 </p>
               </div>
-              <div className="bg-background/80 p-3 rounded-2xl border border-border/50 hidden sm:block">
-                <span className="text-sm font-bold text-primary">Step {step}/3</span>
+              <div className="bg-background/80 px-2.5 py-1.5 rounded-lg border border-border/50 hidden sm:block">
+                <span className="text-xs font-bold text-primary">Step {step}/3</span>
               </div>
             </div>
 
-            <div className="p-6 md:p-10">
-              <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+            <div className="p-4 md:p-6">
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <AnimatePresence mode="wait">
                   
                   {/* STEP 1: PERSONAL INFORMATION */}
