@@ -70,30 +70,25 @@ Deno.serve(async (req) => {
         })
       }
 
-      // Send via internal email queue
-      const messageId = crypto.randomUUID()
-      await admin.from('email_send_log').insert({
-        message_id: messageId,
-        template_name: 'password_recovery_otp',
-        recipient_email: email,
-        status: 'pending',
-      })
-      await admin.rpc('enqueue_email', {
-        queue_name: 'transactional_emails',
-        payload: {
-          message_id: messageId,
-          to: email,
-          from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
-          sender_domain: SENDER_DOMAIN,
-          subject: `Your ${SITE_NAME} password reset code`,
-          html: html6(otp),
-          text: `Your ${SITE_NAME} password reset code is ${otp}. It expires in 10 minutes.`,
-          purpose: 'transactional',
-          label: 'password_recovery_otp',
-          idempotency_key: `pwd-recovery-${messageId}`,
-          queued_at: new Date().toISOString(),
+      // Send via send-transactional-email (handles unsubscribe tokens, suppression, queue)
+      const idempotencyKey = `pwd-recovery-${email.toLowerCase()}-${Date.now()}`
+      const sendResp = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-transactional-email`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
         },
+        body: JSON.stringify({
+          templateName: 'password-recovery-otp',
+          recipientEmail: email,
+          idempotencyKey,
+          templateData: { code: otp },
+        }),
       })
+      if (!sendResp.ok) {
+        const errText = await sendResp.text()
+        console.error('Failed to enqueue OTP email', errText)
+      }
 
       return new Response(JSON.stringify({ ok: true }), {
         status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
