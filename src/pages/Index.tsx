@@ -411,8 +411,8 @@ export default function Index() {
           >
             <div className="grid grid-cols-3 divide-x divide-white/[0.05]">
               {[
-                { value: `${liveStats.members.toLocaleString()}+`, label: 'Active members' },
-                { value: `${liveStats.groups.toLocaleString()}+`, label: 'Chama groups' },
+                { value: liveStats.members.toLocaleString(), label: 'Active members' },
+                { value: liveStats.groups.toLocaleString(), label: 'Chama groups' },
                 { value: formatCompact(liveStats.savings), label: 'Savings managed' },
               ].map((stat, i) => (
                 <div key={i} className="text-center px-2 sm:px-4">
