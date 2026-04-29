@@ -90,6 +90,7 @@ Deno.serve(async (req) => {
           text: `Your ${SITE_NAME} password reset code is ${otp}. It expires in 10 minutes.`,
           purpose: 'transactional',
           label: 'password_recovery_otp',
+          idempotency_key: `pwd-recovery-${messageId}`,
           queued_at: new Date().toISOString(),
         },
       })
