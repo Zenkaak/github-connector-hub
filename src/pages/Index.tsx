@@ -161,6 +161,78 @@ const appHighlights = [
 export default function Index() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeHarambees, setActiveHarambees] = useState<any[]>([]);
+  const [publicChamas, setPublicChamas] = useState<any[]>([]);
+  const [liveStats, setLiveStats] = useState({ members: 0, groups: 0, savings: 0 });
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      // Public approved harambees + raised totals
+      const { data: harambees } = await supabase
+        .from('harambee_applications')
+        .select('id, beneficiary_name, description, target_amount, deadline, harambee_id, category')
+        .eq('status', 'approved')
+        .eq('is_public', true)
+        .order('created_at', { ascending: false })
+        .limit(6);
+
+      const harambeeIds = (harambees || []).map((h: any) => h.harambee_id).filter(Boolean);
+      let totalsMap: Record<string, number> = {};
+      if (harambeeIds.length) {
+        const { data: totals } = await supabase
+          .from('harambee_totals')
+          .select('harambee_id, total_amount')
+          .in('harambee_id', harambeeIds);
+        (totals || []).forEach((t: any) => { totalsMap[t.harambee_id] = Number(t.total_amount || 0); });
+      }
+      const enrichedHarambees = (harambees || []).map((h: any) => ({
+        ...h,
+        title: h.category || 'Harambee',
+        raised_amount: h.harambee_id ? (totalsMap[h.harambee_id] || 0) : 0,
+      }));
+
+      // Public chamas with member counts
+      const { data: chamas } = await supabase
+        .from('chama_groups')
+        .select('id, name, description, contribution_amount, contribution_frequency, max_members')
+        .eq('is_public', true)
+        .order('created_at', { ascending: false })
+        .limit(6);
+
+      const chamaIds = (chamas || []).map((c: any) => c.id);
+      let memberCounts: Record<string, number> = {};
+      if (chamaIds.length) {
+        const { data: members } = await supabase
+          .from('chama_members')
+          .select('group_id')
+          .in('group_id', chamaIds)
+          .eq('is_active', true);
+        (members || []).forEach((m: any) => {
+          memberCounts[m.group_id] = (memberCounts[m.group_id] || 0) + 1;
+        });
+      }
+      const enrichedChamas = (chamas || []).map((c: any) => ({
+        ...c,
+        members_count: memberCounts[c.id] || 0,
+      }));
+
+      // Live stats
+      const [{ count: members }, { count: groups }, { data: walletData }] = await Promise.all([
+        supabase.from('profiles').select('id', { count: 'exact', head: true }),
+        supabase.from('chama_groups').select('id', { count: 'exact', head: true }),
+        supabase.from('wallets').select('balance'),
+      ]);
+      const savings = (walletData || []).reduce((s: number, w: any) => s + Number(w.balance || 0), 0);
+
+      if (mounted) {
+        setActiveHarambees(enrichedHarambees);
+        setPublicChamas(enrichedChamas);
+        setLiveStats({ members: members || 0, groups: groups || 0, savings });
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
 
   const formatCompact = (n: number) => {
     if (n >= 1000000) return `KES ${(n / 1000000).toFixed(1)}M`;
