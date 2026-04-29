@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowRight, Shield, Users, CheckCircle, Star, Zap, MapPin,
@@ -139,23 +140,7 @@ const footerColumns = [
   ]},
 ];
 
-const activeHarambees = [
-  { id: 1, title: 'Medical Bill', beneficiary_name: 'John Kamau', description: 'Help us cover emergency surgery costs for our father following a severe accident.', target_amount: 500000, raised_amount: 320000, deadline: '2024-12-31' },
-  { id: 2, title: 'University Fees', beneficiary_name: 'Grace Wanjiku', description: 'Raising tuition fees for Grace to join University of Nairobi for her Engineering degree.', target_amount: 150000, raised_amount: 85000, deadline: '2024-09-15' },
-  { id: 3, title: 'Business Rebuild', beneficiary_name: 'Peter Ochieng', description: 'Assisting Peter rebuild his electronics shop after the recent market fire.', target_amount: 300000, raised_amount: 45000, deadline: '2024-10-30' }
-];
-
-const publicChamas = [
-  { id: 1, name: 'Umoja Investment Group', description: 'A group of young professionals pooling resources for real estate investments in Kitengela.', contribution_amount: 5000, contribution_frequency: 'monthly', max_members: 50, members_count: 42 },
-  { id: 2, name: 'Baraka Women Savings', description: 'Women supporting women through table banking and small business loans.', contribution_amount: 1000, contribution_frequency: 'weekly', max_members: 30, members_count: 28 },
-  { id: 3, name: 'Tech Innovators Chama', description: 'Software developers saving towards launching a tech startup incubator.', contribution_amount: 10000, contribution_frequency: 'monthly', max_members: 20, members_count: 15 }
-];
-
-const liveStats = {
-  members: 12480,
-  groups: 312,
-  savings: 48500000
-};
+// Live data fetched from database — no hardcoded fallbacks shown to users.
 
 const testimonials = [
   { initials: 'JK', name: 'Joyce Kariuki', role: 'Chairperson, Umoja Group · Nairobi',
