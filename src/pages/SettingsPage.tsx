@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { getSelectedSound, setSelectedSound, playNotificationSound, SOUND_LABELS, type NotificationSoundType } from '@/lib/notification-sound';
 import { isWebAuthnSupported, hasSavedCredential, registerFingerprint, removeFingerprint } from '@/lib/webauthn';
+import { PinSetupDialog } from '@/components/PinSetupDialog';
 import { useNavigate } from 'react-router-dom';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { useAuth } from '@/contexts/AuthContext';
@@ -50,11 +51,20 @@ export default function SettingsPage() {
   const [fingerprintEnabled, setFingerprintEnabled] = useState(false);
   const [fingerprintSupported, setFingerprintSupported] = useState(false);
   const [registeringFingerprint, setRegisteringFingerprint] = useState(false);
+  const [pinDialogOpen, setPinDialogOpen] = useState(false);
+  const [hasPin, setHasPin] = useState(false);
 
   useEffect(() => {
     setFingerprintSupported(isWebAuthnSupported());
     setFingerprintEnabled(hasSavedCredential());
-  }, []);
+    (async () => {
+      if (!user) return;
+      const { data } = await supabase.from('user_pins' as any).select('user_id').eq('user_id', user.id).maybeSingle();
+      const exists = !!data;
+      setHasPin(exists);
+      try { localStorage.setItem('hasPin', exists ? '1' : ''); } catch {}
+    })();
+  }, [user]);
   const handleChangePassword = async () => {
     if (newPassword.length < 8) {
       toast.error('Password must be at least 8 characters');
@@ -265,8 +275,37 @@ export default function SettingsPage() {
                   </div>
                 </>
               )}
+
+              {/* 4-Digit PIN */}
+              <Separator />
+              <div className="flex items-center justify-between py-2">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-accent/10 flex items-center justify-center">
+                    <Lock size={16} className="text-accent" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium">4-Digit Login PIN</p>
+                    <p className="text-xs text-muted-foreground">
+                      {hasPin ? 'Enabled — sign in with your PIN from the login screen' : 'Quick, secure sign-in alongside your password'}
+                    </p>
+                  </div>
+                </div>
+                <Button
+                  variant={hasPin ? 'outline' : 'gold'}
+                  size="sm"
+                  onClick={() => setPinDialogOpen(true)}
+                >
+                  {hasPin ? 'Change PIN' : 'Create PIN'}
+                </Button>
+              </div>
             </CardContent>
           </Card>
+
+          <PinSetupDialog
+            open={pinDialogOpen}
+            onClose={() => setPinDialogOpen(false)}
+            onCompleted={() => { setHasPin(true); }}
+          />
         </motion.div>
 
         {/* Notifications */}
