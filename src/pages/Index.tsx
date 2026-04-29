@@ -168,28 +168,18 @@ export default function Index() {
   useEffect(() => {
     let mounted = true;
     (async () => {
-      // Public approved harambees + raised totals
+      // Public active harambees from chama_harambees (have order_number for public page)
       const { data: harambees } = await supabase
-        .from('harambee_applications')
-        .select('id, beneficiary_name, description, target_amount, deadline, harambee_id, category')
-        .eq('status', 'approved')
+        .from('chama_harambees')
+        .select('id, title, beneficiary_name, description, target_amount, raised_amount, deadline, order_number')
         .eq('is_public', true)
+        .eq('status', 'active')
         .order('created_at', { ascending: false })
         .limit(6);
 
-      const harambeeIds = (harambees || []).map((h: any) => h.harambee_id).filter(Boolean);
-      let totalsMap: Record<string, number> = {};
-      if (harambeeIds.length) {
-        const { data: totals } = await supabase
-          .from('harambee_totals')
-          .select('harambee_id, total_amount')
-          .in('harambee_id', harambeeIds);
-        (totals || []).forEach((t: any) => { totalsMap[t.harambee_id] = Number(t.total_amount || 0); });
-      }
       const enrichedHarambees = (harambees || []).map((h: any) => ({
         ...h,
-        title: h.category || 'Harambee',
-        raised_amount: h.harambee_id ? (totalsMap[h.harambee_id] || 0) : 0,
+        raised_amount: Number(h.raised_amount || 0),
       }));
 
       // Public chamas with member counts
