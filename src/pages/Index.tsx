@@ -888,7 +888,7 @@ export default function Index() {
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
           >
-            <Link href="/signup">
+            <Link to="/signup">
               <Button variant="gold" size="lg" className="rounded-full px-8 !shadow-none font-semibold h-12">
                 Create your account
               </Button>
@@ -1068,12 +1068,12 @@ export default function Index() {
             Join thousands of Kenyans using DASNET VENTURES LTD to manage their Chamas, access loans, and support each other.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-            <Link href="/signup" className="w-full sm:w-auto">
+            <Link to="/signup" className="w-full sm:w-auto">
               <Button variant="gold" size="lg" className="w-full sm:w-auto rounded-full font-semibold px-8 h-12 !shadow-none">
                 Open Free Account
               </Button>
             </Link>
-            <Link href="/auth" className="w-full sm:w-auto">
+            <Link to="/auth" className="w-full sm:w-auto">
               <Button variant="ghost" size="lg" className="w-full sm:w-auto rounded-full text-white/70 hover:text-white border border-white/[0.08] hover:bg-white/[0.04] h-12 px-8">
                 Sign In to Dashboard
               </Button>
@@ -1103,7 +1103,7 @@ export default function Index() {
                 <ul className="space-y-3.5">
                   {col.links.map((link, j) => (
                     <li key={j}>
-                      <Link href={link.href} className="text-[13px] text-white/50 hover:text-accent transition-colors">
+                      <Link to={link.href} className="text-[13px] text-white/50 hover:text-accent transition-colors">
                         {link.label}
                       </Link>
                     </li>
@@ -1116,8 +1116,8 @@ export default function Index() {
           <div className="pt-8 border-t border-white/[0.04] flex flex-col md:flex-row items-center justify-between gap-4 text-[12px] text-white/40">
             <p>© {new Date().getFullYear()} DASNET VENTURES LTD. All rights reserved.</p>
             <div className="flex gap-6">
-              <Link href="/privacy" className="hover:text-white">Privacy Policy</Link>
-              <Link href="/terms" className="hover:text-white">Terms of Service</Link>
+              <Link to="/privacy" className="hover:text-white">Privacy Policy</Link>
+              <Link to="/terms" className="hover:text-white">Terms of Service</Link>
             </div>
           </div>
         </div>
