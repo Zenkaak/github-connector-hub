@@ -10,7 +10,9 @@ export interface TemplateEntry {
 }
 
 import { template as transactionNotification } from './transaction-notification.tsx'
+import { template as passwordRecoveryOtp } from './password-recovery-otp.tsx'
 
 export const TEMPLATES: Record<string, TemplateEntry> = {
   'transaction-notification': transactionNotification,
+  'password-recovery-otp': passwordRecoveryOtp,
 }

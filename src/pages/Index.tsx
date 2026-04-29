@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowRight, Shield, Users, CheckCircle, Star, Zap, MapPin,
@@ -139,23 +140,7 @@ const footerColumns = [
   ]},
 ];
 
-const activeHarambees = [
-  { id: 1, title: 'Medical Bill', beneficiary_name: 'John Kamau', description: 'Help us cover emergency surgery costs for our father following a severe accident.', target_amount: 500000, raised_amount: 320000, deadline: '2024-12-31' },
-  { id: 2, title: 'University Fees', beneficiary_name: 'Grace Wanjiku', description: 'Raising tuition fees for Grace to join University of Nairobi for her Engineering degree.', target_amount: 150000, raised_amount: 85000, deadline: '2024-09-15' },
-  { id: 3, title: 'Business Rebuild', beneficiary_name: 'Peter Ochieng', description: 'Assisting Peter rebuild his electronics shop after the recent market fire.', target_amount: 300000, raised_amount: 45000, deadline: '2024-10-30' }
-];
-
-const publicChamas = [
-  { id: 1, name: 'Umoja Investment Group', description: 'A group of young professionals pooling resources for real estate investments in Kitengela.', contribution_amount: 5000, contribution_frequency: 'monthly', max_members: 50, members_count: 42 },
-  { id: 2, name: 'Baraka Women Savings', description: 'Women supporting women through table banking and small business loans.', contribution_amount: 1000, contribution_frequency: 'weekly', max_members: 30, members_count: 28 },
-  { id: 3, name: 'Tech Innovators Chama', description: 'Software developers saving towards launching a tech startup incubator.', contribution_amount: 10000, contribution_frequency: 'monthly', max_members: 20, members_count: 15 }
-];
-
-const liveStats = {
-  members: 12480,
-  groups: 312,
-  savings: 48500000
-};
+// Live data fetched from database — no hardcoded fallbacks shown to users.
 
 const testimonials = [
   { initials: 'JK', name: 'Joyce Kariuki', role: 'Chairperson, Umoja Group · Nairobi',
@@ -176,6 +161,68 @@ const appHighlights = [
 export default function Index() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeHarambees, setActiveHarambees] = useState<any[]>([]);
+  const [publicChamas, setPublicChamas] = useState<any[]>([]);
+  const [liveStats, setLiveStats] = useState({ members: 0, groups: 0, savings: 0 });
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      // Public active harambees from chama_harambees (have order_number for public page)
+      const { data: harambees } = await supabase
+        .from('chama_harambees')
+        .select('id, title, beneficiary_name, description, target_amount, raised_amount, deadline, order_number')
+        .eq('is_public', true)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(6);
+
+      const enrichedHarambees = (harambees || []).map((h: any) => ({
+        ...h,
+        raised_amount: Number(h.raised_amount || 0),
+      }));
+
+      // Public chamas with member counts
+      const { data: chamas } = await supabase
+        .from('chama_groups')
+        .select('id, name, description, contribution_amount, contribution_frequency, max_members')
+        .eq('is_public', true)
+        .order('created_at', { ascending: false })
+        .limit(6);
+
+      const chamaIds = (chamas || []).map((c: any) => c.id);
+      let memberCounts: Record<string, number> = {};
+      if (chamaIds.length) {
+        const { data: members } = await supabase
+          .from('chama_members')
+          .select('group_id')
+          .in('group_id', chamaIds)
+          .eq('is_active', true);
+        (members || []).forEach((m: any) => {
+          memberCounts[m.group_id] = (memberCounts[m.group_id] || 0) + 1;
+        });
+      }
+      const enrichedChamas = (chamas || []).map((c: any) => ({
+        ...c,
+        members_count: memberCounts[c.id] || 0,
+      }));
+
+      // Live stats
+      const [{ count: members }, { count: groups }, { data: walletData }] = await Promise.all([
+        supabase.from('profiles').select('id', { count: 'exact', head: true }),
+        supabase.from('chama_groups').select('id', { count: 'exact', head: true }),
+        supabase.from('wallets').select('balance'),
+      ]);
+      const savings = (walletData || []).reduce((s: number, w: any) => s + Number(w.balance || 0), 0);
+
+      if (mounted) {
+        setActiveHarambees(enrichedHarambees);
+        setPublicChamas(enrichedChamas);
+        setLiveStats({ members: members || 0, groups: groups || 0, savings });
+      }
+    })();
+    return () => { mounted = false; };
+  }, []);
 
   const formatCompact = (n: number) => {
     if (n >= 1000000) return `KES ${(n / 1000000).toFixed(1)}M`;
@@ -364,8 +411,8 @@ export default function Index() {
           >
             <div className="grid grid-cols-3 divide-x divide-white/[0.05]">
               {[
-                { value: `${liveStats.members.toLocaleString()}+`, label: 'Active members' },
-                { value: `${liveStats.groups.toLocaleString()}+`, label: 'Chama groups' },
+                { value: liveStats.members.toLocaleString(), label: 'Active members' },
+                { value: liveStats.groups.toLocaleString(), label: 'Chama groups' },
                 { value: formatCompact(liveStats.savings), label: 'Savings managed' },
               ].map((stat, i) => (
                 <div key={i} className="text-center px-2 sm:px-4">
@@ -428,10 +475,18 @@ export default function Index() {
             </Link>
           </motion.div>
 
+          {activeHarambees.length === 0 ? (
+            <div className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-10 text-center">
+              <Heart size={28} className="text-white/30 mx-auto mb-3" />
+              <p className="text-white/60 text-[14px] font-medium">No active public harambees right now</p>
+              <p className="text-white/35 text-[12px] mt-1">Check back soon — new fundraisers are listed as they get verified.</p>
+            </div>
+          ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {activeHarambees.map((h, i) => {
               const progress = h.target_amount > 0 ? Math.min(100, Math.round((h.raised_amount / h.target_amount) * 100)) : 0;
               const daysLeft = h.deadline ? Math.max(0, Math.ceil((new Date(h.deadline).getTime() - Date.now()) / (1000 * 60 * 60 * 24))) : null;
+              const publicHref = h.order_number ? `/harambee/${h.order_number}` : '/signup';
               return (
                 <motion.div
                   key={h.id}
@@ -457,7 +512,7 @@ export default function Index() {
                       </div>
                       <div>
                         <h3 className="font-display font-semibold text-[15px] text-white leading-snug tracking-[-0.01em]">
-                          Harambee for {h.beneficiary_name || h.title}
+                          {h.title || `Harambee for ${h.beneficiary_name}`}
                         </h3>
                         {h.description && (
                           <p className="text-[12.5px] text-white/50 mt-2 line-clamp-2 leading-relaxed">{h.description}</p>
@@ -476,14 +531,14 @@ export default function Index() {
                       </div>
                     </div>
                     <div className="px-5 py-3 bg-white/[0.015] border-t border-white/[0.04] flex gap-2">
-                      <Link to="/signup" className="flex-1">
+                      <Link to={publicHref} className="flex-1">
                         <Button variant="gold" size="sm" className="w-full text-[12px] h-8 !shadow-none font-semibold">
                           Contribute
                         </Button>
                       </Link>
-                      <Link to="/signup" className="flex-1">
+                      <Link to={publicHref} className="flex-1">
                         <Button variant="ghost" size="sm" className="w-full text-[12px] h-8 bg-white/[0.03] text-white/70 hover:bg-white/[0.06] border border-white/[0.05]">
-                          Share
+                          View
                         </Button>
                       </Link>
                     </div>
@@ -492,6 +547,7 @@ export default function Index() {
               );
             })}
           </div>
+          )}
           
           <div className="mt-8 text-center sm:hidden">
             <Link to="/signup">
@@ -569,6 +625,13 @@ export default function Index() {
             </Link>
           </motion.div>
 
+          {publicChamas.length === 0 ? (
+            <div className="rounded-xl bg-white/[0.02] border border-white/[0.06] p-10 text-center">
+              <Users size={28} className="text-white/30 mx-auto mb-3" />
+              <p className="text-white/60 text-[14px] font-medium">No public chamas listed yet</p>
+              <p className="text-white/35 text-[12px] mt-1">Be the first — sign up and create your group.</p>
+            </div>
+          ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {publicChamas.map((group, i) => (
               <motion.div
@@ -586,7 +649,7 @@ export default function Index() {
                       </div>
                       <div className="flex flex-col items-end">
                         <span className="text-[14px] font-semibold text-white">
-                          KES {group.contribution_amount.toLocaleString()}
+                          KES {Number(group.contribution_amount || 0).toLocaleString()}
                         </span>
                         <span className="text-[10px] text-white/40 uppercase tracking-wider font-medium">
                           per {group.contribution_frequency}
@@ -618,6 +681,7 @@ export default function Index() {
               </motion.div>
             ))}
           </div>
+          )}
 
           <div className="mt-8 text-center sm:hidden">
             <Link to="/signup">
