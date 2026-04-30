@@ -38,6 +38,7 @@ import ChamaGroupsPage from "./pages/ChamaGroupsPage";
 import ChamaGroupDetailPage from "./pages/ChamaGroupDetailPage";
 import ChamaExplorerPage from "./pages/ChamaExplorerPage";
 import PublicHarambeePage from "./pages/PublicHarambeePage";
+import PublicHarambeesListPage from "./pages/PublicHarambeesListPage";
 import NotFound from "./pages/NotFound";
 import UnsubscribePage from "./pages/UnsubscribePage";
 
@@ -86,6 +87,7 @@ function AppRoutes() {
       <Route path="/about" element={<AboutPage />} />
       <Route path="/terms" element={<TermsPage />} />
       <Route path="/contact" element={<ContactPage />} />
+      <Route path="/harambees" element={<PublicHarambeesListPage />} />
       <Route path="/harambee/:orderNumber" element={<PublicHarambeePage />} />
       <Route path="/unsubscribe" element={<UnsubscribePage />} />
 
