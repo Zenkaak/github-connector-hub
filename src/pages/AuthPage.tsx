@@ -182,107 +182,107 @@ export default function AuthPage() {
       </div>
 
       {/* Right form panel */}
-      <div className="flex-1 flex flex-col items-center justify-center px-4 py-8 bg-background relative">
-        <motion.div className="w-full max-w-[400px] relative z-10" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-          <div className="lg:hidden mb-8"><Link to="/"><Logo size="lg" /></Link></div>
+      <div className="flex-1 flex flex-col items-center justify-center px-4 py-6 bg-background relative">
+        <motion.div className="w-full max-w-[380px] relative z-10" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
+          <div className="lg:hidden mb-5"><Link to="/"><Logo size="md" /></Link></div>
 
-          <div className="mb-6">
-            <h1 className="font-display text-2xl font-bold mb-1.5">Sign In</h1>
-            <p className="text-sm text-muted-foreground">Choose how you'd like to sign in</p>
+          <div className="mb-4">
+            <h1 className="font-display text-xl font-bold mb-0.5">Sign In</h1>
+            <p className="text-xs text-muted-foreground">Choose how you'd like to sign in</p>
           </div>
 
           {/* Mode switch */}
-          <div className="grid grid-cols-2 gap-2 p-1 bg-muted/40 rounded-xl mb-5">
+          <div className="grid grid-cols-2 gap-1.5 p-1 bg-muted/40 rounded-lg mb-4">
             <button
               type="button" onClick={() => setMode('password')}
-              className={`flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition ${
+              className={`flex items-center justify-center gap-1.5 py-2 rounded-md text-xs font-semibold transition ${
                 mode === 'password' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground'
               }`}
-            ><Lock size={14} /> Password</button>
+            ><Lock size={12} /> Password</button>
             <button
               type="button" onClick={() => setMode('pin')}
-              className={`flex items-center justify-center gap-2 py-2.5 rounded-lg text-sm font-semibold transition ${
+              className={`flex items-center justify-center gap-1.5 py-2 rounded-md text-xs font-semibold transition ${
                 mode === 'pin' ? 'bg-card shadow-sm text-foreground' : 'text-muted-foreground'
               }`}
-            ><KeyRound size={14} /> PIN</button>
+            ><KeyRound size={12} /> PIN</button>
           </div>
 
-          <div className="bg-card rounded-2xl border border-border/50 shadow-md p-6">
+          <div className="bg-card rounded-xl border border-border/50 shadow-sm p-4">
             {mode === 'password' ? (
               <Tabs value={loginMethod} onValueChange={(v) => setLoginMethod(v as any)}>
-                <TabsList className="grid w-full grid-cols-2 mb-6 bg-muted/50 p-1 rounded-xl">
-                  <TabsTrigger value="email" className="flex items-center gap-2 text-xs rounded-lg"><Mail size={14} /> Email</TabsTrigger>
-                  <TabsTrigger value="phone" className="flex items-center gap-2 text-xs rounded-lg"><Phone size={14} /> Phone</TabsTrigger>
+                <TabsList className="grid w-full grid-cols-2 mb-4 bg-muted/50 p-0.5 rounded-lg h-9">
+                  <TabsTrigger value="email" className="flex items-center gap-1.5 text-xs rounded-md h-7"><Mail size={12} /> Email</TabsTrigger>
+                  <TabsTrigger value="phone" className="flex items-center gap-1.5 text-xs rounded-md h-7"><Phone size={12} /> Phone</TabsTrigger>
                 </TabsList>
 
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-3.5">
                   <TabsContent value="email" className="mt-0">
-                    <Label className="text-xs uppercase tracking-wider text-muted-foreground">Email Address</Label>
+                    <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Email Address</Label>
                     <Input type="email" placeholder="john@example.com" {...register('identifier')}
-                      className={`mt-2 h-12 rounded-xl ${errors.identifier ? 'border-destructive' : ''}`} />
-                    {errors.identifier && <p className="text-xs text-destructive mt-1.5">{errors.identifier.message}</p>}
+                      className={`mt-1.5 h-10 rounded-lg text-sm ${errors.identifier ? 'border-destructive' : ''}`} />
+                    {errors.identifier && <p className="text-xs text-destructive mt-1">{errors.identifier.message}</p>}
                   </TabsContent>
                   <TabsContent value="phone" className="mt-0">
-                    <Label className="text-xs uppercase tracking-wider text-muted-foreground">Phone Number</Label>
+                    <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Phone Number</Label>
                     <Input type="tel" placeholder="0712345678" {...register('identifier')}
-                      className={`mt-2 h-12 rounded-xl ${errors.identifier ? 'border-destructive' : ''}`} />
-                    {errors.identifier && <p className="text-xs text-destructive mt-1.5">{errors.identifier.message}</p>}
+                      className={`mt-1.5 h-10 rounded-lg text-sm ${errors.identifier ? 'border-destructive' : ''}`} />
+                    {errors.identifier && <p className="text-xs text-destructive mt-1">{errors.identifier.message}</p>}
                   </TabsContent>
 
                   <div>
-                    <Label className="text-xs uppercase tracking-wider text-muted-foreground">Password</Label>
-                    <div className="relative mt-2">
+                    <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Password</Label>
+                    <div className="relative mt-1.5">
                       <Input type={showPassword ? 'text' : 'password'} placeholder="Enter your password"
                         {...register('password')}
-                        className={`h-12 rounded-xl pr-10 ${errors.password ? 'border-destructive' : ''}`} />
+                        className={`h-10 rounded-lg pr-10 text-sm ${errors.password ? 'border-destructive' : ''}`} />
                       <button type="button" onClick={() => setShowPassword(!showPassword)}
                         className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
-                        {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                        {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                       </button>
                     </div>
-                    {errors.password && <p className="text-xs text-destructive mt-1.5">{errors.password.message}</p>}
+                    {errors.password && <p className="text-xs text-destructive mt-1">{errors.password.message}</p>}
                   </div>
 
-                  <Button type="submit" variant="gold" className="w-full h-12" disabled={isLoading}>
-                    {isLoading ? <><Loader2 className="animate-spin" size={18} /> Signing In…</> : <>Sign In <ArrowRight size={18} /></>}
+                  <Button type="submit" variant="gold" className="w-full h-10 text-sm" disabled={isLoading}>
+                    {isLoading ? <><Loader2 className="animate-spin" size={15} /> Signing In…</> : <>Sign In <ArrowRight size={15} /></>}
                   </Button>
                 </form>
               </Tabs>
             ) : (
-              <form onSubmit={handlePinLogin} className="space-y-5">
+              <form onSubmit={handlePinLogin} className="space-y-3.5">
                 <div>
-                  <Label className="text-xs uppercase tracking-wider text-muted-foreground">Email or Phone</Label>
+                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground">Email or Phone</Label>
                   <Input value={pinIdentifier} onChange={(e) => setPinIdentifier(e.target.value)}
-                    placeholder="john@example.com or 0712345678" className="mt-2 h-12 rounded-xl" required />
+                    placeholder="john@example.com or 0712345678" className="mt-1.5 h-10 rounded-lg text-sm" required />
                 </div>
                 <div>
-                  <Label className="text-xs uppercase tracking-wider text-muted-foreground block mb-3">Enter your 4-digit PIN</Label>
+                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground block mb-2">Enter your 4-digit PIN</Label>
                   <PinPad value={pin} onChange={setPin} autoFocus disabled={isLoading} />
                 </div>
-                <Button type="submit" variant="gold" className="w-full h-12"
+                <Button type="submit" variant="gold" className="w-full h-10 text-sm"
                   disabled={isLoading || pin.length !== 4 || !pinIdentifier.trim()}>
-                  {isLoading ? <><Loader2 className="animate-spin" size={18} /> Verifying…</> : <>Sign In with PIN <ArrowRight size={18} /></>}
+                  {isLoading ? <><Loader2 className="animate-spin" size={15} /> Verifying…</> : <>Sign In with PIN <ArrowRight size={15} /></>}
                 </Button>
-                <p className="text-xs text-muted-foreground text-center">
+                <p className="text-[11px] text-muted-foreground text-center">
                   No PIN yet? Sign in with your password once and we'll prompt you to create one.
                 </p>
               </form>
             )}
           </div>
 
-          <div className="text-center mt-6 space-y-3">
+          <div className="text-center mt-4 space-y-2.5">
             {fingerprintAvailable && (
-              <Button variant="outline" className="w-full h-12 gap-2 border-accent/30 text-accent hover:bg-accent/10"
+              <Button variant="outline" className="w-full h-10 gap-2 border-accent/30 text-accent hover:bg-accent/10 text-sm"
                 onClick={handleFingerprintLogin} disabled={fingerprintLoading}>
-                {fingerprintLoading ? <Loader2 size={18} className="animate-spin" /> : <Fingerprint size={20} />}
+                {fingerprintLoading ? <Loader2 size={15} className="animate-spin" /> : <Fingerprint size={16} />}
                 Sign in with Fingerprint
               </Button>
             )}
-            <p className="text-sm text-muted-foreground">
+            <p className="text-xs text-muted-foreground">
               Don't have an account?{' '}
               <Link to="/signup" className="text-accent font-semibold hover:underline">Create Account</Link>
             </p>
-            <Link to="/forgot-password" className="text-xs text-accent/70 hover:text-accent transition-colors block">
+            <Link to="/forgot-password" className="text-[11px] text-accent/70 hover:text-accent transition-colors block">
               Forgot your password?
             </Link>
           </div>
