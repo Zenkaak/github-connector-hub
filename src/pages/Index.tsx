@@ -468,7 +468,7 @@ export default function Index() {
                 Verified fundraisers from real Kenyans. Every contribution counts.
               </p>
             </div>
-            <Link to="/signup" className="hidden sm:inline-flex">
+            <Link to="/harambees" className="hidden sm:inline-flex">
               <Button variant="ghost" size="sm" className="text-white/65 hover:text-accent hover:bg-transparent gap-1 -mr-2 text-[13px]">
                 View all <ArrowRight size={13} />
               </Button>
@@ -550,7 +550,7 @@ export default function Index() {
           )}
           
           <div className="mt-8 text-center sm:hidden">
-            <Link to="/signup">
+            <Link to="/harambees">
               <Button variant="ghost" size="sm" className="text-white/65 hover:text-accent gap-1 text-[13px]">
                 View all appeals <ArrowRight size={13} />
               </Button>
