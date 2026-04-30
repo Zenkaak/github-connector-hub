@@ -49,7 +49,7 @@ export default function SignupPage() {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-background">
         <div className="max-w-md w-full">
-          <div className="text-center mb-8">
+          <div className="text-center mb-5">
             <Logo size="lg" />
           </div>
           <FeatureDisabled 
@@ -223,7 +223,7 @@ export default function SignupPage() {
         </div>
       </nav>
 
-      <main className="flex-1 flex flex-col items-center py-12 px-4">
+      <main className="flex-1 flex flex-col items-center py-6 px-4">
         <motion.div
           className="w-full max-w-2xl"
           initial={{ opacity: 0, y: 20 }}
@@ -231,8 +231,8 @@ export default function SignupPage() {
           transition={{ duration: 0.5, ease: "easeOut" }}
         >
           {/* Header Section */}
-          <div className="text-center mb-6">
-            <h1 className="text-xl md:text-2xl font-extrabold tracking-tight text-foreground mb-1.5">
+          <div className="text-center mb-4">
+            <h1 className="text-lg md:text-xl font-bold tracking-tight text-foreground mb-1.5">
               Start Your Journey
             </h1>
             <p className="text-muted-foreground text-xs md:text-sm max-w-md mx-auto">
@@ -241,7 +241,7 @@ export default function SignupPage() {
           </div>
 
           {/* Multi-Step Indicator */}
-          <div className="flex items-center justify-center mb-8 relative">
+          <div className="flex items-center justify-center mb-5 relative">
             <div className="absolute top-4 left-1/2 -translate-x-1/2 w-2/3 h-[2px] bg-muted -z-10" />
             {stepInfo.map((s, i) => {
               const stepNum = i + 1;
@@ -269,8 +269,8 @@ export default function SignupPage() {
           </div>
 
           {/* Form Container */}
-          <div className="bg-card rounded-2xl border border-border/50 shadow-xl shadow-black/5 overflow-hidden">
-            <div className="p-4 md:p-6 border-b border-border/40 bg-muted/10 flex items-center justify-between">
+          <div className="bg-card rounded-lg border border-border/50 shadow-xl shadow-black/5 overflow-hidden">
+            <div className="p-3.5 md:p-5 border-b border-border/40 bg-muted/10 flex items-center justify-between">
               <div>
                 <h2 className="text-sm md:text-base font-bold text-foreground">
                   {stepInfo[step - 1].desc}
@@ -284,7 +284,7 @@ export default function SignupPage() {
               </div>
             </div>
 
-            <div className="p-4 md:p-6">
+            <div className="p-3.5 md:p-5">
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <AnimatePresence mode="wait">
                   
@@ -295,14 +295,14 @@ export default function SignupPage() {
                       initial={{ opacity: 0, x: 20 }} 
                       animate={{ opacity: 1, x: 0 }} 
                       exit={{ opacity: 0, x: -20 }}
-                      className="space-y-6"
+                      className="space-y-3.5"
                     >
-                      <div className="grid gap-6 sm:grid-cols-2">
+                      <div className="grid gap-3.5 sm:grid-cols-2">
                         <div className="sm:col-span-2">
                           <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Full Name (As per Identity Document)</Label>
                           <div className="relative mt-2">
                             <User className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
-                            <Input {...register('fullName')} placeholder="e.g. Full name" className="h-14 rounded-2xl pl-11 bg-muted/30 border-none focus-visible:ring-2" />
+                            <Input {...register('fullName')} placeholder="e.g. Full name" className="h-11 rounded-lg pl-11 bg-muted/30 border-none focus-visible:ring-2" />
                           </div>
                           {errors.fullName && <p className="text-xs text-destructive mt-2 font-medium ml-1">{errors.fullName.message}</p>}
                         </div>
@@ -311,7 +311,7 @@ export default function SignupPage() {
                           <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Email Address</Label>
                           <div className="relative">
                             <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
-                            <Input type="email" {...register('email')} placeholder="name@example.com" className="h-14 rounded-2xl pl-11 bg-muted/30 border-none" />
+                            <Input type="email" {...register('email')} placeholder="name@example.com" className="h-11 rounded-lg pl-11 bg-muted/30 border-none" />
                           </div>
                           {errors.email && <p className="text-xs text-destructive mt-1 font-medium">{errors.email.message}</p>}
                         </div>
@@ -320,7 +320,7 @@ export default function SignupPage() {
                           <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">M-Pesa Phone Number</Label>
                           <div className="relative">
                             <Smartphone className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
-                            <Input {...register('phone')} placeholder="0712345678" className="h-14 rounded-2xl pl-11 bg-muted/30 border-none" />
+                            <Input {...register('phone')} placeholder="0712345678" className="h-11 rounded-lg pl-11 bg-muted/30 border-none" />
                           </div>
                           {errors.phone && <p className="text-xs text-destructive mt-1 font-medium">{errors.phone.message}</p>}
                         </div>
@@ -328,7 +328,7 @@ export default function SignupPage() {
                         <div className="space-y-2">
                           <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Document Type</Label>
                           <Select onValueChange={(v) => setValue('idType', v as any)} defaultValue="national_id">
-                            <SelectTrigger className="h-14 rounded-2xl bg-muted/30 border-none">
+                            <SelectTrigger className="h-11 rounded-lg bg-muted/30 border-none">
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
@@ -342,7 +342,7 @@ export default function SignupPage() {
                           <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">ID Number</Label>
                           <div className="relative">
                             <CreditCard className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
-                            <Input {...register('idNumber')} placeholder={selectedIdType === 'maisha_card' ? "8 or 9 digits" : "8 digits"} className="h-14 rounded-2xl pl-11 bg-muted/30 border-none" />
+                            <Input {...register('idNumber')} placeholder={selectedIdType === 'maisha_card' ? "8 or 9 digits" : "8 digits"} className="h-11 rounded-lg pl-11 bg-muted/30 border-none" />
                           </div>
                           {errors.idNumber && <p className="text-xs text-destructive mt-1 font-medium">{errors.idNumber.message}</p>}
                         </div>
@@ -351,13 +351,13 @@ export default function SignupPage() {
                           <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Date of Birth</Label>
                           <div className="relative">
                             <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
-                            <Input type="date" {...register('dateOfBirth')} className="h-14 rounded-2xl pl-11 bg-muted/30 border-none" />
+                            <Input type="date" {...register('dateOfBirth')} className="h-11 rounded-lg pl-11 bg-muted/30 border-none" />
                           </div>
                           {errors.dateOfBirth && <p className="text-xs text-destructive mt-1 font-medium">{errors.dateOfBirth.message}</p>}
                         </div>
                       </div>
 
-                      <Button type="button" variant="gold" className="w-full h-14 rounded-2xl text-md font-bold shadow-xl shadow-primary/10 group" onClick={handleNextStep}>
+                      <Button type="button" variant="gold" className="w-full h-11 rounded-lg text-sm font-semibold shadow-xl shadow-primary/10 group" onClick={handleNextStep}>
                         Continue to Location <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" size={18} />
                       </Button>
                     </motion.div>
@@ -370,13 +370,13 @@ export default function SignupPage() {
                       initial={{ opacity: 0, x: 20 }} 
                       animate={{ opacity: 1, x: 0 }} 
                       exit={{ opacity: 0, x: -20 }}
-                      className="space-y-6"
+                      className="space-y-3.5"
                     >
-                      <div className="grid gap-6 sm:grid-cols-2">
+                      <div className="grid gap-3.5 sm:grid-cols-2">
                         <div className="space-y-2">
                           <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">County of Residence</Label>
                           <Select onValueChange={(v) => setValue('county', v)}>
-                            <SelectTrigger className="h-14 rounded-2xl bg-muted/30 border-none">
+                            <SelectTrigger className="h-11 rounded-lg bg-muted/30 border-none">
                               <SelectValue placeholder="Select County" />
                             </SelectTrigger>
                             <SelectContent className="max-h-[300px]">
@@ -390,28 +390,28 @@ export default function SignupPage() {
 
                         <div className="space-y-2">
                           <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Sub-County</Label>
-                          <Input {...register('subCounty')} placeholder="Enter sub-county" className="h-14 rounded-2xl bg-muted/30 border-none" />
+                          <Input {...register('subCounty')} placeholder="Enter sub-county" className="h-11 rounded-lg bg-muted/30 border-none" />
                           {errors.subCounty && <p className="text-xs text-destructive mt-1">{errors.subCounty.message}</p>}
                         </div>
 
                         <div className="space-y-2">
                           <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Ward</Label>
-                          <Input {...register('ward')} placeholder="Enter ward name" className="h-14 rounded-2xl bg-muted/30 border-none" />
+                          <Input {...register('ward')} placeholder="Enter ward name" className="h-11 rounded-lg bg-muted/30 border-none" />
                           {errors.ward && <p className="text-xs text-destructive mt-1">{errors.ward.message}</p>}
                         </div>
 
                         <div className="space-y-2">
                           <Label className="text-xs font-bold uppercase tracking-widest text-muted-foreground ml-1">Residential Address</Label>
-                          <Input {...register('address')} placeholder="Landmark or Street Name" className="h-14 rounded-2xl bg-muted/30 border-none" />
+                          <Input {...register('address')} placeholder="Landmark or Street Name" className="h-11 rounded-lg bg-muted/30 border-none" />
                           {errors.address && <p className="text-xs text-destructive mt-1">{errors.address.message}</p>}
                         </div>
                       </div>
 
                       <div className="flex gap-4">
-                        <Button type="button" variant="outline" className="flex-1 h-14 rounded-2xl font-bold border-muted-foreground/20" onClick={handlePrevStep}>
+                        <Button type="button" variant="outline" className="flex-1 h-11 rounded-lg font-bold border-muted-foreground/20" onClick={handlePrevStep}>
                           <ArrowLeft className="mr-2" size={18} /> Back
                         </Button>
-                        <Button type="button" variant="gold" className="flex-[2] h-14 rounded-2xl font-bold shadow-xl shadow-primary/10" onClick={handleNextStep}>
+                        <Button type="button" variant="gold" className="flex-[2] h-11 rounded-lg font-bold shadow-xl shadow-primary/10" onClick={handleNextStep}>
                           Continue to Security <ArrowRight className="ml-2" size={18} />
                         </Button>
                       </div>
@@ -425,9 +425,9 @@ export default function SignupPage() {
                       initial={{ opacity: 0, x: 20 }} 
                       animate={{ opacity: 1, x: 0 }} 
                       exit={{ opacity: 0, x: -20 }}
-                      className="space-y-6"
+                      className="space-y-3.5"
                     >
-                      <div className="bg-accent/5 p-5 rounded-[1.5rem] border border-accent/10 flex gap-4 items-start mb-6">
+                      <div className="bg-accent/5 p-5 rounded-[1.5rem] border border-accent/10 flex gap-4 items-start mb-4">
                         <ShieldCheck className="text-accent shrink-0 mt-0.5" size={24} />
                         <div className="space-y-1">
                           <h4 className="text-sm font-bold text-accent">Security Requirement</h4>
@@ -446,7 +446,7 @@ export default function SignupPage() {
                               type={showPassword ? 'text' : 'password'} 
                               {...register('password')} 
                               placeholder="••••••••" 
-                              className="h-14 rounded-2xl pl-11 pr-12 bg-muted/30 border-none" 
+                              className="h-11 rounded-lg pl-11 pr-12 bg-muted/30 border-none" 
                             />
                             <button 
                               type="button" 
@@ -467,7 +467,7 @@ export default function SignupPage() {
                               type="password" 
                               {...register('confirmPassword')} 
                               placeholder="••••••••" 
-                              className="h-14 rounded-2xl pl-11 bg-muted/30 border-none" 
+                              className="h-11 rounded-lg pl-11 bg-muted/30 border-none" 
                             />
                           </div>
                           {errors.confirmPassword && <p className="text-xs text-destructive mt-1 font-medium">{errors.confirmPassword.message}</p>}
@@ -475,10 +475,10 @@ export default function SignupPage() {
                       </div>
 
                       <div className="flex gap-4 pt-4">
-                        <Button type="button" variant="outline" className="flex-1 h-14 rounded-2xl font-bold border-muted-foreground/20" onClick={handlePrevStep} disabled={isLoading}>
+                        <Button type="button" variant="outline" className="flex-1 h-11 rounded-lg font-bold border-muted-foreground/20" onClick={handlePrevStep} disabled={isLoading}>
                           Back
                         </Button>
-                        <Button type="submit" variant="gold" className="flex-[2] h-14 rounded-2xl font-bold shadow-2xl shadow-accent/20" disabled={isLoading}>
+                        <Button type="submit" variant="gold" className="flex-[2] h-11 rounded-lg font-bold shadow-2xl shadow-accent/20" disabled={isLoading}>
                           {isLoading ? (
                             <>
                               <Loader2 className="animate-spin mr-2" size={20} /> Finalizing...
