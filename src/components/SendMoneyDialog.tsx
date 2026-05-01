@@ -141,12 +141,13 @@ export function SendMoneyDialog({ open, onOpenChange, walletBalance, onSuccess }
   };
 
   const sendNotificationEmails = async (
-    title: string,
-    message: string,
+    txnType: string,
+    description: string,
     recipientEmail?: string | null,
+    recipientFirstName?: string,
   ) => {
     try {
-      // Wallet owner email
+      const dateStr = new Date().toLocaleString('en-KE', { dateStyle: 'medium', timeStyle: 'short' });
       if (profile?.email) {
         await supabase.functions.invoke('send-transactional-email', {
           body: {
@@ -155,8 +156,11 @@ export function SendMoneyDialog({ open, onOpenChange, walletBalance, onSuccess }
             idempotencyKey: `txn-${user?.id}-${Date.now()}`,
             templateData: {
               name: (profile.full_name || 'Member').split(' ')[0],
-              title,
-              message,
+              type: txnType,
+              amount: formatCurrency(amt),
+              status: 'Completed',
+              date: dateStr,
+              description,
             },
           },
         });
@@ -167,7 +171,14 @@ export function SendMoneyDialog({ open, onOpenChange, walletBalance, onSuccess }
             templateName: 'transaction-notification',
             recipientEmail,
             idempotencyKey: `txn-recv-${recipientEmail}-${Date.now()}`,
-            templateData: { name: 'Member', title, message },
+            templateData: {
+              name: recipientFirstName || 'Member',
+              type: 'Money Received',
+              amount: formatCurrency(amt),
+              status: 'Completed',
+              date: dateStr,
+              description: `You received ${formatCurrency(amt)} from ${profile?.full_name || 'a Dasnet user'}.${reason ? ` Reason: ${reason}` : ''}`,
+            },
           },
         });
       }
