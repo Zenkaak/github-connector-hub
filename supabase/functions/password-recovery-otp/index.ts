@@ -90,6 +90,25 @@ Deno.serve(async (req) => {
         console.error('Failed to enqueue OTP email', errText)
       }
 
+      // Also send via SMS if user has a phone on profile (best-effort, never block)
+      try {
+        const { data: prof } = await admin
+          .from('profiles')
+          .select('phone, full_name')
+          .eq('email', email.toLowerCase())
+          .maybeSingle()
+        if (prof?.phone) {
+          const { sendSMS } = await import('../_shared/sms.ts')
+          const firstName = (prof.full_name || 'Member').split(' ')[0]
+          await sendSMS(
+            prof.phone,
+            `Dear ${firstName}, your DASNET VENTURES password reset code is ${otp}. It expires in 10 minutes. Do not share this code with anyone.`,
+          )
+        }
+      } catch (smsErr) {
+        console.warn('OTP SMS dispatch failed (non-fatal):', smsErr)
+      }
+
       return new Response(JSON.stringify({ ok: true }), {
         status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })

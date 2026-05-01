@@ -2689,27 +2689,39 @@ export type Database = {
         Row: {
           admin_reason: string | null
           amount: number
+          bank_name: string | null
           created_at: string
+          fee: number
           id: string
+          method: string
           phone: string
+          remarks: string | null
           status: string
           user_id: string
         }
         Insert: {
           admin_reason?: string | null
           amount: number
+          bank_name?: string | null
           created_at?: string
+          fee?: number
           id?: string
+          method?: string
           phone: string
+          remarks?: string | null
           status?: string
           user_id: string
         }
         Update: {
           admin_reason?: string | null
           amount?: number
+          bank_name?: string | null
           created_at?: string
+          fee?: number
           id?: string
+          method?: string
           phone?: string
+          remarks?: string | null
           status?: string
           user_id?: string
         }
