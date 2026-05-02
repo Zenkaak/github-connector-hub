@@ -239,18 +239,35 @@ export function SendMoneyDialog({ open, onOpenChange, walletBalance, onSuccess }
             amount: amt,
             phone: phone.trim(),
             remarks: recipientType === 'self' ? 'Withdraw to my number' : `Send to M-Pesa${reason ? `: ${reason}` : ''}`,
-            fee, // edge function may use this; harmless if ignored
+            fee,
           },
         });
         if (error || !data?.success) throw new Error(data?.error || error?.message || 'M-Pesa transfer failed');
         toast.success(`${formatCurrency(amt)} sent to ${phone}. Fee: ${formatCurrency(fee)}.`);
+
+        const senderName = profile?.full_name || 'A Dasnet user';
+        const ref = (data?.request_id || '').toString().slice(0, 10).toUpperCase() || 'DASNET';
+
+        // Sender confirmation SMS (only ONE — no "processing" message)
+        if (profile?.phone && recipientType === 'mpesa') {
+          supabase.functions.invoke('send-sms', {
+            body: { phone: profile.phone, message: `Dear ${(profile.full_name || 'Member').split(' ')[0]}, you have sent ${formatCurrency(amt)} to ${phone}. Reference: ${ref}. Thank you for banking with DASNET VENTURES.` },
+          }).catch(() => {});
+        }
+        // Notify the recipient M-Pesa number that money is on the way (only for "other" M-Pesa)
+        if (recipientType === 'mpesa') {
+          supabase.functions.invoke('send-sms', {
+            body: { phone: phone.trim(), message: `Hello, ${senderName} has sent you ${formatCurrency(amt)} via DASNET VENTURES. Reference: ${ref}. Funds will reflect on your M-Pesa shortly.` },
+          }).catch(() => {});
+        }
+
         sendNotificationEmails(
-          'M-Pesa Transfer Initiated',
-          `Your transfer of ${formatCurrency(amt)} to ${phone} is being processed. Fee charged: ${formatCurrency(fee)}.`,
+          recipientType === 'self' ? 'M-Pesa Withdrawal' : 'M-Pesa Transfer',
+          `Your transfer of ${formatCurrency(amt)} to ${phone} is on the way. Fee charged: ${formatCurrency(fee)}.`,
         );
       } else if (recipientType === 'bank') {
         // Record a pending bank-transfer withdrawal request — admin processes manually
-        const { error } = await supabase.from('withdrawal_requests').insert({
+        const { data: insertedRows, error } = await supabase.from('withdrawal_requests').insert({
           user_id: user.id,
           amount: amt,
           fee,
@@ -259,12 +276,21 @@ export function SendMoneyDialog({ open, onOpenChange, walletBalance, onSuccess }
           bank_name: bankName,
           status: 'pending',
           remarks: reason || `Bank transfer to ${bankName} ${bankAccount}`,
-        } as any);
+        } as any).select('id').limit(1);
         if (error) throw error;
+        const ref = (insertedRows?.[0]?.id || '').toString().slice(0, 10).toUpperCase() || 'DASNET';
         toast.success(`Bank transfer of ${formatCurrency(amt)} submitted. Fee: ${formatCurrency(fee)}. Processed within 1 business day.`);
+
+        // Sender confirmation SMS
+        if (profile?.phone) {
+          supabase.functions.invoke('send-sms', {
+            body: { phone: profile.phone, message: `Dear ${(profile.full_name || 'Member').split(' ')[0]}, you have sent ${formatCurrency(amt)} to ${bankName} A/C ${bankAccount}. Reference: ${ref}. You'll be notified once the bank confirms. — DASNET VENTURES.` },
+          }).catch(() => {});
+        }
+
         sendNotificationEmails(
           'Bank Transfer Submitted',
-          `Your bank transfer of ${formatCurrency(amt)} to ${bankName} (${bankAccount}) is being processed. Fee: ${formatCurrency(fee)}.`,
+          `Your bank transfer of ${formatCurrency(amt)} to ${bankName} (${bankAccount}) has been submitted. Fee: ${formatCurrency(fee)}. Reference: ${ref}.`,
         );
       }
 
