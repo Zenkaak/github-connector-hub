@@ -435,8 +435,8 @@ export function SendMoneyDialog({ open, onOpenChange, walletBalance, onSuccess }
           ) : (
             <>
               <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-              <Button variant="gold" onClick={handleSend} disabled={!canProceed}>
-                Send {amt ? formatCurrency(amt) : ''}
+              <Button variant="gold" onClick={handleSend} disabled={!canProceed} className="font-bold tabular-nums">
+                {amt > 0 ? `Send ${formatCurrency(amt)}` : 'Send'}
               </Button>
             </>
           )}
