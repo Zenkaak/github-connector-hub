@@ -67,8 +67,8 @@ Deno.serve(async (req) => {
       .select("originator_conversation_id").eq("id", requestId).single();
     const origConv = reqRow?.originator_conversation_id;
 
-    // Send "processing" SMS immediately
-    await sendUserSMS(admin, userId, SMS.walletWithdrawalInitiated("{name}", amount, normalized));
+    // NOTE: We intentionally DO NOT send a "processing" SMS here.
+    // Only ONE SMS is sent — either success (b2c-result) or failure/refund.
 
     // Step 2: Try Daraja B2C
     const tryDaraja = async (): Promise<{ ok: boolean; data: any }> => {
