@@ -371,13 +371,21 @@ export function SendMoneyDialog({ open, onOpenChange, walletBalance, onSuccess }
             )}
 
             <div>
-              <Label className="text-xs">Amount (KES)</Label>
-              <Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Enter amount" max={walletBalance} className="mt-1" />
+              <Label className="text-sm font-semibold">Amount (KES)</Label>
+              <Input
+                type="number"
+                inputMode="numeric"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="0"
+                max={walletBalance}
+                className="mt-1.5 h-12 text-lg font-bold tabular-nums text-foreground placeholder:text-muted-foreground/50 placeholder:font-normal"
+              />
               {amt > 0 && (
-                <div className="mt-2 p-2 rounded-lg bg-muted/40 border border-border/40 text-xs space-y-1">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Amount</span><span className="font-medium">{formatCurrency(amt)}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Fee ({(feeRate * 100).toFixed(0)}%)</span><span className="font-medium">{formatCurrency(fee)}</span></div>
-                  <div className="flex justify-between border-t border-border/40 pt-1"><span className="font-semibold">Total Debit</span><span className={`font-bold ${insufficient ? 'text-destructive' : 'text-primary'}`}>{formatCurrency(totalDebit)}</span></div>
+                <div className="mt-2 p-2.5 rounded-lg bg-muted/40 border border-border/40 text-xs space-y-1">
+                  <div className="flex justify-between"><span className="text-muted-foreground">Amount</span><span className="font-medium tabular-nums">{formatCurrency(amt)}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Fee ({(feeRate * 100).toFixed(0)}%)</span><span className="font-medium tabular-nums">{formatCurrency(fee)}</span></div>
+                  <div className="flex justify-between border-t border-border/40 pt-1"><span className="font-semibold">Total Debit</span><span className={`font-bold tabular-nums ${insufficient ? 'text-destructive' : 'text-primary'}`}>{formatCurrency(totalDebit)}</span></div>
                   {insufficient && <p className="text-destructive text-[11px]">Insufficient balance</p>}
                 </div>
               )}
