@@ -74,14 +74,33 @@ export const SMS = {
   walletDeposit: (name: string, amount: number, balance: number, ref: string) =>
     `Dear ${name}, your wallet has been credited with ${fmt(amount)}. New balance: ${fmt(balance)}. Ref: ${ref}. Thank you for banking with DASNET VENTURES.`,
 
-  walletWithdrawalInitiated: (name: string, amount: number, phone: string) =>
-    `Dear ${name}, your withdrawal of ${fmt(amount)} to ${phone} is being processed. You will receive your funds shortly.`,
+  // Initiated SMS intentionally removed — we only send ONE confirmation
+  // (success or refund) to avoid double-notifying users.
 
   walletWithdrawalSuccess: (name: string, amount: number, phone: string, receipt: string) =>
     `Dear ${name}, your withdrawal of ${fmt(amount)} to ${phone} was successful. M-Pesa receipt: ${receipt}. Thank you for banking with DASNET VENTURES.`,
 
   walletWithdrawalFailed: (name: string, amount: number, _reason: string) =>
     `Dear ${name}, we are experiencing delays processing your withdrawal of ${fmt(amount)}. If it is not completed within 30 minutes, the full amount will be refunded to your wallet automatically. — DASNET VENTURES.`,
+
+  // Sent to the SENDER when they push money out to M-Pesa or bank
+  walletSendOutSender: (name: string, amount: number, recipient: string, ref: string) =>
+    `Dear ${name}, you have sent ${fmt(amount)} to ${recipient}. Reference: ${ref}. Thank you for banking with DASNET VENTURES.`,
+
+  // Sent to the RECEIVING M-Pesa number when a Dasnet user sends them money
+  walletSendOutRecipient: (senderName: string, amount: number, ref: string) =>
+    `Hello, ${senderName} has sent you ${fmt(amount)} via DASNET VENTURES. Reference: ${ref}. Funds will reflect on M-Pesa shortly.`,
+
+  // Sent to the destination bank-account holder (best-effort if phone provided)
+  bankSendOutRecipient: (senderName: string, amount: number, bank: string, account: string, ref: string) =>
+    `Hello, ${senderName} has sent you ${fmt(amount)} to your ${bank} account ${account} via DASNET VENTURES. Reference: ${ref}.`,
+
+  // Money request notifications
+  moneyRequestReceived: (name: string, requesterName: string, amount: number) =>
+    `Dear ${name}, ${requesterName} has requested ${fmt(amount)} from you on DASNET VENTURES. Open the app to approve or decline.`,
+
+  moneyRequestSent: (name: string, recipientName: string, amount: number) =>
+    `Dear ${name}, your request for ${fmt(amount)} from ${recipientName} has been sent. You'll be notified when they respond. — DASNET VENTURES.`,
 
   walletWithdrawalRefunded: (name: string, amount: number) =>
     `Dear ${name}, your withdrawal of ${fmt(amount)} could not be completed and has been refunded to your wallet. — DASNET VENTURES.`,
