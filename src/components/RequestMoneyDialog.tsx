@@ -15,7 +15,7 @@ interface RequestMoneyDialogProps {
 }
 
 export function RequestMoneyDialog({ open, onOpenChange, onSuccess }: RequestMoneyDialogProps) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [phone, setPhone] = useState('');
   const [amount, setAmount] = useState('');
   const [targetName, setTargetName] = useState<string | null>(null);
@@ -91,12 +91,56 @@ export function RequestMoneyDialog({ open, onOpenChange, onSuccess }: RequestMon
       }]);
       if (error) throw error;
 
-      // Notify target user
+      // Notify target user (in-app)
       await supabase.from('notifications').insert({
         user_id: targetId,
         title: '💸 Money Request',
-        message: `Someone has requested ${formatCurrency(amt)} from you. Check your wallet for details.`,
+        message: `${profile?.full_name || 'A Dasnet user'} has requested ${formatCurrency(amt)} from you. Open your wallet to approve or decline.`,
       });
+
+      // Fire SMS + email to BOTH parties (best-effort, never block)
+      try {
+        const { data: targetProf } = await supabase
+          .from('profiles')
+          .select('phone, full_name, email')
+          .eq('user_id', targetId)
+          .maybeSingle();
+        const requesterName = profile?.full_name || 'A Dasnet user';
+        const targetFirst = (targetProf?.full_name || targetName || 'Member').split(' ')[0];
+        const senderFirst = (profile?.full_name || 'Member').split(' ')[0];
+
+        const smsPromises: Promise<any>[] = [];
+        if (targetProf?.phone) {
+          smsPromises.push(supabase.functions.invoke('send-sms', {
+            body: { phone: targetProf.phone, message: `Dear ${targetFirst}, ${requesterName} has requested ${formatCurrency(amt)} from you on DASNET VENTURES. Open the app to approve or decline.` },
+          }));
+        }
+        if (profile?.phone) {
+          smsPromises.push(supabase.functions.invoke('send-sms', {
+            body: { phone: profile.phone, message: `Dear ${senderFirst}, your request for ${formatCurrency(amt)} from ${targetProf?.full_name || targetName} has been sent. You'll be notified when they respond. — DASNET VENTURES.` },
+          }));
+        }
+        Promise.all(smsPromises).catch(() => {});
+
+        const dateStr = new Date().toLocaleString('en-KE', { dateStyle: 'medium', timeStyle: 'short' });
+        if (targetProf?.email) {
+          supabase.functions.invoke('send-transactional-email', {
+            body: {
+              templateName: 'transaction-notification',
+              recipientEmail: targetProf.email,
+              idempotencyKey: `mreq-${user.id}-${targetId}-${Date.now()}`,
+              templateData: {
+                name: targetFirst,
+                type: 'Money Request Received',
+                amount: formatCurrency(amt),
+                status: 'Pending',
+                date: dateStr,
+                description: `${requesterName} has requested ${formatCurrency(amt)} from you. Open the app to approve or decline.`,
+              },
+            },
+          }).catch(() => {});
+        }
+      } catch (e) { console.warn('Money-request notify side-effects failed:', e); }
 
       toast.success('Money request sent!');
       onOpenChange(false);

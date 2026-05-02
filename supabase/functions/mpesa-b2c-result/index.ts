@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
       await sendUserSMS(supabase, reqRow.user_id,
         SMS.walletWithdrawalSuccess("{name}", reqRow.amount, reqRow.phone, receipt));
     } else {
-      // Daraja failure — refund + notify
+      // Daraja failure — refund + notify (NEVER expose internal reasons like "insufficient float")
       await supabase.from("mpesa_b2c_requests").update({
         status: "failed", result_code: resultCode, result_desc: resultDesc, result_payload: body,
       }).eq("id", reqRow.id);
@@ -64,8 +64,15 @@ Deno.serve(async (req) => {
         await supabase.rpc("refund_b2c_withdrawal", { _request_id: reqRow.id, _reason: resultDesc });
       }
 
+      await supabase.from("notifications").insert({
+        user_id: reqRow.user_id,
+        title: "Withdrawal Refunded",
+        message: `Your withdrawal of KES ${Number(reqRow.amount).toLocaleString()} could not be completed at this time and has been refunded to your wallet. Please try again shortly.`,
+        type: "payment",
+      });
+
       await sendUserSMS(supabase, reqRow.user_id,
-        SMS.walletWithdrawalFailed("{name}", reqRow.amount, resultDesc || "M-Pesa rejected"));
+        SMS.walletWithdrawalRefunded("{name}", reqRow.amount));
     }
 
     return new Response(JSON.stringify(ACK), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

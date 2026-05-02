@@ -1031,7 +1031,7 @@ export default function WalletPage() {
 
         {/* Enhanced Professional Transaction Receipt */}
         <Dialog open={!!selectedTx} onOpenChange={() => setSelectedTx(null)}>
-          <DialogContent className="sm:max-w-md rounded-2xl p-0 overflow-hidden border-border/30">
+          <DialogContent className="max-w-[92vw] sm:max-w-md rounded-2xl p-0 overflow-hidden border-border/30 max-h-[88vh] overflow-y-auto">
             {selectedTx && (() => {
               const statusInfo = getStatusBadge(selectedTx.status || 'completed');
               const isTransfer = selectedTxExtra?._type === 'transfer';

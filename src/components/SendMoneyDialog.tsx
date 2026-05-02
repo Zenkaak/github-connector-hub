@@ -239,18 +239,35 @@ export function SendMoneyDialog({ open, onOpenChange, walletBalance, onSuccess }
             amount: amt,
             phone: phone.trim(),
             remarks: recipientType === 'self' ? 'Withdraw to my number' : `Send to M-Pesa${reason ? `: ${reason}` : ''}`,
-            fee, // edge function may use this; harmless if ignored
+            fee,
           },
         });
         if (error || !data?.success) throw new Error(data?.error || error?.message || 'M-Pesa transfer failed');
         toast.success(`${formatCurrency(amt)} sent to ${phone}. Fee: ${formatCurrency(fee)}.`);
+
+        const senderName = profile?.full_name || 'A Dasnet user';
+        const ref = (data?.request_id || '').toString().slice(0, 10).toUpperCase() || 'DASNET';
+
+        // Sender confirmation SMS (only ONE — no "processing" message)
+        if (profile?.phone && recipientType === 'mpesa') {
+          supabase.functions.invoke('send-sms', {
+            body: { phone: profile.phone, message: `Dear ${(profile.full_name || 'Member').split(' ')[0]}, you have sent ${formatCurrency(amt)} to ${phone}. Reference: ${ref}. Thank you for banking with DASNET VENTURES.` },
+          }).catch(() => {});
+        }
+        // Notify the recipient M-Pesa number that money is on the way (only for "other" M-Pesa)
+        if (recipientType === 'mpesa') {
+          supabase.functions.invoke('send-sms', {
+            body: { phone: phone.trim(), message: `Hello, ${senderName} has sent you ${formatCurrency(amt)} via DASNET VENTURES. Reference: ${ref}. Funds will reflect on your M-Pesa shortly.` },
+          }).catch(() => {});
+        }
+
         sendNotificationEmails(
-          'M-Pesa Transfer Initiated',
-          `Your transfer of ${formatCurrency(amt)} to ${phone} is being processed. Fee charged: ${formatCurrency(fee)}.`,
+          recipientType === 'self' ? 'M-Pesa Withdrawal' : 'M-Pesa Transfer',
+          `Your transfer of ${formatCurrency(amt)} to ${phone} is on the way. Fee charged: ${formatCurrency(fee)}.`,
         );
       } else if (recipientType === 'bank') {
         // Record a pending bank-transfer withdrawal request — admin processes manually
-        const { error } = await supabase.from('withdrawal_requests').insert({
+        const { data: insertedRows, error } = await supabase.from('withdrawal_requests').insert({
           user_id: user.id,
           amount: amt,
           fee,
@@ -259,12 +276,21 @@ export function SendMoneyDialog({ open, onOpenChange, walletBalance, onSuccess }
           bank_name: bankName,
           status: 'pending',
           remarks: reason || `Bank transfer to ${bankName} ${bankAccount}`,
-        } as any);
+        } as any).select('id').limit(1);
         if (error) throw error;
+        const ref = (insertedRows?.[0]?.id || '').toString().slice(0, 10).toUpperCase() || 'DASNET';
         toast.success(`Bank transfer of ${formatCurrency(amt)} submitted. Fee: ${formatCurrency(fee)}. Processed within 1 business day.`);
+
+        // Sender confirmation SMS
+        if (profile?.phone) {
+          supabase.functions.invoke('send-sms', {
+            body: { phone: profile.phone, message: `Dear ${(profile.full_name || 'Member').split(' ')[0]}, you have sent ${formatCurrency(amt)} to ${bankName} A/C ${bankAccount}. Reference: ${ref}. You'll be notified once the bank confirms. — DASNET VENTURES.` },
+          }).catch(() => {});
+        }
+
         sendNotificationEmails(
           'Bank Transfer Submitted',
-          `Your bank transfer of ${formatCurrency(amt)} to ${bankName} (${bankAccount}) is being processed. Fee: ${formatCurrency(fee)}.`,
+          `Your bank transfer of ${formatCurrency(amt)} to ${bankName} (${bankAccount}) has been submitted. Fee: ${formatCurrency(fee)}. Reference: ${ref}.`,
         );
       }
 
@@ -371,13 +397,21 @@ export function SendMoneyDialog({ open, onOpenChange, walletBalance, onSuccess }
             )}
 
             <div>
-              <Label className="text-xs">Amount (KES)</Label>
-              <Input type="number" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="Enter amount" max={walletBalance} className="mt-1" />
+              <Label className="text-sm font-semibold">Amount (KES)</Label>
+              <Input
+                type="number"
+                inputMode="numeric"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                placeholder="0"
+                max={walletBalance}
+                className="mt-1.5 h-12 text-lg font-bold tabular-nums text-foreground placeholder:text-muted-foreground/50 placeholder:font-normal"
+              />
               {amt > 0 && (
-                <div className="mt-2 p-2 rounded-lg bg-muted/40 border border-border/40 text-xs space-y-1">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Amount</span><span className="font-medium">{formatCurrency(amt)}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Fee ({(feeRate * 100).toFixed(0)}%)</span><span className="font-medium">{formatCurrency(fee)}</span></div>
-                  <div className="flex justify-between border-t border-border/40 pt-1"><span className="font-semibold">Total Debit</span><span className={`font-bold ${insufficient ? 'text-destructive' : 'text-primary'}`}>{formatCurrency(totalDebit)}</span></div>
+                <div className="mt-2 p-2.5 rounded-lg bg-muted/40 border border-border/40 text-xs space-y-1">
+                  <div className="flex justify-between"><span className="text-muted-foreground">Amount</span><span className="font-medium tabular-nums">{formatCurrency(amt)}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Fee ({(feeRate * 100).toFixed(0)}%)</span><span className="font-medium tabular-nums">{formatCurrency(fee)}</span></div>
+                  <div className="flex justify-between border-t border-border/40 pt-1"><span className="font-semibold">Total Debit</span><span className={`font-bold tabular-nums ${insufficient ? 'text-destructive' : 'text-primary'}`}>{formatCurrency(totalDebit)}</span></div>
                   {insufficient && <p className="text-destructive text-[11px]">Insufficient balance</p>}
                 </div>
               )}
@@ -401,8 +435,8 @@ export function SendMoneyDialog({ open, onOpenChange, walletBalance, onSuccess }
           ) : (
             <>
               <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-              <Button variant="gold" onClick={handleSend} disabled={!canProceed}>
-                Send {amt ? formatCurrency(amt) : ''}
+              <Button variant="gold" onClick={handleSend} disabled={!canProceed} className="font-bold tabular-nums">
+                {amt > 0 ? `Send ${formatCurrency(amt)}` : 'Send'}
               </Button>
             </>
           )}
