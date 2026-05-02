@@ -15,7 +15,7 @@ interface RequestMoneyDialogProps {
 }
 
 export function RequestMoneyDialog({ open, onOpenChange, onSuccess }: RequestMoneyDialogProps) {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [phone, setPhone] = useState('');
   const [amount, setAmount] = useState('');
   const [targetName, setTargetName] = useState<string | null>(null);
