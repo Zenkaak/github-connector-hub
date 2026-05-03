@@ -515,6 +515,28 @@ Deno.serve(async (req) => {
           smsMsg = SMS.harambeeContribution("{name}", actualAmount, h?.beneficiary_name || h?.title || "the cause");
         }
         if (smsMsg) await sendUserSMS(supabase, txn.user_id, smsMsg);
+
+        // Third-party payer SMS — paying phone differs from beneficiary's registered phone
+        try {
+          const { data: benProf } = await supabase.from("profiles").select("phone, full_name").eq("user_id", txn.user_id).maybeSingle();
+          const payerPhoneRaw = String(phone || "").replace(/\D/g, "");
+          const benPhoneRaw = String(benProf?.phone || "").replace(/\D/g, "");
+          const norm = (p: string) => p.startsWith("0") ? "254" + p.slice(1) : p.startsWith("254") ? p : p;
+          if (payerPhoneRaw && benPhoneRaw && norm(payerPhoneRaw) !== norm(benPhoneRaw)) {
+            const purposeWord = purpose === "chama_savings" ? "chama savings"
+              : purpose === "personal_savings" ? "personal savings"
+              : purpose === "harambee" ? "harambee contribution"
+              : purpose === "loan_repayment" ? "loan repayment"
+              : purpose === "wallet_deposit" || purpose === "activation" ? "wallet deposit"
+              : "payment";
+            const payerMsg = `Dear customer, you have paid KES ${Math.round(actualAmount).toLocaleString()} on behalf of ${benProf?.full_name || "a Dasnet user"} for ${purposeWord}. Ref: ${mpesaReceipt}. Thank you for using DASNET VENTURES.`;
+            await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-sms`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` },
+              body: JSON.stringify({ phone: payerPhoneRaw, message: payerMsg }),
+            }).catch(() => {});
+          }
+        } catch (e) { console.warn("Payer SMS failed:", e); }
       } catch (smsErr) {
         console.error("⚠️ SMS notification failed (non-fatal):", smsErr);
       }

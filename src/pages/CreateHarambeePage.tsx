@@ -574,7 +574,7 @@ export default function CreateHarambeePage() {
                           {app.status === 'pending_review' ? 'Under Review' : app.status?.replace('_', ' ')}
                         </span>
                       </div>
-                      <p className="text-xs text-muted-foreground line-clamp-3 whitespace-pre-line">{app.description}</p>
+                      <p className="text-xs text-muted-foreground line-clamp-2 whitespace-pre-line">{app.description}</p>
                       <div className="flex items-center justify-between mt-3">
                         <p className="text-sm font-bold">KES {app.target_amount?.toLocaleString()}</p>
                         {app.deadline && (

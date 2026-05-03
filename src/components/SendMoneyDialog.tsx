@@ -220,9 +220,12 @@ export function SendMoneyDialog({ open, onOpenChange, walletBalance, onSuccess }
 
         const senderFirst = (profile?.full_name || 'Member').split(' ')[0];
         const recvFirst = (recvProf?.full_name || recipientName || 'Member').split(' ')[0];
+        const amtStr = `KES ${Math.round(amt).toLocaleString()}`;
+        const senderBalStr = `KES ${Math.round(Number(senderW?.balance || 0)).toLocaleString()}`;
+        const recvBalStr = `KES ${Math.round(Number(recvW?.balance || 0)).toLocaleString()}`;
         const smsCalls: Promise<any>[] = [];
-        if (profile?.phone) smsCalls.push(supabase.functions.invoke('send-sms', { body: { phone: profile.phone, message: `Dear ${senderFirst}, you sent KES ${amt.toLocaleString()} to ${recipientName}. New balance: KES ${Number(senderW?.balance || 0).toLocaleString()}. — DASNET VENTURES.` } }));
-        if (recvProf?.phone) smsCalls.push(supabase.functions.invoke('send-sms', { body: { phone: recvProf.phone, message: `Dear ${recvFirst}, you received KES ${amt.toLocaleString()} from ${profile?.full_name || 'a Dasnet user'}. New balance: KES ${Number(recvW?.balance || 0).toLocaleString()}. — DASNET VENTURES.` } }));
+        if (profile?.phone) smsCalls.push(supabase.functions.invoke('send-sms', { body: { phone: profile.phone, message: `Dear ${senderFirst}, you have sent ${amtStr} to ${recipientName}. New wallet balance: ${senderBalStr}. Thank you for banking with DASNET VENTURES.` } }));
+        if (recvProf?.phone) smsCalls.push(supabase.functions.invoke('send-sms', { body: { phone: recvProf.phone, message: `Dear ${recvFirst}, you have received ${amtStr} from ${profile?.full_name || 'a Dasnet user'}. New wallet balance: ${recvBalStr}. — DASNET VENTURES.` } }));
         Promise.all(smsCalls).catch(() => {});
 
         sendNotificationEmails(
@@ -234,11 +237,12 @@ export function SendMoneyDialog({ open, onOpenChange, walletBalance, onSuccess }
         toast.success(`${formatCurrency(amt)} sent successfully!`);
       } else if (recipientType === 'self' || recipientType === 'mpesa') {
         // M-Pesa B2C withdrawal — fee 4% (0% for self)
+        const txnLabel = recipientType === 'self' ? 'Withdraw to my M-Pesa' : 'Sent to M-Pesa';
         const { data, error } = await supabase.functions.invoke('mpesa-b2c-request', {
           body: {
             amount: amt,
             phone: phone.trim(),
-            remarks: recipientType === 'self' ? 'Withdraw to my number' : `Send to M-Pesa${reason ? `: ${reason}` : ''}`,
+            remarks: recipientType === 'self' ? 'Withdraw to my number' : `${txnLabel}${reason ? `: ${reason}` : ''}`,
             fee,
           },
         });
@@ -247,17 +251,18 @@ export function SendMoneyDialog({ open, onOpenChange, walletBalance, onSuccess }
 
         const senderName = profile?.full_name || 'A Dasnet user';
         const ref = (data?.request_id || '').toString().slice(0, 10).toUpperCase() || 'DASNET';
+        const amtStr = `KES ${Math.round(amt).toLocaleString()}`;
 
         // Sender confirmation SMS (only ONE — no "processing" message)
         if (profile?.phone && recipientType === 'mpesa') {
           supabase.functions.invoke('send-sms', {
-            body: { phone: profile.phone, message: `Dear ${(profile.full_name || 'Member').split(' ')[0]}, you have sent ${formatCurrency(amt)} to ${phone}. Reference: ${ref}. Thank you for banking with DASNET VENTURES.` },
+            body: { phone: profile.phone, message: `Dear ${(profile.full_name || 'Member').split(' ')[0]}, you have sent ${amtStr} to ${phone}. Reference: ${ref}. Thank you for banking with DASNET VENTURES.` },
           }).catch(() => {});
         }
         // Notify the recipient M-Pesa number that money is on the way (only for "other" M-Pesa)
         if (recipientType === 'mpesa') {
           supabase.functions.invoke('send-sms', {
-            body: { phone: phone.trim(), message: `Hello, ${senderName} has sent you ${formatCurrency(amt)} via DASNET VENTURES. Reference: ${ref}. Funds will reflect on your M-Pesa shortly.` },
+            body: { phone: phone.trim(), message: `Hello, ${senderName} has sent you ${amtStr} via DASNET VENTURES. Reference: ${ref}. Funds will reflect on your M-Pesa shortly.` },
           }).catch(() => {});
         }
 
@@ -281,10 +286,11 @@ export function SendMoneyDialog({ open, onOpenChange, walletBalance, onSuccess }
         const ref = (insertedRows?.[0]?.id || '').toString().slice(0, 10).toUpperCase() || 'DASNET';
         toast.success(`Bank transfer of ${formatCurrency(amt)} submitted. Fee: ${formatCurrency(fee)}. Processed within 1 business day.`);
 
+        const bankAmtStr = `KES ${Math.round(amt).toLocaleString()}`;
         // Sender confirmation SMS
         if (profile?.phone) {
           supabase.functions.invoke('send-sms', {
-            body: { phone: profile.phone, message: `Dear ${(profile.full_name || 'Member').split(' ')[0]}, you have sent ${formatCurrency(amt)} to ${bankName} A/C ${bankAccount}. Reference: ${ref}. You'll be notified once the bank confirms. — DASNET VENTURES.` },
+            body: { phone: profile.phone, message: `Dear ${(profile.full_name || 'Member').split(' ')[0]}, you have sent ${bankAmtStr} to ${bankName} A/C ${bankAccount}. Reference: ${ref}. You'll be notified once the bank confirms. — DASNET VENTURES.` },
           }).catch(() => {});
         }
 
