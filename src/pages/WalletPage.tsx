@@ -449,8 +449,10 @@ export default function WalletPage() {
       if (desc.includes('deposit')) return 'Wallet Deposit';
       return 'Money In';
     }
+    const isMpesaSend = desc.includes('sent to m-pesa') || desc.includes('withdraw to my');
+    if (tx.type === 'withdrawal' && isMpesaSend) return 'Sent Money';
     if (tx.type === 'withdrawal') return 'Withdrawal';
-    if (desc.includes('transfer to')) return 'Sent Money';
+    if (desc.includes('transfer to') || desc.includes('sent to')) return 'Sent Money';
     if (desc.includes('reversed')) return 'Transfer Reversed';
     return 'Money Out';
   };
