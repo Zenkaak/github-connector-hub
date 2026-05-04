@@ -574,7 +574,7 @@ export default function CreateHarambeePage() {
                           {app.status === 'pending_review' ? 'Under Review' : app.status?.replace('_', ' ')}
                         </span>
                       </div>
-                      <p className="text-xs text-muted-foreground line-clamp-2 whitespace-pre-line">{app.description}</p>
+                      <p className="text-xs text-muted-foreground whitespace-pre-line break-words">{app.description}</p>
                       <div className="flex items-center justify-between mt-3">
                         <p className="text-sm font-bold">KES {app.target_amount?.toLocaleString()}</p>
                         {app.deadline && (
@@ -894,7 +894,7 @@ export default function CreateHarambeePage() {
 
                     <div className="rounded-xl border border-border/30 bg-muted/10 p-4">
                       <p className="text-[10px] font-bold uppercase text-muted-foreground mb-2">Description</p>
-                      <p className="text-sm leading-relaxed whitespace-pre-line text-foreground">{selectedApplication.description}</p>
+                      <p className="text-sm leading-relaxed whitespace-pre-line break-words text-foreground">{selectedApplication.description}</p>
                     </div>
 
                     {selectedApplication.category_answers && Object.keys(selectedApplication.category_answers).length > 0 && (
@@ -903,7 +903,7 @@ export default function CreateHarambeePage() {
                         {Object.entries(selectedApplication.category_answers as Record<string, string>).map(([key, value]) => (
                           <div key={key} className="flex items-start justify-between gap-3 text-sm border-b border-border/20 pb-2 last:border-0 last:pb-0">
                             <span className="font-semibold text-foreground capitalize">{key.replace(/_/g, ' ')}</span>
-                            <span className="text-right text-muted-foreground whitespace-pre-line">{String(value || '—')}</span>
+                            <span className="text-right text-muted-foreground whitespace-pre-line break-words">{String(value || '—')}</span>
                           </div>
                         ))}
                       </div>
