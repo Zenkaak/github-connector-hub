@@ -1,141 +1,56 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 
-<!-- CORE PAGES -->
-<url>
-  <loc>https://dasnett.site/</loc>
-  <lastmod>2026-04-10</lastmod>
-  <changefreq>daily</changefreq>
-  <priority>1.0</priority>
-</url>
+  <!-- ── CORE PAGES ── -->
+  <url><loc>https://dasnett.site/</loc><lastmod>2026-05-04</lastmod><changefreq>daily</changefreq><priority>1.0</priority></url>
+  <url><loc>https://dasnett.site/explore-chamas</loc><lastmod>2026-05-04</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>
+  <url><loc>https://dasnett.site/loan-products</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://dasnett.site/harambees</loc><lastmod>2026-05-04</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>
 
-<url>
-  <loc>https://dasnett.site/explore-chamas</loc>
-  <lastmod>2026-04-10</lastmod>
-  <changefreq>daily</changefreq>
-  <priority>0.8</priority>
-</url>
+  <!-- ── TRUST & INFO ── -->
+  <url><loc>https://dasnett.site/about</loc><lastmod>2026-05-04</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://dasnett.site/contact</loc><lastmod>2026-05-04</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://dasnett.site/terms</loc><lastmod>2026-05-04</lastmod><changefreq>yearly</changefreq>  <priority>0.5</priority></url>
+  <url><loc>https://dasnett.site/pricing</loc><lastmod>2026-05-04</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://dasnett.site/how-it-works</loc><lastmod>2026-05-04</lastmod><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://dasnett.site/faq</loc><lastmod>2026-05-04</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://dasnett.site/auth</loc><lastmod>2026-05-04</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://dasnett.site/signup</loc><lastmod>2026-05-04</lastmod><changefreq>monthly</changefreq><priority>0.6</priority></url>
 
-<url>
-  <loc>https://dasnett.site/loan-products</loc>
-  <lastmod>2026-04-10</lastmod>
-  <changefreq>weekly</changefreq>
-  <priority>0.8</priority>
-</url>
+  <!-- ── HIGH-VALUE SEO LANDING PAGES ── -->
+  <url><loc>https://dasnett.site/chama-app-kenya</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://dasnett.site/chama-management-kenya</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://dasnett.site/harambee-fundraising-kenya</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://dasnett.site/community-loans-kenya</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://dasnett.site/table-banking-kenya</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://dasnett.site/group-savings-app-kenya</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://dasnett.site/online-chama-platform</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://dasnett.site/online-fundraising-kenya</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://dasnett.site/online-investment-groups-kenya</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://dasnett.site/mpesa-chama-management</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://dasnett.site/mobile-money-chama-platform</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://dasnett.site/digital-chama-wallet</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://dasnett.site/digital-savings-groups-kenya</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://dasnett.site/rotating-savings-groups-kenya</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://dasnett.site/savings-credit-groups-kenya</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://dasnett.site/chama-investment-groups-kenya</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://dasnett.site/chama-contribution-app</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://dasnett.site/chama-contribution-tracking</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://dasnett.site/chama-loan-management</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://dasnett.site/chama-financial-management</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://dasnett.site/chama-member-management</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://dasnett.site/chama-accounting-software</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://dasnett.site/chama-record-keeping-software</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://dasnett.site/group-investment-management</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://dasnett.site/community-investment-platform</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://dasnett.site/community-savings-platform</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://dasnett.site/harambee-donation-platform</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://dasnett.site/harambee-fundraising-platform</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
 
-<!-- TRUST & INFO -->
-<url>
-  <loc>https://dasnett.site/about</loc>
-  <lastmod>2026-04-10</lastmod>
-  <changefreq>monthly</changefreq>
-  <priority>0.6</priority>
-</url>
-
-<url>
-  <loc>https://dasnett.site/contact</loc>
-  <lastmod>2026-04-10</lastmod>
-  <changefreq>monthly</changefreq>
-  <priority>0.6</priority>
-</url>
-
-<url>
-  <loc>https://dasnett.site/terms</loc>
-  <lastmod>2026-04-10</lastmod>
-  <changefreq>yearly</changefreq>
-  <priority>0.5</priority>
-</url>
-
-<url>
-  <loc>https://dasnett.site/pricing</loc>
-  <lastmod>2026-04-10</lastmod>
-  <changefreq>monthly</changefreq>
-  <priority>0.7</priority>
-</url>
-
-<url>
-  <loc>https://dasnett.site/how-it-works</loc>
-  <lastmod>2026-04-10</lastmod>
-  <changefreq>monthly</changefreq>
-  <priority>0.7</priority>
-</url>
-
-<url>
-  <loc>https://dasnett.site/faq</loc>
-  <lastmod>2026-04-10</lastmod>
-  <changefreq>monthly</changefreq>
-  <priority>0.6</priority>
-</url>
-
-<!-- HIGH-VALUE SEO PAGES -->
-<url>
-  <loc>https://dasnett.site/chama-app-kenya</loc>
-  <lastmod>2026-04-10</lastmod>
-  <changefreq>weekly</changefreq>
-  <priority>0.9</priority>
-</url>
-
-<url>
-  <loc>https://dasnett.site/chama-management-kenya</loc>
-  <lastmod>2026-04-10</lastmod>
-  <changefreq>weekly</changefreq>
-  <priority>0.7</priority>
-</url>
-
-<url>
-  <loc>https://dasnett.site/harambee-fundraising-kenya</loc>
-  <lastmod>2026-04-10</lastmod>
-  <changefreq>weekly</changefreq>
-  <priority>0.7</priority>
-</url>
-
-<url>
-  <loc>https://dasnett.site/community-loans-kenya</loc>
-  <lastmod>2026-04-10</lastmod>
-  <changefreq>weekly</changefreq>
-  <priority>0.7</priority>
-</url>
-
-<url>
-  <loc>https://dasnett.site/table-banking-kenya</loc>
-  <lastmod>2026-04-10</lastmod>
-  <changefreq>weekly</changefreq>
-  <priority>0.6</priority>
-</url>
-
-<url>
-  <loc>https://dasnett.site/group-savings-app-kenya</loc>
-  <lastmod>2026-04-10</lastmod>
-  <changefreq>weekly</changefreq>
-  <priority>0.6</priority>
-</url>
-
-<!-- BLOG (TRAFFIC ENGINE) -->
-<url>
-  <loc>https://dasnett.site/blog/how-to-start-chama-kenya</loc>
-  <lastmod>2026-04-10</lastmod>
-  <changefreq>weekly</changefreq>
-  <priority>0.7</priority>
-</url>
-
-<url>
-  <loc>https://dasnett.site/blog/chama-rules-and-regulations</loc>
-  <lastmod>2026-04-10</lastmod>
-  <changefreq>weekly</changefreq>
-  <priority>0.7</priority>
-</url>
-
-<url>
-  <loc>https://dasnett.site/blog/best-chama-app-kenya</loc>
-  <lastmod>2026-04-10</lastmod>
-  <changefreq>weekly</changefreq>
-  <priority>0.7</priority>
-</url>
-
-<url>
-  <loc>https://dasnett.site/blog/how-harambee-works</loc>
-  <lastmod>2026-04-10</lastmod>
-  <changefreq>weekly</changefreq>
-  <priority>0.7</priority>
-</url>
+  <!-- ── BLOG ── -->
+  <url><loc>https://dasnett.site/blog/how-to-start-chama-kenya</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://dasnett.site/blog/chama-rules-and-regulations</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://dasnett.site/blog/best-chama-app-kenya</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://dasnett.site/blog/how-harambee-works</loc><lastmod>2026-05-04</lastmod><changefreq>weekly</changefreq><priority>0.7</priority></url>
 
 </urlset>
