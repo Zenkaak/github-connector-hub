@@ -51,7 +51,9 @@ export function AdminCreateLoanDialog({ open, onOpenChange, onCreated }: Props) 
         generated_limit: amt,
         status: 'disbursed',
         admin_message: reason || 'Loan created by admin',
-        purpose: reason || 'Admin-issued loan',
+        loan_type: 'admin_issued',
+        next_of_kin_name: 'N/A',
+        next_of_kin_phone: 'N/A',
       } as any).select('id').single();
       if (appErr) throw appErr;
 
