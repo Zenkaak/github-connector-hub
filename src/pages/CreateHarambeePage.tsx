@@ -999,7 +999,7 @@ function DetailItem({ label, value }: { label: string; value?: string | null }) 
   return (
     <div className="rounded-xl border border-border/30 bg-muted/10 p-3">
       <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">{label}</p>
-      <p className="text-xs font-medium text-foreground whitespace-pre-line">{value || '—'}</p>
+      <p className="text-xs font-medium text-foreground whitespace-pre-line break-words">{value || '—'}</p>
     </div>
   );
 }
