@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Send, Loader2, User, Lock, Smartphone, Building2, Users, UserCheck } from 'lucide-react';
+import { Send, Loader2, User, Lock, Smartphone, Building2, Users, UserCheck, Fingerprint } from 'lucide-react';
+import { hasSavedCredential, authenticateWithFingerprint } from '@/lib/webauthn';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -315,13 +316,13 @@ export function SendMoneyDialog({ open, onOpenChange, walletBalance, onSuccess }
       onClick={() => setRecipientType(t)}
       className={`flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all text-center ${
         recipientType === t
-          ? 'border-primary bg-primary/10 text-primary'
-          : 'border-border bg-background hover:border-primary/40'
+          ? 'border-accent bg-accent/15 text-accent shadow-sm'
+          : 'border-border bg-background hover:border-accent/40 text-foreground'
       }`}
     >
       <Icon size={20} />
-      <span className="text-xs font-semibold leading-tight">{label}</span>
-      <span className="text-[10px] text-muted-foreground leading-tight">{sub}</span>
+      <span className="text-xs font-bold leading-tight">{label}</span>
+      <span className={`text-[10px] leading-tight ${recipientType === t ? 'text-accent/80' : 'text-muted-foreground'}`}>{sub}</span>
     </button>
   );
 
@@ -403,7 +404,7 @@ export function SendMoneyDialog({ open, onOpenChange, walletBalance, onSuccess }
             )}
 
             <div>
-              <Label className="text-sm font-semibold">Amount (KES)</Label>
+              <Label className="text-sm font-semibold text-foreground">Amount (KES)</Label>
               <Input
                 type="number"
                 inputMode="numeric"
@@ -411,13 +412,14 @@ export function SendMoneyDialog({ open, onOpenChange, walletBalance, onSuccess }
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="0"
                 max={walletBalance}
-                className="mt-1.5 h-12 text-lg font-bold tabular-nums text-foreground placeholder:text-muted-foreground/50 placeholder:font-normal"
+                style={{ color: 'hsl(var(--foreground))' }}
+                className="mt-1.5 h-14 text-2xl font-extrabold tabular-nums bg-background border-2 border-border focus-visible:border-accent placeholder:text-muted-foreground/40 placeholder:font-normal placeholder:text-lg"
               />
               {amt > 0 && (
                 <div className="mt-2 p-2.5 rounded-lg bg-muted/40 border border-border/40 text-xs space-y-1">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Amount</span><span className="font-medium tabular-nums">{formatCurrency(amt)}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Fee ({(feeRate * 100).toFixed(0)}%)</span><span className="font-medium tabular-nums">{formatCurrency(fee)}</span></div>
-                  <div className="flex justify-between border-t border-border/40 pt-1"><span className="font-semibold">Total Debit</span><span className={`font-bold tabular-nums ${insufficient ? 'text-destructive' : 'text-primary'}`}>{formatCurrency(totalDebit)}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Amount</span><span className="font-medium tabular-nums text-foreground">{formatCurrency(amt)}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Fee ({(feeRate * 100).toFixed(0)}%)</span><span className="font-medium tabular-nums text-foreground">{formatCurrency(fee)}</span></div>
+                  <div className="flex justify-between border-t border-border/40 pt-1"><span className="font-semibold text-foreground">Total Debit</span><span className={`font-bold tabular-nums ${insufficient ? 'text-destructive' : 'text-accent'}`}>{formatCurrency(totalDebit)}</span></div>
                   {insufficient && <p className="text-destructive text-[11px]">Insufficient balance</p>}
                 </div>
               )}
