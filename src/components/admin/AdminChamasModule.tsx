@@ -33,29 +33,15 @@ export function AdminChamasModule() {
       setLoading(false);
   };
 
-  useEffect(() => {
-    (async () => {
-      const { data } = await supabase
-        .from('chama_groups')
-        .select('id, name, contribution_amount, contribution_frequency, is_public, created_at, max_members, profile_image_url')
-        .order('created_at', { ascending: false });
-      const ids = (data || []).map((g) => g.id);
-      const { data: members } = await supabase.from('chama_members').select('group_id, id').in('group_id', ids);
-      const counts = new Map<string, number>();
-      (members || []).forEach((m: any) => counts.set(m.group_id, (counts.get(m.group_id) || 0) + 1));
-      const { data: savings } = await supabase.from('chama_savings').select('group_id, amount').in('group_id', ids);
-      const totals = new Map<string, number>();
-      (savings || []).forEach((s: any) => totals.set(s.group_id, (totals.get(s.group_id) || 0) + Number(s.amount)));
-      setGroups((data || []).map((g) => ({ ...g, member_count: counts.get(g.id) || 0, total_savings: totals.get(g.id) || 0 })));
-      setLoading(false);
-    })();
-  }, []);
+  useEffect(() => { load(); }, []);
 
   const filtered = groups.filter((g) => !search || g.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
     <div className="space-y-5">
-      <AdminSectionHeader title="Chama Groups" description={`${groups.length} groups`} icon={Users} />
+      <AdminSectionHeader title="Chama Groups" description={`${groups.length} groups`} icon={Users}
+        actions={<Button variant="gold" size="sm" onClick={() => setCreateOpen(true)}><Plus size={14} className="mr-1" />Create Chama</Button>} />
+      <AdminCreateChamaDialog open={createOpen} onOpenChange={setCreateOpen} onCreated={load} />
       <div className="relative">
         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
         <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search groups…" className="pl-9" />
