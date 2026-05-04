@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Users, Loader2, Search } from 'lucide-react';
+import { Users, Loader2, Search, Plus } from 'lucide-react';
 import { AdminSectionHeader } from './AdminSectionHeader';
 import { AdminEmptyState } from './AdminEmptyState';
+import { AdminCreateChamaDialog } from './AdminCreateChamaDialog';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 
@@ -12,9 +14,10 @@ export function AdminChamasModule() {
   const [groups, setGroups] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [createOpen, setCreateOpen] = useState(false);
 
-  useEffect(() => {
-    (async () => {
+  const load = async () => {
+      setLoading(true);
       const { data } = await supabase
         .from('chama_groups')
         .select('id, name, contribution_amount, contribution_frequency, is_public, created_at, max_members, profile_image_url')
@@ -28,14 +31,17 @@ export function AdminChamasModule() {
       (savings || []).forEach((s: any) => totals.set(s.group_id, (totals.get(s.group_id) || 0) + Number(s.amount)));
       setGroups((data || []).map((g) => ({ ...g, member_count: counts.get(g.id) || 0, total_savings: totals.get(g.id) || 0 })));
       setLoading(false);
-    })();
-  }, []);
+  };
+
+  useEffect(() => { load(); }, []);
 
   const filtered = groups.filter((g) => !search || g.name.toLowerCase().includes(search.toLowerCase()));
 
   return (
     <div className="space-y-5">
-      <AdminSectionHeader title="Chama Groups" description={`${groups.length} groups`} icon={Users} />
+      <AdminSectionHeader title="Chama Groups" description={`${groups.length} groups`} icon={Users}
+        actions={<Button variant="gold" size="sm" onClick={() => setCreateOpen(true)}><Plus size={14} className="mr-1" />Create Chama</Button>} />
+      <AdminCreateChamaDialog open={createOpen} onOpenChange={setCreateOpen} onCreated={load} />
       <div className="relative">
         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
         <Input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search groups…" className="pl-9" />

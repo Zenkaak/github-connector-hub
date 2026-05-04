@@ -335,7 +335,7 @@ export default function AdminHarambeeApplicationsPage() {
                             </Badge>
                           </div>
                           <p className="font-semibold text-sm truncate">For: {app.beneficiary_name}</p>
-                          <p className="text-xs text-muted-foreground truncate">{app.description}</p>
+                          <p className="text-xs text-muted-foreground line-clamp-2 break-words whitespace-pre-line">{app.description}</p>
                           <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
                             <span className="flex items-center gap-1"><User size={12} />{profile?.full_name || 'Unknown'}</span>
                             <span className="flex items-center gap-1"><DollarSign size={12} />{fmt(app.target_amount)}</span>

@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import {
   Users, Search, Ban, CheckCircle2, MessageSquare, Loader2, Wallet, Shield,
-  FileText, PiggyBank, Activity, Save, Mail, Phone, MapPin, IdCard, Calendar,
+  FileText, PiggyBank, Activity, Save, Mail, Phone, MapPin, IdCard, Calendar, Plus,
 } from 'lucide-react';
+import { AdminCreateUserDialog } from './AdminCreateUserDialog';
 import { AdminSectionHeader } from './AdminSectionHeader';
 import { AdminEmptyState } from './AdminEmptyState';
 import { Card } from '@/components/ui/card';
@@ -88,6 +89,7 @@ export function AdminUsersModule() {
   const [transactions, setTransactions] = useState<UnifiedTx[]>([]);
   const [txFilter, setTxFilter] = useState<'all' | 'wallet' | 'mpesa_in' | 'mpesa_out' | 'loan' | 'savings' | 'chama'>('all');
   const [loadingTx, setLoadingTx] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -324,7 +326,13 @@ export function AdminUsersModule() {
         title="User Management"
         description={`${users.length} registered users — full access, fully editable`}
         icon={Users}
+        actions={
+          <Button variant="gold" size="sm" onClick={() => setCreateOpen(true)}>
+            <Plus size={14} className="mr-1" /> Create User
+          </Button>
+        }
       />
+      <AdminCreateUserDialog open={createOpen} onOpenChange={setCreateOpen} onCreated={load} />
 
       {/* Filters */}
       <div className="flex flex-col gap-3">
