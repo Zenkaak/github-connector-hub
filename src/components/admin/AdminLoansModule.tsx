@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { FileText, Loader2, Check, X as XIcon } from 'lucide-react';
+import { FileText, Loader2, Check, X as XIcon, Plus } from 'lucide-react';
+import { AdminCreateLoanDialog } from './AdminCreateLoanDialog';
 import { AdminSectionHeader } from './AdminSectionHeader';
 import { AdminEmptyState } from './AdminEmptyState';
 import { Card } from '@/components/ui/card';
@@ -20,6 +21,7 @@ export function AdminLoansModule() {
   const [adminMessage, setAdminMessage] = useState('');
   const [approvedAmount, setApprovedAmount] = useState('');
   const [acting, setActing] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -80,7 +82,9 @@ export function AdminLoansModule() {
 
   return (
     <div className="space-y-5">
-      <AdminSectionHeader title="Loan Applications" description="Review and approve loan requests" icon={FileText} />
+      <AdminSectionHeader title="Loan Applications" description="Review and approve loan requests" icon={FileText}
+        actions={<Button variant="gold" size="sm" onClick={() => setCreateOpen(true)}><Plus size={14} className="mr-1" />Create Loan</Button>} />
+      <AdminCreateLoanDialog open={createOpen} onOpenChange={setCreateOpen} onCreated={load} />
       <div className="flex gap-2 flex-wrap">
         {(['pending', 'approved', 'disbursed', 'rejected'] as const).map((s) => (
           <Button key={s} variant={filter === s ? 'default' : 'outline'} size="sm" onClick={() => setFilter(s)}>

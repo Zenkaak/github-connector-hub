@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Users, Loader2, Search } from 'lucide-react';
+import { Users, Loader2, Search, Plus } from 'lucide-react';
 import { AdminSectionHeader } from './AdminSectionHeader';
 import { AdminEmptyState } from './AdminEmptyState';
+import { AdminCreateChamaDialog } from './AdminCreateChamaDialog';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { format } from 'date-fns';
 
@@ -12,6 +14,24 @@ export function AdminChamasModule() {
   const [groups, setGroups] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [createOpen, setCreateOpen] = useState(false);
+
+  const load = async () => {
+      setLoading(true);
+      const { data } = await supabase
+        .from('chama_groups')
+        .select('id, name, contribution_amount, contribution_frequency, is_public, created_at, max_members, profile_image_url')
+        .order('created_at', { ascending: false });
+      const ids = (data || []).map((g) => g.id);
+      const { data: members } = await supabase.from('chama_members').select('group_id, id').in('group_id', ids);
+      const counts = new Map<string, number>();
+      (members || []).forEach((m: any) => counts.set(m.group_id, (counts.get(m.group_id) || 0) + 1));
+      const { data: savings } = await supabase.from('chama_savings').select('group_id, amount').in('group_id', ids);
+      const totals = new Map<string, number>();
+      (savings || []).forEach((s: any) => totals.set(s.group_id, (totals.get(s.group_id) || 0) + Number(s.amount)));
+      setGroups((data || []).map((g) => ({ ...g, member_count: counts.get(g.id) || 0, total_savings: totals.get(g.id) || 0 })));
+      setLoading(false);
+  };
 
   useEffect(() => {
     (async () => {
