@@ -141,6 +141,19 @@ export function SendMoneyDialog({ open, onOpenChange, walletBalance, onSuccess }
     }
   };
 
+  const handleFingerprintAuth = async () => {
+    setVerifyingPassword(true);
+    try {
+      const cred = await authenticateWithFingerprint();
+      if (!cred?.password) { toast.error('Fingerprint not verified'); return; }
+      const { error } = await supabase.auth.signInWithPassword({ email: cred.email, password: cred.password });
+      if (error) { toast.error('Authorization failed'); return; }
+      await executeSend();
+    } finally {
+      setVerifyingPassword(false);
+    }
+  };
+
   const sendNotificationEmails = async (
     txnType: string,
     description: string,
@@ -360,7 +373,7 @@ export function SendMoneyDialog({ open, onOpenChange, walletBalance, onSuccess }
           <div className="space-y-4">
             <div className="p-3 rounded-xl bg-muted/40 border border-border/40 text-center">
               <p className="text-xs text-muted-foreground">Available Balance</p>
-              <p className="text-2xl font-bold font-display text-primary">{formatCurrency(walletBalance)}</p>
+              <p className="text-2xl font-bold font-display text-accent">{formatCurrency(walletBalance)}</p>
             </div>
 
             <div>
