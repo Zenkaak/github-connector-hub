@@ -367,6 +367,11 @@ export function SendMoneyDialog({ open, onOpenChange, walletBalance, onSuccess }
               </Label>
               <Input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Your account password" autoFocus
                 onKeyDown={(e) => { if (e.key === 'Enter') handlePasswordVerify(); }} />
+              {hasSavedCredential() && (
+                <Button type="button" variant="outline" className="w-full" onClick={handleFingerprintAuth} disabled={verifyingPassword || sending}>
+                  <Fingerprint size={16} className="mr-2 text-accent" /> Authorize with Fingerprint
+                </Button>
+              )}
             </div>
           </div>
         ) : (
