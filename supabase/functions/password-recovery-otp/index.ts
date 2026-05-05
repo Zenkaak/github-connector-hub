@@ -150,7 +150,9 @@ Deno.serve(async (req) => {
         })
       }
 
-      if (row.code_hash !== code) {
+      const verifyHashBuf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(code))
+      const verifyHash = Array.from(new Uint8Array(verifyHashBuf)).map(b => b.toString(16).padStart(2, '0')).join('')
+      if (row.code_hash !== verifyHash && row.code_hash !== code) {
         await admin.from('password_recovery_codes')
           .update({ attempts: row.attempts + 1 })
           .eq('email', email.toLowerCase())
