@@ -53,12 +53,15 @@ Deno.serve(async (req) => {
       const otp = Math.floor(100000 + Math.random() * 900000).toString()
       const expires = new Date(Date.now() + 10 * 60 * 1000).toISOString()
 
-      // Encode payload as base64 in user metadata note (single source) — store on profile
+      // Hash OTP before storing (defense-in-depth)
+      const hashBuf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(otp))
+      const otpHash = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('')
+
       const { error: upsertErr } = await admin
         .from('password_recovery_codes')
         .upsert({
           email: email.toLowerCase(),
-          code_hash: otp, // stored as plain — short-lived, single-use; protected by RLS service-only
+          code_hash: otpHash,
           expires_at: expires,
           used: false,
           attempts: 0,
@@ -147,7 +150,9 @@ Deno.serve(async (req) => {
         })
       }
 
-      if (row.code_hash !== code) {
+      const verifyHashBuf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(code))
+      const verifyHash = Array.from(new Uint8Array(verifyHashBuf)).map(b => b.toString(16).padStart(2, '0')).join('')
+      if (row.code_hash !== verifyHash && row.code_hash !== code) {
         await admin.from('password_recovery_codes')
           .update({ attempts: row.attempts + 1 })
           .eq('email', email.toLowerCase())

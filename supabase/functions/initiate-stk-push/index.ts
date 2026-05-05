@@ -21,7 +21,7 @@ Deno.serve(async (req) => {
     const phone = body.phone;
     const amount = body.amount;
     const purpose = body.purpose || body.metadata?.type || "harambee";
-    const userId = body.userId || body.metadata?.userId || null;
+    let userId = body.userId || body.metadata?.userId || null;
     const groupId = body.groupId || body.metadata?.group_id || null;
     const savingsId = body.savingsId || null;
     const harambee_id = body.harambee_id || body.harambeeId || body.metadata?.harambee_id || null;
@@ -38,14 +38,43 @@ Deno.serve(async (req) => {
       );
     }
 
-    // For harambee contributions, userId is optional (public contributors allowed)
     const isHarambee = purpose === "harambee" || purpose === "harambee_contribution";
-    if (!userId && !isHarambee) {
-      console.error("Validation failed - userId required for purpose:", purpose);
-      return new Response(
-        JSON.stringify({ error: "User ID is required for this transaction type" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+
+    // Authentication: required for non-harambee flows. Harambee public contributions
+    // are intentionally anonymous; if a userId is supplied for harambee, it MUST match
+    // the JWT user. Otherwise we strip it.
+    const adminClient = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+      { auth: { persistSession: false } },
+    );
+    const authToken = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
+    let tokenUserId: string | null = null;
+    if (authToken) {
+      const { data: u } = await adminClient.auth.getUser(authToken);
+      tokenUserId = u?.user?.id || null;
+    }
+
+    if (!isHarambee) {
+      if (!tokenUserId) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (userId && userId !== tokenUserId) {
+        return new Response(JSON.stringify({ error: "userId mismatch" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      userId = tokenUserId;
+    } else {
+      // Harambee: trust JWT if present, else anonymous
+      if (userId && tokenUserId && userId !== tokenUserId) {
+        userId = tokenUserId;
+      } else if (userId && !tokenUserId) {
+        // anonymous caller cannot claim a userId
+        userId = null;
+      }
     }
 
     const numericAmount = Number(amount);

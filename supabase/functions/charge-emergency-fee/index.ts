@@ -14,6 +14,13 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    // Restrict to service-role-only invocations (cron)
+    const auth = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
+    if (auth !== supabaseKey) {
+      return new Response(JSON.stringify({ error: "Unauthorized" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const currentMonth = new Date().toISOString().slice(0, 7); // e.g. "2026-04"

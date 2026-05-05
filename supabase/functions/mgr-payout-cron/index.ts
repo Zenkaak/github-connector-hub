@@ -11,9 +11,17 @@ import { sendUserSMS, sendSMS, SMS, fmt } from "../_shared/sms.ts";
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const auth = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
+  if (auth !== serviceKey) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   const supabase = createClient(
     Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    serviceKey
   );
 
   const nowIso = new Date().toISOString();
