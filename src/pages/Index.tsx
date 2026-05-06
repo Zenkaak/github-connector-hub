@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { cn } from '@/lib/utils';
 
-import bgHero from "@/assets/bg-hero.png";
+import bgHero from "@/assets/bg-hero.jpg";
 import bgHarambee from "@/assets/bg-harambee.png";
 import bgChama from "@/assets/bg-chama.png";
 import bgWallet from "@/assets/bg-wallet.png";
