@@ -538,7 +538,7 @@ Deno.serve(async (req) => {
         if (smsMsg) {
           const finalMsg = isThirdParty
             ? smsMsg.replace(/\.\s*Thank you for banking[^]*$/i, '').replace(/\s+$/, '') +
-              ` Paid on your behalf by ${norm(payerPhoneRaw)}. Thank you for banking with DASNET VENTURES.`
+              ` Paid on your behalf by ${payerName}. Thank you for banking with DASNET VENTURES.`
             : smsMsg;
           await sendUserSMS(supabase, txn.user_id, finalMsg);
         }
