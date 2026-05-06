@@ -334,10 +334,10 @@ export default function Index() {
         </AnimatePresence>
       </header>
             {/* ───── HERO ───── */}
-      <section className="relative pt-28 pb-20 sm:pt-36 sm:pb-28 md:pt-52 md:pb-36 px-4 overflow-hidden bg-[hsl(218,55%,6%)]">
+      <section className="relative pt-28 pb-20 sm:pt-36 sm:pb-28 md:pt-52 md:pb-36 px-4 overflow-hidden bg-[hsl(218,45%,12%)]">
         <div className="absolute inset-0" style={{ backgroundImage: `url(${bgHero})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-        <div className="absolute inset-0 bg-gradient-to-b from-[hsl(218,55%,6%)]/85 via-[hsl(218,55%,6%)]/75 to-[hsl(218,55%,6%)]/95" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_0%,_hsl(42_88%_55%_/_0.07),_transparent_70%)]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[hsl(218,45%,10%)]/55 via-[hsl(218,45%,10%)]/35 to-[hsl(218,45%,8%)]/85" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_0%,_hsl(42_88%_55%_/_0.12),_transparent_70%)]" />
         
         <motion.div className="container max-w-4xl text-center relative z-10" initial="hidden" animate="visible" variants={stagger}>
           <motion.div
