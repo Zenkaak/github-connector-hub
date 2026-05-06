@@ -18,6 +18,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { ProseText } from '@/components/ProseText';
 
 // ─── Category definitions ───
 const CATEGORIES = [
@@ -894,7 +895,7 @@ export default function CreateHarambeePage() {
 
                     <div className="rounded-xl border border-border/30 bg-muted/10 p-4">
                       <p className="text-[10px] font-bold uppercase text-muted-foreground mb-2">Description</p>
-                      <p className="text-sm leading-relaxed whitespace-pre-line break-words text-foreground">{selectedApplication.description}</p>
+                      <ProseText text={selectedApplication.description} className="text-sm text-foreground" />
                     </div>
 
                     {selectedApplication.category_answers && Object.keys(selectedApplication.category_answers).length > 0 && (
