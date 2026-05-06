@@ -521,6 +521,19 @@ Deno.serve(async (req) => {
         const norm = (p: string) => p.startsWith("0") ? "254" + p.slice(1) : (p.startsWith("7") || p.startsWith("1")) ? "254" + p : p;
         const isThirdParty = !!(payerPhoneRaw && benPhoneRaw && norm(payerPhoneRaw) !== norm(benPhoneRaw));
 
+        // Resolve payer's display name: M-Pesa metadata first, then Dasnet profile lookup, else phone
+        let payerName = "";
+        const metaFirst = String(getMeta("FirstName") || "").trim();
+        const metaMiddle = String(getMeta("MiddleName") || "").trim();
+        const metaLast = String(getMeta("LastName") || "").trim();
+        payerName = [metaFirst, metaMiddle, metaLast].filter(Boolean).join(" ").trim();
+        if (!payerName && payerPhoneRaw) {
+          const { data: payerProf } = await supabase
+            .from("profiles").select("full_name").eq("phone", norm(payerPhoneRaw)).maybeSingle();
+          payerName = payerProf?.full_name || "";
+        }
+        if (!payerName) payerName = norm(payerPhoneRaw) || "another customer";
+
         // Beneficiary SMS — append "(paid by 2547xx…)" suffix when third-party
         if (smsMsg) {
           const finalMsg = isThirdParty
