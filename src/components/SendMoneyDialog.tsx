@@ -261,29 +261,13 @@ export function SendMoneyDialog({ open, onOpenChange, walletBalance, onSuccess }
           },
         });
         if (error || !data?.success) throw new Error(data?.error || error?.message || 'M-Pesa transfer failed');
-        toast.success(`${formatCurrency(amt)} sent to ${phone}. Fee: ${formatCurrency(fee)}.`);
+        toast.success(`${formatCurrency(amt)} is being processed. Fee: ${formatCurrency(fee)}.`);
 
-        const senderName = profile?.full_name || 'A Dasnet user';
-        const ref = (data?.request_id || '').toString().slice(0, 10).toUpperCase() || 'DASNET';
-        const amtStr = `KES ${Math.round(amt).toLocaleString()}`;
-
-        // Sender confirmation SMS (only ONE — no "processing" message)
-        if (profile?.phone && recipientType === 'mpesa') {
-          supabase.functions.invoke('send-sms', {
-            body: { phone: profile.phone, message: `Dear ${(profile.full_name || 'Member').split(' ')[0]}, you have sent ${amtStr} to ${phone}. Reference: ${ref}. Thank you for banking with DASNET VENTURES.` },
-          }).catch(() => {});
-        }
-        // Notify the recipient M-Pesa number that money is on the way (only for "other" M-Pesa)
-        if (recipientType === 'mpesa') {
-          supabase.functions.invoke('send-sms', {
-            body: { phone: phone.trim(), message: `Hello, ${senderName} has sent you ${amtStr} via DASNET VENTURES. Reference: ${ref}. Funds will reflect on your M-Pesa shortly.` },
-          }).catch(() => {});
-        }
-
-        sendNotificationEmails(
-          recipientType === 'self' ? 'M-Pesa Withdrawal' : 'M-Pesa Transfer',
-          `Your transfer of ${formatCurrency(amt)} to ${phone} is on the way. Fee charged: ${formatCurrency(fee)}.`,
-        );
+        // NOTE: Sender + recipient SMS and email are sent ONLY after M-Pesa
+        // confirms success (handled by the mpesa-b2c-result edge function).
+        // We intentionally do NOT send any "on the way" notification here,
+        // because failures (insufficient float, etc.) would falsely tell the
+        // recipient they have received money.
       } else if (recipientType === 'bank') {
         // Record a pending bank-transfer withdrawal request — admin processes manually
         const { data: insertedRows, error } = await supabase.from('withdrawal_requests').insert({
