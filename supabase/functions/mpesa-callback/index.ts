@@ -514,15 +514,25 @@ Deno.serve(async (req) => {
           const { data: h } = await supabase.from("chama_harambees").select("beneficiary_name, title").eq("id", txn.harambee_id).maybeSingle();
           smsMsg = SMS.harambeeContribution("{name}", actualAmount, h?.beneficiary_name || h?.title || "the cause");
         }
-        if (smsMsg) await sendUserSMS(supabase, txn.user_id, smsMsg);
+        // Detect third-party payer (different phone from beneficiary's registered phone)
+        const { data: benProf } = await supabase.from("profiles").select("phone, full_name").eq("user_id", txn.user_id).maybeSingle();
+        const payerPhoneRaw = String(phone || "").replace(/\D/g, "");
+        const benPhoneRaw = String(benProf?.phone || "").replace(/\D/g, "");
+        const norm = (p: string) => p.startsWith("0") ? "254" + p.slice(1) : (p.startsWith("7") || p.startsWith("1")) ? "254" + p : p;
+        const isThirdParty = !!(payerPhoneRaw && benPhoneRaw && norm(payerPhoneRaw) !== norm(benPhoneRaw));
 
-        // Third-party payer SMS — paying phone differs from beneficiary's registered phone
+        // Beneficiary SMS — append "(paid by 2547xx…)" suffix when third-party
+        if (smsMsg) {
+          const finalMsg = isThirdParty
+            ? smsMsg.replace(/\.\s*Thank you for banking[^]*$/i, '').replace(/\s+$/, '') +
+              ` Paid on your behalf by ${norm(payerPhoneRaw)}. Thank you for banking with DASNET VENTURES.`
+            : smsMsg;
+          await sendUserSMS(supabase, txn.user_id, finalMsg);
+        }
+
+        // Third-party payer SMS
         try {
-          const { data: benProf } = await supabase.from("profiles").select("phone, full_name").eq("user_id", txn.user_id).maybeSingle();
-          const payerPhoneRaw = String(phone || "").replace(/\D/g, "");
-          const benPhoneRaw = String(benProf?.phone || "").replace(/\D/g, "");
-          const norm = (p: string) => p.startsWith("0") ? "254" + p.slice(1) : p.startsWith("254") ? p : p;
-          if (payerPhoneRaw && benPhoneRaw && norm(payerPhoneRaw) !== norm(benPhoneRaw)) {
+          if (isThirdParty) {
             const purposeWord = purpose === "chama_savings" ? "chama savings"
               : purpose === "personal_savings" ? "personal savings"
               : purpose === "harambee" ? "harambee contribution"
