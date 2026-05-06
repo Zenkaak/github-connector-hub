@@ -18,6 +18,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
+import { ProseText } from '@/components/ProseText';
 
 // ─── Category definitions ───
 const CATEGORIES = [
