@@ -231,7 +231,7 @@ export default function Index() {
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[hsl(218,55%,6%)] antialiased text-white/90 selection:bg-accent/25 selection:text-white">
+    <div className="min-h-screen overflow-x-hidden bg-[hsl(218,42%,13%)] antialiased text-white/90 selection:bg-accent/25 selection:text-white">
 
       {/* ───── HEADER ───── */}
       <header className="fixed top-0 left-0 right-0 z-50">
@@ -430,7 +430,7 @@ export default function Index() {
       </section>
 
       {/* ───── TRUST BAR ───── */}
-      <section className="py-7 sm:py-8 px-4 bg-[hsl(218,55%,5%)] border-y border-white/[0.04]">
+      <section className="py-7 sm:py-8 px-4 bg-[hsl(218,42%,11%)] border-y border-white/[0.04]">
         <div className="container max-w-5xl">
           <div className="flex flex-wrap items-center justify-center gap-x-8 sm:gap-x-12 gap-y-3">
             {trustBadges.map((badge, i) => (
@@ -449,7 +449,7 @@ export default function Index() {
       {/* ───── ACTIVE HARAMBEES ───── */}
       <section className="py-16 sm:py-24 px-4 relative">
         <div className="absolute inset-0" style={{ backgroundImage: `url(${bgHarambee})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-        <div className="absolute inset-0 bg-gradient-to-b from-[hsl(218,55%,7%)]/95 via-[hsl(218,55%,7%)]/90 to-[hsl(218,55%,7%)]/95" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[hsl(218,42%,15%)]/95 via-[hsl(218,42%,15%)]/90 to-[hsl(218,42%,15%)]/95" />
         <div className="container max-w-6xl relative z-10">
           <motion.div
             className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10 sm:mb-12"
@@ -560,7 +560,7 @@ export default function Index() {
       </section>
 
       {/* ───── PLATFORM FEATURES ───── */}
-      <section id="features" className="py-20 sm:py-28 px-4 border-t border-white/[0.04] bg-[hsl(218,55%,6%)]">
+      <section id="features" className="py-20 sm:py-28 px-4 border-t border-white/[0.04] bg-[hsl(218,42%,13%)]">
         <div className="container max-w-6xl">
           <motion.div
             className="text-center max-w-2xl mx-auto mb-16 sm:mb-20"
@@ -599,7 +599,7 @@ export default function Index() {
             {/* ───── PUBLIC CHAMAS ───── */}
       <section className="py-16 sm:py-24 px-4 relative">
         <div className="absolute inset-0" style={{ backgroundImage: `url(${bgChama})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-        <div className="absolute inset-0 bg-gradient-to-b from-[hsl(218,55%,6%)]/95 via-[hsl(218,55%,6%)]/90 to-[hsl(218,55%,6%)]/95" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[hsl(218,42%,13%)]/95 via-[hsl(218,42%,13%)]/90 to-[hsl(218,42%,13%)]/95" />
         <div className="container max-w-6xl relative z-10">
           <motion.div
             className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10 sm:mb-12"
@@ -696,7 +696,7 @@ export default function Index() {
       {/* ───── WALLET ───── */}
       <section id="wallet" className="py-20 sm:py-28 px-4 border-t border-white/[0.04] relative">
         <div className="absolute inset-0" style={{ backgroundImage: `url(${bgWallet})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-        <div className="absolute inset-0 bg-gradient-to-b from-[hsl(218,55%,6%)]/95 via-[hsl(218,55%,6%)]/90 to-[hsl(218,55%,6%)]/95" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[hsl(218,42%,13%)]/95 via-[hsl(218,42%,13%)]/90 to-[hsl(218,42%,13%)]/95" />
         <div className="container max-w-6xl relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-24 items-center">
             <motion.div
@@ -811,7 +811,7 @@ export default function Index() {
       {/* ───── LOANS ───── */}
       <section id="loans" className="py-20 sm:py-28 px-4 relative border-t border-white/[0.04]">
         <div className="absolute inset-0" style={{ backgroundImage: `url(${bgLoans})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-        <div className="absolute inset-0 bg-gradient-to-b from-[hsl(218,55%,5%)]/95 via-[hsl(218,55%,5%)]/90 to-[hsl(218,55%,5%)]/95" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[hsl(218,42%,11%)]/95 via-[hsl(218,42%,11%)]/90 to-[hsl(218,42%,11%)]/95" />
         <div className="container max-w-5xl relative z-10">
           <motion.div
             className="text-center max-w-2xl mx-auto mb-16"
@@ -870,7 +870,7 @@ export default function Index() {
             {/* ───── SECURITY ───── */}
       <section className="py-20 sm:py-28 px-4 relative border-t border-white/[0.04]">
         <div className="absolute inset-0" style={{ backgroundImage: `url(${bgSecurity})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-        <div className="absolute inset-0 bg-[hsl(218,55%,6%)]/95" />
+        <div className="absolute inset-0 bg-[hsl(218,42%,13%)]/95" />
         <div className="container max-w-5xl relative z-10">
           <motion.div
             className="text-center max-w-2xl mx-auto mb-16"
@@ -906,7 +906,7 @@ export default function Index() {
         </div>
       </section>
             {/* ───── HOW IT WORKS ───── */}
-      <section id="how-it-works" className="py-20 sm:py-28 px-4 border-t border-white/[0.04] bg-[hsl(218,55%,7%)]">
+      <section id="how-it-works" className="py-20 sm:py-28 px-4 border-t border-white/[0.04] bg-[hsl(218,42%,15%)]">
         <div className="container max-w-4xl">
           <motion.div
             className="text-center mb-16 sm:mb-20"
@@ -962,7 +962,7 @@ export default function Index() {
       </section>
 
       {/* ───── TESTIMONIALS ───── */}
-      <section className="py-20 sm:py-28 px-4 border-t border-white/[0.04] bg-[hsl(218,55%,6%)]">
+      <section className="py-20 sm:py-28 px-4 border-t border-white/[0.04] bg-[hsl(218,42%,13%)]">
         <div className="container max-w-6xl">
           <motion.div
             className="text-center max-w-2xl mx-auto mb-14"
@@ -1010,7 +1010,7 @@ export default function Index() {
         </div>
       </section>
             {/* ───── FAQ ───── */}
-      <section id="faq" className="py-20 sm:py-28 px-4 border-t border-white/[0.04] bg-[hsl(218,55%,5%)]">
+      <section id="faq" className="py-20 sm:py-28 px-4 border-t border-white/[0.04] bg-[hsl(218,42%,11%)]">
         <div className="container max-w-3xl">
           <motion.div
             className="text-center mb-12 sm:mb-16"
@@ -1067,7 +1067,7 @@ export default function Index() {
       </section>
 
       {/* ───── DOWNLOAD APP ───── */}
-      <section id="download" className="py-20 sm:py-28 px-4 border-t border-white/[0.04] bg-[hsl(218,55%,7%)] relative overflow-hidden">
+      <section id="download" className="py-20 sm:py-28 px-4 border-t border-white/[0.04] bg-[hsl(218,42%,15%)] relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_50%,_hsl(42_88%_55%_/_0.07),_transparent_60%)]" />
         <div className="container max-w-5xl relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -1122,7 +1122,7 @@ export default function Index() {
         </div>
       </section>
             {/* ───── CTA FOOTER ───── */}
-      <section className="py-24 sm:py-32 px-4 border-t border-white/[0.04] bg-[hsl(218,55%,6%)] relative overflow-hidden">
+      <section className="py-24 sm:py-32 px-4 border-t border-white/[0.04] bg-[hsl(218,42%,13%)] relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_100%,_hsl(42_88%_55%_/_0.08),_transparent_60%)]" />
         <div className="container max-w-4xl text-center relative z-10">
           <h2 className="font-display text-[2rem] sm:text-[3rem] font-semibold mb-6 text-white tracking-[-0.02em] leading-[1.05]">
