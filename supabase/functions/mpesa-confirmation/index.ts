@@ -238,11 +238,20 @@ Deno.serve(async (req) => {
         });
       }
     } else {
-      // unmapped
-      await supabase.from("mpesa_unmapped_payments").insert({
+      // unmapped — store + enqueue admin payout (KES 10+ threshold handled by cron)
+      const reason = route.type === "unmapped" ? route.reason : "Unhandled route";
+      const { data: ump } = await supabase.from("mpesa_unmapped_payments").insert({
         c2b_transaction_id: c2bRow.id, bill_ref_number: billRef, amount, msisdn,
-        reason: route.type === "unmapped" ? route.reason : "Unhandled route",
-      });
+        reason,
+      }).select("id").single();
+      if (ump?.id) {
+        await supabase.from("mpesa_admin_payout_queue").insert({
+          unmapped_payment_id: ump.id,
+          amount,
+          destination_phone: '254719841370',
+          status: 'queued',
+        });
+      }
     }
 
     await supabase.from("mpesa_c2b_transactions")
