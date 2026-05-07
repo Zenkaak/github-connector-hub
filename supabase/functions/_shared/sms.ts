@@ -69,10 +69,13 @@ export async function sendUserSMS(supabase: any, userId: string, message: string
 // Format helper
 export const fmt = (n: number) => `KES ${Math.round(Number(n || 0)).toLocaleString()}`;
 
+// Helper to inject "from <PayerName>" only when present
+const _from = (payerName?: string) => (payerName ? ` from ${payerName}` : "");
+
 // Standard message templates
 export const SMS = {
-  walletDeposit: (name: string, amount: number, balance: number, ref: string) =>
-    `Dear ${name}, your wallet has been credited with ${fmt(amount)}. New balance: ${fmt(balance)}. Ref: ${ref}. Thank you for banking with DASNET VENTURES.`,
+  walletDeposit: (name: string, amount: number, balance: number, ref: string, payerName?: string) =>
+    `Dear ${name}, your wallet has been credited with ${fmt(amount)}${_from(payerName)}. New balance: ${fmt(balance)}. Ref: ${ref}. Thank you for banking with DASNET VENTURES.`,
 
   // Initiated SMS intentionally removed — we only send ONE confirmation
   // (success or refund) to avoid double-notifying users.
