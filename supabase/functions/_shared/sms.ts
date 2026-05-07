@@ -114,14 +114,18 @@ export const SMS = {
   loanDisbursed: (name: string, amount: number) =>
     `Dear ${name}, your loan of ${fmt(amount)} has been disbursed to your wallet. Thank you for banking with DASNET VENTURES.`,
 
-  personalSavings: (name: string, amount: number, total: number, goal: string) =>
-    `Dear ${name}, your savings of ${fmt(amount)} for "${goal}" has been recorded. Total saved: ${fmt(total)}. Thank you for banking with DASNET VENTURES.`,
+  personalSavings: (name: string, amount: number, total: number, goal: string, payerName?: string) =>
+    `Dear ${name}, your savings of ${fmt(amount)}${_from(payerName)} for "${goal}" has been recorded. Total saved: ${fmt(total)}. Thank you for banking with DASNET VENTURES.`,
 
-  chamaContribution: (name: string, amount: number, group: string, total: number) =>
-    `Dear ${name}, your contribution of ${fmt(amount)} to ${group} has been received. Your total savings: ${fmt(total)}. Thank you for banking with DASNET VENTURES.`,
+  chamaContribution: (name: string, amount: number, group: string, total: number, payerName?: string) =>
+    `Dear ${name}, your contribution of ${fmt(amount)}${_from(payerName)} to ${group} has been received. Your total savings: ${fmt(total)}. Thank you for banking with DASNET VENTURES.`,
 
   harambeeContribution: (name: string, amount: number, beneficiary: string) =>
     `Dear ${name}, thank you for contributing ${fmt(amount)} to the harambee for ${beneficiary}. May God bless your generosity. — DASNET VENTURES.`,
+
+  // Sent to MGR contributor (sender) when they pay for a recipient
+  mgrPaidForRecipient: (name: string, amount: number, recipient: string, ref: string) =>
+    `Dear ${name}, you have paid ${fmt(amount)} for the merry-go-round round of ${recipient}. Ref: ${ref}. Thank you for banking with DASNET VENTURES.`,
 
   walletTransferOut: (name: string, amount: number, recipient: string, balance: number) =>
     `Dear ${name}, you have sent ${fmt(amount)} to ${recipient}. New wallet balance: ${fmt(balance)}.`,
