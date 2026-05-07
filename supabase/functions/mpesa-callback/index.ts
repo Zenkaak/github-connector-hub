@@ -491,20 +491,41 @@ Deno.serve(async (req) => {
       });
       if (notifErr) console.error("❌ Notification insert failed:", JSON.stringify(notifErr));
 
-      // --- SMS NOTIFICATION (Africa's Talking) ---
+      // --- SMS NOTIFICATION (OTS) ---
       try {
+        // Detect third-party payer first (so we can embed "from <name>" inline)
+        const { data: benProf } = await supabase.from("profiles").select("phone, full_name").eq("user_id", txn.user_id).maybeSingle();
+        const payerPhoneRaw = String(phone || "").replace(/\D/g, "");
+        const benPhoneRaw = String(benProf?.phone || "").replace(/\D/g, "");
+        const norm = (p: string) => p.startsWith("0") ? "254" + p.slice(1) : (p.startsWith("7") || p.startsWith("1")) ? "254" + p : p;
+        const isThirdParty = !!(payerPhoneRaw && benPhoneRaw && norm(payerPhoneRaw) !== norm(benPhoneRaw));
+
+        // Resolve payer's display name: M-Pesa metadata first, then Dasnet profile lookup, else phone
+        const metaFirst = String(getMeta("FirstName") || "").trim();
+        const metaMiddle = String(getMeta("MiddleName") || "").trim();
+        const metaLast = String(getMeta("LastName") || "").trim();
+        let payerName = [metaFirst, metaMiddle, metaLast].filter(Boolean).join(" ").trim();
+        if (!payerName && payerPhoneRaw) {
+          const { data: payerProf } = await supabase
+            .from("profiles").select("full_name").eq("phone", norm(payerPhoneRaw)).maybeSingle();
+          payerName = payerProf?.full_name || "";
+        }
+        // Convert to first name only for cleaner SMS
+        const payerFirst = (payerName || "").split(" ")[0];
+        const payerForMsg = isThirdParty ? (payerFirst || norm(payerPhoneRaw) || "another customer") : undefined;
+
         let smsMsg = "";
         if (purpose === "wallet_deposit" || purpose === "activation") {
           const { data: w } = await supabase.from("wallets").select("balance").eq("user_id", txn.user_id).maybeSingle();
-          smsMsg = SMS.walletDeposit("{name}", actualAmount, Number(w?.balance || 0), mpesaReceipt);
+          smsMsg = SMS.walletDeposit("{name}", actualAmount, Number(w?.balance || 0), mpesaReceipt, payerForMsg);
         } else if (purpose === "personal_savings" && txn.savings_id) {
           const { data: ps } = await supabase.from("personal_savings").select("saved_amount, name").eq("id", txn.savings_id).maybeSingle();
-          smsMsg = SMS.personalSavings("{name}", actualAmount, Number(ps?.saved_amount || 0), ps?.name || "Savings");
+          smsMsg = SMS.personalSavings("{name}", actualAmount, Number(ps?.saved_amount || 0), ps?.name || "Savings", payerForMsg);
         } else if (purpose === "chama_savings" && txn.group_id) {
           const { data: g } = await supabase.from("chama_groups").select("name").eq("id", txn.group_id).maybeSingle();
           const { data: agg } = await supabase.from("chama_savings").select("amount").eq("group_id", txn.group_id).eq("user_id", txn.user_id);
           const total = (agg || []).reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
-          smsMsg = SMS.chamaContribution("{name}", actualAmount, g?.name || "your chama", total);
+          smsMsg = SMS.chamaContribution("{name}", actualAmount, g?.name || "your chama", total, payerForMsg);
         } else if (purpose === "loan_repayment") {
           const { data: d } = await supabase.from("loan_disbursements").select("outstanding_balance, disbursed_amount").eq("user_id", txn.user_id).order("created_at", { ascending: false }).limit(1).maybeSingle();
           const bal = Number(d?.outstanding_balance || 0);
@@ -513,37 +534,25 @@ Deno.serve(async (req) => {
         } else if (purpose === "harambee" && txn.harambee_id) {
           const { data: h } = await supabase.from("chama_harambees").select("beneficiary_name, title").eq("id", txn.harambee_id).maybeSingle();
           smsMsg = SMS.harambeeContribution("{name}", actualAmount, h?.beneficiary_name || h?.title || "the cause");
+        } else if (purpose === "merry_go_round" && txn.group_id) {
+          // Sender SMS: "you have paid for mgr round of <recipient>"
+          const cycleId = txn.metadata?.cycle_id;
+          let recipientName = "the recipient";
+          if (cycleId) {
+            const { data: cyc } = await supabase.from("chama_mgr_cycles").select("recipient_id").eq("id", cycleId).maybeSingle();
+            if (cyc?.recipient_id) {
+              const { data: rp } = await supabase.from("profiles").select("full_name").eq("user_id", cyc.recipient_id).maybeSingle();
+              if (rp?.full_name) recipientName = rp.full_name;
+            }
+          }
+          smsMsg = SMS.mgrPaidForRecipient("{name}", actualAmount, recipientName, mpesaReceipt);
         }
-        // Detect third-party payer (different phone from beneficiary's registered phone)
-        const { data: benProf } = await supabase.from("profiles").select("phone, full_name").eq("user_id", txn.user_id).maybeSingle();
-        const payerPhoneRaw = String(phone || "").replace(/\D/g, "");
-        const benPhoneRaw = String(benProf?.phone || "").replace(/\D/g, "");
-        const norm = (p: string) => p.startsWith("0") ? "254" + p.slice(1) : (p.startsWith("7") || p.startsWith("1")) ? "254" + p : p;
-        const isThirdParty = !!(payerPhoneRaw && benPhoneRaw && norm(payerPhoneRaw) !== norm(benPhoneRaw));
 
-        // Resolve payer's display name: M-Pesa metadata first, then Dasnet profile lookup, else phone
-        let payerName = "";
-        const metaFirst = String(getMeta("FirstName") || "").trim();
-        const metaMiddle = String(getMeta("MiddleName") || "").trim();
-        const metaLast = String(getMeta("LastName") || "").trim();
-        payerName = [metaFirst, metaMiddle, metaLast].filter(Boolean).join(" ").trim();
-        if (!payerName && payerPhoneRaw) {
-          const { data: payerProf } = await supabase
-            .from("profiles").select("full_name").eq("phone", norm(payerPhoneRaw)).maybeSingle();
-          payerName = payerProf?.full_name || "";
-        }
-        if (!payerName) payerName = norm(payerPhoneRaw) || "another customer";
-
-        // Beneficiary SMS — append "(paid by 2547xx…)" suffix when third-party
         if (smsMsg) {
-          const finalMsg = isThirdParty
-            ? smsMsg.replace(/\.\s*Thank you for banking[^]*$/i, '').replace(/\s+$/, '') +
-              ` Paid on your behalf by ${payerName}. Thank you for banking with DASNET VENTURES.`
-            : smsMsg;
-          await sendUserSMS(supabase, txn.user_id, finalMsg);
+          await sendUserSMS(supabase, txn.user_id, smsMsg);
         }
 
-        // Third-party payer SMS
+        // Third-party payer SMS (confirmation to the person who actually paid)
         try {
           if (isThirdParty) {
             const purposeWord = purpose === "chama_savings" ? "chama savings"
@@ -551,6 +560,7 @@ Deno.serve(async (req) => {
               : purpose === "harambee" ? "harambee contribution"
               : purpose === "loan_repayment" ? "loan repayment"
               : purpose === "wallet_deposit" || purpose === "activation" ? "wallet deposit"
+              : purpose === "merry_go_round" ? "merry-go-round contribution"
               : "payment";
             const payerMsg = `Dear customer, you have paid KES ${Math.round(actualAmount).toLocaleString()} on behalf of ${benProf?.full_name || "a Dasnet user"} for ${purposeWord}. Ref: ${mpesaReceipt}. Thank you for using DASNET VENTURES.`;
             await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-sms`, {
