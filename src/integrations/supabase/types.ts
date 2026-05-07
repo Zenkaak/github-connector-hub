@@ -1799,6 +1799,63 @@ export type Database = {
         }
         Relationships: []
       }
+      mpesa_admin_payout_queue: {
+        Row: {
+          amount: number
+          attempts: number
+          b2c_request_id: string | null
+          created_at: string
+          destination_phone: string
+          id: string
+          last_attempt_at: string | null
+          last_error: string | null
+          status: string
+          unmapped_payment_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          attempts?: number
+          b2c_request_id?: string | null
+          created_at?: string
+          destination_phone?: string
+          id?: string
+          last_attempt_at?: string | null
+          last_error?: string | null
+          status?: string
+          unmapped_payment_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          attempts?: number
+          b2c_request_id?: string | null
+          created_at?: string
+          destination_phone?: string
+          id?: string
+          last_attempt_at?: string | null
+          last_error?: string | null
+          status?: string
+          unmapped_payment_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "mpesa_admin_payout_queue_b2c_request_id_fkey"
+            columns: ["b2c_request_id"]
+            isOneToOne: false
+            referencedRelation: "mpesa_b2c_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "mpesa_admin_payout_queue_unmapped_payment_id_fkey"
+            columns: ["unmapped_payment_id"]
+            isOneToOne: false
+            referencedRelation: "mpesa_unmapped_payments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       mpesa_b2c_requests: {
         Row: {
           amount: number
