@@ -63,6 +63,14 @@ export function AdminWithdrawalsModule() {
   return (
     <div className="space-y-5">
       <AdminSectionHeader title="Chama Withdrawals" description="Review withdrawal requests" icon={PiggyBank} />
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <AdminKpiCard label="Pending" value={stats.pending.toLocaleString()} icon={Clock} accent="gold" />
+        <AdminKpiCard label="Pending value" value={`KES ${Math.round(stats.pendingValue).toLocaleString()}`} icon={Banknote} accent="blue" />
+        <AdminKpiCard label="Approved" value={stats.approved.toLocaleString()} icon={CheckCircle2} accent="emerald" />
+        <AdminKpiCard label="Rejected" value={stats.rejected.toLocaleString()} icon={XCircle} accent="red" />
+      </div>
+
       <div className="flex gap-2">
         {(['pending', 'approved', 'rejected'] as const).map((s) => (
           <Button key={s} variant={filter === s ? 'default' : 'outline'} size="sm" onClick={() => setFilter(s)}>
