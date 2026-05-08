@@ -23,6 +23,19 @@ export function AdminLoansModule() {
   const [approvedAmount, setApprovedAmount] = useState('');
   const [acting, setActing] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const [stats, setStats] = useState({ pending: 0, disbursed: 0, disbursedValue: 0, rejected: 0 });
+
+  useEffect(() => {
+    (async () => {
+      const [p, d, r] = await Promise.all([
+        supabase.from('loan_applications').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+        supabase.from('loan_applications').select('amount, generated_limit').eq('status', 'disbursed'),
+        supabase.from('loan_applications').select('id', { count: 'exact', head: true }).eq('status', 'rejected'),
+      ]);
+      const disbursedValue = (d.data || []).reduce((s: number, l: any) => s + Number(l.generated_limit || l.amount || 0), 0);
+      setStats({ pending: p.count || 0, disbursed: d.data?.length || 0, disbursedValue, rejected: r.count || 0 });
+    })();
+  }, []);
 
   const load = async () => {
     setLoading(true);
