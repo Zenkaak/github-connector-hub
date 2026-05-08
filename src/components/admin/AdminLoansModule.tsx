@@ -99,6 +99,14 @@ export function AdminLoansModule() {
       <AdminSectionHeader title="Loan Applications" description="Review and approve loan requests" icon={FileText}
         actions={<Button variant="gold" size="sm" onClick={() => setCreateOpen(true)}><Plus size={14} className="mr-1" />Create Loan</Button>} />
       <AdminCreateLoanDialog open={createOpen} onOpenChange={setCreateOpen} onCreated={load} />
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <AdminKpiCard label="Pending" value={stats.pending.toLocaleString()} icon={Clock} accent="gold" />
+        <AdminKpiCard label="Disbursed value" value={`KES ${Math.round(stats.disbursedValue).toLocaleString()}`} icon={Banknote} accent="emerald" />
+        <AdminKpiCard label="Active loans" value={stats.disbursed.toLocaleString()} icon={CheckCircle2} accent="blue" />
+        <AdminKpiCard label="Rejected" value={stats.rejected.toLocaleString()} icon={XCircle} accent="red" />
+      </div>
+
       <div className="flex gap-2 flex-wrap">
         {(['pending', 'approved', 'disbursed', 'rejected'] as const).map((s) => (
           <Button key={s} variant={filter === s ? 'default' : 'outline'} size="sm" onClick={() => setFilter(s)}>
