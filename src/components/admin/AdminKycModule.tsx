@@ -81,6 +81,12 @@ export function AdminKycModule() {
     <div className="space-y-5">
       <AdminSectionHeader title="KYC Reviews" description="Verify member identity documents" icon={ShieldCheck} />
 
+      <div className="grid grid-cols-3 gap-3">
+        <AdminKpiCard label="Pending" value={counts.pending.toLocaleString()} icon={Clock} accent="gold" />
+        <AdminKpiCard label="Approved" value={counts.approved.toLocaleString()} icon={CheckCircle2} accent="emerald" />
+        <AdminKpiCard label="Rejected" value={counts.rejected.toLocaleString()} icon={XCircle} accent="red" />
+      </div>
+
       <div className="flex gap-2">
         {(['pending', 'approved', 'rejected'] as const).map((s) => (
           <Button key={s} variant={filter === s ? 'default' : 'outline'} size="sm" onClick={() => setFilter(s)}>
