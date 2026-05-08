@@ -20,6 +20,18 @@ export function AdminKycModule() {
   const [notes, setNotes] = useState('');
   const [acting, setActing] = useState(false);
   const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected'>('pending');
+  const [counts, setCounts] = useState({ pending: 0, approved: 0, rejected: 0 });
+
+  useEffect(() => {
+    (async () => {
+      const [p, a, r] = await Promise.all([
+        supabase.from('kyc_documents').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+        supabase.from('kyc_documents').select('id', { count: 'exact', head: true }).eq('status', 'approved'),
+        supabase.from('kyc_documents').select('id', { count: 'exact', head: true }).eq('status', 'rejected'),
+      ]);
+      setCounts({ pending: p.count || 0, approved: a.count || 0, rejected: r.count || 0 });
+    })();
+  }, []);
 
   const load = async () => {
     setLoading(true);
