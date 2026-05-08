@@ -274,15 +274,19 @@ export default function ChamaGroupDetailPage() {
         {/* Group Header */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
           <Card className="border-border/50 mb-5 overflow-hidden">
-            <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-5">
-              <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="relative group">
+            {/* Hero band */}
+            <div className="relative bg-gradient-to-br from-primary/15 via-primary/5 to-transparent p-5 sm:p-6">
+              <div className="absolute -right-10 -top-10 w-44 h-44 rounded-full bg-accent/10 blur-2xl pointer-events-none" />
+              <div className="absolute -left-12 bottom-0 w-32 h-32 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
+
+              <div className="relative flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                  <div className="relative group shrink-0">
                     {group.profile_image_url ? (
-                      <img src={group.profile_image_url} alt={group.name} className="w-12 h-12 rounded-2xl object-cover" />
+                      <img src={group.profile_image_url} alt={group.name} className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover ring-2 ring-primary/20 shadow-md" />
                     ) : (
-                      <div className="w-12 h-12 rounded-2xl bg-primary/20 flex items-center justify-center">
-                        <PiggyBank size={24} className="text-primary" />
+                      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center ring-2 ring-primary/20 shadow-md">
+                        <PiggyBank size={28} className="text-primary" />
                       </div>
                     )}
                     {isChair && (
@@ -298,12 +302,16 @@ export default function ChamaGroupDetailPage() {
                       </>
                     )}
                   </div>
-                  <div>
-                    <h1 className="text-xl lg:text-2xl font-display font-bold">{group.name}</h1>
-                    {group.description && <p className="text-sm text-muted-foreground mt-0.5">{group.description}</p>}
-                    <div className="flex items-center gap-2 mt-1.5">
+                  <div className="min-w-0">
+                    <p className="text-[10px] uppercase tracking-[0.18em] font-semibold text-muted-foreground">Chama Group</p>
+                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-display font-bold tracking-tight mt-0.5 truncate">{group.name}</h1>
+                    {group.description && <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-2">{group.description}</p>}
+                    <div className="flex items-center gap-2 mt-2 flex-wrap">
                       <span className={cn('text-[11px] px-2.5 py-1 rounded-full font-semibold flex items-center gap-1', roleColors[myRole])}>
                         <MyRoleIcon size={12} /> {myRoleLabel}
+                      </span>
+                      <span className="text-[11px] px-2.5 py-1 rounded-full font-semibold bg-background/60 text-foreground/80 ring-1 ring-border flex items-center gap-1">
+                        <Users size={11} /> {members.length} members
                       </span>
                     </div>
                   </div>
@@ -311,7 +319,7 @@ export default function ChamaGroupDetailPage() {
                 {isLeader && (
                   <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
                     <DialogTrigger asChild>
-                      <Button size="sm" className="gap-1.5"><UserPlus size={14} /> Add</Button>
+                      <Button size="sm" className="gap-1.5 shrink-0"><UserPlus size={14} /> Add</Button>
                     </DialogTrigger>
                     <DialogContent>
                       <DialogHeader><DialogTitle>Add Member</DialogTitle></DialogHeader>
@@ -358,19 +366,25 @@ export default function ChamaGroupDetailPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 sm:grid-cols-6 divide-x border-t">
+            {/* KPI grid */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-px bg-border/60 border-t">
               {[
-                { label: 'Savings Wallet', value: `KES ${totalSavings.toLocaleString()}`, icon: TrendingUp, color: 'text-primary' },
-                { label: 'Joining Fees', value: `KES ${totalJoiningFees.toLocaleString()}`, icon: Coins, color: 'text-accent' },
-                { label: 'Platform Fees', value: `KES ${totalPlatformFees.toLocaleString()}`, icon: Shield, color: 'text-pink-500' },
-                { label: 'My Savings', value: `KES ${mySavings.toLocaleString()}`, icon: Wallet, color: 'text-emerald-500' },
-                { label: 'Members', value: members.length, icon: Users, color: 'text-blue-500' },
-                { label: 'Deposits', value: savingsCount, icon: Calendar, color: 'text-accent' },
+                { label: 'Savings Wallet', value: `KES ${totalSavings.toLocaleString()}`, icon: TrendingUp, color: 'text-primary', bg: 'from-primary/10 to-transparent' },
+                { label: 'Joining Fees', value: `KES ${totalJoiningFees.toLocaleString()}`, icon: Coins, color: 'text-amber-500', bg: 'from-amber-500/10 to-transparent' },
+                { label: 'Platform Fees', value: `KES ${totalPlatformFees.toLocaleString()}`, icon: Shield, color: 'text-pink-500', bg: 'from-pink-500/10 to-transparent' },
+                { label: 'My Savings', value: `KES ${mySavings.toLocaleString()}`, icon: Wallet, color: 'text-emerald-500', bg: 'from-emerald-500/10 to-transparent' },
+                { label: 'Members', value: members.length, icon: Users, color: 'text-blue-500', bg: 'from-blue-500/10 to-transparent' },
+                { label: 'Deposits', value: savingsCount, icon: Calendar, color: 'text-violet-500', bg: 'from-violet-500/10 to-transparent' },
               ].map((stat, i) => (
-                <div key={i} className="p-3 lg:p-4 text-center">
-                  <stat.icon size={16} className={cn('mx-auto mb-1', stat.color)} />
-                  <p className="text-sm lg:text-base font-bold">{stat.value}</p>
-                  <p className="text-[10px] text-muted-foreground">{stat.label}</p>
+                <div key={i} className={cn('relative p-3 lg:p-4 bg-card overflow-hidden')}>
+                  <div className={cn('absolute inset-0 bg-gradient-to-br opacity-60 pointer-events-none', stat.bg)} />
+                  <div className="relative">
+                    <div className={cn('w-7 h-7 rounded-lg bg-background flex items-center justify-center mb-2 ring-1 ring-border', stat.color)}>
+                      <stat.icon size={13} />
+                    </div>
+                    <p className="text-sm lg:text-base font-bold tracking-tight truncate">{stat.value}</p>
+                    <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mt-0.5 truncate">{stat.label}</p>
+                  </div>
                 </div>
               ))}
             </div>
