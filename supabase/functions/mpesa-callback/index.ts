@@ -370,11 +370,8 @@ Deno.serve(async (req) => {
         .maybeSingle();
 
       if (w) {
-        await supabase
-          .from("wallets")
-          .update({ balance: Number(w.balance || 0) + Number(actualAmount) })
-          .eq("id", w.id);
-
+        // Insert ledger first — unique index on (user_id, reference_id, type)
+        // guarantees this fails if the receipt was already credited (STK vs C2B race).
         const { error: wtErr } = await supabase.from("wallet_transactions").insert({
           user_id: txn.user_id,
           type: "deposit",
@@ -383,7 +380,18 @@ Deno.serve(async (req) => {
           reference_id: mpesaReceipt,
           status: "completed",
         });
-        if (wtErr) console.error("❌ Wallet tx insert failed:", JSON.stringify(wtErr));
+        if (wtErr) {
+          if ((wtErr as any).code === "23505") {
+            console.log(`⏭️ Wallet credit for ${mpesaReceipt} already recorded — skipping balance update`);
+          } else {
+            console.error("❌ Wallet tx insert failed:", JSON.stringify(wtErr));
+          }
+        } else {
+          await supabase
+            .from("wallets")
+            .update({ balance: Number(w.balance || 0) + Number(actualAmount) })
+            .eq("id", w.id);
+        }
       }
     }
 
