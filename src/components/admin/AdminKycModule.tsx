@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { ShieldCheck, Loader2, FileText, Check, X as XIcon } from 'lucide-react';
+import { ShieldCheck, Loader2, FileText, Check, X as XIcon, Clock, CheckCircle2, XCircle } from 'lucide-react';
 import { AdminSectionHeader } from './AdminSectionHeader';
 import { AdminEmptyState } from './AdminEmptyState';
+import { AdminKpiCard } from './AdminKpiCard';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
