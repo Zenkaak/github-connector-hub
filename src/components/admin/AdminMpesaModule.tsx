@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import {
-  Wallet, Loader2, AlertTriangle, Check, RefreshCw, Link2, Zap
+  Wallet, Loader2, AlertTriangle, Check, RefreshCw, Link2, Zap, Send, ArrowDownLeft
 } from 'lucide-react';
 import { AdminSectionHeader } from './AdminSectionHeader';
 import { AdminEmptyState } from './AdminEmptyState';
+import { AdminKpiCard } from './AdminKpiCard';
 import { AdminReconcileDialog } from './AdminReconcileDialog';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -115,25 +116,16 @@ export function AdminMpesaModule() {
       />
 
       {/* KPI */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Card className="p-3">
-          <p className="text-xs">Unmapped</p>
-          <p className="text-lg font-bold text-amber-600">{totalUnmapped}</p>
-        </Card>
-        <Card className="p-3">
-          <p className="text-xs">Failed Payouts</p>
-          <p className="text-lg font-bold text-red-600">{failedB2c}</p>
-        </Card>
-        <Card className="p-3">
-          <p className="text-xs">Pending C2B</p>
-          <p className="text-lg font-bold">{pendingC2b}</p>
-        </Card>
-        <Card className="p-3">
-          <p className="text-xs">Volume</p>
-          <p className="text-lg font-bold">
-            KES {[...b2c, ...c2b].reduce((s, x: any) => s + Number(x.amount || x.trans_amount || 0), 0).toLocaleString()}
-          </p>
-        </Card>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <AdminKpiCard label="Unmapped" value={totalUnmapped.toLocaleString()} icon={AlertTriangle} accent="gold" />
+        <AdminKpiCard label="Failed payouts" value={failedB2c.toLocaleString()} icon={Send} accent="red" />
+        <AdminKpiCard label="Pending C2B" value={pendingC2b.toLocaleString()} icon={ArrowDownLeft} accent="blue" />
+        <AdminKpiCard
+          label="Total volume"
+          value={`KES ${Math.round([...b2c, ...c2b].reduce((s, x: any) => s + Number(x.amount || x.trans_amount || 0), 0)).toLocaleString()}`}
+          icon={Wallet}
+          accent="emerald"
+        />
       </div>
 
       {/* ALERT */}

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { ShieldCheck, Loader2, FileText, Check, X as XIcon } from 'lucide-react';
+import { ShieldCheck, Loader2, FileText, Check, X as XIcon, Clock, CheckCircle2, XCircle } from 'lucide-react';
 import { AdminSectionHeader } from './AdminSectionHeader';
 import { AdminEmptyState } from './AdminEmptyState';
+import { AdminKpiCard } from './AdminKpiCard';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +20,18 @@ export function AdminKycModule() {
   const [notes, setNotes] = useState('');
   const [acting, setActing] = useState(false);
   const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected'>('pending');
+  const [counts, setCounts] = useState({ pending: 0, approved: 0, rejected: 0 });
+
+  useEffect(() => {
+    (async () => {
+      const [p, a, r] = await Promise.all([
+        supabase.from('kyc_documents').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+        supabase.from('kyc_documents').select('id', { count: 'exact', head: true }).eq('status', 'approved'),
+        supabase.from('kyc_documents').select('id', { count: 'exact', head: true }).eq('status', 'rejected'),
+      ]);
+      setCounts({ pending: p.count || 0, approved: a.count || 0, rejected: r.count || 0 });
+    })();
+  }, []);
 
   const load = async () => {
     setLoading(true);
@@ -67,6 +80,12 @@ export function AdminKycModule() {
   return (
     <div className="space-y-5">
       <AdminSectionHeader title="KYC Reviews" description="Verify member identity documents" icon={ShieldCheck} />
+
+      <div className="grid grid-cols-3 gap-3">
+        <AdminKpiCard label="Pending" value={counts.pending.toLocaleString()} icon={Clock} accent="gold" />
+        <AdminKpiCard label="Approved" value={counts.approved.toLocaleString()} icon={CheckCircle2} accent="emerald" />
+        <AdminKpiCard label="Rejected" value={counts.rejected.toLocaleString()} icon={XCircle} accent="red" />
+      </div>
 
       <div className="flex gap-2">
         {(['pending', 'approved', 'rejected'] as const).map((s) => (

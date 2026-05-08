@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { FileText, Loader2, Check, X as XIcon, Plus } from 'lucide-react';
+import { FileText, Loader2, Check, X as XIcon, Plus, Clock, Banknote, CheckCircle2, XCircle } from 'lucide-react';
 import { AdminCreateLoanDialog } from './AdminCreateLoanDialog';
 import { AdminSectionHeader } from './AdminSectionHeader';
 import { AdminEmptyState } from './AdminEmptyState';
+import { AdminKpiCard } from './AdminKpiCard';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,6 +23,19 @@ export function AdminLoansModule() {
   const [approvedAmount, setApprovedAmount] = useState('');
   const [acting, setActing] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const [stats, setStats] = useState({ pending: 0, disbursed: 0, disbursedValue: 0, rejected: 0 });
+
+  useEffect(() => {
+    (async () => {
+      const [p, d, r] = await Promise.all([
+        supabase.from('loan_applications').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+        supabase.from('loan_applications').select('amount, generated_limit').eq('status', 'disbursed'),
+        supabase.from('loan_applications').select('id', { count: 'exact', head: true }).eq('status', 'rejected'),
+      ]);
+      const disbursedValue = (d.data || []).reduce((s: number, l: any) => s + Number(l.generated_limit || l.amount || 0), 0);
+      setStats({ pending: p.count || 0, disbursed: d.data?.length || 0, disbursedValue, rejected: r.count || 0 });
+    })();
+  }, []);
 
   const load = async () => {
     setLoading(true);
@@ -85,6 +99,14 @@ export function AdminLoansModule() {
       <AdminSectionHeader title="Loan Applications" description="Review and approve loan requests" icon={FileText}
         actions={<Button variant="gold" size="sm" onClick={() => setCreateOpen(true)}><Plus size={14} className="mr-1" />Create Loan</Button>} />
       <AdminCreateLoanDialog open={createOpen} onOpenChange={setCreateOpen} onCreated={load} />
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <AdminKpiCard label="Pending" value={stats.pending.toLocaleString()} icon={Clock} accent="gold" />
+        <AdminKpiCard label="Disbursed value" value={`KES ${Math.round(stats.disbursedValue).toLocaleString()}`} icon={Banknote} accent="emerald" />
+        <AdminKpiCard label="Active loans" value={stats.disbursed.toLocaleString()} icon={CheckCircle2} accent="blue" />
+        <AdminKpiCard label="Rejected" value={stats.rejected.toLocaleString()} icon={XCircle} accent="red" />
+      </div>
+
       <div className="flex gap-2 flex-wrap">
         {(['pending', 'approved', 'disbursed', 'rejected'] as const).map((s) => (
           <Button key={s} variant={filter === s ? 'default' : 'outline'} size="sm" onClick={() => setFilter(s)}>

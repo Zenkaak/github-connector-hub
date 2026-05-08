@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { PiggyBank, Loader2, Check, X as XIcon } from 'lucide-react';
+import { PiggyBank, Loader2, Check, X as XIcon, Clock, Banknote, CheckCircle2, XCircle } from 'lucide-react';
 import { AdminSectionHeader } from './AdminSectionHeader';
 import { AdminEmptyState } from './AdminEmptyState';
+import { AdminKpiCard } from './AdminKpiCard';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -18,6 +19,19 @@ export function AdminWithdrawalsModule() {
   const [selected, setSelected] = useState<any>(null);
   const [reason, setReason] = useState('');
   const [acting, setActing] = useState(false);
+  const [stats, setStats] = useState({ pending: 0, pendingValue: 0, approved: 0, rejected: 0 });
+
+  useEffect(() => {
+    (async () => {
+      const [p, a, r] = await Promise.all([
+        supabase.from('chama_withdrawals').select('amount').eq('status', 'pending'),
+        supabase.from('chama_withdrawals').select('id', { count: 'exact', head: true }).eq('status', 'approved'),
+        supabase.from('chama_withdrawals').select('id', { count: 'exact', head: true }).eq('status', 'rejected'),
+      ]);
+      const pendingValue = (p.data || []).reduce((s, x: any) => s + Number(x.amount || 0), 0);
+      setStats({ pending: p.data?.length || 0, pendingValue, approved: a.count || 0, rejected: r.count || 0 });
+    })();
+  }, []);
 
   const load = async () => {
     setLoading(true);
@@ -49,6 +63,14 @@ export function AdminWithdrawalsModule() {
   return (
     <div className="space-y-5">
       <AdminSectionHeader title="Chama Withdrawals" description="Review withdrawal requests" icon={PiggyBank} />
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <AdminKpiCard label="Pending" value={stats.pending.toLocaleString()} icon={Clock} accent="gold" />
+        <AdminKpiCard label="Pending value" value={`KES ${Math.round(stats.pendingValue).toLocaleString()}`} icon={Banknote} accent="blue" />
+        <AdminKpiCard label="Approved" value={stats.approved.toLocaleString()} icon={CheckCircle2} accent="emerald" />
+        <AdminKpiCard label="Rejected" value={stats.rejected.toLocaleString()} icon={XCircle} accent="red" />
+      </div>
+
       <div className="flex gap-2">
         {(['pending', 'approved', 'rejected'] as const).map((s) => (
           <Button key={s} variant={filter === s ? 'default' : 'outline'} size="sm" onClick={() => setFilter(s)}>
