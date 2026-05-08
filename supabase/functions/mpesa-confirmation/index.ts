@@ -153,23 +153,27 @@ Deno.serve(async (req) => {
   // 4. Process based on routing
   try {
     if (route.type === "wallet") {
-      await supabase.rpc("ensure_wallet_credit", { _user_id: route.user_id, _amount: amount });
-      // Fallback if RPC absent: direct upsert
-      // (we'll do a safe upsert below)
-      const { data: w } = await supabase.from("wallets").select("user_id, balance").eq("user_id", route.user_id).maybeSingle();
-      if (!w) {
-        await supabase.from("wallets").insert({ user_id: route.user_id, balance: amount });
-      } else {
-        // Note: ensure_wallet_credit may not exist; do direct math safely
-        await supabase.from("wallets").update({ balance: (w.balance || 0) + amount }).eq("user_id", route.user_id);
-      }
-      await supabase.from("wallet_transactions").insert({
+      // Insert ledger first; unique index on (user_id, reference_id, type) makes
+      // this idempotent against the STK callback that may credit the same receipt.
+      const { error: wtErr } = await supabase.from("wallet_transactions").insert({
         user_id: route.user_id,
         type: "deposit",
         amount,
         description: `M-Pesa deposit · ${transId}`,
         reference_id: transId,
       });
+      if (wtErr && (wtErr as any).code === "23505") {
+        console.log(`⏭️ Wallet credit for ${transId} already recorded by STK callback`);
+      } else if (wtErr) {
+        console.error("❌ Wallet tx insert failed:", JSON.stringify(wtErr));
+      } else {
+        const { data: w } = await supabase.from("wallets").select("user_id, balance").eq("user_id", route.user_id).maybeSingle();
+        if (!w) {
+          await supabase.from("wallets").insert({ user_id: route.user_id, balance: amount });
+        } else {
+          await supabase.from("wallets").update({ balance: (w.balance || 0) + amount }).eq("user_id", route.user_id);
+        }
+      }
       // Note: notification handled centrally below to avoid duplicates
     } else if (route.type === "savings") {
       const { data: s } = await supabase.from("personal_savings").select("saved_amount").eq("id", route.savings_id).maybeSingle();
