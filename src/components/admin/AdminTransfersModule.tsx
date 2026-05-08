@@ -32,12 +32,32 @@ export function AdminTransfersModule() {
       t.sender_number?.includes(q) || t.recipient_number?.includes(q);
   });
 
-  const totalToday = transfers.filter((t) => new Date(t.created_at).toDateString() === new Date().toDateString() && t.status === 'completed')
-    .reduce((s, t) => s + Number(t.amount), 0);
+  const stats = useMemo(() => {
+    const today = new Date().toDateString();
+    let totalToday = 0, completed = 0, failed = 0, total7d = 0;
+    const sevenDaysAgo = Date.now() - 7 * 86400e3;
+    transfers.forEach((t) => {
+      const ts = new Date(t.created_at).getTime();
+      if (t.status === 'completed') {
+        completed += 1;
+        if (new Date(t.created_at).toDateString() === today) totalToday += Number(t.amount || 0);
+        if (ts >= sevenDaysAgo) total7d += Number(t.amount || 0);
+      }
+      if (t.status === 'failed' || t.status === 'cancelled') failed += 1;
+    });
+    return { totalToday, completed, failed, total7d };
+  }, [transfers]);
 
   return (
     <div className="space-y-5">
-      <AdminSectionHeader title="Wallet Transfers" description={`${transfers.length} transfers • KES ${totalToday.toLocaleString()} today`} icon={Send} />
+      <AdminSectionHeader title="Wallet Transfers" description={`${transfers.length} transfers tracked`} icon={Send} />
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <AdminKpiCard label="Volume today" value={`KES ${Math.round(stats.totalToday).toLocaleString()}`} icon={Wallet} accent="gold" />
+        <AdminKpiCard label="Volume (7d)" value={`KES ${Math.round(stats.total7d).toLocaleString()}`} icon={TrendingUp} accent="emerald" />
+        <AdminKpiCard label="Completed" value={stats.completed.toLocaleString()} icon={CheckCircle2} accent="blue" />
+        <AdminKpiCard label="Failed / cancelled" value={stats.failed.toLocaleString()} icon={XCircle} accent="red" />
+      </div>
 
       <div className="relative">
         <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
