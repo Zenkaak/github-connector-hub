@@ -75,22 +75,16 @@ Deno.serve(async (req) => {
 
       // Send via send-transactional-email (handles unsubscribe tokens, suppression, queue)
       const idempotencyKey = `pwd-recovery-${email.toLowerCase()}-${Date.now()}`
-      const sendResp = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-transactional-email`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
-        },
-        body: JSON.stringify({
+      const { error: sendErr } = await admin.functions.invoke('send-transactional-email', {
+        body: {
           templateName: 'password-recovery-otp',
           recipientEmail: email,
           idempotencyKey,
           templateData: { code: otp },
-        }),
+        },
       })
-      if (!sendResp.ok) {
-        const errText = await sendResp.text()
-        console.error('Failed to enqueue OTP email', errText)
+      if (sendErr) {
+        console.error('Failed to enqueue OTP email', sendErr)
       }
 
       // Also send via SMS if user has a phone on profile (best-effort, never block)
