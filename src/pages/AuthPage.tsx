@@ -1,21 +1,26 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Eye, EyeOff, Loader2, Mail, Phone, ArrowRight, Shield, Star, Fingerprint, Lock, KeyRound } from 'lucide-react';
+import { Eye, EyeOff, Loader2, ArrowRight, Shield, Star, Fingerprint, Lock, KeyRound, AtSign } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
-import { loginSchema, LoginFormData } from '@/lib/validations';
 import { Logo } from '@/components/Logo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PinPad } from '@/components/PinPad';
 import { toast } from 'sonner';
-import { isWebAuthnSupported, hasSavedCredential, authenticateWithFingerprint, registerFingerprint, syncFingerprintPassword, removeFingerprint } from '@/lib/webauthn';
+import { isWebAuthnSupported, hasSavedCredential, authenticateWithFingerprint, syncFingerprintPassword, removeFingerprint } from '@/lib/webauthn';
 
-type Mode = 'password' | 'pin';
+type Mode = 'password' | 'otp';
+
+function normalizePhoneClient(input: string) {
+  let p = input.trim().replace(/\s+/g, '');
+  if (p.startsWith('0') && p.length === 10) return '+254' + p.slice(1);
+  if (p.startsWith('254') && p.length === 12) return '+' + p;
+  if (p.startsWith('+254')) return p;
+  if (/^\d{9}$/.test(p)) return '+254' + p;
+  return p;
+}
 
 export default function AuthPage() {
   const navigate = useNavigate();
@@ -23,21 +28,25 @@ export default function AuthPage() {
   const [mode, setMode] = useState<Mode>('password');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [loginMethod, setLoginMethod] = useState<'email' | 'phone'>('email');
   const [fingerprintAvailable, setFingerprintAvailable] = useState(false);
   const [fingerprintLoading, setFingerprintLoading] = useState(false);
-  const [pinIdentifier, setPinIdentifier] = useState('');
-  const [pin, setPin] = useState('');
+
+  // Shared identifier (email or phone)
+  const [identifier, setIdentifier] = useState('');
+  const [password, setPassword] = useState('');
+
+  // OTP state
+  const [otpStep, setOtpStep] = useState<'enter' | 'verify'>('enter');
+  const [otp, setOtp] = useState('');
+  const [otpEmail, setOtpEmail] = useState(''); // resolved email returned from server
+  const [otpMaskEmail, setOtpMaskEmail] = useState('');
+  const [otpMaskPhone, setOtpMaskPhone] = useState<string | null>(null);
 
   useEffect(() => {
     setFingerprintAvailable(isWebAuthnSupported() && hasSavedCredential());
   }, []);
 
   const from = location.state?.from?.pathname || '/dashboard';
-
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
-  });
 
   const redirectAfterAuth = async (userId: string) => {
     const { data: roleData } = await supabase
@@ -46,54 +55,46 @@ export default function AuthPage() {
     else navigate(from, { replace: true });
   };
 
-  const onSubmit = async (data: LoginFormData) => {
+  const resolveEmailFromIdentifier = async (raw: string): Promise<{ email: string; profile: any }> => {
+    const id = raw.trim();
+    if (id.includes('@')) {
+      const { data } = await supabase.from('profiles')
+        .select('email, is_active, disable_reason').eq('email', id.toLowerCase()).maybeSingle();
+      return { email: id.toLowerCase(), profile: data };
+    }
+    const phone = normalizePhoneClient(id);
+    const altLocal = phone.startsWith('+254') ? '0' + phone.slice(4) : phone;
+    const { data } = await supabase.from('profiles')
+      .select('email, is_active, disable_reason')
+      .or(`phone.eq.${phone},phone.eq.${altLocal}`).limit(1).maybeSingle();
+    if (!data) throw new Error('No account found for that phone');
+    return { email: data.email, profile: data };
+  };
+
+  const onPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!identifier.trim() || !password) return;
     setIsLoading(true);
     try {
-      let email = data.identifier;
-
-      if (loginMethod === 'phone') {
-        let phone = data.identifier.trim();
-        if (phone.startsWith('0')) phone = '+254' + phone.slice(1);
-        else if (phone.startsWith('254')) phone = '+' + phone;
-        else if (!phone.startsWith('+254')) phone = '+254' + phone;
-
-        let { data: profile } = await supabase
-          .from('profiles').select('email, phone').eq('phone', phone).maybeSingle();
-        if (!profile) {
-          const { data: alt } = await supabase
-            .from('profiles').select('email, phone')
-            .or(`phone.eq.${phone},phone.eq.${phone.replace('+254', '0')}`).limit(1).maybeSingle();
-          if (alt) profile = alt;
-        }
-        if (!profile) throw new Error('Phone not registered');
-        email = profile.email;
-      }
-
-      const { data: profileCheck } = await supabase
-        .from('profiles').select('is_active, disable_reason').eq('email', email).maybeSingle();
-      if (profileCheck && profileCheck.is_active === false) {
-        toast.error(`Account Disabled: ${profileCheck.disable_reason || 'Contact support.'}`, { duration: 8000 });
+      const { email, profile } = await resolveEmailFromIdentifier(identifier);
+      if (profile && profile.is_active === false) {
+        toast.error(`Account Disabled: ${profile.disable_reason || 'Contact support.'}`, { duration: 8000 });
         setIsLoading(false);
         return;
       }
-
-      const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password: data.password });
+      const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
       if (error) throw error;
       if (!authData.user) throw new Error('Login failed');
 
       toast.success('Welcome back!');
 
-      // Mark needs-PIN flag if user doesn't have one
       const { data: pinRow } = await supabase
         .from('user_pins' as any).select('id').eq('user_id', authData.user.id).maybeSingle();
       if (!pinRow) sessionStorage.setItem('promptPinSetup', '1');
       else try { localStorage.setItem('hasPin', '1'); } catch {}
 
-      // Fingerprint setup
-      if (isWebAuthnSupported() && !hasSavedCredential()) {
-        // skip auto prompt to avoid overlap with PIN prompt
-      } else if (isWebAuthnSupported()) {
-        syncFingerprintPassword(authData.user.id, authData.user.email || email, data.password);
+      if (isWebAuthnSupported() && hasSavedCredential()) {
+        syncFingerprintPassword(authData.user.id, authData.user.email || email, password);
       }
 
       await redirectAfterAuth(authData.user.id);
@@ -105,20 +106,39 @@ export default function AuthPage() {
     }
   };
 
-  const handlePinLogin = async (e: React.FormEvent) => {
+  const requestOtp = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (pin.length !== 4 || !pinIdentifier.trim()) return;
+    if (!identifier.trim()) return;
     setIsLoading(true);
     try {
-      let identifier = pinIdentifier.trim();
-      if (/^0\d{9}$/.test(identifier)) identifier = '+254' + identifier.slice(1);
-
-      const { data, error } = await supabase.functions.invoke('pin-login', {
-        body: { identifier, pin },
+      const { data, error } = await supabase.functions.invoke('auth-otp', {
+        body: { action: 'request', identifier: identifier.trim() },
       });
-      if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message || 'PIN login failed');
+      if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message || 'Could not send code');
+      const d = data as any;
+      setOtpEmail(d.email);
+      setOtpMaskEmail(d.emailMask || '');
+      setOtpMaskPhone(d.phoneMask || null);
+      setOtpStep('verify');
+      toast.success(d.sentSms ? 'Code sent via SMS and email' : 'Code sent to your email');
+    } catch (err: any) {
+      toast.error(err.message || 'Could not send code');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-      const { email, token_hash } = data as { email: string; token_hash: string };
+  const verifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (otp.length !== 6) return;
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('auth-otp', {
+        body: { action: 'verify', email: otpEmail, code: otp },
+      });
+      if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message || 'Verification failed');
+      const { token_hash, email } = data as { token_hash: string; email: string };
+
       const { data: vData, error: vErr } = await supabase.auth.verifyOtp({
         type: 'magiclink', token_hash, email,
       });
@@ -127,12 +147,26 @@ export default function AuthPage() {
 
       toast.success('Welcome back!');
       await redirectAfterAuth(vData.user.id);
-    } catch (error: any) {
-      toast.error(error.message || 'PIN login failed');
-      setPin('');
+    } catch (err: any) {
+      toast.error(err.message || 'Verification failed');
+      setOtp('');
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const resendOtp = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('auth-otp', {
+        body: { action: 'request', identifier: identifier.trim() },
+      });
+      if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message);
+      const d = data as any;
+      toast.success(d.sentSms ? 'New code sent via SMS and email' : 'New code sent to your email');
+      setOtp('');
+    } catch (err: any) { toast.error(err.message || 'Resend failed'); }
+    finally { setIsLoading(false); }
   };
 
   const handleFingerprintLogin = async () => {
@@ -140,9 +174,9 @@ export default function AuthPage() {
     try {
       const result = await authenticateWithFingerprint();
       if (!result) { toast.error('Fingerprint failed'); return; }
-      const { email, password } = result;
-      if (!password) { toast.error('Sign in with password to refresh fingerprint'); return; }
-      const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password });
+      const { email, password: pwd } = result;
+      if (!pwd) { toast.error('Sign in with password to refresh fingerprint'); return; }
+      const { data: authData, error } = await supabase.auth.signInWithPassword({ email, password: pwd });
       if (error) {
         if (error.message?.includes('Invalid login')) {
           removeFingerprint(); setFingerprintAvailable(false);
@@ -171,7 +205,7 @@ export default function AuthPage() {
             <span className="bg-gradient-to-r from-accent to-gold-300 bg-clip-text text-transparent">DASNET VENTURES</span>
           </h2>
           <p className="text-white/50 leading-relaxed max-w-sm">
-            Sign in with your password or 4-digit PIN to manage your wallet, loans, and chama groups.
+            Sign in with your password or a one-time code sent by SMS and email.
           </p>
           <div className="flex items-center gap-6 pt-4">
             <div className="flex items-center gap-2 text-white/40 text-sm"><Shield size={16} className="text-accent" /><span>256-bit Encrypted</span></div>
@@ -183,17 +217,13 @@ export default function AuthPage() {
 
       {/* Right form panel */}
       <div className="flex-1 flex flex-col items-center justify-center px-5 py-8 bg-gradient-to-b from-background via-background to-muted/30 relative">
-        {/* Subtle gradient orbs for depth */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[500px] h-[500px] bg-accent/5 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 right-0 w-[300px] h-[300px] bg-primary/5 rounded-full blur-3xl pointer-events-none" />
 
         <motion.div
           className="w-full max-w-[400px] relative z-10"
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
+          initial={{ opacity: 0, y: 14 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}
         >
-          {/* Mobile logo + brand strip */}
           <div className="lg:hidden mb-6 text-center">
             <Link to="/" className="inline-block mb-3"><Logo size="md" /></Link>
             <div className="flex items-center justify-center gap-3 text-[10px] text-muted-foreground">
@@ -210,87 +240,96 @@ export default function AuthPage() {
 
           {/* Mode switch */}
           <div className="grid grid-cols-2 gap-1 p-1 bg-muted/60 rounded-xl mb-4 border border-border/40">
-            <button
-              type="button" onClick={() => setMode('password')}
+            <button type="button" onClick={() => { setMode('password'); }}
               className={`flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-semibold transition-all ${
                 mode === 'password' ? 'bg-card shadow-sm text-foreground ring-1 ring-border/50' : 'text-muted-foreground hover:text-foreground/80'
-              }`}
-            ><Lock size={13} /> Password</button>
-            <button
-              type="button" onClick={() => setMode('pin')}
+              }`}>
+              <Lock size={13} /> Password
+            </button>
+            <button type="button" onClick={() => { setMode('otp'); setOtpStep('enter'); setOtp(''); }}
               className={`flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-semibold transition-all ${
-                mode === 'pin' ? 'bg-card shadow-sm text-foreground ring-1 ring-border/50' : 'text-muted-foreground hover:text-foreground/80'
-              }`}
-            ><KeyRound size={13} /> Quick PIN</button>
+                mode === 'otp' ? 'bg-card shadow-sm text-foreground ring-1 ring-border/50' : 'text-muted-foreground hover:text-foreground/80'
+              }`}>
+              <KeyRound size={13} /> One-time Code
+            </button>
           </div>
 
           <div className="bg-card rounded-2xl border border-border/50 shadow-xl shadow-primary/5 p-5">
             {mode === 'password' ? (
-              <Tabs value={loginMethod} onValueChange={(v) => setLoginMethod(v as any)}>
-                <TabsList className="grid w-full grid-cols-2 mb-4 bg-muted/50 p-0.5 rounded-lg h-9">
-                  <TabsTrigger value="email" className="flex items-center gap-1.5 text-xs rounded-md h-7"><Mail size={12} /> Email</TabsTrigger>
-                  <TabsTrigger value="phone" className="flex items-center gap-1.5 text-xs rounded-md h-7"><Phone size={12} /> Phone</TabsTrigger>
-                </TabsList>
-
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-                  <TabsContent value="email" className="mt-0">
-                    <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Email Address</Label>
-                    <Input type="email" placeholder="you@example.com" {...register('identifier')}
-                      className={`mt-1.5 h-11 rounded-lg text-sm ${errors.identifier ? 'border-destructive' : ''}`} />
-                    {errors.identifier && <p className="text-xs text-destructive mt-1">{errors.identifier.message}</p>}
-                  </TabsContent>
-                  <TabsContent value="phone" className="mt-0">
-                    <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Phone Number</Label>
-                    <Input type="tel" placeholder="0712 345 678" {...register('identifier')}
-                      className={`mt-1.5 h-11 rounded-lg text-sm tabular-nums ${errors.identifier ? 'border-destructive' : ''}`} />
-                    {errors.identifier && <p className="text-xs text-destructive mt-1">{errors.identifier.message}</p>}
-                  </TabsContent>
-
-                  <div>
-                    <div className="flex items-center justify-between mb-1.5">
-                      <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Password</Label>
-                      <Link to="/forgot-password" className="text-[10px] text-accent hover:underline font-medium">Forgot?</Link>
-                    </div>
-                    <div className="relative">
-                      <Input type={showPassword ? 'text' : 'password'} placeholder="••••••••"
-                        {...register('password')}
-                        className={`h-11 rounded-lg pr-10 text-sm ${errors.password ? 'border-destructive' : ''}`} />
-                      <button type="button" onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
-                        {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
-                      </button>
-                    </div>
-                    {errors.password && <p className="text-xs text-destructive mt-1">{errors.password.message}</p>}
+              <form onSubmit={onPasswordSubmit} className="space-y-4">
+                <div>
+                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Email or Phone Number</Label>
+                  <div className="relative mt-1.5">
+                    <AtSign size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    <Input value={identifier} onChange={(e) => setIdentifier(e.target.value)}
+                      placeholder="you@example.com or 0712 345 678"
+                      className="h-11 rounded-lg text-sm pl-9" autoComplete="username" required />
                   </div>
+                </div>
 
-                  <Button type="submit" variant="gold" className="w-full h-11 text-sm font-semibold rounded-lg" disabled={isLoading}>
-                    {isLoading ? <><Loader2 className="animate-spin" size={15} /> Signing In…</> : <>Sign In <ArrowRight size={15} /></>}
-                  </Button>
-                </form>
-              </Tabs>
-            ) : (
-              <form onSubmit={handlePinLogin} className="space-y-4">
                 <div>
-                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Email or Phone</Label>
-                  <Input value={pinIdentifier} onChange={(e) => setPinIdentifier(e.target.value)}
-                    placeholder="you@example.com or 0712345678" className="mt-1.5 h-11 rounded-lg text-sm" required />
+                  <div className="flex items-center justify-between mb-1.5">
+                    <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Password</Label>
+                    <Link to="/forgot-password" className="text-[10px] text-accent hover:underline font-medium">Forgot?</Link>
+                  </div>
+                  <div className="relative">
+                    <Input type={showPassword ? 'text' : 'password'} placeholder="••••••••"
+                      value={password} onChange={(e) => setPassword(e.target.value)}
+                      className="h-11 rounded-lg pr-10 text-sm" autoComplete="current-password" required />
+                    <button type="button" onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors">
+                      {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                    </button>
+                  </div>
                 </div>
-                <div>
-                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold block mb-2">Enter your 4-digit PIN</Label>
-                  <PinPad value={pin} onChange={setPin} autoFocus disabled={isLoading} />
-                </div>
-                <Button type="submit" variant="gold" className="w-full h-11 text-sm font-semibold rounded-lg"
-                  disabled={isLoading || pin.length !== 4 || !pinIdentifier.trim()}>
-                  {isLoading ? <><Loader2 className="animate-spin" size={15} /> Verifying…</> : <>Sign In with PIN <ArrowRight size={15} /></>}
+
+                <Button type="submit" variant="gold" className="w-full h-11 text-sm font-semibold rounded-lg" disabled={isLoading}>
+                  {isLoading ? <><Loader2 className="animate-spin" size={15} /> Signing In…</> : <>Sign In <ArrowRight size={15} /></>}
                 </Button>
-                <p className="text-[11px] text-muted-foreground text-center leading-relaxed">
-                  No PIN yet? Sign in with your password — we'll prompt you to create one.
-                </p>
+              </form>
+            ) : otpStep === 'enter' ? (
+              <form onSubmit={requestOtp} className="space-y-4">
+                <div>
+                  <Label className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Email or Phone Number</Label>
+                  <div className="relative mt-1.5">
+                    <AtSign size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                    <Input value={identifier} onChange={(e) => setIdentifier(e.target.value)}
+                      placeholder="you@example.com or 0712 345 678"
+                      className="h-11 rounded-lg text-sm pl-9" required />
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">
+                    We'll send a 6-digit code to your registered email and phone (if available).
+                  </p>
+                </div>
+                <Button type="submit" variant="gold" className="w-full h-11 text-sm font-semibold rounded-lg" disabled={isLoading || !identifier.trim()}>
+                  {isLoading ? <><Loader2 className="animate-spin" size={15} /> Sending…</> : <>Send Code <ArrowRight size={15} /></>}
+                </Button>
+              </form>
+            ) : (
+              <form onSubmit={verifyOtp} className="space-y-4">
+                <div className="text-center">
+                  <p className="text-xs text-muted-foreground">Code sent to</p>
+                  <p className="text-sm font-semibold text-foreground mt-0.5">{otpMaskEmail}</p>
+                  {otpMaskPhone && <p className="text-xs text-muted-foreground mt-0.5">and SMS to {otpMaskPhone}</p>}
+                </div>
+                <PinPad value={otp} onChange={setOtp} length={6} autoFocus disabled={isLoading} />
+                <Button type="submit" variant="gold" className="w-full h-11 text-sm font-semibold rounded-lg"
+                  disabled={isLoading || otp.length !== 6}>
+                  {isLoading ? <><Loader2 className="animate-spin" size={15} /> Verifying…</> : <>Sign In <ArrowRight size={15} /></>}
+                </Button>
+                <div className="flex items-center justify-between text-[11px]">
+                  <button type="button" onClick={() => { setOtpStep('enter'); setOtp(''); }} className="text-muted-foreground hover:text-foreground">
+                    ← Change details
+                  </button>
+                  <button type="button" onClick={resendOtp} disabled={isLoading} className="text-accent font-semibold hover:underline disabled:opacity-50">
+                    Didn't get it? Resend
+                  </button>
+                </div>
               </form>
             )}
           </div>
 
-          {fingerprintAvailable && (
+          {fingerprintAvailable && mode === 'password' && (
             <>
               <div className="flex items-center gap-3 my-4">
                 <div className="flex-1 h-px bg-border/50" />
