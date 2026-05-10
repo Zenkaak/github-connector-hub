@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { RefreshCw, Plus, CheckCircle2, Clock, AlertTriangle, Wallet, Phone, Calendar, User as UserIcon, Loader2, Eye, TrendingDown, TrendingUp } from 'lucide-react';
+import { RefreshCw, Plus, CheckCircle2, Clock, AlertTriangle, Wallet, Phone, Calendar, User as UserIcon, Loader2, Eye, TrendingDown, TrendingUp, Send } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,6 +40,32 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
   const [stkPhone, setStkPhone] = useState(profile?.phone || '');
   const [paying, setPaying] = useState(false);
   const [detailCycle, setDetailCycle] = useState<any | null>(null);
+  const [triggering, setTriggering] = useState<string | null>(null);
+
+  const triggerStkForMember = async (cycle: any, member: any) => {
+    if (!member?.profile?.phone) {
+      toast({ title: 'No phone on file', description: `${member?.profile?.full_name || 'Member'} has no phone number.`, variant: 'destructive' });
+      return;
+    }
+    const isLate = new Date() > new Date(cycle.deadline);
+    const pen = isLate ? Number(cycle.penalty_amount || 0) : 0;
+    const total = Number(cycle.contribution_amount) + pen;
+    setTriggering(member.user_id);
+    try {
+      const { error } = await supabase.functions.invoke('initiate-stk-push', {
+        body: {
+          phone: member.profile.phone, amount: total,
+          purpose: 'merry_go_round', userId: member.user_id, groupId,
+          cycle_number: cycle.cycle_number,
+          metadata: { type: 'merry_go_round', cycle_id: cycle.id, cycle_number: cycle.cycle_number, penalty: pen, triggered_by_chair: true },
+        },
+      });
+      if (error) throw error;
+      toast({ title: 'STK push sent', description: `${member.profile.full_name} will receive a prompt for ${fmt(total)}.` });
+    } catch (e: any) {
+      toast({ title: 'Failed to send STK', description: e.message, variant: 'destructive' });
+    } finally { setTriggering(null); }
+  };
 
   // Create form
   const [recipient, setRecipient] = useState('');
@@ -614,6 +640,19 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
                                 <p className="text-[10px] text-muted-foreground truncate">{m.profile?.phone || '—'}{isLate ? ' · late penalty applies' : ''}</p>
                               </div>
                               <span className="text-[11.5px] font-semibold text-amber-600 dark:text-amber-400 shrink-0">{fmt(owed)}</span>
+                              {isChair && cy.status === 'open' && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="h-7 px-2 gap-1 text-[10px] shrink-0"
+                                  disabled={triggering === m.user_id || !m.profile?.phone}
+                                  onClick={() => triggerStkForMember(cy, m)}
+                                  title={m.profile?.phone ? 'Send STK push to this member' : 'No phone on file'}
+                                >
+                                  {triggering === m.user_id ? <Loader2 size={11} className="animate-spin" /> : <Send size={11} />}
+                                  STK
+                                </Button>
+                              )}
                             </div>
                           );
                         })}
