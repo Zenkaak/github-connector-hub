@@ -337,95 +337,105 @@ export default function ChamaGroupDetailPage() {
                     </>
                   )}
                 </div>
-                <div className="min-w-0">
-                  <p className="text-[10px] uppercase tracking-[0.2em] font-semibold text-primary-foreground/60">
-                    Chama Group
-                  </p>
-                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-display font-bold tracking-tight mt-0.5 truncate">
-                    {group.name}
-                  </h1>
-                  {group.description && (
-                    <p className="text-xs sm:text-sm text-primary-foreground/70 mt-1 line-clamp-2 max-w-md">
-                      {group.description}
-                    </p>
-                  )}
-                  <div className="flex items-center gap-1.5 mt-2.5 flex-wrap">
-                    <span className="text-[11px] px-2.5 py-1 rounded-full font-semibold bg-accent/15 text-accent border border-accent/30 inline-flex items-center gap-1">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] uppercase tracking-[0.2em] font-semibold text-primary-foreground/60">
+                        Chama Group
+                      </p>
+                      <h1 className="text-xl sm:text-2xl lg:text-3xl font-display font-bold tracking-tight mt-0.5 truncate">
+                        {group.name}
+                      </h1>
+                      {group.description && (
+                        <p className="text-xs sm:text-sm text-primary-foreground/70 mt-1 line-clamp-1 max-w-md">
+                          {group.description}
+                        </p>
+                      )}
+                    </div>
+                    {/* Compact icon actions, top-right */}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        onClick={handleShare}
+                        title="Share chama link"
+                        aria-label="Share chama link"
+                        className="h-9 w-9 sm:w-auto sm:px-3 inline-flex items-center justify-center gap-1.5 rounded-xl bg-accent text-accent-foreground hover:bg-accent/90 shadow-md font-semibold text-xs transition-colors"
+                      >
+                        {shareCopied ? <Check size={15} /> : <Share2 size={15} />}
+                        <span className="hidden sm:inline">{shareCopied ? 'Copied' : 'Share'}</span>
+                      </button>
+                      {isLeader && (
+                        <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+                          <DialogTrigger asChild>
+                            <button
+                              title="Add member"
+                              aria-label="Add member"
+                              className="h-9 w-9 sm:w-auto sm:px-3 inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary-foreground/10 border border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/20 text-xs font-semibold transition-colors"
+                            >
+                              <UserPlus size={15} />
+                              <span className="hidden sm:inline">Add</span>
+                            </button>
+                          </DialogTrigger>
+                          <DialogContent>
+                            <DialogHeader><DialogTitle>Add Member</DialogTitle></DialogHeader>
+                            <div className="space-y-4 mt-2">
+                              <div>
+                                <Label>Search by Phone</Label>
+                                <div className="flex gap-2 mt-1">
+                                  <Input value={searchPhone} onChange={e => setSearchPhone(e.target.value)} placeholder="0712345678" maxLength={15} />
+                                  <Button onClick={handleSearchUser} disabled={searching || !searchPhone.trim()} variant="secondary"><Search size={16} /></Button>
+                                </div>
+                              </div>
+                              {searchResult && (
+                                <Card className="p-4 bg-muted/50">
+                                  <div className="flex items-center gap-3 mb-3">
+                                    <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
+                                      {searchResult.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                                    </div>
+                                    <div>
+                                      <p className="font-semibold text-sm">{searchResult.full_name}</p>
+                                      <p className="text-xs text-muted-foreground">{searchResult.phone}</p>
+                                    </div>
+                                  </div>
+                                  <div className="mb-3">
+                                    <Label>Role</Label>
+                                    <Select value={selectedRole} onValueChange={setSelectedRole}>
+                                      <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                                      <SelectContent>
+                                        <SelectItem value="member">Member</SelectItem>
+                                        <SelectItem value="treasurer">Treasurer</SelectItem>
+                                        <SelectItem value="secretary">Secretary</SelectItem>
+                                        <SelectItem value="chairperson">Chairperson</SelectItem>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                  <Button onClick={handleAddMember} disabled={adding} className="w-full">
+                                    {adding ? 'Adding...' : `Add ${searchResult.full_name}`}
+                                  </Button>
+                                </Card>
+                              )}
+                            </div>
+                          </DialogContent>
+                        </Dialog>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Chips row — compact, single line, scrollable on overflow */}
+                  <div className="flex items-center gap-1.5 mt-3 overflow-x-auto no-scrollbar -mx-0.5 px-0.5">
+                    <span className="text-[10.5px] px-2 py-1 rounded-full font-semibold bg-accent/15 text-accent border border-accent/30 inline-flex items-center gap-1 whitespace-nowrap">
                       <MyRoleIcon size={11} /> {myRoleLabel}
                     </span>
-                    <span className="text-[11px] px-2.5 py-1 rounded-full font-semibold bg-primary-foreground/10 text-primary-foreground/90 border border-primary-foreground/15 inline-flex items-center gap-1">
-                      <Users size={11} /> {members.length}
-                      {group.max_members ? ` / ${group.max_members}` : ''} members
+                    <span className="text-[10.5px] px-2 py-1 rounded-full font-semibold bg-primary-foreground/10 text-primary-foreground/90 border border-primary-foreground/15 inline-flex items-center gap-1 whitespace-nowrap">
+                      <Users size={11} /> {members.length}{group.max_members ? `/${group.max_members}` : ''}
                     </span>
                     {group.contribution_amount > 0 && (
-                      <span className="text-[11px] px-2.5 py-1 rounded-full font-semibold bg-primary-foreground/10 text-primary-foreground/90 border border-primary-foreground/15 inline-flex items-center gap-1">
-                        <Coins size={11} /> KES {group.contribution_amount.toLocaleString()} / {group.contribution_frequency}
+                      <span className="text-[10.5px] px-2 py-1 rounded-full font-semibold bg-primary-foreground/10 text-primary-foreground/90 border border-primary-foreground/15 inline-flex items-center gap-1 whitespace-nowrap">
+                        <Coins size={11} /> KES {group.contribution_amount.toLocaleString()}/{group.contribution_frequency}
                       </span>
                     )}
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <Button
-                  size="sm"
-                  onClick={handleShare}
-                  className="gap-1.5 rounded-xl bg-accent text-accent-foreground hover:bg-accent/90 shadow-md font-semibold"
-                  title="Share chama link"
-                >
-                  {shareCopied ? <Check size={14} /> : <Share2 size={14} />}
-                  <span>{shareCopied ? 'Copied' : 'Share'}</span>
-                </Button>
-                {isLeader && (
-                  <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button size="sm" variant="outline" className="gap-1.5 rounded-xl bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/20">
-                        <UserPlus size={14} /> <span className="hidden sm:inline">Add</span>
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader><DialogTitle>Add Member</DialogTitle></DialogHeader>
-                      <div className="space-y-4 mt-2">
-                        <div>
-                          <Label>Search by Phone</Label>
-                          <div className="flex gap-2 mt-1">
-                            <Input value={searchPhone} onChange={e => setSearchPhone(e.target.value)} placeholder="0712345678" maxLength={15} />
-                            <Button onClick={handleSearchUser} disabled={searching || !searchPhone.trim()} variant="secondary"><Search size={16} /></Button>
-                          </div>
-                        </div>
-                        {searchResult && (
-                          <Card className="p-4 bg-muted/50">
-                            <div className="flex items-center gap-3 mb-3">
-                              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
-                                {searchResult.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-                              </div>
-                              <div>
-                                <p className="font-semibold text-sm">{searchResult.full_name}</p>
-                                <p className="text-xs text-muted-foreground">{searchResult.phone}</p>
-                              </div>
-                            </div>
-                            <div className="mb-3">
-                              <Label>Role</Label>
-                              <Select value={selectedRole} onValueChange={setSelectedRole}>
-                                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="member">Member</SelectItem>
-                                  <SelectItem value="treasurer">Treasurer</SelectItem>
-                                  <SelectItem value="secretary">Secretary</SelectItem>
-                                  <SelectItem value="chairperson">Chairperson</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <Button onClick={handleAddMember} disabled={adding} className="w-full">
-                              {adding ? 'Adding...' : `Add ${searchResult.full_name}`}
-                            </Button>
-                          </Card>
-                        )}
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                )}
-              </div>
-            </div>
 
             {/* Headline KPIs inside hero */}
             <div className="relative grid grid-cols-3 gap-3 lg:gap-6 mt-5 pt-5 border-t border-primary-foreground/10">
