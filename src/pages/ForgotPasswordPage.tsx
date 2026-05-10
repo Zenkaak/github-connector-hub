@@ -37,10 +37,22 @@ export default function ForgotPasswordPage() {
     }
   };
 
-  const handleVerifyCode = (e: React.FormEvent) => {
+  const handleVerifyCode = async (e: React.FormEvent) => {
     e.preventDefault();
     if (code.length !== 6) return toast.error('Enter the 6-digit code');
-    setStep('password');
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('password-recovery-otp', {
+        body: { action: 'check', email: email.trim().toLowerCase(), code },
+      });
+      if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message || 'Invalid code');
+      setStep('password');
+    } catch (err: any) {
+      toast.error(err.message || 'Invalid code');
+      setCode('');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleResetPassword = async (e: React.FormEvent) => {
@@ -126,7 +138,9 @@ export default function ForgotPasswordPage() {
               </div>
               <form onSubmit={handleVerifyCode} className="space-y-5">
                 <PinPad value={code} onChange={setCode} length={6} autoFocus />
-                <Button type="submit" variant="gold" className="w-full h-12" disabled={code.length !== 6}>Continue</Button>
+                <Button type="submit" variant="gold" className="w-full h-12" disabled={code.length !== 6 || isLoading}>
+                  {isLoading ? <><Loader2 className="animate-spin" size={18} /> Verifying…</> : 'Continue'}
+                </Button>
               </form>
               <button onClick={handleResend} disabled={isLoading}
                 className="block mx-auto text-xs text-primary font-semibold hover:underline disabled:opacity-50">

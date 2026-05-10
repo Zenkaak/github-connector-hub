@@ -137,10 +137,10 @@ export default function AuthPage() {
         body: { action: 'verify', email: otpEmail, code: otp },
       });
       if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message || 'Verification failed');
-      const { token_hash, email } = data as { token_hash: string; email: string };
+      const { token_hash } = data as { token_hash: string; email: string };
 
       const { data: vData, error: vErr } = await supabase.auth.verifyOtp({
-        type: 'magiclink', token_hash, email,
+        type: 'magiclink', token_hash,
       });
       if (vErr) throw vErr;
       if (!vData.user) throw new Error('Sign-in failed');

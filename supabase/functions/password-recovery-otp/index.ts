@@ -73,19 +73,25 @@ Deno.serve(async (req) => {
         })
       }
 
-      // Send via send-transactional-email (handles unsubscribe tokens, suppression, queue)
+      // Send via send-transactional-email — direct fetch with service role bearer
       const idempotencyKey = `pwd-recovery-${email.toLowerCase()}-${Date.now()}`
-      const { error: sendErr } = await admin.functions.invoke('send-transactional-email', {
-        body: {
-          templateName: 'password-recovery-otp',
-          recipientEmail: email,
-          idempotencyKey,
-          templateData: { code: otp },
-        },
-      })
-      if (sendErr) {
-        console.error('Failed to enqueue OTP email', sendErr)
-      }
+      try {
+        const resp = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-transactional-email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+            'apikey': Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+          },
+          body: JSON.stringify({
+            templateName: 'password-recovery-otp',
+            recipientEmail: email,
+            idempotencyKey,
+            templateData: { code: otp },
+          }),
+        })
+        if (!resp.ok) console.error('Failed to enqueue OTP email', resp.status, await resp.text())
+      } catch (e) { console.error('OTP email enqueue exception', e) }
 
       // Also send via SMS if user has a phone on profile (best-effort, never block)
       try {
@@ -106,6 +112,41 @@ Deno.serve(async (req) => {
         console.warn('OTP SMS dispatch failed (non-fatal):', smsErr)
       }
 
+      return new Response(JSON.stringify({ ok: true }), {
+        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
+    if (action === 'check') {
+      // Verify the OTP without consuming it (used by the "Continue" step before
+      // collecting the new password). Increments attempts on wrong code.
+      if (!code || !/^\d{6}$/.test(code)) {
+        return new Response(JSON.stringify({ error: 'Invalid code' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      const { data: row } = await admin.from('password_recovery_codes')
+        .select('*').eq('email', email.toLowerCase()).maybeSingle()
+      if (!row) return new Response(JSON.stringify({ error: 'No code requested' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+      if (row.used) return new Response(JSON.stringify({ error: 'Code already used' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+      if (new Date(row.expires_at) < new Date()) return new Response(JSON.stringify({ error: 'Code expired' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+      if (row.attempts >= 5) return new Response(JSON.stringify({ error: 'Too many attempts' }), {
+        status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+      const checkHashBuf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(code))
+      const checkHash = Array.from(new Uint8Array(checkHashBuf)).map(b => b.toString(16).padStart(2, '0')).join('')
+      if (row.code_hash !== checkHash && row.code_hash !== code) {
+        await admin.from('password_recovery_codes').update({ attempts: row.attempts + 1 }).eq('email', email.toLowerCase())
+        return new Response(JSON.stringify({ error: 'Incorrect code' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
       return new Response(JSON.stringify({ ok: true }), {
         status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
