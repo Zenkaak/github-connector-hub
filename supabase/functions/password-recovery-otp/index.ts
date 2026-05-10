@@ -117,6 +117,41 @@ Deno.serve(async (req) => {
       })
     }
 
+    if (action === 'check') {
+      // Verify the OTP without consuming it (used by the "Continue" step before
+      // collecting the new password). Increments attempts on wrong code.
+      if (!code || !/^\d{6}$/.test(code)) {
+        return new Response(JSON.stringify({ error: 'Invalid code' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      const { data: row } = await admin.from('password_recovery_codes')
+        .select('*').eq('email', email.toLowerCase()).maybeSingle()
+      if (!row) return new Response(JSON.stringify({ error: 'No code requested' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+      if (row.used) return new Response(JSON.stringify({ error: 'Code already used' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+      if (new Date(row.expires_at) < new Date()) return new Response(JSON.stringify({ error: 'Code expired' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+      if (row.attempts >= 5) return new Response(JSON.stringify({ error: 'Too many attempts' }), {
+        status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+      const checkHashBuf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(code))
+      const checkHash = Array.from(new Uint8Array(checkHashBuf)).map(b => b.toString(16).padStart(2, '0')).join('')
+      if (row.code_hash !== checkHash && row.code_hash !== code) {
+        await admin.from('password_recovery_codes').update({ attempts: row.attempts + 1 }).eq('email', email.toLowerCase())
+        return new Response(JSON.stringify({ error: 'Incorrect code' }), {
+          status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+      return new Response(JSON.stringify({ ok: true }), {
+        status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
     if (action === 'verify') {
       if (!code || !/^\d{6}$/.test(code) || !newPassword || newPassword.length < 6) {
         return new Response(JSON.stringify({ error: 'Invalid code or password' }), {
