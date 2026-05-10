@@ -45,6 +45,63 @@ Deno.serve(async (req) => {
   }
 
   const nowIso = new Date().toISOString();
+
+  // ---- Reconciliation: cron-only run resolves any stuck payout_pending cycles
+  // (chair & cron can both trigger, so we double-check the actual B2C status
+  // before re-processing or letting them stay stuck.)
+  const reconciled: any[] = [];
+  if (!chairTriggered) {
+    const { data: pending } = await supabase
+      .from("chama_mgr_cycles").select("*")
+      .eq("status", "payout_pending");
+    for (const cy of pending || []) {
+      const occasion = `MGR cycle #${cy.cycle_number}`.slice(0, 100);
+      const { data: b2c } = await supabase
+        .from("mpesa_b2c_requests")
+        .select("id, status, last_attempt_at, result_desc")
+        .eq("user_id", cy.recipient_id)
+        .eq("occasion", occasion)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!b2c) {
+        // No B2C request found — reset so cron/chair can try again
+        await supabase.from("chama_mgr_cycles")
+          .update({ status: "payout_failed" }).eq("id", cy.id);
+        await notifyChairOfFailure(supabase, cy, "No B2C request found for pending payout");
+        reconciled.push({ cycle_id: cy.id, action: "reset_no_request" });
+        continue;
+      }
+      if (b2c.status === "completed") {
+        await supabase.from("chama_mgr_cycles")
+          .update({ status: "paid_out" }).eq("id", cy.id);
+        reconciled.push({ cycle_id: cy.id, action: "marked_paid_out" });
+        continue;
+      }
+      if (b2c.status === "failed") {
+        await supabase.from("chama_mgr_cycles")
+          .update({ status: "payout_failed" }).eq("id", cy.id);
+        await notifyChairOfFailure(supabase, cy, b2c.result_desc || "B2C marked failed");
+        reconciled.push({ cycle_id: cy.id, action: "marked_failed" });
+        continue;
+      }
+      // Still processing — flag as failed if stale (>15 min) so chair can retry
+      const lastAt = b2c.last_attempt_at ? new Date(b2c.last_attempt_at).getTime() : 0;
+      if (lastAt && Date.now() - lastAt > 15 * 60 * 1000) {
+        await supabase.from("chama_mgr_cycles")
+          .update({ status: "payout_failed" }).eq("id", cy.id);
+        await supabase.from("mpesa_b2c_requests")
+          .update({ status: "failed", result_desc: "Timed out awaiting M-Pesa callback" })
+          .eq("id", b2c.id);
+        await notifyChairOfFailure(supabase, cy, "Timed out awaiting M-Pesa confirmation");
+        reconciled.push({ cycle_id: cy.id, action: "timed_out" });
+      } else {
+        reconciled.push({ cycle_id: cy.id, action: "still_processing" });
+      }
+    }
+  }
+
   let dueCycles: any[] = [];
   if (chairTriggered && cycleIdOverride) {
     const { data: cy, error } = await supabase
@@ -101,7 +158,7 @@ Deno.serve(async (req) => {
     }
   }
 
-  return new Response(JSON.stringify({ processed: results.length, results }), {
+  return new Response(JSON.stringify({ processed: results.length, results, reconciled }), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 });
