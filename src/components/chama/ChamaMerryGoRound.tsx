@@ -70,15 +70,20 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
     try {
       const nextNum = cycles.length > 0 ? Math.max(...cycles.map(c => c.cycle_number)) + 1 : 1;
       const recipMember = members.find(m => m.user_id === recipient);
-      const { error } = await supabase.from('chama_mgr_cycles' as any).insert({
+      const { data: inserted, error } = await supabase.from('chama_mgr_cycles' as any).insert({
         group_id: groupId, cycle_number: nextNum, recipient_id: recipient,
         recipient_name: recipMember?.profile?.full_name || 'Unknown',
         contribution_amount: parseFloat(amount), penalty_amount: parseFloat(penalty || '0'),
         deadline: new Date(deadline).toISOString(), payout_date: new Date(payoutDate).toISOString(),
         created_by: user.id,
-      });
+      }).select('id').single();
       if (error) throw error;
-      toast({ title: `Cycle #${nextNum} created` });
+      const newId = (inserted as any)?.id;
+      // Notify all members by SMS (Paybill + their unique account no.) — fire-and-forget
+      if (newId) {
+        supabase.functions.invoke('notify-mgr-cycle', { body: { cycle_id: newId } }).catch(() => {});
+      }
+      toast({ title: `Cycle #${nextNum} created`, description: 'Members are being notified by SMS.' });
       setCreateOpen(false);
       setRecipient(''); setAmount(''); setPenalty('0'); setDeadline(''); setPayoutDate('');
       fetchData();
