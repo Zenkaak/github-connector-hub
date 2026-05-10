@@ -80,26 +80,20 @@ export function SendMoneyDialog({ open, onOpenChange, walletBalance, onSuccess }
     setSearching(true);
     setRecipientName(null); setRecipientId(null);
     try {
-      const variants = [phoneNumber];
-      if (phoneNumber.startsWith('0')) {
-        variants.push('+254' + phoneNumber.slice(1), '254' + phoneNumber.slice(1));
-      } else if (phoneNumber.startsWith('+254')) {
-        variants.push('0' + phoneNumber.slice(4), '254' + phoneNumber.slice(4));
-      } else if (phoneNumber.startsWith('254')) {
-        variants.push('0' + phoneNumber.slice(3), '+' + phoneNumber);
+      const { data, error } = await supabase.rpc('lookup_dasnet_user_by_phone' as any, { _phone: phoneNumber });
+      if (error) {
+        console.warn('lookup_dasnet_user_by_phone error:', error);
+        setRecipientName('User not on Dasnet');
+        return;
       }
-      const { data } = await supabase
-        .from('profiles')
-        .select('user_id, full_name, phone')
-        .in('phone', variants)
-        .limit(1);
-      if (data && data.length > 0) {
-        if (data[0].user_id === user?.id) {
+      const row = Array.isArray(data) && data.length > 0 ? (data[0] as any) : null;
+      if (row) {
+        if (row.user_id === user?.id) {
           setRecipientName('⚠️ This is your own account — switch to "My M-Pesa Number"');
           setRecipientId(null);
         } else {
-          setRecipientName(data[0].full_name);
-          setRecipientId(data[0].user_id);
+          setRecipientName(row.full_name);
+          setRecipientId(row.user_id);
         }
       } else {
         setRecipientName('User not on Dasnet');
