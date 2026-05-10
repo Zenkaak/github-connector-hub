@@ -47,11 +47,17 @@ Deno.serve(async (req) => {
     try {
       const r = await processCycle(supabase, cycle);
       results.push({ cycle_id: cycle.id, ...r });
+      // If processCycle returned ok:false with a B2C/Daraja reason, alert chair too
+      if (r && r.ok === false && r.reason && r.reason !== "no_funds" && r.reason !== "already_in_flight") {
+        await notifyChairOfFailure(supabase, cycle, r.reason);
+      }
     } catch (err) {
-      console.error(`Cycle ${cycle.id} payout failed:`, err);
+      const reason = err instanceof Error ? err.message : String(err);
+      console.error(`Cycle ${cycle.id} payout failed:`, reason);
       await supabase.from("chama_mgr_cycles")
         .update({ status: "payout_failed" }).eq("id", cycle.id);
-      results.push({ cycle_id: cycle.id, ok: false, error: String(err) });
+      await notifyChairOfFailure(supabase, cycle, reason);
+      results.push({ cycle_id: cycle.id, ok: false, error: reason });
     }
   }
 
