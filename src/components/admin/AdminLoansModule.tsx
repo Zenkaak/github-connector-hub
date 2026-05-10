@@ -123,7 +123,7 @@ export function AdminLoansModule() {
         <Card className="overflow-hidden">
           <div className="divide-y divide-border">
             {loans.map((l) => (
-              <button key={l.id} onClick={() => open(l)} className="w-full p-4 hover:bg-muted/40 text-left flex items-center gap-3">
+              <button key={l.id} onClick={() => open(l)} className="w-full p-4 hover:bg-muted/60 text-left flex items-center gap-3">
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-foreground truncate">{l.profile?.full_name || 'Unknown'}</p>
                   <p className="text-xs text-muted-foreground">{l.profile?.phone} • {l.loan_type}</p>

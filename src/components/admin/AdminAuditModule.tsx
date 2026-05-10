@@ -32,7 +32,7 @@ export function AdminAuditModule() {
               <Badge variant="outline" className="text-[10px] shrink-0">{l.action}</Badge>
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-muted-foreground">{format(new Date(l.created_at), 'MMM d, yyyy HH:mm:ss')}</p>
-                {l.details && <pre className="text-[10px] text-muted-foreground bg-muted/40 p-2 rounded mt-1 overflow-x-auto">{JSON.stringify(l.details, null, 2)}</pre>}
+                {l.details && <pre className="text-[10px] text-muted-foreground bg-muted/60 p-2 rounded mt-1 overflow-x-auto">{JSON.stringify(l.details, null, 2)}</pre>}
               </div>
             </div>
           ))}

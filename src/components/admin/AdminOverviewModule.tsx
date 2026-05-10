@@ -71,7 +71,7 @@ function KpiCard({ label, value, delta, icon: Icon, accent = 'gold', onClick, tr
   return (
     <button
       onClick={onClick}
-      className="group text-left bg-card border border-border/60 rounded-xl p-4 hover:border-accent/40 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 relative overflow-hidden"
+      className="group text-left bg-card border border-border rounded-xl p-4 hover:border-accent/40 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 relative overflow-hidden"
     >
       <div className={cn('absolute -right-6 -top-6 w-24 h-24 rounded-full bg-gradient-to-br opacity-50', accentMap[accent].split(' ').slice(0, 2).join(' '))} />
       <div className="relative">
@@ -500,7 +500,7 @@ export function AdminOverviewModule() {
               { label: 'Active chamas', status: 'healthy', badge: stats.activeChamas.toString() },
               { label: 'MGR cycles', status: 'healthy', badge: stats.openMgrCycles.toString() },
             ].map((s) => (
-              <div key={s.label} className="flex items-center justify-between py-1.5 border-b border-border/50 last:border-0">
+              <div key={s.label} className="flex items-center justify-between py-1.5 border-b border-border last:border-0">
                 <div className="flex items-center gap-2">
                   {s.status === 'healthy' && <CheckCircle size={13} className="text-emerald-500" />}
                   {s.status === 'warning' && <AlertTriangle size={13} className="text-amber-500" />}
@@ -539,7 +539,7 @@ export function AdminOverviewModule() {
             {recentUsers.length === 0 ? (
               <p className="text-xs text-muted-foreground py-6 text-center">No members yet</p>
             ) : recentUsers.map((u) => (
-              <div key={u.id} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
+              <div key={u.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500/20 to-amber-500/5 flex items-center justify-center text-xs font-bold text-amber-700 shrink-0">
                     {(u.full_name || 'U').slice(0, 1).toUpperCase()}
@@ -577,7 +577,7 @@ export function AdminOverviewModule() {
             {recentTransfers.length === 0 ? (
               <p className="text-xs text-muted-foreground py-6 text-center">No transfers yet</p>
             ) : recentTransfers.map((t) => (
-              <div key={t.id} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
+              <div key={t.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
                     <Send size={13} className="text-emerald-600" />

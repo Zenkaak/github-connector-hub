@@ -82,7 +82,7 @@ export function AdminWithdrawalsModule() {
        items.length === 0 ? <AdminEmptyState icon={PiggyBank} title={`No ${filter} withdrawals`} /> : (
         <Card className="divide-y divide-border">
           {items.map((w) => (
-            <button key={w.id} onClick={() => { setSelected(w); setReason(w.admin_reason || ''); }} className="w-full p-4 hover:bg-muted/40 text-left flex items-center gap-3">
+            <button key={w.id} onClick={() => { setSelected(w); setReason(w.admin_reason || ''); }} className="w-full p-4 hover:bg-muted/60 text-left flex items-center gap-3">
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-foreground truncate">{w.group_name}</p>
                 <p className="text-xs text-muted-foreground truncate">{w.reason || 'No reason'}</p>

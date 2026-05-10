@@ -72,7 +72,7 @@ export function AdminTransfersModule() {
         <Card className="overflow-hidden">
           <div className="divide-y divide-border">
             {filtered.map((t) => (
-              <div key={t.id} className="p-4 hover:bg-muted/40">
+              <div key={t.id} className="p-4 hover:bg-muted/60">
                 <div className="flex items-center justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 text-sm">
