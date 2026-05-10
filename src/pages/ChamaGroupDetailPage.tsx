@@ -305,7 +305,8 @@ export default function ChamaGroupDetailPage() {
 
       <div className="p-4 lg:p-8 max-w-5xl mx-auto">
 
-        {/* Hero header */}
+        {/* Hero header — only on the chama "home" view */}
+        {currentSection === 'home' && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
           <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-primary via-primary to-primary/85 text-primary-foreground p-5 sm:p-6 shadow-md">
             <div aria-hidden className="absolute -right-16 -top-16 w-56 h-56 rounded-full bg-accent/20 blur-3xl pointer-events-none" />
