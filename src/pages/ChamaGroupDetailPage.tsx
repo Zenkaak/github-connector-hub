@@ -45,10 +45,13 @@ interface Member {
 }
 
 export default function ChamaGroupDetailPage() {
-  const { groupId } = useParams<{ groupId: string }>();
+  const { groupId, section } = useParams<{ groupId: string; section?: string }>();
   const { user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const currentSection = section || 'home';
+  const goToSection = (s?: string) =>
+    navigate(s && s !== 'home' ? `/dashboard/chama/${groupId}/${s}` : `/dashboard/chama/${groupId}`);
 
   const [group, setGroup] = useState<any>(null);
   const [members, setMembers] = useState<Member[]>([]);
