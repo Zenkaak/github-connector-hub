@@ -337,12 +337,24 @@ export default function AdminHarambeeApplicationsPage() {
                             </Badge>
                           </div>
                           <p className="font-semibold text-sm truncate">For: {app.beneficiary_name}</p>
-                          <p className="text-xs text-muted-foreground line-clamp-2 break-words whitespace-pre-line">{app.description}</p>
-                          <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                            <span className="flex items-center gap-1"><User size={12} />{profile?.full_name || 'Unknown'}</span>
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1 min-w-0"><User size={12} /><span className="truncate">{profile?.full_name || 'Unknown'}</span></span>
                             <span className="flex items-center gap-1"><DollarSign size={12} />{fmt(app.target_amount)}</span>
                             <span className="flex items-center gap-1"><Calendar size={12} />{format(new Date(app.created_at), 'MMM dd, yyyy')}</span>
                           </div>
+                          {app.description && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="mt-2 h-7 px-2 text-xs text-accent hover:text-accent"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setListDescription({ name: app.beneficiary_name, text: app.description });
+                              }}
+                            >
+                              <FileText size={12} className="mr-1" /> Read description
+                            </Button>
+                          )}
                         </div>
                         <Button variant="ghost" size="icon" className="shrink-0">
                           <Eye size={16} />
