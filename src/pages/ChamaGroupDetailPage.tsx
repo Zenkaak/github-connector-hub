@@ -262,14 +262,14 @@ export default function ChamaGroupDetailPage() {
 
   if (loading) {
     return (
-      <DashboardLayout>
+      <div className="min-h-screen bg-background">
         <div className="p-4 lg:p-8 max-w-4xl mx-auto space-y-4">
           <div className="h-8 w-48 bg-muted animate-pulse rounded" />
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {[1, 2, 3, 4].map(i => <div key={i} className="h-20 bg-muted animate-pulse rounded-xl" />)}
           </div>
         </div>
-      </DashboardLayout>
+      </div>
     );
   }
 
@@ -278,17 +278,29 @@ export default function ChamaGroupDetailPage() {
   const myRoleLabel = roleLabels[myRole] || 'Member';
   const MyRoleIcon = roleIcons[myRole] || Users;
 
+  const bottomNavItems = [
+    { id: '__home', icon: Home, label: 'Home', action: () => navigate('/dashboard/chama'), isActive: false },
+    { id: 'savings', icon: Wallet, label: 'Save', action: () => setActiveTab('savings'), isActive: activeTab === 'savings' },
+    { id: 'loans', icon: Landmark, label: 'Loans', action: () => setActiveTab('loans'), isActive: activeTab === 'loans' },
+    { id: 'withdrawals', icon: HandCoins, label: 'Withdraw', action: () => setActiveTab('withdrawals'), isActive: activeTab === 'withdrawals' },
+    { id: 'chat', icon: MessageSquare, label: 'Chat', action: () => setActiveTab('chat'), isActive: activeTab === 'chat' },
+  ];
+
   return (
-    <DashboardLayout>
+    <div className="min-h-screen bg-background pb-24">
+      <div className="sticky top-0 z-30 bg-background/85 backdrop-blur-md border-b border-border/50">
+        <div className="max-w-5xl mx-auto px-3 sm:px-4 h-12 flex items-center justify-between gap-2">
+          <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard/chama')} className="-ml-2 text-muted-foreground gap-1">
+            <ArrowLeft size={16} /> <span className="hidden sm:inline">Back to Chamas</span><span className="sm:hidden">Back</span>
+          </Button>
+          <Button variant="ghost" size="sm" onClick={handleShare} className="-mr-2 gap-1.5 text-primary" title="Share chama link">
+            {shareCopied ? <Check size={16} /> : <Share2 size={16} />}
+            <span className="text-xs font-semibold">{shareCopied ? 'Copied' : 'Share'}</span>
+          </Button>
+        </div>
+      </div>
+
       <div className="p-4 lg:p-8 max-w-5xl mx-auto">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate('/dashboard/chama')}
-          className="mb-3 -ml-2 text-muted-foreground gap-1"
-        >
-          <ArrowLeft size={16} /> Back to Chamas
-        </Button>
 
         {/* Hero header */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
