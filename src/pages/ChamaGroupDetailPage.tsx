@@ -281,14 +281,13 @@ export default function ChamaGroupDetailPage() {
   const myRoleLabel = roleLabels[myRole] || 'Member';
   const MyRoleIcon = roleIcons[myRole] || Users;
 
-  // Bottom nav uses DIFFERENT items from the in-hero quick actions (Contribute / Loan / Withdraw / Chat)
-  // so we don't duplicate. These give navigation to the most-used info views.
+  // Bottom nav uses dedicated routes, separate from the in-hero quick actions.
   const bottomNavItems = [
-    { id: '__home',        icon: Home,         label: 'Home',     action: () => navigate('/dashboard/chama'),  isActive: false },
-    { id: 'members',       icon: Users,        label: 'Members',  action: () => setActiveTab('members'),       isActive: activeTab === 'members' },
-    { id: 'announcements', icon: Megaphone,    label: 'Notices',  action: () => setActiveTab('announcements'), isActive: activeTab === 'announcements' },
-    { id: 'meetings',      icon: CalendarDays, label: 'Meetings', action: () => setActiveTab('meetings'),      isActive: activeTab === 'meetings' },
-    { id: 'reports',       icon: Download,     label: 'Reports',  action: () => setActiveTab('reports'),       isActive: activeTab === 'reports' },
+    { id: 'home',          icon: Home,         label: 'Home',     action: () => goToSection(),                isActive: currentSection === 'home' },
+    { id: 'members',       icon: Users,        label: 'Members',  action: () => goToSection('members'),       isActive: currentSection === 'members' },
+    { id: 'announcements', icon: Megaphone,    label: 'Notices',  action: () => goToSection('announcements'), isActive: currentSection === 'announcements' },
+    { id: 'meetings',      icon: CalendarDays, label: 'Meetings', action: () => goToSection('meetings'),      isActive: currentSection === 'meetings' },
+    { id: 'reports',       icon: Download,     label: 'Reports',  action: () => goToSection('reports'),       isActive: currentSection === 'reports' },
   ];
 
   return (
