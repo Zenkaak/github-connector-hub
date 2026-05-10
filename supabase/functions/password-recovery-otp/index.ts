@@ -73,15 +73,18 @@ Deno.serve(async (req) => {
         })
       }
 
-      // Send via send-transactional-email — direct fetch with service role bearer
+      // Send via send-transactional-email. The email function verifies a JWT at
+      // the gateway, so use the anon JWT for this function call; the sender
+      // function still uses its own service role internally for database work.
       const idempotencyKey = `pwd-recovery-${email.toLowerCase()}-${Date.now()}`
       try {
+        const functionJwt = Deno.env.get('SUPABASE_ANON_KEY') || Deno.env.get('SUPABASE_PUBLISHABLE_KEY')
         const resp = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-transactional-email`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
-            'apikey': Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+            'Authorization': `Bearer ${functionJwt}`,
+            'apikey': functionJwt ?? '',
           },
           body: JSON.stringify({
             templateName: 'password-recovery-otp',
