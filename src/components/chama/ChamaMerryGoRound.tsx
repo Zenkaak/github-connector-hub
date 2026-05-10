@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { RefreshCw, Plus, CheckCircle2, Clock, AlertTriangle, Wallet, Phone, Calendar, User as UserIcon, Loader2 } from 'lucide-react';
+import { RefreshCw, Plus, CheckCircle2, Clock, AlertTriangle, Wallet, Phone, Calendar, User as UserIcon, Loader2, Eye, TrendingDown, TrendingUp } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,10 +9,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { PaybillBox } from '@/components/PaybillBox';
+
+const initials = (name?: string) => (name || '?').split(' ').filter(Boolean).slice(0, 2).map(s => s[0]?.toUpperCase()).join('') || '?';
 
 interface Props {
   groupId: string;
@@ -36,6 +39,7 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
   const [payMethod, setPayMethod] = useState<'wallet' | 'paybill' | 'stk'>('wallet');
   const [stkPhone, setStkPhone] = useState(profile?.phone || '');
   const [paying, setPaying] = useState(false);
+  const [detailCycle, setDetailCycle] = useState<any | null>(null);
 
   // Create form
   const [recipient, setRecipient] = useState('');
@@ -239,8 +243,16 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
                   {/* Header */}
                   <div className="flex items-start justify-between gap-3 mb-3">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/15 to-accent/10 ring-1 ring-primary/20 flex items-center justify-center text-primary font-bold text-sm shrink-0">
-                        #{cycle.cycle_number}
+                      <div className="relative shrink-0">
+                        <Avatar className="w-12 h-12 ring-2 ring-primary/20">
+                          <AvatarImage src={recipMember?.profile?.avatar_url || undefined} alt={recipMember?.profile?.full_name || cycle.recipient_name} />
+                          <AvatarFallback className="bg-gradient-to-br from-primary/20 to-accent/15 text-primary font-bold text-sm">
+                            {initials(recipMember?.profile?.full_name || cycle.recipient_name)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="absolute -bottom-1 -right-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground border border-card shadow-sm">
+                          #{cycle.cycle_number}
+                        </span>
                       </div>
                       <div className="min-w-0">
                         <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Recipient</p>
@@ -299,15 +311,18 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
                     </div>
                   )}
 
-                  {/* Members */}
-                  <div className="rounded-lg border border-border/40 divide-y divide-border/30 mb-3 max-h-44 overflow-y-auto">
-                    {members.map(m => {
+                  {/* Members preview (first 5) */}
+                  <div className="rounded-lg border border-border/40 divide-y divide-border/30 mb-3 overflow-hidden">
+                    {members.slice(0, 5).map(m => {
                       const hasPaid = paid.has(m.user_id);
                       const isThisRecipient = m.user_id === cycle.recipient_id;
                       return (
                         <div key={m.user_id} className="flex items-center justify-between text-[11.5px] px-2.5 py-1.5">
-                          <span className="flex items-center gap-1.5 min-w-0">
-                            <UserIcon size={10} className="text-muted-foreground shrink-0" />
+                          <span className="flex items-center gap-2 min-w-0">
+                            <Avatar className="w-6 h-6 shrink-0">
+                              <AvatarImage src={m.profile?.avatar_url || undefined} alt={m.profile?.full_name} />
+                              <AvatarFallback className="text-[9px] bg-muted">{initials(m.profile?.full_name)}</AvatarFallback>
+                            </Avatar>
                             <span className="truncate">{m.profile?.full_name || 'Unknown'}</span>
                             {isThisRecipient && <Badge variant="outline" className="text-[9px] py-0 px-1 shrink-0">Recipient</Badge>}
                           </span>
@@ -321,13 +336,23 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
                     })}
                   </div>
 
-                  {!haveIPaid && cycle.status === 'open' && (
-                    <Button onClick={() => { setPayOpen({ cycle }); setPayMethod('wallet'); }} className="w-full gap-1.5 h-10 shadow-sm" size="sm">
-                      <Wallet size={14} /> Pay {fmt(cycle.contribution_amount)}
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setDetailCycle(cycle)}
+                      className="flex-1 gap-1.5 h-10"
+                    >
+                      <Eye size={14} /> View Details
                     </Button>
-                  )}
+                    {!haveIPaid && cycle.status === 'open' && (
+                      <Button onClick={() => { setPayOpen({ cycle }); setPayMethod('wallet'); }} className="flex-1 gap-1.5 h-10 shadow-sm" size="sm">
+                        <Wallet size={14} /> Pay {fmt(cycle.contribution_amount)}
+                      </Button>
+                    )}
+                  </div>
                   {haveIPaid && cycle.status === 'open' && (
-                    <div className="rounded-md bg-emerald-500/10 border border-emerald-500/30 py-2 text-center">
+                    <div className="rounded-md bg-emerald-500/10 border border-emerald-500/30 py-2 text-center mt-2">
                       <p className="text-[11.5px] text-emerald-600 dark:text-emerald-400 flex items-center justify-center gap-1 font-medium">
                         <CheckCircle2 size={12} /> You have paid this cycle
                       </p>
@@ -437,6 +462,158 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
               </Button>
             )}
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Details dialog */}
+      <Dialog open={!!detailCycle} onOpenChange={(o) => !o && setDetailCycle(null)}>
+        <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+          {detailCycle && (() => {
+            const cy = detailCycle;
+            const cyContribs = contribs.filter(c => c.cycle_id === cy.id);
+            const paidMap = new Map<string, { amount: number; paid_at: string; method: string }>();
+            cyContribs.forEach(c => {
+              const prev = paidMap.get(c.user_id);
+              paidMap.set(c.user_id, {
+                amount: (prev?.amount || 0) + Number(c.amount || 0),
+                paid_at: c.paid_at,
+                method: c.payment_method,
+              });
+            });
+            const total = cyContribs.reduce((s, c) => s + Number(c.amount || 0), 0);
+            const expectedTotal = Number(cy.contribution_amount) * members.length;
+            const arrears = Math.max(0, expectedTotal - total);
+            const paidMembers = members.filter(m => paidMap.has(m.user_id));
+            const unpaidMembers = members.filter(m => !paidMap.has(m.user_id));
+            const recipMember = members.find(m => m.user_id === cy.recipient_id);
+            const isLate = new Date() > new Date(cy.deadline);
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <span className="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded">#{cy.cycle_number}</span>
+                    <span className="text-base">Cycle Details</span>
+                  </DialogTitle>
+                </DialogHeader>
+
+                <div className="space-y-3">
+                  {/* Recipient */}
+                  <div className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-br from-accent/10 to-transparent border border-accent/20">
+                    <Avatar className="w-12 h-12 ring-2 ring-accent/30">
+                      <AvatarImage src={recipMember?.profile?.avatar_url || undefined} />
+                      <AvatarFallback className="bg-accent/15 text-accent font-bold">{initials(recipMember?.profile?.full_name || cy.recipient_name)}</AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Recipient</p>
+                      <p className="font-semibold text-sm truncate">{recipMember?.profile?.full_name || cy.recipient_name}</p>
+                      {recipMember?.profile?.phone && <p className="text-[11px] text-muted-foreground truncate">{recipMember.profile.phone}</p>}
+                    </div>
+                  </div>
+
+                  {/* KPIs */}
+                  <div className="grid grid-cols-3 gap-2">
+                    <div className="rounded-lg border border-border/60 p-2.5 bg-card">
+                      <p className="text-[9.5px] uppercase tracking-wider text-muted-foreground font-medium flex items-center gap-1"><TrendingUp size={9} /> Collected</p>
+                      <p className="text-sm font-bold mt-0.5 text-emerald-600 dark:text-emerald-400">{fmt(total)}</p>
+                    </div>
+                    <div className="rounded-lg border border-border/60 p-2.5 bg-card">
+                      <p className="text-[9.5px] uppercase tracking-wider text-muted-foreground font-medium">Target</p>
+                      <p className="text-sm font-bold mt-0.5">{fmt(expectedTotal)}</p>
+                    </div>
+                    <div className="rounded-lg border border-border/60 p-2.5 bg-card">
+                      <p className="text-[9.5px] uppercase tracking-wider text-muted-foreground font-medium flex items-center gap-1"><TrendingDown size={9} /> Arrears</p>
+                      <p className={`text-sm font-bold mt-0.5 ${arrears > 0 ? 'text-destructive' : 'text-muted-foreground'}`}>{fmt(arrears)}</p>
+                    </div>
+                  </div>
+
+                  {/* Schedule */}
+                  <div className="grid grid-cols-2 gap-2 text-[11px]">
+                    <div className="rounded-md bg-muted/40 px-2.5 py-1.5">
+                      <p className="text-[9.5px] uppercase tracking-wider text-muted-foreground font-medium">Deadline</p>
+                      <p className="font-medium mt-0.5">{new Date(cy.deadline).toLocaleString()}</p>
+                    </div>
+                    <div className="rounded-md bg-muted/40 px-2.5 py-1.5">
+                      <p className="text-[9.5px] uppercase tracking-wider text-muted-foreground font-medium">Payout</p>
+                      <p className="font-medium mt-0.5">{new Date(cy.payout_date).toLocaleString()}</p>
+                    </div>
+                  </div>
+
+                  {cy.status === 'paid_out' && (
+                    <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-2.5 text-[11.5px]">
+                      <p className="font-semibold text-emerald-700 dark:text-emerald-400">Paid out · {fmt(cy.payout_amount || total)}</p>
+                      <p className="text-muted-foreground text-[10.5px] mt-0.5">Processed {new Date(cy.payout_processed_at || cy.payout_date).toLocaleString()}</p>
+                    </div>
+                  )}
+
+                  {/* Paid members */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <p className="text-[10.5px] uppercase tracking-wider text-muted-foreground font-semibold">Paid ({paidMembers.length})</p>
+                      <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">{fmt(total)}</span>
+                    </div>
+                    {paidMembers.length === 0 ? (
+                      <p className="text-[11px] text-muted-foreground italic px-2 py-3 text-center bg-muted/30 rounded-md">No contributions yet.</p>
+                    ) : (
+                      <div className="rounded-lg border border-border/40 divide-y divide-border/30">
+                        {paidMembers.map(m => {
+                          const info = paidMap.get(m.user_id)!;
+                          return (
+                            <div key={m.user_id} className="flex items-center gap-2 px-2.5 py-2">
+                              <Avatar className="w-7 h-7 shrink-0">
+                                <AvatarImage src={m.profile?.avatar_url || undefined} />
+                                <AvatarFallback className="text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">{initials(m.profile?.full_name)}</AvatarFallback>
+                              </Avatar>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-[12px] font-medium truncate leading-tight">{m.profile?.full_name || 'Unknown'}</p>
+                                <p className="text-[10px] text-muted-foreground">{new Date(info.paid_at).toLocaleDateString()} · {info.method}</p>
+                              </div>
+                              <span className="text-[11.5px] font-semibold text-emerald-600 dark:text-emerald-400 shrink-0">{fmt(info.amount)}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Unpaid members */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1.5">
+                      <p className="text-[10.5px] uppercase tracking-wider text-muted-foreground font-semibold">Pending ({unpaidMembers.length})</p>
+                      {arrears > 0 && <span className="text-[10px] text-destructive font-medium">{fmt(arrears)} owed</span>}
+                    </div>
+                    {unpaidMembers.length === 0 ? (
+                      <p className="text-[11px] text-emerald-600 dark:text-emerald-400 italic px-2 py-3 text-center bg-emerald-500/5 rounded-md flex items-center justify-center gap-1">
+                        <CheckCircle2 size={12} /> Everyone has paid.
+                      </p>
+                    ) : (
+                      <div className="rounded-lg border border-border/40 divide-y divide-border/30">
+                        {unpaidMembers.map(m => {
+                          const owed = Number(cy.contribution_amount) + (isLate ? Number(cy.penalty_amount || 0) : 0);
+                          return (
+                            <div key={m.user_id} className="flex items-center gap-2 px-2.5 py-2">
+                              <Avatar className="w-7 h-7 shrink-0">
+                                <AvatarImage src={m.profile?.avatar_url || undefined} />
+                                <AvatarFallback className="text-[10px] bg-amber-500/10 text-amber-600 dark:text-amber-400">{initials(m.profile?.full_name)}</AvatarFallback>
+                              </Avatar>
+                              <div className="min-w-0 flex-1">
+                                <p className="text-[12px] font-medium truncate leading-tight">{m.profile?.full_name || 'Unknown'}</p>
+                                <p className="text-[10px] text-muted-foreground truncate">{m.profile?.phone || '—'}{isLate ? ' · late penalty applies' : ''}</p>
+                              </div>
+                              <span className="text-[11.5px] font-semibold text-amber-600 dark:text-amber-400 shrink-0">{fmt(owed)}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setDetailCycle(null)}>Close</Button>
+                </DialogFooter>
+              </>
+            );
+          })()}
         </DialogContent>
       </Dialog>
     </div>
