@@ -59,6 +59,11 @@ Deno.serve(async (req) => {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    if (cy.status === "payout_pending") {
+      return new Response(JSON.stringify({ error: "Payout already in progress — awaiting M-Pesa confirmation" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     // For chair retry, reset payout_failed -> open so processCycle proceeds
     if (cy.status === "payout_failed") {
       await supabase.from("chama_mgr_cycles").update({ status: "open" }).eq("id", cy.id);
