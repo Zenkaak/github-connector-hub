@@ -50,7 +50,7 @@ export function AdminAlertsPopover() {
   useEffect(() => {
     refresh();
     const channel = supabase
-      .channel('admin-alerts')
+      .channel(`admin-alerts-${Math.random().toString(36).slice(2)}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'kyc_documents' }, refresh)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'loan_applications' }, refresh)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'chama_withdrawals' }, refresh)
