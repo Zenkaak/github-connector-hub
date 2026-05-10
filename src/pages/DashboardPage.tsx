@@ -66,6 +66,10 @@ export default function DashboardPage() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [chamaUpdates, setChamaUpdates] = useState<any[]>([]);
   const [pinPromptOpen, setPinPromptOpen] = useState(false);
+  const [broadcastOpen, setBroadcastOpen] = useState(false);
+  const [broadcastMsg, setBroadcastMsg] = useState('');
+  const [broadcastGroupId, setBroadcastGroupId] = useState('');
+  const [broadcasting, setBroadcasting] = useState(false);
 
   useEffect(() => {
     if (!user) return;
