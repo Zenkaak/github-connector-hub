@@ -357,7 +357,7 @@ export default function AdminHarambeeApplicationsPage() {
 
       {/* Review Dialog */}
       <Dialog open={!!selected} onOpenChange={(open) => !open && setSelected(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl w-[calc(100vw-1.5rem)] max-h-[90vh] overflow-y-auto overflow-x-hidden">
           {selected && (() => {
             const profile = getProfile(selected.user_id);
             const sc = statusConfig[selected.status] || statusConfig.pending_review;
@@ -366,9 +366,9 @@ export default function AdminHarambeeApplicationsPage() {
             return (
               <>
                 <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2">
-                    {categoryLabels[selected.category]} Application
-                    <Badge variant="outline" className={cn('ml-2', sc.color)}>
+                  <DialogTitle className="flex flex-wrap items-center gap-2 text-base">
+                    <span className="break-words">{categoryLabels[selected.category]} Application</span>
+                    <Badge variant="outline" className={cn('shrink-0', sc.color)}>
                       <StatusIcon size={12} className="mr-1" />{sc.label}
                     </Badge>
                   </DialogTitle>
@@ -379,12 +379,12 @@ export default function AdminHarambeeApplicationsPage() {
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm flex items-center gap-2"><User size={14} />Applicant</CardTitle>
                   </CardHeader>
-                  <CardContent className="grid grid-cols-2 gap-2 text-sm">
-                    <div><span className="text-muted-foreground">Name:</span> {profile?.full_name}</div>
-                    <div><span className="text-muted-foreground">Phone:</span> {profile?.phone}</div>
-                    <div><span className="text-muted-foreground">Email:</span> {profile?.email}</div>
-                    <div><span className="text-muted-foreground">ID:</span> {profile?.id_number}</div>
-                    <div><span className="text-muted-foreground">Verified:</span> {profile?.is_verified ? '✅ Yes' : '❌ No'}</div>
+                  <CardContent className="space-y-1.5 text-sm">
+                    <DetailLine label="Name" value={profile?.full_name} />
+                    <DetailLine label="Phone" value={profile?.phone} mono />
+                    <DetailLine label="Email" value={profile?.email} mono />
+                    <DetailLine label="ID" value={profile?.id_number} mono />
+                    <DetailLine label="Verified" value={profile?.is_verified ? '✅ Yes' : '❌ No'} />
                   </CardContent>
                 </Card>
 
@@ -393,19 +393,17 @@ export default function AdminHarambeeApplicationsPage() {
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm">Fundraiser Details</CardTitle>
                   </CardHeader>
-                  <CardContent className="space-y-2 text-sm">
-                    <div className="grid grid-cols-2 gap-2">
-                      <div><span className="text-muted-foreground">Beneficiary:</span> {selected.beneficiary_name}</div>
-                      <div><span className="text-muted-foreground">Relationship:</span> {selected.beneficiary_relationship}</div>
-                      <div><span className="text-muted-foreground">Phone:</span> {selected.beneficiary_phone || 'N/A'}</div>
-                      <div><span className="text-muted-foreground">Target:</span> <span className="font-bold text-accent">{fmt(selected.target_amount)}</span></div>
-                      <div><span className="text-muted-foreground">Fee:</span> {selected.platform_fee_percent}%</div>
-                      <div><span className="text-muted-foreground">Deadline:</span> {selected.deadline ? format(new Date(selected.deadline), 'MMM dd, yyyy') : 'None'}</div>
-                    </div>
-                    <Separator />
+                  <CardContent className="space-y-1.5 text-sm">
+                    <DetailLine label="Beneficiary" value={selected.beneficiary_name} />
+                    <DetailLine label="Relationship" value={selected.beneficiary_relationship} />
+                    <DetailLine label="Phone" value={selected.beneficiary_phone || 'N/A'} mono />
+                    <DetailLine label="Target" value={fmt(selected.target_amount)} accent />
+                    <DetailLine label="Fee" value={`${selected.platform_fee_percent}%`} />
+                    <DetailLine label="Deadline" value={selected.deadline ? format(new Date(selected.deadline), 'MMM dd, yyyy') : 'None'} />
+                    <Separator className="my-2" />
                     <div>
                       <p className="text-muted-foreground mb-2 text-xs uppercase tracking-wider font-semibold">Description</p>
-                      <ProseText text={selected.description} className="text-sm text-foreground" />
+                      <ProseText text={selected.description} className="text-sm text-foreground break-words" />
                     </div>
                   </CardContent>
                 </Card>
@@ -422,9 +420,9 @@ export default function AdminHarambeeApplicationsPage() {
                     {expandedAnswers && (
                       <CardContent className="space-y-2 text-sm">
                         {Object.entries(answers).map(([key, val]) => (
-                          <div key={key} className="flex justify-between py-1 border-b border-border/30 last:border-0">
-                            <span className="text-muted-foreground capitalize">{key.replace(/_/g, ' ')}:</span>
-                            <span className="font-medium text-right max-w-[60%]">{String(val)}</span>
+                          <div key={key} className="py-1 border-b border-border/30 last:border-0">
+                            <p className="text-muted-foreground capitalize text-xs">{key.replace(/_/g, ' ')}</p>
+                            <p className="font-medium break-words whitespace-pre-line">{String(val)}</p>
                           </div>
                         ))}
                       </CardContent>
@@ -445,12 +443,12 @@ export default function AdminHarambeeApplicationsPage() {
                     ) : (
                       <div className="space-y-2">
                         {docs.map(doc => (
-                          <div key={doc.id} className="flex items-center justify-between p-2 rounded-lg bg-muted/50">
+                          <div key={doc.id} className="flex items-center justify-between gap-2 p-2 rounded-lg bg-muted/50 min-w-0">
                             <div className="flex-1 min-w-0">
-                              <p className="text-xs font-medium truncate">{doc.file_name}</p>
+                              <p className="text-xs font-medium break-all">{doc.file_name}</p>
                               <p className="text-[10px] text-muted-foreground capitalize">{doc.document_type.replace(/_/g, ' ')}</p>
                             </div>
-                            <Button variant="ghost" size="sm" onClick={() => getDocUrl(doc.file_path)}>
+                            <Button variant="ghost" size="sm" onClick={() => getDocUrl(doc.file_path)} className="shrink-0">
                               <ExternalLink size={14} className="mr-1" /> View
                             </Button>
                           </div>
@@ -498,5 +496,16 @@ export default function AdminHarambeeApplicationsPage() {
         </DialogContent>
       </Dialog>
     </AdminLayout>
+  );
+}
+
+function DetailLine({ label, value, mono, accent }: { label: string; value?: string | null; mono?: boolean; accent?: boolean }) {
+  return (
+    <div className="flex items-start gap-2 min-w-0">
+      <span className="text-muted-foreground text-xs shrink-0 w-24">{label}</span>
+      <span className={cn('flex-1 text-sm break-words min-w-0', mono && 'font-mono break-all', accent && 'font-bold text-accent')}>
+        {value || '—'}
+      </span>
+    </div>
   );
 }

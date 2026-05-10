@@ -2052,6 +2052,7 @@ export type Database = {
           resolved: boolean | null
           resolved_at: string | null
           resolved_by: string | null
+          status: string
         }
         Insert: {
           amount: number
@@ -2065,6 +2066,7 @@ export type Database = {
           resolved?: boolean | null
           resolved_at?: string | null
           resolved_by?: string | null
+          status?: string
         }
         Update: {
           amount?: number
@@ -2078,6 +2080,7 @@ export type Database = {
           resolved?: boolean | null
           resolved_at?: string | null
           resolved_by?: string | null
+          status?: string
         }
         Relationships: [
           {

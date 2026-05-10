@@ -147,7 +147,8 @@ function AppRoutes() {
       <Route path="/dashboard/admin/transactions" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="mpesa" /></ProtectedRoute>} />
       <Route path="/dashboard/admin/withdrawals" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="withdrawals" /></ProtectedRoute>} />
       <Route path="/dashboard/admin/mgr" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="mgr" /></ProtectedRoute>} />
-      <Route path="/dashboard/admin/audit" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="audit" /></ProtectedRoute>} />
+     <Route path="/dashboard/admin/audit" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="audit" /></ProtectedRoute>} />
+     <Route path="/dashboard/admin/broadcast" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="broadcast" /></ProtectedRoute>} />
       <Route path="/dashboard/admin/wallets" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="users" /></ProtectedRoute>} />
       <Route path="/dashboard/admin/messages" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="users" /></ProtectedRoute>} />
       <Route path="/dashboard/admin/savings" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="withdrawals" /></ProtectedRoute>} />

@@ -11,6 +11,7 @@ import { AdminChamasModule } from "@/components/admin/AdminChamasModule";
 import { AdminMgrModule } from "@/components/admin/AdminMgrModule";
 import { AdminWithdrawalsModule } from "@/components/admin/AdminWithdrawalsModule";
 import { AdminAuditModule } from "@/components/admin/AdminAuditModule";
+import { AdminBroadcastModule } from "@/components/admin/AdminBroadcastModule";
 
 const moduleMap = {
   overview: AdminOverviewModule,
@@ -23,6 +24,7 @@ const moduleMap = {
   mgr: AdminMgrModule,
   withdrawals: AdminWithdrawalsModule,
   audit: AdminAuditModule,
+  broadcast: AdminBroadcastModule,
 };
 
 interface Props {
@@ -45,6 +47,7 @@ const PATH_TAB: Record<string, keyof typeof moduleMap> = {
   "/dashboard/admin/mgr": "mgr",
   "/dashboard/admin/chama": "chama",
   "/dashboard/admin/audit": "audit",
+  "/dashboard/admin/broadcast": "broadcast",
 };
 
 export default function AdminDashboardPage({ defaultTab }: Props) {
