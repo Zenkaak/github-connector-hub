@@ -51,33 +51,68 @@ export function AdminReconcileDialog({ payment, onClose, onResolved }: Props) {
   const [statusValue, setStatusValue] = useState('');
   const [actionBusy, setActionBusy] = useState(false);
 
-  // Lookup of sender name (from c2b) — matches msisdn
+  // Enriched data resolved from c2b transactions (real phone + receipt)
   const [senderName, setSenderName] = useState<string | null>(null);
+  const [realPhone, setRealPhone] = useState<string | null>(null);
+  const [mpesaReceipt, setMpesaReceipt] = useState<string | null>(null);
+
+  // Resolve a usable phone: pick the first valid Kenyan-looking number from candidates
+  const resolvePhone = (...candidates: (string | null | undefined)[]) => {
+    for (const c of candidates) {
+      if (!c) continue;
+      const digits = String(c).replace(/\D/g, '');
+      if (/^(254|0)?[17]\d{8}$/.test(digits)) return digits;
+    }
+    return null;
+  };
 
   useEffect(() => {
     if (!payment) return;
-    setSearch(payment.msisdn || '');
+    const initialPhone = resolvePhone(payment.msisdn, payment.phone) || payment.msisdn || '';
+    setSearch(initialPhone);
     setSelected(null);
     setNotes('');
     setActionMode('assign');
-    setSendPhone(payment.msisdn || '');
+    setSendPhone(initialPhone);
     setSendAmount(String(payment.amount || ''));
     setStatusValue(payment.status || 'pending');
     setSenderName(null);
-    // try fetch sender name from c2b transactions
+    setRealPhone(resolvePhone(payment.msisdn, payment.phone));
+    setMpesaReceipt(payment.mpesa_receipt || payment.trans_id || null);
+
+    // Lookup matching c2b transaction for real phone + receipt + name
     (async () => {
-      if (payment.msisdn) {
-        const { data } = await supabase
-          .from('mpesa_c2b_transactions')
-          .select('first_name, middle_name, last_name')
+      let row: any = null;
+      if (payment.c2b_transaction_id) {
+        const { data } = await supabase.from('mpesa_c2b_transactions')
+          .select('first_name, middle_name, last_name, msisdn, trans_id')
+          .eq('id', payment.c2b_transaction_id).maybeSingle();
+        row = data;
+      }
+      if (!row && payment.bill_ref_number) {
+        const { data } = await supabase.from('mpesa_c2b_transactions')
+          .select('first_name, middle_name, last_name, msisdn, trans_id')
+          .eq('bill_ref_number', payment.bill_ref_number)
+          .order('created_at', { ascending: false }).limit(1).maybeSingle();
+        row = data;
+      }
+      if (!row && payment.msisdn) {
+        const { data } = await supabase.from('mpesa_c2b_transactions')
+          .select('first_name, middle_name, last_name, msisdn, trans_id')
           .eq('msisdn', payment.msisdn)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        if (data) {
-          const name = [data.first_name, data.middle_name, data.last_name].filter(Boolean).join(' ').trim();
-          if (name) setSenderName(name);
+          .order('created_at', { ascending: false }).limit(1).maybeSingle();
+        row = data;
+      }
+      if (row) {
+        const name = [row.first_name, row.middle_name, row.last_name].filter(Boolean).join(' ').trim();
+        if (name) setSenderName(name);
+        const phone = resolvePhone(row.msisdn);
+        if (phone) {
+          setRealPhone(phone);
+          setSearch((s) => s || phone);
+          setSendPhone((p) => (resolvePhone(p) ? p : phone));
         }
+        if (row.trans_id) setMpesaReceipt(row.trans_id);
       }
     })();
   }, [payment]);
