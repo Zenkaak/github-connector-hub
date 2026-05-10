@@ -10,6 +10,26 @@ import { Label } from '@/components/ui/label';
 import { PinPad } from '@/components/PinPad';
 import { toast } from 'sonner';
 
+// Extract a readable error message from a supabase.functions.invoke error.
+// When the edge function returns a non-2xx response, supabase-js wraps it as
+// FunctionsHttpError and the JSON body lives on error.context (a Response).
+async function readFnError(error: any, data: any, fallback: string): Promise<string> {
+  if (data && typeof data === 'object' && data.error) return String(data.error);
+  try {
+    const res = error?.context;
+    if (res && typeof res.json === 'function') {
+      const body = await res.clone().json();
+      if (body?.error) return String(body.error);
+      if (body?.message) return String(body.message);
+    }
+    if (res && typeof res.text === 'function') {
+      const txt = await res.clone().text();
+      if (txt) return txt;
+    }
+  } catch { /* ignore */ }
+  return error?.message || fallback;
+}
+
 export default function ForgotPasswordPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
