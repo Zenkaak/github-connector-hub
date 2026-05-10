@@ -364,55 +364,66 @@ export default function ChamaGroupDetailPage() {
                   </div>
                 </div>
               </div>
-              {isLeader && (
-                <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button size="sm" variant="gold" className="gap-1.5 shrink-0 rounded-xl shadow-md">
-                      <UserPlus size={14} /> Add member
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader><DialogTitle>Add Member</DialogTitle></DialogHeader>
-                    <div className="space-y-4 mt-2">
-                      <div>
-                        <Label>Search by Phone</Label>
-                        <div className="flex gap-2 mt-1">
-                          <Input value={searchPhone} onChange={e => setSearchPhone(e.target.value)} placeholder="0712345678" maxLength={15} />
-                          <Button onClick={handleSearchUser} disabled={searching || !searchPhone.trim()} variant="secondary"><Search size={16} /></Button>
+              <div className="flex items-center gap-2 shrink-0">
+                <Button
+                  size="sm"
+                  onClick={handleShare}
+                  className="gap-1.5 rounded-xl bg-accent text-accent-foreground hover:bg-accent/90 shadow-md font-semibold"
+                  title="Share chama link"
+                >
+                  {shareCopied ? <Check size={14} /> : <Share2 size={14} />}
+                  <span>{shareCopied ? 'Copied' : 'Share'}</span>
+                </Button>
+                {isLeader && (
+                  <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button size="sm" variant="outline" className="gap-1.5 rounded-xl bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/20">
+                        <UserPlus size={14} /> <span className="hidden sm:inline">Add</span>
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader><DialogTitle>Add Member</DialogTitle></DialogHeader>
+                      <div className="space-y-4 mt-2">
+                        <div>
+                          <Label>Search by Phone</Label>
+                          <div className="flex gap-2 mt-1">
+                            <Input value={searchPhone} onChange={e => setSearchPhone(e.target.value)} placeholder="0712345678" maxLength={15} />
+                            <Button onClick={handleSearchUser} disabled={searching || !searchPhone.trim()} variant="secondary"><Search size={16} /></Button>
+                          </div>
                         </div>
+                        {searchResult && (
+                          <Card className="p-4 bg-muted/50">
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
+                                {searchResult.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                              </div>
+                              <div>
+                                <p className="font-semibold text-sm">{searchResult.full_name}</p>
+                                <p className="text-xs text-muted-foreground">{searchResult.phone}</p>
+                              </div>
+                            </div>
+                            <div className="mb-3">
+                              <Label>Role</Label>
+                              <Select value={selectedRole} onValueChange={setSelectedRole}>
+                                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="member">Member</SelectItem>
+                                  <SelectItem value="treasurer">Treasurer</SelectItem>
+                                  <SelectItem value="secretary">Secretary</SelectItem>
+                                  <SelectItem value="chairperson">Chairperson</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <Button onClick={handleAddMember} disabled={adding} className="w-full">
+                              {adding ? 'Adding...' : `Add ${searchResult.full_name}`}
+                            </Button>
+                          </Card>
+                        )}
                       </div>
-                      {searchResult && (
-                        <Card className="p-4 bg-muted/50">
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
-                              {searchResult.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-                            </div>
-                            <div>
-                              <p className="font-semibold text-sm">{searchResult.full_name}</p>
-                              <p className="text-xs text-muted-foreground">{searchResult.phone}</p>
-                            </div>
-                          </div>
-                          <div className="mb-3">
-                            <Label>Role</Label>
-                            <Select value={selectedRole} onValueChange={setSelectedRole}>
-                              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="member">Member</SelectItem>
-                                <SelectItem value="treasurer">Treasurer</SelectItem>
-                                <SelectItem value="secretary">Secretary</SelectItem>
-                                <SelectItem value="chairperson">Chairperson</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <Button onClick={handleAddMember} disabled={adding} className="w-full">
-                            {adding ? 'Adding...' : `Add ${searchResult.full_name}`}
-                          </Button>
-                        </Card>
-                      )}
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              )}
+                    </DialogContent>
+                  </Dialog>
+                )}
+              </div>
             </div>
 
             {/* Headline KPIs inside hero */}
