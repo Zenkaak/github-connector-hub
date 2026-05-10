@@ -93,16 +93,24 @@ Deno.serve(async (req) => {
         attempts: 0,
       }, { onConflict: 'email' })
 
-      // Email (via transactional queue)
-      const { error: sendErr } = await admin.functions.invoke('send-transactional-email', {
-        body: {
-          templateName: 'login-otp',
-          recipientEmail: profile.email,
-          idempotencyKey: `login-otp-${profile.email.toLowerCase()}-${Date.now()}`,
-          templateData: { code: otp },
-        },
-      })
-      if (sendErr) console.error('OTP email enqueue failed', sendErr)
+      // Email (via transactional queue) — use direct fetch with service role bearer
+      try {
+        const resp = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-transactional-email`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+            'apikey': Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
+          },
+          body: JSON.stringify({
+            templateName: 'login-otp',
+            recipientEmail: profile.email,
+            idempotencyKey: `login-otp-${profile.email.toLowerCase()}-${Date.now()}`,
+            templateData: { code: otp },
+          }),
+        })
+        if (!resp.ok) console.error('OTP email enqueue failed', resp.status, await resp.text())
+      } catch (e) { console.error('OTP email enqueue exception', e) }
 
       // SMS (best-effort)
       let smsSent = false
