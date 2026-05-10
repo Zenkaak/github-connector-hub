@@ -29,6 +29,7 @@ export function ChamaWithdrawals({ groupId, members, myRole, savings }: Props) {
   const [reason, setReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [voting, setVoting] = useState<string | null>(null);
+  const [detailItem, setDetailItem] = useState<any | null>(null);
 
   const isTreasurer = myRole === 'treasurer';
   const isChair = myRole === 'chairperson';
@@ -195,7 +196,7 @@ export function ChamaWithdrawals({ groupId, members, myRole, savings }: Props) {
           const isVoting = voting === w.id;
 
           return (
-            <Card key={w.id} className="p-4">
+            <Card key={w.id} className="p-4 cursor-pointer hover:border-accent/40 hover:shadow-sm transition-all" onClick={() => setDetailItem(w)}>
               <div className="flex items-start justify-between mb-2">
                 <div>
                   <p className="font-semibold">KES {w.amount.toLocaleString()}</p>
@@ -221,13 +222,13 @@ export function ChamaWithdrawals({ groupId, members, myRole, savings }: Props) {
               </div>
 
               {canApprove && (
-                <div className="flex gap-2 mt-3">
-                  <Button size="sm" className="gap-1 bg-emerald-600 hover:bg-emerald-700" 
-                    disabled={isVoting} onClick={() => handleApproval(w.id, 'approved')}>
+                <div className="flex gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
+                  <Button size="sm" className="gap-1 bg-emerald-600 hover:bg-emerald-700"
+                    disabled={isVoting} onClick={(e) => { e.stopPropagation(); handleApproval(w.id, 'approved'); }}>
                     {isVoting ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Approve
                   </Button>
-                  <Button size="sm" variant="destructive" className="gap-1" 
-                    disabled={isVoting} onClick={() => handleApproval(w.id, 'rejected')}>
+                  <Button size="sm" variant="destructive" className="gap-1"
+                    disabled={isVoting} onClick={(e) => { e.stopPropagation(); handleApproval(w.id, 'rejected'); }}>
                     {isVoting ? <Loader2 size={14} className="animate-spin" /> : <X size={14} />} Reject
                   </Button>
                 </div>
@@ -272,6 +273,82 @@ export function ChamaWithdrawals({ groupId, members, myRole, savings }: Props) {
               {submitting ? 'Submitting...' : 'Submit Request'}
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+      {/* Detail Dialog */}
+      <Dialog open={!!detailItem} onOpenChange={(open) => { if (!open) setDetailItem(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader><DialogTitle>Withdrawal Details</DialogTitle></DialogHeader>
+          {detailItem && (() => {
+            const wdApprovals = approvals.filter(a => a.withdrawal_id === detailItem.id);
+            return (
+              <div className="space-y-4 mt-1">
+                <div className="rounded-xl border border-border/60 bg-gradient-to-br from-card to-muted/30 p-4">
+                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Amount</p>
+                  <p className="text-2xl font-display font-bold mt-0.5">KES {Number(detailItem.amount).toLocaleString()}</p>
+                  <div className="mt-2">{getStatusBadge(detailItem.status)}</div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Requested by</p>
+                    <p className="font-medium">{getMemberName(detailItem.requested_by)}</p>
+                  </div>
+                  <div>
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold">Date</p>
+                    <p className="font-medium">{new Date(detailItem.created_at).toLocaleString('en-KE')}</p>
+                  </div>
+                </div>
+
+                {detailItem.reason && (
+                  <div>
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Reason</p>
+                    <p className="text-sm bg-muted/40 rounded-lg p-3 leading-relaxed">{detailItem.reason}</p>
+                  </div>
+                )}
+
+                {detailItem.admin_reason && (
+                  <div>
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">Admin note</p>
+                    <p className="text-sm bg-muted/40 rounded-lg p-3 leading-relaxed italic">{detailItem.admin_reason}</p>
+                  </div>
+                )}
+
+                <div>
+                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mb-2">Leader approvals</p>
+                  <div className="space-y-1.5">
+                    {wdApprovals.length === 0 && <p className="text-xs text-muted-foreground">No approvals recorded.</p>}
+                    {wdApprovals.map(a => (
+                      <div key={a.id} className="flex items-center justify-between text-xs bg-muted/30 rounded-lg px-3 py-2">
+                        <span className="font-medium capitalize">{getMemberRole(a.user_id)} · {getMemberName(a.user_id)}</span>
+                        <span className={cn('px-2 py-0.5 rounded-full font-semibold',
+                          a.approved === true ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' :
+                          a.approved === false ? 'bg-destructive/15 text-destructive' :
+                          'bg-muted text-muted-foreground'
+                        )}>
+                          {a.approved === true ? 'Approved' : a.approved === false ? 'Rejected' : 'Pending'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {Array.isArray(detailItem.member_snapshots) && detailItem.member_snapshots.length > 0 && (
+                  <div>
+                    <p className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold mb-2">Member contribution snapshot</p>
+                    <div className="max-h-40 overflow-y-auto space-y-1 border border-border/60 rounded-lg p-2">
+                      {detailItem.member_snapshots.map((s: any, i: number) => (
+                        <div key={i} className="flex items-center justify-between text-xs">
+                          <span className="truncate">{s.full_name || s.user_id}</span>
+                          <span className="font-mono">KES {Number(s.amount || 0).toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
         </DialogContent>
       </Dialog>
     </div>

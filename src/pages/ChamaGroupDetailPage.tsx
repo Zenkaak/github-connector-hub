@@ -363,6 +363,17 @@ export default function ChamaGroupDetailPage() {
                         {shareCopied ? <Check size={15} /> : <Share2 size={15} />}
                         <span className="hidden sm:inline">{shareCopied ? 'Copied' : 'Share'}</span>
                       </button>
+                      {isChair && (
+                        <button
+                          onClick={() => goToSection('settings')}
+                          title="Edit chama"
+                          aria-label="Edit chama settings"
+                          className="h-9 w-9 sm:w-auto sm:px-3 inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary-foreground/10 border border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/20 text-xs font-semibold transition-colors"
+                        >
+                          <Settings size={15} />
+                          <span className="hidden sm:inline">Edit</span>
+                        </button>
+                      )}
                       {isLeader && (
                         <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
                           <DialogTrigger asChild>
