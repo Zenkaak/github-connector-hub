@@ -39,6 +39,7 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
   const [payMethod, setPayMethod] = useState<'wallet' | 'paybill' | 'stk'>('wallet');
   const [stkPhone, setStkPhone] = useState(profile?.phone || '');
   const [paying, setPaying] = useState(false);
+  const [detailCycle, setDetailCycle] = useState<any | null>(null);
 
   // Create form
   const [recipient, setRecipient] = useState('');
