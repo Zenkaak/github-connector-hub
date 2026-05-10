@@ -69,19 +69,15 @@ export default function ForgotPasswordPage() {
     if (code.length !== 6) return toast.error('Enter the 6-digit code');
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('password-recovery-otp', {
-        body: { action: 'check', email: email.trim().toLowerCase(), code },
+      const result = await callRecoveryFn({
+        action: 'check', email: email.trim().toLowerCase(), code,
       });
-      if (error || (data as any)?.error) {
-        const msg = await readFnError(error, data, 'Invalid code');
+      if (!result.ok) {
         setCode('');
-        toast.error(msg);
-        return; // stay on code step
+        toast.error(result.error || 'Invalid code');
+        return;
       }
       setStep('password');
-    } catch (err: any) {
-      toast.error(err?.message || 'Invalid code');
-      setCode('');
     } finally {
       setIsLoading(false);
     }
@@ -93,18 +89,15 @@ export default function ForgotPasswordPage() {
     if (password !== confirmPassword) return toast.error('Passwords don\'t match');
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('password-recovery-otp', {
-        body: {
-          action: 'verify',
-          email: email.trim().toLowerCase(),
-          code,
-          newPassword: password,
-        },
+      const result = await callRecoveryFn({
+        action: 'verify',
+        email: email.trim().toLowerCase(),
+        code,
+        newPassword: password,
       });
-      if (error || (data as any)?.error) {
-        const msg = await readFnError(error, data, 'Could not reset password');
+      if (!result.ok) {
+        const msg = result.error || 'Could not reset password';
         toast.error(msg);
-        // If the code became invalid/expired/used, send user back to code step
         if (/code|expired|attempts|used|incorrect/i.test(msg)) {
           setCode('');
           setStep('code');
@@ -113,8 +106,6 @@ export default function ForgotPasswordPage() {
       }
       setStep('success');
       toast.success('Password reset successfully');
-    } catch (error: any) {
-      toast.error(error?.message || 'Could not reset password');
     } finally {
       setIsLoading(false);
     }
