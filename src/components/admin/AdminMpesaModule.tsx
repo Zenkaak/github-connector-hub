@@ -179,25 +179,32 @@ export function AdminMpesaModule() {
             <Card className="overflow-hidden">
               <div className="divide-y divide-border">
                 {filteredUnmapped.map((u) => (
-                  <div key={u.id} className="p-4 flex items-center justify-between gap-3 hover:bg-muted/60 transition-colors">
-                    <div className="min-w-0">
-                      <p className="font-semibold text-foreground truncate">{u.bill_ref_number || '—'}</p>
-                      <p className="text-xs text-muted-foreground">{u.msisdn || '—'} · {u.created_at ? format(new Date(u.created_at), 'MMM d, HH:mm') : ''}</p>
+                  <div key={u.id} className="p-4 hover:bg-muted/60 transition-colors">
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <div className="min-w-0 flex-1">
+                        <p className="font-semibold text-foreground truncate">{u.bill_ref_number || '—'}</p>
+                        <p className="text-xs text-muted-foreground truncate">
+                          {u.msisdn || '—'}
+                        </p>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">
+                          {u.created_at ? format(new Date(u.created_at), 'MMM d, HH:mm') : ''}
+                        </p>
+                      </div>
+                      <p className="font-bold text-foreground tabular-nums shrink-0 whitespace-nowrap">
+                        KES {Number(u.amount).toLocaleString()}
+                      </p>
                     </div>
-                    <div className="flex items-center gap-3 shrink-0">
-                      <p className="font-bold text-foreground tabular-nums">KES {Number(u.amount).toLocaleString()}</p>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="gap-1.5"
-                        onClick={() => {
-                          if (!u.msisdn) { toast.error('Missing phone'); return; }
-                          setReconciling(u);
-                        }}
-                      >
-                        <Link2 size={12} /> Reconcile
-                      </Button>
-                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="gap-1.5 w-full sm:w-auto sm:ml-auto sm:flex"
+                      onClick={() => {
+                        if (!u.msisdn) { toast.error('Missing phone'); return; }
+                        setReconciling(u);
+                      }}
+                    >
+                      <Link2 size={12} /> Reconcile
+                    </Button>
                   </div>
                 ))}
               </div>
