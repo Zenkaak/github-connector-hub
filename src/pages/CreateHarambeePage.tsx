@@ -902,9 +902,9 @@ export default function CreateHarambeePage() {
                       <div className="rounded-xl border border-border/30 bg-muted/10 p-4 space-y-2">
                         <p className="text-[10px] font-bold uppercase text-muted-foreground">Application Details</p>
                         {Object.entries(selectedApplication.category_answers as Record<string, string>).map(([key, value]) => (
-                          <div key={key} className="flex items-start justify-between gap-3 text-sm border-b border-border/20 pb-2 last:border-0 last:pb-0">
-                            <span className="font-semibold text-foreground capitalize">{key.replace(/_/g, ' ')}</span>
-                            <span className="text-right text-muted-foreground whitespace-pre-line break-words">{String(value || '—')}</span>
+                          <div key={key} className="text-sm border-b border-border/20 pb-2 last:border-0 last:pb-0">
+                            <p className="font-semibold text-foreground capitalize text-xs mb-0.5">{key.replace(/_/g, ' ')}</p>
+                            <p className="text-muted-foreground whitespace-pre-line break-words">{String(value || '—')}</p>
                           </div>
                         ))}
                       </div>
