@@ -158,28 +158,19 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       {/* Main Content */}
       <main className="lg:ml-[272px] min-h-screen">
         {/* Desktop Top Bar */}
-        <div className="hidden lg:flex items-center justify-between h-[72px] px-8 border-b bg-card/60 backdrop-blur-sm sticky top-0 z-20">
+        <div className="hidden lg:flex items-center justify-between h-[72px] px-8 border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-20">
           <div className="flex items-center gap-2">
             <Shield size={16} className="text-destructive" />
             <p className="text-sm font-semibold text-foreground">Admin Panel</p>
           </div>
           <div className="flex items-center gap-2.5">
-            <Link to="/dashboard/notifications">
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell size={18} />
-                {unreadCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center px-0.5">
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </span>
-                )}
-              </Button>
-            </Link>
+            <AdminAlertsPopover />
             <div className="w-px h-6 bg-border" />
             <div className="w-8 h-8 rounded-lg bg-destructive/80 flex items-center justify-center text-white text-xs font-bold">
               {initials}
             </div>
             <div className="text-sm">
-              <p className="font-medium leading-tight">{profile?.full_name?.split(' ')[0] || 'Admin'}</p>
+              <p className="font-medium leading-tight text-foreground">{profile?.full_name?.split(' ')[0] || 'Admin'}</p>
               <p className="text-[11px] text-muted-foreground leading-tight">Administrator</p>
             </div>
             <div className="w-px h-6 bg-border ml-2" />
