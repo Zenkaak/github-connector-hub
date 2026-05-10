@@ -222,13 +222,13 @@ export function ChamaWithdrawals({ groupId, members, myRole, savings }: Props) {
               </div>
 
               {canApprove && (
-                <div className="flex gap-2 mt-3">
-                  <Button size="sm" className="gap-1 bg-emerald-600 hover:bg-emerald-700" 
-                    disabled={isVoting} onClick={() => handleApproval(w.id, 'approved')}>
+                <div className="flex gap-2 mt-3" onClick={(e) => e.stopPropagation()}>
+                  <Button size="sm" className="gap-1 bg-emerald-600 hover:bg-emerald-700"
+                    disabled={isVoting} onClick={(e) => { e.stopPropagation(); handleApproval(w.id, 'approved'); }}>
                     {isVoting ? <Loader2 size={14} className="animate-spin" /> : <Check size={14} />} Approve
                   </Button>
-                  <Button size="sm" variant="destructive" className="gap-1" 
-                    disabled={isVoting} onClick={() => handleApproval(w.id, 'rejected')}>
+                  <Button size="sm" variant="destructive" className="gap-1"
+                    disabled={isVoting} onClick={(e) => { e.stopPropagation(); handleApproval(w.id, 'rejected'); }}>
                     {isVoting ? <Loader2 size={14} className="animate-spin" /> : <X size={14} />} Reject
                   </Button>
                 </div>
