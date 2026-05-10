@@ -498,3 +498,14 @@ export default function AdminHarambeeApplicationsPage() {
     </AdminLayout>
   );
 }
+
+function DetailLine({ label, value, mono, accent }: { label: string; value?: string | null; mono?: boolean; accent?: boolean }) {
+  return (
+    <div className="flex items-start gap-2 min-w-0">
+      <span className="text-muted-foreground text-xs shrink-0 w-24">{label}</span>
+      <span className={cn('flex-1 text-sm break-words min-w-0', mono && 'font-mono break-all', accent && 'font-bold text-accent')}>
+        {value || '—'}
+      </span>
+    </div>
+  );
+}
