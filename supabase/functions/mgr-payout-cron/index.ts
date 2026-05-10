@@ -203,5 +203,37 @@ async function processCycle(supabase: any, cycle: any) {
     }
   }
 
-  return { ok, payout: payoutAmount, non_payers: nonPayers.length };
+  return {
+    ok,
+    payout: payoutAmount,
+    non_payers: nonPayers.length,
+    reason: ok ? undefined : (data.ResponseDescription || data.errorMessage || `Daraja code ${data.ResponseCode}`),
+  };
+}
+
+async function notifyChairOfFailure(supabase: any, cycle: any, reason: string) {
+  try {
+    const { data: chair } = await supabase
+      .from("chama_members")
+      .select("user_id")
+      .eq("group_id", cycle.group_id)
+      .eq("role", "chairperson")
+      .eq("is_active", true)
+      .maybeSingle();
+    if (!chair?.user_id) return;
+    const shortReason = String(reason || "Unknown error").slice(0, 140);
+    await supabase.from("notifications").insert({
+      user_id: chair.user_id,
+      title: `Merry-Go-Round payout FAILED — cycle #${cycle.cycle_number}`,
+      message: `Automatic payout to recipient could not be completed. Reason: ${shortReason}. Please check the merry-go-round screen and retry.`,
+      type: "alert",
+    });
+    await sendUserSMS(
+      supabase,
+      chair.user_id,
+      `Dear {name}, the merry-go-round payout for cycle #${cycle.cycle_number} FAILED. Reason: ${shortReason}. Please review and retry on the Dasnet app.`
+    );
+  } catch (e) {
+    console.error("notifyChairOfFailure error:", e);
+  }
 }
