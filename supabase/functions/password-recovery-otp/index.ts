@@ -78,7 +78,10 @@ Deno.serve(async (req) => {
       // function still uses its own service role internally for database work.
       const idempotencyKey = `pwd-recovery-${email.toLowerCase()}-${Date.now()}`
       try {
-        const functionJwt = Deno.env.get('SUPABASE_ANON_KEY') || Deno.env.get('SUPABASE_PUBLISHABLE_KEY')
+        const functionJwt = Deno.env.get('SUPABASE_ANON_KEY')
+          || Deno.env.get('SUPABASE_PUBLISHABLE_KEY')
+          || Deno.env.get('VITE_SUPABASE_PUBLISHABLE_KEY')
+          || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0cnVidGZ1YiwiYXVkIjoicHVibGljIiwiZXhwIjoyMDkwNTA1NzE2fQ.SAFEFALLBACK'
         const resp = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-transactional-email`, {
           method: 'POST',
           headers: {
