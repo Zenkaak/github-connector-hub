@@ -18,6 +18,7 @@ import {
   Settings,
   Activity,
   Heart,
+  Megaphone,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Logo } from '@/components/Logo';
