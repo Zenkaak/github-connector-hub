@@ -520,16 +520,17 @@ export default function ChamaGroupDetailPage() {
           </div>
 
           {/* Quick actions */}
-          <div className="grid grid-cols-4 gap-2 mt-3">
+          <div className={cn("grid gap-2 mt-3", isChair ? "grid-cols-5" : "grid-cols-4")}>
             {[
               { id: 'savings',     icon: Wallet,        label: 'Contribute', tone: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' },
               { id: 'loans',       icon: Landmark,      label: 'Loan',       tone: 'bg-blue-500/15 text-blue-600 dark:text-blue-400' },
               { id: 'withdrawals', icon: HandCoins,     label: 'Withdraw',   tone: 'bg-amber-500/15 text-amber-600 dark:text-amber-400' },
               { id: 'chat',        icon: MessageSquare, label: 'Chat',       tone: 'bg-violet-500/15 text-violet-600 dark:text-violet-400' },
-            ].map((a) => (
+              ...(isChair ? [{ id: 'broadcast', icon: Megaphone, label: 'Broadcast', tone: 'bg-pink-500/15 text-pink-600 dark:text-pink-400', onClick: () => setBroadcastOpen(true) }] : []),
+            ].map((a: any) => (
               <button
                 key={a.id}
-                onClick={() => goToSection(a.id)}
+                onClick={a.onClick ? a.onClick : () => goToSection(a.id)}
                 className="group flex flex-col items-center gap-1.5 rounded-xl border bg-card px-2 py-3 transition-all border-border/60 hover:border-accent/40"
               >
                 <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center", a.tone)}>
