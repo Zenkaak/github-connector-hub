@@ -10,7 +10,7 @@ const corsHeaders = {
 };
 
 const PAYBILL = "4018275";
-const APP_URL = Deno.env.get("APP_PUBLIC_URL") || "https://dasnetventures.lovable.app";
+const APP_URL = Deno.env.get("APP_PUBLIC_URL") || "https://dasnett.site";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
       : "";
     const amount = fmt(Number(cycle.contribution_amount || 0));
     const groupName = group?.name || "your chama";
-    const link = `${APP_URL.replace(/\/$/, "")}/chama`;
+    const link = APP_URL.replace(/\/$/, "");
 
     let sent = 0;
     let failed = 0;
@@ -81,10 +81,9 @@ Deno.serve(async (req) => {
         ? `${p.mpesa_account_code}${letter}${cycle.cycle_number}`
         : "—";
       const msg =
-        `Dear ${first}, a new Merry-Go-Round round #${cycle.cycle_number} for ${groupName} has been opened. ` +
-        `Recipient: ${cycle.recipient_name}. Amount: ${amount}. Deadline: ${deadline}. ` +
-        `Pay via M-Pesa Paybill ${PAYBILL}, Account ${accountNo}. ` +
-        `Open ${link} to pay from wallet. — DASNET VENTURES.`;
+        `Dear ${(first || "").toUpperCase()}, Merry-Go-Round #${cycle.cycle_number} for ${groupName.toUpperCase()} is open. ` +
+        `Send KES ${amount} to ${String(cycle.recipient_name || "").toUpperCase()} by ${deadline} via M-Pesa Paybill ${PAYBILL}, Acc ${accountNo} ` +
+        `or pay by wallet at ${link}`;
       const r = await sendSMS(p.phone, msg);
       if (r.ok) sent++; else failed++;
     }
