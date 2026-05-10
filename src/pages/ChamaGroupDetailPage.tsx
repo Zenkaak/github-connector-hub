@@ -465,18 +465,21 @@ export default function ChamaGroupDetailPage() {
           {/* Quick actions */}
           <div className="grid grid-cols-4 gap-2 mt-3">
             {[
-              { id: 'savings',     icon: Wallet,   label: 'Contribute' },
-              { id: 'loans',       icon: Landmark, label: 'Loan' },
-              { id: 'withdrawals', icon: HandCoins,label: 'Withdraw' },
-              { id: 'chat',        icon: MessageSquare, label: 'Chat' },
+              { id: 'savings',     icon: Wallet,        label: 'Contribute', tone: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' },
+              { id: 'loans',       icon: Landmark,      label: 'Loan',       tone: 'bg-blue-500/15 text-blue-600 dark:text-blue-400' },
+              { id: 'withdrawals', icon: HandCoins,     label: 'Withdraw',   tone: 'bg-amber-500/15 text-amber-600 dark:text-amber-400' },
+              { id: 'chat',        icon: MessageSquare, label: 'Chat',       tone: 'bg-violet-500/15 text-violet-600 dark:text-violet-400' },
             ].map((a) => (
               <button
                 key={a.id}
                 onClick={() => setActiveTab(a.id)}
-                className="group flex flex-col items-center gap-1.5 rounded-xl border border-border/60 bg-card px-2 py-3 hover:border-accent/40 hover:bg-accent/5 transition-all"
+                className={cn(
+                  "group flex flex-col items-center gap-1.5 rounded-xl border bg-card px-2 py-3 transition-all",
+                  activeTab === a.id ? "border-accent/60 ring-1 ring-accent/30" : "border-border/60 hover:border-accent/40"
+                )}
               >
-                <div className="w-9 h-9 rounded-lg bg-primary/8 text-primary group-hover:bg-accent/15 group-hover:text-accent transition-colors flex items-center justify-center">
-                  <a.icon size={16} />
+                <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center", a.tone)}>
+                  <a.icon size={18} strokeWidth={2.2} />
                 </div>
                 <span className="text-[11px] font-semibold">{a.label}</span>
               </button>
@@ -489,14 +492,14 @@ export default function ChamaGroupDetailPage() {
             const primaryTabs = [
               { value: 'members', icon: Users, label: 'Members' },
               { value: 'savings', icon: Wallet, label: 'Savings' },
-              { value: 'loans', icon: Landmark, label: 'Loans' },
-              { value: 'withdrawals', icon: Coins, label: 'Withdraw' },
+              { value: 'announcements', icon: Megaphone, label: 'Notices' },
+              { value: 'meetings', icon: CalendarDays, label: 'Meetings' },
               { value: 'mgr', icon: RefreshCw, label: 'Merry-Go-Round' },
             ];
             const moreTabs = [
               { value: 'chat', icon: MessageSquare, label: 'Chat' },
-              { value: 'announcements', icon: Megaphone, label: 'Notices' },
-              { value: 'meetings', icon: CalendarDays, label: 'Meetings' },
+              { value: 'loans', icon: Landmark, label: 'Loans' },
+              { value: 'withdrawals', icon: Coins, label: 'Withdraw' },
               { value: 'transactions', icon: Receipt, label: 'Transactions' },
               { value: 'votes', icon: Vote, label: 'Votes' },
               { value: 'arrears', icon: AlertTriangle, label: 'Arrears' },
