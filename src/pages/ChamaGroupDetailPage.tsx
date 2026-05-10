@@ -75,10 +75,25 @@ export default function ChamaGroupDetailPage() {
   const [removing, setRemoving] = useState(false);
   const [viewMember, setViewMember] = useState<Member | null>(null);
   const [uploadingPic, setUploadingPic] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
   const profilePicRef = useRef<HTMLInputElement>(null);
 
   const isLeader = ['chairperson', 'secretary', 'treasurer'].includes(myRole);
   const isChair = myRole === 'chairperson';
+
+  const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/dashboard/chama/${groupId}` : '';
+  const handleShare = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: group?.name || 'Chama Group', text: `Join "${group?.name}" on DASNET`, url: shareUrl });
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
+        setShareCopied(true);
+        toast({ title: 'Link copied', description: 'Share link copied to clipboard.' });
+        setTimeout(() => setShareCopied(false), 2000);
+      }
+    } catch {}
+  };
 
   const handleProfilePicUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
