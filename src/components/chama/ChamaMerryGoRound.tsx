@@ -669,12 +669,57 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
                   </div>
                 </div>
 
-                <DialogFooter>
+                <DialogFooter className="gap-2 flex-col-reverse sm:flex-row">
                   <Button variant="outline" onClick={() => setDetailCycle(null)}>Close</Button>
+                  {isChair && cy.status !== 'paid_out' && cy.status !== 'closed_no_funds' && total >= 10 && (
+                    <Button
+                      onClick={() => triggerB2CPayout(cy)}
+                      disabled={payoutTriggering === cy.id}
+                      className="gap-1.5"
+                    >
+                      {payoutTriggering === cy.id ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+                      {cy.status === 'payout_failed' ? 'Retry Payout' : 'Trigger Payout'} ({fmt(total)})
+                    </Button>
+                  )}
                 </DialogFooter>
               </>
             );
           })()}
+        </DialogContent>
+      </Dialog>
+
+      {/* Broadcast dialog */}
+      <Dialog open={broadcastOpen} onOpenChange={setBroadcastOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Megaphone size={18} className="text-accent" /> Broadcast to Members
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-[11.5px] text-muted-foreground">
+              Sends an SMS to every active member. Each message is personalised:
+              <span className="block mt-1 italic text-foreground/80">"Hello [Name], [{group?.name?.toUpperCase() || 'CHAMA'}]: your message…"</span>
+            </p>
+            <div>
+              <Label>Message</Label>
+              <Textarea
+                value={broadcastMsg}
+                onChange={(e) => setBroadcastMsg(e.target.value.slice(0, 280))}
+                placeholder="Reminder: meeting this Sunday 3pm at the office."
+                rows={4}
+                className="mt-1 resize-none"
+              />
+              <p className="text-[10px] text-muted-foreground text-right mt-1">{broadcastMsg.length}/280</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBroadcastOpen(false)}>Cancel</Button>
+            <Button onClick={sendBroadcast} disabled={broadcasting || broadcastMsg.trim().length < 2} className="gap-1.5">
+              {broadcasting ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
+              Send Broadcast
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
