@@ -5,13 +5,15 @@ import {
   CreditCard, FileText, TrendingUp, ArrowRight, CheckCircle, Clock, Sparkles,
   ArrowUpRight, ArrowDownLeft, Wallet, Plus, Eye, Settings, User, Activity,
   Bell, Upload, MessageSquare, Users, Crown, ChevronRight, Receipt,
-  CheckCircle2, XCircle, Send, HandCoins, PiggyBank, HeartHandshake,
+  CheckCircle2, XCircle, Send, HandCoins, PiggyBank, HeartHandshake, Megaphone,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
 import { StatusBadge } from '@/components/StatusBadge';
 import { loanProducts, LoanProduct } from '@/lib/loan-products';
 import { LoanProductCard } from '@/components/LoanProductCard';
