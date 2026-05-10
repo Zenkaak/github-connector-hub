@@ -145,23 +145,61 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
 
   const userCode = (profile as any)?.mpesa_account_code;
 
+  // Aggregate stats for hero
+  const activeCycle = cycles.find(c => c.status === 'open');
+  const paidOutCount = cycles.filter(c => c.status === 'paid_out').length;
+  const totalDisbursed = cycles
+    .filter(c => c.status === 'paid_out')
+    .reduce((s, c) => s + Number(c.payout_amount || 0), 0);
+  const myTurnCycle = cycles.find(c => c.recipient_id === user?.id && c.status === 'open');
+
   return (
     <div className="space-y-4">
-      <Card className="p-4 bg-gradient-to-br from-primary/5 via-accent/5 to-transparent border-accent/20">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center">
-              <RefreshCw size={20} className="text-accent" />
+      {/* Hero */}
+      <Card className="relative overflow-hidden border-accent/20 bg-gradient-to-br from-primary/10 via-accent/5 to-transparent">
+        <div className="absolute inset-0 opacity-[0.04] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)', backgroundSize: '14px 14px' }} />
+        <div className="relative p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-11 h-11 rounded-xl bg-accent/15 ring-1 ring-accent/30 flex items-center justify-center shrink-0">
+                <RefreshCw size={20} className="text-accent" />
+              </div>
+              <div className="min-w-0">
+                <h3 className="font-bold text-[15px] leading-tight truncate">Merry-Go-Round</h3>
+                <p className="text-[11px] text-muted-foreground leading-snug">Rotating savings · automatic M-Pesa payout on schedule</p>
+              </div>
             </div>
-            <div>
-              <h3 className="font-bold">Merry-Go-Round</h3>
-              <p className="text-xs text-muted-foreground">Rotating savings — each member receives a payout</p>
+            {isChair && (
+              <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5 h-9 shrink-0 shadow-sm">
+                <Plus size={14} /> New Cycle
+              </Button>
+            )}
+          </div>
+
+          {/* KPI strip */}
+          <div className="grid grid-cols-3 gap-2 mt-4">
+            <div className="rounded-lg bg-card/70 backdrop-blur-sm border border-border/60 p-2.5">
+              <p className="text-[9.5px] uppercase tracking-wider text-muted-foreground font-medium">Active</p>
+              <p className="text-sm font-bold mt-0.5">{activeCycle ? `#${activeCycle.cycle_number}` : '—'}</p>
+            </div>
+            <div className="rounded-lg bg-card/70 backdrop-blur-sm border border-border/60 p-2.5">
+              <p className="text-[9.5px] uppercase tracking-wider text-muted-foreground font-medium">Completed</p>
+              <p className="text-sm font-bold mt-0.5">{paidOutCount}</p>
+            </div>
+            <div className="rounded-lg bg-card/70 backdrop-blur-sm border border-border/60 p-2.5">
+              <p className="text-[9.5px] uppercase tracking-wider text-muted-foreground font-medium">Disbursed</p>
+              <p className="text-sm font-bold mt-0.5 text-emerald-600 dark:text-emerald-400">{fmt(totalDisbursed)}</p>
             </div>
           </div>
-          {isChair && (
-            <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5">
-              <Plus size={14} /> New Cycle
-            </Button>
+
+          {myTurnCycle && (
+            <div className="mt-3 rounded-lg bg-accent/10 border border-accent/30 px-3 py-2 flex items-center gap-2">
+              <span className="text-base leading-none">🎉</span>
+              <p className="text-[11.5px]">
+                <span className="font-semibold text-accent">It's your turn</span>
+                <span className="text-muted-foreground"> · cycle #{myTurnCycle.cycle_number} payout on {new Date(myTurnCycle.payout_date).toLocaleDateString()}</span>
+              </p>
+            </div>
           )}
         </div>
       </Card>
@@ -169,97 +207,114 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
       {loading ? (
         <div className="flex items-center justify-center py-12"><Loader2 className="animate-spin text-muted-foreground" /></div>
       ) : cycles.length === 0 ? (
-        <Card className="p-8 text-center">
-          <RefreshCw size={32} className="mx-auto text-muted-foreground mb-2" />
-          <p className="text-sm font-medium">No cycles yet</p>
-          <p className="text-xs text-muted-foreground mt-1">{isChair ? 'Create the first merry-go-round cycle to begin.' : 'The chairperson will start the first cycle.'}</p>
+        <Card className="p-10 text-center border-dashed">
+          <div className="w-14 h-14 rounded-2xl bg-muted/50 mx-auto mb-3 flex items-center justify-center">
+            <RefreshCw size={26} className="text-muted-foreground" />
+          </div>
+          <p className="text-sm font-semibold">No cycles yet</p>
+          <p className="text-xs text-muted-foreground mt-1 max-w-xs mx-auto">{isChair ? 'Create the first merry-go-round cycle to start rotating payouts to members.' : 'The chairperson will start the first cycle.'}</p>
         </Card>
       ) : (
         <div className="space-y-3">
           {cycles.map((cycle) => {
-            const { paid, total, haveIPaid, unpaid, count } = cycleStats(cycle);
+            const { paid, total, haveIPaid, count } = cycleStats(cycle);
             const isOverdue = new Date(cycle.deadline) < new Date() && cycle.status === 'open';
-            // Everyone contributes including recipient
             const expectedTotal = cycle.contribution_amount * members.length;
             const recipMember = members.find(m => m.user_id === cycle.recipient_id);
             const isRecipient = user?.id === cycle.recipient_id;
+            const progress = Math.min(100, expectedTotal > 0 ? (total / expectedTotal) * 100 : 0);
+            const statusCfg = cycle.status === 'paid_out'
+              ? { label: 'Paid Out', cls: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30' }
+              : cycle.status === 'closed_no_funds'
+              ? { label: 'Closed', cls: 'bg-muted text-muted-foreground border-border' }
+              : cycle.status === 'payout_failed'
+              ? { label: 'Payout Failed', cls: 'bg-destructive/15 text-destructive border-destructive/30' }
+              : isOverdue
+              ? { label: 'Overdue', cls: 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30' }
+              : { label: 'Open', cls: 'bg-primary/10 text-primary border-primary/30' };
+
             return (
               <motion.div key={cycle.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
-                <Card className="p-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold">
+                <Card className="p-4 bg-gradient-to-br from-card to-muted/20 border-border/60 hover:border-accent/40 transition-colors">
+                  {/* Header */}
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/15 to-accent/10 ring-1 ring-primary/20 flex items-center justify-center text-primary font-bold text-sm shrink-0">
                         #{cycle.cycle_number}
                       </div>
-                      <div>
-                        <p className="font-bold text-sm">Recipient: {recipMember?.profile?.full_name || cycle.recipient_name}</p>
-                        <p className="text-[11px] text-muted-foreground">
-                          Contribution: <span className="font-semibold text-foreground">{fmt(cycle.contribution_amount)}</span> · Penalty: {fmt(cycle.penalty_amount)}
+                      <div className="min-w-0">
+                        <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Recipient</p>
+                        <p className="font-semibold text-sm truncate leading-tight">{recipMember?.profile?.full_name || cycle.recipient_name}</p>
+                        <p className="text-[10.5px] text-muted-foreground mt-0.5">
+                          {fmt(cycle.contribution_amount)}/member · penalty {fmt(cycle.penalty_amount)}
                         </p>
                       </div>
                     </div>
-                    <Badge variant={cycle.status === 'paid_out' ? 'default' : isOverdue ? 'destructive' : 'secondary'} className="text-[10px]">
-                      {cycle.status === 'paid_out' ? 'Paid Out' : isOverdue ? 'Overdue' : 'Open'}
-                    </Badge>
+                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border whitespace-nowrap ${statusCfg.cls}`}>
+                      {statusCfg.label}
+                    </span>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2 text-[11px] text-muted-foreground mb-3">
-                    <div className="flex items-center gap-1"><Calendar size={11} /> Deadline: {new Date(cycle.deadline).toLocaleDateString()}</div>
-                    <div className="flex items-center gap-1"><Clock size={11} /> Payout: {new Date(cycle.payout_date).toLocaleDateString()}</div>
+                  {/* Dates */}
+                  <div className="grid grid-cols-2 gap-2 mb-3">
+                    <div className="rounded-md bg-muted/30 px-2.5 py-1.5">
+                      <p className="text-[9.5px] uppercase tracking-wider text-muted-foreground font-medium flex items-center gap-1"><Calendar size={9} /> Deadline</p>
+                      <p className="text-[11.5px] font-medium mt-0.5">{new Date(cycle.deadline).toLocaleDateString()}</p>
+                    </div>
+                    <div className="rounded-md bg-muted/30 px-2.5 py-1.5">
+                      <p className="text-[9.5px] uppercase tracking-wider text-muted-foreground font-medium flex items-center gap-1"><Clock size={9} /> Payout</p>
+                      <p className="text-[11.5px] font-medium mt-0.5">{new Date(cycle.payout_date).toLocaleDateString()}</p>
+                    </div>
                   </div>
 
-                  <div className="bg-muted/30 rounded-lg p-2.5 mb-3">
-                    <div className="flex justify-between text-[11px] mb-1">
-                      <span>Collected: <strong className="text-emerald-500">{fmt(total)}</strong></span>
-                      <span>Target: {fmt(expectedTotal)}</span>
+                  {/* Progress */}
+                  <div className="rounded-lg bg-muted/30 border border-border/40 p-2.5 mb-3">
+                    <div className="flex justify-between items-baseline text-[11px] mb-1.5">
+                      <span className="text-muted-foreground">Collected</span>
+                      <span><strong className="text-emerald-600 dark:text-emerald-400">{fmt(total)}</strong> <span className="text-muted-foreground">/ {fmt(expectedTotal)}</span></span>
                     </div>
                     <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                      <div className="h-full bg-emerald-500" style={{ width: `${Math.min(100, (total / expectedTotal) * 100)}%` }} />
+                      <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all" style={{ width: `${progress}%` }} />
                     </div>
-                    <p className="text-[10px] text-muted-foreground mt-1">{count}/{members.length} members paid</p>
+                    <p className="text-[10px] text-muted-foreground mt-1.5">{count}/{members.length} members paid · {Math.round(progress)}%</p>
                   </div>
 
-                  {/* If I'm recipient — show payout summary */}
+                  {/* Recipient banner */}
                   {isRecipient && (
                     <div className="bg-accent/10 border border-accent/30 rounded-lg p-2.5 mb-3">
                       <p className="text-[11px] font-semibold text-accent mb-1">🎉 You receive this cycle</p>
                       {isOverdue && total < expectedTotal ? (
                         <>
-                          <p className="text-[11px]">
-                            You have received <strong className="text-emerald-600">{fmt(total)}</strong> so far.
-                            Outstanding balance: <strong className="text-destructive">{fmt(expectedTotal - total)}</strong>.
-                          </p>
-                          <p className="text-[10px] text-muted-foreground mt-1">
-                            Late payments + penalties will be sent to your M-Pesa as they arrive.
-                          </p>
+                          <p className="text-[11px]">Received so far: <strong className="text-emerald-600 dark:text-emerald-400">{fmt(total)}</strong> · outstanding <strong className="text-destructive">{fmt(expectedTotal - total)}</strong></p>
+                          <p className="text-[10px] text-muted-foreground mt-1">Late payments + penalties will be sent to your M-Pesa as they arrive.</p>
                         </>
                       ) : cycle.status === 'paid_out' ? (
                         <p className="text-[11px]">Paid out: <strong>{fmt(cycle.payout_amount || total)}</strong> on {new Date(cycle.payout_processed_at || cycle.payout_date).toLocaleDateString()}</p>
                       ) : (
                         <>
                           <p className="text-[11px]">Expected payout: <strong>{fmt(expectedTotal)}</strong> on {new Date(cycle.payout_date).toLocaleDateString()}</p>
-                          <p className="text-[10px] text-muted-foreground">Payout will be sent automatically to your registered M-Pesa.</p>
+                          <p className="text-[10px] text-muted-foreground">Sent automatically to your registered M-Pesa.</p>
                         </>
                       )}
                     </div>
                   )}
 
-                  {/* Member status — show ALL members */}
-                  <div className="space-y-1 mb-3 max-h-40 overflow-y-auto">
+                  {/* Members */}
+                  <div className="rounded-lg border border-border/40 divide-y divide-border/30 mb-3 max-h-44 overflow-y-auto">
                     {members.map(m => {
                       const hasPaid = paid.has(m.user_id);
                       const isThisRecipient = m.user_id === cycle.recipient_id;
                       return (
-                        <div key={m.user_id} className="flex items-center justify-between text-[11px] py-1 border-b border-border/30 last:border-0">
-                          <span className="flex items-center gap-1.5">
-                            <UserIcon size={10} className="text-muted-foreground" />
-                            {m.profile?.full_name || 'Unknown'}
-                            {isThisRecipient && <Badge variant="outline" className="text-[9px] py-0 px-1">Recipient</Badge>}
+                        <div key={m.user_id} className="flex items-center justify-between text-[11.5px] px-2.5 py-1.5">
+                          <span className="flex items-center gap-1.5 min-w-0">
+                            <UserIcon size={10} className="text-muted-foreground shrink-0" />
+                            <span className="truncate">{m.profile?.full_name || 'Unknown'}</span>
+                            {isThisRecipient && <Badge variant="outline" className="text-[9px] py-0 px-1 shrink-0">Recipient</Badge>}
                           </span>
                           {hasPaid ? (
-                            <span className="text-emerald-500 flex items-center gap-1"><CheckCircle2 size={11} /> Paid</span>
+                            <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1 shrink-0 font-medium"><CheckCircle2 size={11} /> Paid</span>
                           ) : (
-                            <span className="text-destructive/80 flex items-center gap-1"><AlertTriangle size={11} /> Pending</span>
+                            <span className="text-amber-600 dark:text-amber-400 flex items-center gap-1 shrink-0 font-medium"><AlertTriangle size={11} /> Pending</span>
                           )}
                         </div>
                       );
@@ -267,14 +322,16 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
                   </div>
 
                   {!haveIPaid && cycle.status === 'open' && (
-                    <Button onClick={() => { setPayOpen({ cycle }); setPayMethod('wallet'); }} className="w-full gap-1.5" size="sm">
+                    <Button onClick={() => { setPayOpen({ cycle }); setPayMethod('wallet'); }} className="w-full gap-1.5 h-10 shadow-sm" size="sm">
                       <Wallet size={14} /> Pay {fmt(cycle.contribution_amount)}
                     </Button>
                   )}
-                  {haveIPaid && (
-                    <p className="text-center text-[11px] text-emerald-500 flex items-center justify-center gap-1">
-                      <CheckCircle2 size={11} /> You have paid this cycle
-                    </p>
+                  {haveIPaid && cycle.status === 'open' && (
+                    <div className="rounded-md bg-emerald-500/10 border border-emerald-500/30 py-2 text-center">
+                      <p className="text-[11.5px] text-emerald-600 dark:text-emerald-400 flex items-center justify-center gap-1 font-medium">
+                        <CheckCircle2 size={12} /> You have paid this cycle
+                      </p>
+                    </div>
                   )}
                 </Card>
               </motion.div>
