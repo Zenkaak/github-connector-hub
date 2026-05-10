@@ -45,22 +45,10 @@ const adminNavItems = [
 ];
 
 export function AdminLayout({ children }: AdminLayoutProps) {
-  const { profile, user, signOut } = useAuth();
+  const { profile, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
-
-  useEffect(() => {
-    if (user) {
-      supabase
-        .from('notifications')
-        .select('id', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .eq('is_read', false)
-        .then(({ count }) => setUnreadCount(count || 0));
-    }
-  }, [user, location.pathname]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -77,22 +65,13 @@ export function AdminLayout({ children }: AdminLayoutProps) {
   return (
     <div className="min-h-screen bg-background">
       {/* Mobile Header */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-card/95 backdrop-blur-xl border-b z-50 flex items-center justify-between px-4">
+      <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-card/95 backdrop-blur-xl border-b border-border z-50 flex items-center justify-between px-4">
         <div className="flex items-center gap-2">
           <Shield size={18} className="text-accent" />
           <span className="font-bold text-sm">Admin Panel</span>
         </div>
         <div className="flex items-center gap-1">
-          <Link to="/dashboard/notifications">
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell size={18} />
-              {unreadCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-[16px] rounded-full bg-destructive text-destructive-foreground text-[9px] font-bold flex items-center justify-center px-0.5">
-                  {unreadCount > 9 ? '9+' : unreadCount}
-                </span>
-              )}
-            </Button>
-          </Link>
+          <AdminAlertsPopover />
           <Button variant="ghost" size="icon" onClick={handleSignOut} className="text-muted-foreground hover:text-destructive">
             <LogOut size={18} />
           </Button>
