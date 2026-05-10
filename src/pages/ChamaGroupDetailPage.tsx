@@ -843,9 +843,34 @@ export default function ChamaGroupDetailPage() {
                     <p className="text-sm font-medium">{new Date(viewMember.created_at).toLocaleDateString()}</p>
                   </div>
                 </div>
-                <p className="text-[11px] text-muted-foreground text-center">Read-only • Only visible to Chairperson</p>
+              <p className="text-[11px] text-muted-foreground text-center">Read-only • Only visible to Chairperson</p>
               </div>
             )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Broadcast Dialog */}
+        <Dialog open={broadcastOpen} onOpenChange={setBroadcastOpen}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader><DialogTitle>Broadcast to Members</DialogTitle></DialogHeader>
+            <div className="space-y-3 mt-2">
+              <p className="text-xs text-muted-foreground">Send an SMS to all active members of <span className="font-semibold text-foreground">{group?.name}</span>.</p>
+              <Textarea
+                value={broadcastMsg}
+                onChange={e => setBroadcastMsg(e.target.value)}
+                placeholder="Type your message..."
+                maxLength={280}
+                rows={4}
+                className="text-sm resize-none"
+              />
+              <p className="text-[10px] text-muted-foreground text-right">{broadcastMsg.length}/280</p>
+            </div>
+            <DialogFooter>
+              <Button variant="ghost" size="sm" onClick={() => { setBroadcastOpen(false); setBroadcastMsg(''); }}>Cancel</Button>
+              <Button size="sm" onClick={sendBroadcast} disabled={broadcasting || broadcastMsg.trim().length < 2}>
+                {broadcasting ? 'Sending...' : 'Send Broadcast'}
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
