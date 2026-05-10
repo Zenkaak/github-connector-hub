@@ -196,7 +196,7 @@ export function ChamaWithdrawals({ groupId, members, myRole, savings }: Props) {
           const isVoting = voting === w.id;
 
           return (
-            <Card key={w.id} className="p-4">
+            <Card key={w.id} className="p-4 cursor-pointer hover:border-accent/40 hover:shadow-sm transition-all" onClick={() => setDetailItem(w)}>
               <div className="flex items-start justify-between mb-2">
                 <div>
                   <p className="font-semibold">KES {w.amount.toLocaleString()}</p>
