@@ -456,7 +456,7 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
                 </TabsContent>
                 <TabsContent value="paybill" className="pt-3">
                   <PaybillBox
-                    accountRef={userCode ? `${userCode}M${String(payOpen.cycle.id).replace(/-/g,'').slice(0,6).toUpperCase()}` : '—'}
+                    accountRef={userCode && chamaLetter ? `${userCode}${chamaLetter}${payOpen.cycle.cycle_number}` : '—'}
                     helperText={`Pay ${fmt(payOpen.cycle.contribution_amount)} for cycle #${payOpen.cycle.cycle_number}`}
                     compact
                   />
