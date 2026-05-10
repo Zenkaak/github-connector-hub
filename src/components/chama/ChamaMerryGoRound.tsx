@@ -243,8 +243,16 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
                   {/* Header */}
                   <div className="flex items-start justify-between gap-3 mb-3">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/15 to-accent/10 ring-1 ring-primary/20 flex items-center justify-center text-primary font-bold text-sm shrink-0">
-                        #{cycle.cycle_number}
+                      <div className="relative shrink-0">
+                        <Avatar className="w-12 h-12 ring-2 ring-primary/20">
+                          <AvatarImage src={recipMember?.profile?.avatar_url || undefined} alt={recipMember?.profile?.full_name || cycle.recipient_name} />
+                          <AvatarFallback className="bg-gradient-to-br from-primary/20 to-accent/15 text-primary font-bold text-sm">
+                            {initials(recipMember?.profile?.full_name || cycle.recipient_name)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <span className="absolute -bottom-1 -right-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground border border-card shadow-sm">
+                          #{cycle.cycle_number}
+                        </span>
                       </div>
                       <div className="min-w-0">
                         <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Recipient</p>
