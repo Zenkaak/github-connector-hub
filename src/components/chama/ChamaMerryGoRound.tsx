@@ -292,6 +292,8 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
             const progress = Math.min(100, expectedTotal > 0 ? (total / expectedTotal) * 100 : 0);
             const statusCfg = cycle.status === 'paid_out'
               ? { label: 'Paid Out', cls: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30' }
+              : cycle.status === 'payout_pending'
+              ? { label: 'Payout Pending', cls: 'bg-blue-500/15 text-blue-600 dark:text-blue-400 border-blue-500/30' }
               : cycle.status === 'closed_no_funds'
               ? { label: 'Closed', cls: 'bg-muted text-muted-foreground border-border' }
               : cycle.status === 'payout_failed'
