@@ -2976,6 +2976,14 @@ export type Database = {
         Args: { _group_id: string; _user_id: string }
         Returns: boolean
       }
+      lookup_dasnet_user_by_phone: {
+        Args: { _phone: string }
+        Returns: {
+          full_name: string
+          phone: string
+          user_id: string
+        }[]
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
