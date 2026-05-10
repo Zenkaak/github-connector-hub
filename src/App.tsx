@@ -134,6 +134,7 @@ function AppRoutes() {
       <Route path="/dashboard/chama" element={<ProtectedRoute><ChamaGroupsPage /></ProtectedRoute>} />
       <Route path="/dashboard/chama/explore" element={<ProtectedRoute><ChamaExplorerPage /></ProtectedRoute>} />
       <Route path="/dashboard/chama/:groupId" element={<ProtectedRoute><ChamaGroupDetailPage /></ProtectedRoute>} />
+      <Route path="/dashboard/chama/:groupId/:section" element={<ProtectedRoute><ChamaGroupDetailPage /></ProtectedRoute>} />
       <Route path="/dashboard/create-fundraiser" element={<ProtectedRoute><CreateHarambeePage /></ProtectedRoute>} />
 
       {/* ADMIN */}
