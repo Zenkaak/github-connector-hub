@@ -486,11 +486,8 @@ export default function ChamaGroupDetailPage() {
             ].map((a) => (
               <button
                 key={a.id}
-                onClick={() => setActiveTab(a.id)}
-                className={cn(
-                  "group flex flex-col items-center gap-1.5 rounded-xl border bg-card px-2 py-3 transition-all",
-                  activeTab === a.id ? "border-accent/60 ring-1 ring-accent/30" : "border-border/60 hover:border-accent/40"
-                )}
+                onClick={() => goToSection(a.id)}
+                className="group flex flex-col items-center gap-1.5 rounded-xl border bg-card px-2 py-3 transition-all border-border/60 hover:border-accent/40"
               >
                 <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center", a.tone)}>
                   <a.icon size={18} strokeWidth={2.2} />
