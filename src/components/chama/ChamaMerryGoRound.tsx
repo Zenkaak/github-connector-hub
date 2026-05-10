@@ -656,19 +656,6 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
                                 <p className="text-[10px] text-muted-foreground truncate">{m.profile?.phone || '—'}{isLate ? ' · late penalty applies' : ''}</p>
                               </div>
                               <span className="text-[11.5px] font-semibold text-amber-600 dark:text-amber-400 shrink-0">{fmt(owed)}</span>
-                              {isChair && cy.status === 'open' && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  className="h-7 px-2 gap-1 text-[10px] shrink-0"
-                                  disabled={triggering === m.user_id || !m.profile?.phone}
-                                  onClick={() => triggerStkForMember(cy, m)}
-                                  title={m.profile?.phone ? 'Send STK push to this member' : 'No phone on file'}
-                                >
-                                  {triggering === m.user_id ? <Loader2 size={11} className="animate-spin" /> : <Send size={11} />}
-                                  STK
-                                </Button>
-                              )}
                             </div>
                           );
                         })}
