@@ -513,6 +513,34 @@ export default function AdminHarambeeApplicationsPage() {
           })()}
         </DialogContent>
       </Dialog>
+
+      {/* Description modal (from review dialog) */}
+      <Dialog open={descriptionOpen} onOpenChange={setDescriptionOpen}>
+        <DialogContent className="max-w-xl w-[calc(100vw-1.5rem)] max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-base flex items-center gap-2">
+              <FileText size={16} /> Fundraiser Description
+            </DialogTitle>
+          </DialogHeader>
+          {selected && (
+            <ProseText text={selected.description} className="text-sm text-foreground break-words whitespace-pre-line" />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Description modal (from list cards) */}
+      <Dialog open={!!listDescription} onOpenChange={(o) => !o && setListDescription(null)}>
+        <DialogContent className="max-w-xl w-[calc(100vw-1.5rem)] max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-base flex items-center gap-2">
+              <FileText size={16} /> {listDescription?.name}
+            </DialogTitle>
+          </DialogHeader>
+          {listDescription && (
+            <ProseText text={listDescription.text} className="text-sm text-foreground break-words whitespace-pre-line" />
+          )}
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }
