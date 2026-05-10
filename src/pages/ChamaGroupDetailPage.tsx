@@ -266,6 +266,23 @@ export default function ChamaGroupDetailPage() {
   const roleIcons: Record<string, typeof Crown> = { chairperson: Crown, secretary: BookOpen, treasurer: Coins, member: Users };
   const roleColors: Record<string, string> = { chairperson: 'bg-accent/10 text-accent', secretary: 'bg-blue-500/10 text-blue-500', treasurer: 'bg-emerald-500/10 text-emerald-500', member: 'bg-muted text-muted-foreground' };
 
+  const sendBroadcast = async () => {
+    if (!broadcastMsg.trim() || !groupId) return;
+    setBroadcasting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('chama-broadcast', {
+        body: { group_id: groupId, message: broadcastMsg.trim() },
+      });
+      if (error) throw error;
+      const sent = (data as any)?.sent || 0;
+      const failed = (data as any)?.failed || 0;
+      toast({ title: 'Broadcast sent', description: `${sent} delivered${failed ? `, ${failed} failed` : ''}.` });
+      setBroadcastOpen(false); setBroadcastMsg('');
+    } catch (e: any) {
+      toast({ title: 'Broadcast failed', description: e.message, variant: 'destructive' });
+    } finally { setBroadcasting(false); }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
