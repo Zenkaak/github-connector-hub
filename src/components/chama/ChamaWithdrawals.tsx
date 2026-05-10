@@ -158,23 +158,23 @@ export function ChamaWithdrawals({ groupId, members, myRole, savings }: Props) {
 
   return (
     <div className="space-y-4">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <Card className="p-4">
-          <p className="text-xs text-muted-foreground">Total Withdrawn</p>
-          <p className="text-xl font-bold">KES {totalWithdrawn.toLocaleString()}</p>
-        </Card>
-        <Card className="p-4">
-          <p className="text-xs text-muted-foreground">Pending</p>
-          <p className="text-xl font-bold text-accent">{pendingCount}</p>
-        </Card>
-        <Card className="p-4">
-          <p className="text-xs text-muted-foreground">Approved</p>
-          <p className="text-xl font-bold text-emerald-500">{approvedCount}</p>
-        </Card>
-        <Card className="p-4">
-          <p className="text-xs text-muted-foreground">Group Balance</p>
-          <p className="text-xl font-bold text-primary">KES {savings.toLocaleString()}</p>
-        </Card>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+        {[
+          { label: 'Total Withdrawn', value: `KES ${totalWithdrawn.toLocaleString()}`, icon: HandCoins,    tone: 'text-amber-600 dark:text-amber-400',     bg: 'bg-amber-500/15',    valueClass: 'text-foreground' },
+          { label: 'Pending',         value: String(pendingCount),                     icon: Clock,        tone: 'text-orange-600 dark:text-orange-400',   bg: 'bg-orange-500/15',   valueClass: 'text-orange-600 dark:text-orange-400' },
+          { label: 'Approved',        value: String(approvedCount),                    icon: CheckCircle2, tone: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/15',  valueClass: 'text-emerald-600 dark:text-emerald-400' },
+          { label: 'Group Balance',   value: `KES ${savings.toLocaleString()}`,        icon: Wallet,       tone: 'text-sky-600 dark:text-sky-400',         bg: 'bg-sky-500/15',      valueClass: 'text-foreground' },
+        ].map((s, i) => (
+          <Card key={i} className="p-3.5 border-border/60 bg-gradient-to-br from-card to-muted/30">
+            <div className="flex items-center gap-2.5 mb-2">
+              <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center', s.bg, s.tone)}>
+                <s.icon size={14} strokeWidth={2.4} />
+              </div>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground truncate">{s.label}</p>
+            </div>
+            <p className={cn('text-lg sm:text-xl font-display font-bold leading-tight truncate', s.valueClass)}>{s.value}</p>
+          </Card>
+        ))}
       </div>
 
       {(isTreasurer || isChair) && (
