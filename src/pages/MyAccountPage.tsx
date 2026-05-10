@@ -150,11 +150,11 @@ export default function MyAccountPage() {
 
           <div className="relative px-4 pt-5 pb-8 lg:px-8 lg:pt-8 max-w-5xl mx-auto">
             <div className="flex items-center justify-between mb-5">
-              <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-full bg-card/60 backdrop-blur-md border border-border/40 flex items-center justify-center hover:bg-card transition">
+              <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-full bg-card backdrop-blur-md border border-border/60 flex items-center justify-center hover:bg-card transition">
                 <ArrowLeft size={16} />
               </button>
               <p className="text-[11px] uppercase tracking-[0.2em] font-bold text-muted-foreground">My Account</p>
-              <button onClick={() => setIsEditing(true)} className="w-9 h-9 rounded-full bg-card/60 backdrop-blur-md border border-border/40 flex items-center justify-center hover:bg-card transition">
+              <button onClick={() => setIsEditing(true)} className="w-9 h-9 rounded-full bg-card backdrop-blur-md border border-border/60 flex items-center justify-center hover:bg-card transition">
                 <Settings2 size={16} />
               </button>
             </div>
@@ -187,7 +187,7 @@ export default function MyAccountPage() {
 
             {/* Verification progress strip */}
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-              className="mt-5 rounded-2xl bg-card/70 backdrop-blur-md border border-border/40 p-4 flex items-center gap-4 shadow-lg">
+              className="mt-5 rounded-2xl bg-card backdrop-blur-md border border-border/60 p-4 flex items-center gap-4 shadow-lg">
               <div className="relative w-16 h-16 shrink-0">
                 <svg viewBox="0 0 64 64" className="w-full h-full -rotate-90">
                   <circle cx="32" cy="32" r="26" stroke="hsl(var(--muted))" strokeWidth="6" fill="none" opacity="0.3" />
@@ -211,7 +211,7 @@ export default function MyAccountPage() {
         </div>
 
         {/* TABS */}
-        <div className="sticky top-0 z-30 bg-background/85 backdrop-blur-xl border-b border-border/40">
+        <div className="sticky top-0 z-30 bg-background/85 backdrop-blur-xl border-b border-border/60">
           <div className="max-w-5xl mx-auto px-2 lg:px-8">
             <div className="flex items-center gap-1 overflow-x-auto no-scrollbar">
               {tabs.map(t => {
@@ -240,7 +240,7 @@ export default function MyAccountPage() {
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                     {stats.map((s, i) => (
                       <button key={i} onClick={s.onClick}
-                        className="relative overflow-hidden text-left rounded-2xl border border-border/40 bg-card p-4 hover:border-primary/40 hover:shadow-lg transition-all">
+                        className="relative overflow-hidden text-left rounded-2xl border border-border/60 bg-card p-4 hover:border-primary/40 hover:shadow-lg transition-all">
                         <div className={`absolute inset-0 bg-gradient-to-br ${s.accent} opacity-60 pointer-events-none`} />
                         <div className="relative">
                           <s.icon size={18} className={s.text} />
@@ -252,8 +252,8 @@ export default function MyAccountPage() {
                   </div>
 
                   {/* Quick actions */}
-                  <Card className="border-border/40 overflow-hidden">
-                    <CardHeader className="py-3 px-4 border-b border-border/30 bg-muted/10 flex flex-row items-center gap-2">
+                  <Card className="border-border/60 overflow-hidden">
+                    <CardHeader className="py-3 px-4 border-b border-border/60 bg-muted/40 flex flex-row items-center gap-2">
                       <Zap size={13} className="text-accent" />
                       <CardTitle className="text-[11px] font-bold uppercase tracking-widest">Quick Actions</CardTitle>
                     </CardHeader>
@@ -271,8 +271,8 @@ export default function MyAccountPage() {
                   </Card>
 
                   {/* Verification details */}
-                  <Card className="border-border/40">
-                    <CardHeader className="py-3 px-4 border-b border-border/30 bg-muted/10 flex flex-row items-center justify-between">
+                  <Card className="border-border/60">
+                    <CardHeader className="py-3 px-4 border-b border-border/60 bg-muted/40 flex flex-row items-center justify-between">
                       <div className="flex items-center gap-2">
                         <BadgeCheck size={13} className="text-primary" />
                         <CardTitle className="text-[11px] font-bold uppercase tracking-widest">Verification</CardTitle>
@@ -283,12 +283,12 @@ export default function MyAccountPage() {
                     </CardHeader>
                     <CardContent className="p-3 space-y-2">
                       {verificationSteps.map((step, i) => (
-                        <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-muted/20 border border-border/20">
+                        <div key={i} className="flex items-center gap-3 p-3 rounded-xl bg-muted/300 border border-border/50">
                           <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${step.done ? 'bg-emerald-500/20' : 'bg-muted/40'}`}>
-                            {step.done ? <CheckCircle2 size={14} className="text-emerald-400" /> : <AlertCircle size={14} className="text-muted-foreground/60" />}
+                            {step.done ? <CheckCircle2 size={14} className="text-emerald-400" /> : <AlertCircle size={14} className="text-muted-foreground" />}
                           </div>
                           <span className={`text-xs font-semibold flex-1 ${step.done ? 'text-foreground' : 'text-muted-foreground'}`}>{step.label}</span>
-                          {!step.done && <ChevronRight size={14} className="text-muted-foreground/50" />}
+                          {!step.done && <ChevronRight size={14} className="text-muted-foreground" />}
                         </div>
                       ))}
                     </CardContent>
@@ -298,8 +298,8 @@ export default function MyAccountPage() {
 
               {tab === 'profile' && (
                 <motion.div key="profile" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-5">
-                  <Card className="border-border/40">
-                    <CardHeader className="py-3 px-4 border-b border-border/30 bg-muted/10 flex flex-row items-center justify-between">
+                  <Card className="border-border/60">
+                    <CardHeader className="py-3 px-4 border-b border-border/60 bg-muted/40 flex flex-row items-center justify-between">
                       <div className="flex items-center gap-2">
                         <User size={13} className="text-primary" />
                         <CardTitle className="text-[11px] font-bold uppercase tracking-widest">Personal Info</CardTitle>
@@ -308,7 +308,7 @@ export default function MyAccountPage() {
                         <Edit3 size={10} className="mr-1" /> Edit
                       </Button>
                     </CardHeader>
-                    <CardContent className="p-0 divide-y divide-border/20">
+                    <CardContent className="p-0 divide-y divide-border/50">
                       {[
                         { icon: User, label: 'Full Legal Name', value: profile?.full_name },
                         { icon: CreditCard, label: 'National ID', value: profile?.id_number },
@@ -321,7 +321,7 @@ export default function MyAccountPage() {
                             <f.icon size={14} className="text-primary" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-[10px] uppercase font-bold text-muted-foreground/80 tracking-wider">{f.label}</p>
+                            <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">{f.label}</p>
                             <p className="text-sm font-semibold truncate">{f.value || '—'}</p>
                           </div>
                         </div>
@@ -329,12 +329,12 @@ export default function MyAccountPage() {
                     </CardContent>
                   </Card>
 
-                  <Card className="border-border/40">
-                    <CardHeader className="py-3 px-4 border-b border-border/30 bg-muted/10 flex flex-row items-center gap-2">
+                  <Card className="border-border/60">
+                    <CardHeader className="py-3 px-4 border-b border-border/60 bg-muted/40 flex flex-row items-center gap-2">
                       <MapPin size={13} className="text-primary" />
                       <CardTitle className="text-[11px] font-bold uppercase tracking-widest">Residential</CardTitle>
                     </CardHeader>
-                    <CardContent className="p-0 divide-y divide-border/20">
+                    <CardContent className="p-0 divide-y divide-border/50">
                       {[
                         { label: 'County', value: profile?.county },
                         { label: 'Sub-County', value: profile?.sub_county },
@@ -342,7 +342,7 @@ export default function MyAccountPage() {
                         { label: 'Physical Address', value: profile?.address },
                       ].map((f, i) => (
                         <div key={i} className="px-4 py-3 flex flex-col">
-                          <span className="text-[10px] uppercase font-bold text-muted-foreground/80 tracking-wider">{f.label}</span>
+                          <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">{f.label}</span>
                           <span className="text-sm font-semibold mt-0.5 truncate">{f.value || '—'}</span>
                         </div>
                       ))}
@@ -353,14 +353,14 @@ export default function MyAccountPage() {
 
               {tab === 'security' && (
                 <motion.div key="security" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-5">
-                  <Card className="border-border/40">
-                    <CardHeader className="py-3 px-4 border-b border-border/30 bg-muted/10 flex flex-row items-center gap-2">
+                  <Card className="border-border/60">
+                    <CardHeader className="py-3 px-4 border-b border-border/60 bg-muted/40 flex flex-row items-center gap-2">
                       <ShieldCheck size={13} className="text-primary" />
                       <CardTitle className="text-[11px] font-bold uppercase tracking-widest">Access & Privacy</CardTitle>
                     </CardHeader>
                     <CardContent className="p-3 space-y-2">
                       <button onClick={() => setShowPassModal(true)}
-                        className="w-full flex items-center gap-3 p-3 rounded-xl bg-muted/20 hover:bg-muted/40 border border-border/30 transition group">
+                        className="w-full flex items-center gap-3 p-3 rounded-xl bg-muted/300 hover:bg-muted/40 border border-border/60 transition group">
                         <div className="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center text-accent group-hover:bg-accent group-hover:text-accent-foreground transition-colors">
                           <Key size={16} />
                         </div>
@@ -368,11 +368,11 @@ export default function MyAccountPage() {
                           <p className="text-sm font-bold">Update Password</p>
                           <p className="text-[10px] text-muted-foreground">Change your login credentials</p>
                         </div>
-                        <ChevronRight size={16} className="text-muted-foreground/50" />
+                        <ChevronRight size={16} className="text-muted-foreground" />
                       </button>
 
-                      <button onClick={() => navigate('/dashboard/pin')}
-                        className="w-full flex items-center gap-3 p-3 rounded-xl bg-muted/20 hover:bg-muted/40 border border-border/30 transition group">
+                      <button onClick={() => navigate('/dashboard/settings')}
+                        className="w-full flex items-center gap-3 p-3 rounded-xl bg-muted/300 hover:bg-muted/40 border border-border/60 transition group">
                         <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
                           <Lock size={16} />
                         </div>
@@ -380,17 +380,17 @@ export default function MyAccountPage() {
                           <p className="text-sm font-bold">Transaction PIN</p>
                           <p className="text-[10px] text-muted-foreground">Manage your 4-digit PIN</p>
                         </div>
-                        <ChevronRight size={16} className="text-muted-foreground/50" />
+                        <ChevronRight size={16} className="text-muted-foreground" />
                       </button>
                     </CardContent>
                   </Card>
 
-                  <Card className="border-border/40">
-                    <CardHeader className="py-3 px-4 border-b border-border/30 bg-muted/10 flex flex-row items-center gap-2">
+                  <Card className="border-border/60">
+                    <CardHeader className="py-3 px-4 border-b border-border/60 bg-muted/40 flex flex-row items-center gap-2">
                       <Smartphone size={13} className="text-primary" />
                       <CardTitle className="text-[11px] font-bold uppercase tracking-widest">Active Sessions</CardTitle>
                     </CardHeader>
-                    <CardContent className="p-0 divide-y divide-border/20">
+                    <CardContent className="p-0 divide-y divide-border/50">
                       {activeDevices.map((device) => (
                         <div key={device.id} className="p-4">
                           <div className="flex items-start gap-3">
@@ -420,8 +420,8 @@ export default function MyAccountPage() {
 
               {tab === 'documents' && (
                 <motion.div key="docs" initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-5">
-                  <Card className="border-border/40">
-                    <CardHeader className="py-3 px-4 border-b border-border/30 bg-muted/10 flex flex-row items-center justify-between">
+                  <Card className="border-border/60">
+                    <CardHeader className="py-3 px-4 border-b border-border/60 bg-muted/40 flex flex-row items-center justify-between">
                       <div className="flex items-center gap-2">
                         <FileText size={13} className="text-primary" />
                         <CardTitle className="text-[11px] font-bold uppercase tracking-widest">KYC Documents</CardTitle>
@@ -460,7 +460,7 @@ export default function MyAccountPage() {
                         <div className="relative">
                           <Lock className="absolute left-3 top-2.5 text-muted-foreground" size={16} />
                           <input type="password" required placeholder="Min. 6 characters"
-                            className="w-full bg-muted/50 border rounded-lg py-2.5 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                            className="w-full bg-muted/300 border rounded-lg py-2.5 pl-10 pr-4 text-sm focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                             value={newPassword} onChange={(e) => setNewPassword(e.target.value)} />
                         </div>
                       </div>
@@ -482,8 +482,8 @@ export default function MyAccountPage() {
         <AnimatePresence>
           {showDocViewer && (
             <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-              <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 20, opacity: 0 }} className="w-full max-w-2xl bg-card rounded-2xl overflow-hidden flex flex-col shadow-2xl border border-border/40">
-                <div className="p-4 border-b flex items-center justify-between bg-muted/20">
+              <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 20, opacity: 0 }} className="w-full max-w-2xl bg-card rounded-2xl overflow-hidden flex flex-col shadow-2xl border border-border/60">
+                <div className="p-4 border-b flex items-center justify-between bg-muted/300">
                   <div className="flex items-center gap-3">
                     <div className="p-2 bg-primary/10 rounded-lg"><FileText size={18} className="text-primary" /></div>
                     <div>
@@ -493,7 +493,7 @@ export default function MyAccountPage() {
                   </div>
                   <Button variant="ghost" size="icon" onClick={() => setShowDocViewer(false)} className="rounded-full"><X size={20} /></Button>
                 </div>
-                <div className="bg-muted/10 flex items-center justify-center p-10">
+                <div className="bg-muted/40 flex items-center justify-center p-10">
                   <div className="text-center space-y-4">
                     <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center mx-auto shadow-inner">
                       <ShieldCheck size={48} className="text-primary" />
