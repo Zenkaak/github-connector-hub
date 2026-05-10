@@ -317,6 +317,7 @@ export function AdminOverviewModule() {
           icon={Banknote}
           accent="gold"
           onClick={() => navigate('/dashboard/admin/loans')}
+        />
       </div>
 
       {/* Financial / Revenue strip */}
