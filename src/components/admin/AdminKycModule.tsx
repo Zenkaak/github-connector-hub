@@ -4,6 +4,7 @@ import { ShieldCheck, Loader2, FileText, Check, X as XIcon, Clock, CheckCircle2,
 import { AdminSectionHeader } from './AdminSectionHeader';
 import { AdminEmptyState } from './AdminEmptyState';
 import { AdminKpiCard } from './AdminKpiCard';
+import { AdminToolbar, exportToCsv } from './AdminToolbar';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +13,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
+type KycStatus = 'pending' | 'approved' | 'rejected';
+
 export function AdminKycModule() {
   const [docs, setDocs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -19,7 +22,8 @@ export function AdminKycModule() {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [notes, setNotes] = useState('');
   const [acting, setActing] = useState(false);
-  const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected'>('pending');
+  const [filter, setFilter] = useState<KycStatus>('pending');
+  const [search, setSearch] = useState('');
   const [counts, setCounts] = useState({ pending: 0, approved: 0, rejected: 0 });
 
   useEffect(() => {
@@ -77,6 +81,28 @@ export function AdminKycModule() {
     setActing(false);
   };
 
+  const filtered = docs.filter((d) => {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return (
+      d.profile?.full_name?.toLowerCase().includes(q) ||
+      d.profile?.phone?.includes(search) ||
+      d.profile?.email?.toLowerCase().includes(q) ||
+      d.document_type?.toLowerCase().includes(q)
+    );
+  });
+
+  const handleExport = () => {
+    exportToCsv(`kyc-${filter}-${format(new Date(), 'yyyy-MM-dd')}`, filtered, [
+      { header: 'Name',     get: (d) => d.profile?.full_name || '' },
+      { header: 'Phone',    get: (d) => d.profile?.phone || '' },
+      { header: 'Email',    get: (d) => d.profile?.email || '' },
+      { header: 'Document', get: (d) => d.document_type },
+      { header: 'Status',   get: (d) => d.status },
+      { header: 'Submitted',get: (d) => format(new Date(d.created_at), 'yyyy-MM-dd HH:mm') },
+    ]);
+  };
+
   return (
     <div className="space-y-5">
       <AdminSectionHeader title="KYC Reviews" description="Verify member identity documents" icon={ShieldCheck} />
@@ -87,22 +113,28 @@ export function AdminKycModule() {
         <AdminKpiCard label="Rejected" value={counts.rejected.toLocaleString()} icon={XCircle} accent="red" />
       </div>
 
-      <div className="flex gap-2">
-        {(['pending', 'approved', 'rejected'] as const).map((s) => (
-          <Button key={s} variant={filter === s ? 'default' : 'outline'} size="sm" onClick={() => setFilter(s)}>
-            {s.charAt(0).toUpperCase() + s.slice(1)}
-          </Button>
-        ))}
-      </div>
+      <AdminToolbar<KycStatus>
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search name, phone, email, document…"
+        filters={[
+          { key: 'pending',  label: 'Pending',  count: counts.pending },
+          { key: 'approved', label: 'Approved', count: counts.approved },
+          { key: 'rejected', label: 'Rejected', count: counts.rejected },
+        ]}
+        activeFilter={filter}
+        onFilterChange={setFilter}
+        onExport={filtered.length ? handleExport : undefined}
+      />
 
       {loading ? (
         <div className="flex justify-center py-16"><Loader2 className="animate-spin text-accent" /></div>
-      ) : docs.length === 0 ? (
-        <AdminEmptyState icon={FileText} title={`No ${filter} documents`} />
+      ) : filtered.length === 0 ? (
+        <AdminEmptyState icon={FileText} title={search ? 'No matches' : `No ${filter} documents`} />
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {docs.map((d) => (
-            <Card key={d.id} onClick={() => openDoc(d)} className="p-4 cursor-pointer hover:shadow-md transition-shadow">
+          {filtered.map((d) => (
+            <Card key={d.id} onClick={() => openDoc(d)} className="p-4 cursor-pointer hover:shadow-md hover:border-accent/40 transition-all">
               <div className="flex items-start gap-3">
                 <div className="h-10 w-10 rounded-xl bg-accent/10 text-accent flex items-center justify-center shrink-0">
                   <FileText size={18} />
@@ -129,7 +161,7 @@ export function AdminKycModule() {
                 <DialogTitle>{selected.profile?.full_name} — {selected.document_type}</DialogTitle>
               </DialogHeader>
               {imageUrl && (
-                <div className="rounded-lg overflow-hidden border bg-muted">
+                <div className="rounded-lg overflow-hidden border border-border bg-muted">
                   <img src={imageUrl} alt={selected.document_type} className="w-full h-auto" />
                 </div>
               )}

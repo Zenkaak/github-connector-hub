@@ -4,6 +4,7 @@ import { PiggyBank, Loader2, Check, X as XIcon, Clock, Banknote, CheckCircle2, X
 import { AdminSectionHeader } from './AdminSectionHeader';
 import { AdminEmptyState } from './AdminEmptyState';
 import { AdminKpiCard } from './AdminKpiCard';
+import { AdminToolbar, exportToCsv } from './AdminToolbar';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,10 +13,13 @@ import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
+type WStatus = 'pending' | 'approved' | 'rejected';
+
 export function AdminWithdrawalsModule() {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected'>('pending');
+  const [filter, setFilter] = useState<WStatus>('pending');
+  const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<any>(null);
   const [reason, setReason] = useState('');
   const [acting, setActing] = useState(false);
@@ -39,7 +43,7 @@ export function AdminWithdrawalsModule() {
       .from('chama_withdrawals')
       .select('*')
       .eq('status', filter)
-      .order('created_at', { ascending: false }).limit(100);
+      .order('created_at', { ascending: false }).limit(200);
     const groupIds = [...new Set((data || []).map((w) => w.group_id))];
     const { data: groups } = await supabase.from('chama_groups').select('id, name').in('id', groupIds);
     const gmap = new Map((groups || []).map((g: any) => [g.id, g.name]));
@@ -60,6 +64,20 @@ export function AdminWithdrawalsModule() {
     setActing(false);
   };
 
+  const filtered = items.filter((w) =>
+    !search || w.group_name?.toLowerCase().includes(search.toLowerCase()) || w.reason?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const handleExport = () => {
+    exportToCsv(`withdrawals-${filter}-${format(new Date(), 'yyyy-MM-dd')}`, filtered, [
+      { header: 'Group',  get: (w) => w.group_name || '' },
+      { header: 'Amount', get: (w) => Number(w.amount || 0) },
+      { header: 'Reason', get: (w) => w.reason || '' },
+      { header: 'Status', get: (w) => w.status },
+      { header: 'Date',   get: (w) => format(new Date(w.created_at), 'yyyy-MM-dd HH:mm') },
+    ]);
+  };
+
   return (
     <div className="space-y-5">
       <AdminSectionHeader title="Chama Withdrawals" description="Review withdrawal requests" icon={PiggyBank} />
@@ -71,24 +89,31 @@ export function AdminWithdrawalsModule() {
         <AdminKpiCard label="Rejected" value={stats.rejected.toLocaleString()} icon={XCircle} accent="red" />
       </div>
 
-      <div className="flex gap-2">
-        {(['pending', 'approved', 'rejected'] as const).map((s) => (
-          <Button key={s} variant={filter === s ? 'default' : 'outline'} size="sm" onClick={() => setFilter(s)}>
-            {s.charAt(0).toUpperCase() + s.slice(1)}
-          </Button>
-        ))}
-      </div>
+      <AdminToolbar<WStatus>
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search group or reason…"
+        filters={[
+          { key: 'pending',  label: 'Pending',  count: stats.pending },
+          { key: 'approved', label: 'Approved', count: stats.approved },
+          { key: 'rejected', label: 'Rejected', count: stats.rejected },
+        ]}
+        activeFilter={filter}
+        onFilterChange={setFilter}
+        onExport={filtered.length ? handleExport : undefined}
+      />
+
       {loading ? <div className="flex justify-center py-16"><Loader2 className="animate-spin text-accent" /></div> :
-       items.length === 0 ? <AdminEmptyState icon={PiggyBank} title={`No ${filter} withdrawals`} /> : (
+       filtered.length === 0 ? <AdminEmptyState icon={PiggyBank} title={search ? 'No matches' : `No ${filter} withdrawals`} /> : (
         <Card className="divide-y divide-border">
-          {items.map((w) => (
-            <button key={w.id} onClick={() => { setSelected(w); setReason(w.admin_reason || ''); }} className="w-full p-4 hover:bg-muted/60 text-left flex items-center gap-3">
+          {filtered.map((w) => (
+            <button key={w.id} onClick={() => { setSelected(w); setReason(w.admin_reason || ''); }} className="w-full p-4 hover:bg-muted/60 text-left flex items-center gap-3 transition-colors">
               <div className="flex-1 min-w-0">
                 <p className="font-semibold text-foreground truncate">{w.group_name}</p>
                 <p className="text-xs text-muted-foreground truncate">{w.reason || 'No reason'}</p>
               </div>
               <div className="text-right shrink-0">
-                <p className="font-bold tabular-nums">KES {Number(w.amount).toLocaleString()}</p>
+                <p className="font-bold tabular-nums text-foreground">KES {Number(w.amount).toLocaleString()}</p>
                 <Badge variant="outline" className="text-[10px] mt-1">{w.status}</Badge>
                 <p className="text-[10px] text-muted-foreground mt-0.5">{format(new Date(w.created_at), 'MMM d')}</p>
               </div>

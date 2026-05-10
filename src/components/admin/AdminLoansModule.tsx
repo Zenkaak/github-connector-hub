@@ -5,6 +5,7 @@ import { AdminCreateLoanDialog } from './AdminCreateLoanDialog';
 import { AdminSectionHeader } from './AdminSectionHeader';
 import { AdminEmptyState } from './AdminEmptyState';
 import { AdminKpiCard } from './AdminKpiCard';
+import { AdminToolbar, exportToCsv } from './AdminToolbar';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -14,26 +15,30 @@ import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 
+type LoanStatus = 'pending' | 'approved' | 'rejected' | 'disbursed';
+
 export function AdminLoansModule() {
   const [loans, setLoans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'pending' | 'approved' | 'rejected' | 'disbursed'>('pending');
+  const [filter, setFilter] = useState<LoanStatus>('pending');
+  const [search, setSearch] = useState('');
   const [selected, setSelected] = useState<any>(null);
   const [adminMessage, setAdminMessage] = useState('');
   const [approvedAmount, setApprovedAmount] = useState('');
   const [acting, setActing] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
-  const [stats, setStats] = useState({ pending: 0, disbursed: 0, disbursedValue: 0, rejected: 0 });
+  const [stats, setStats] = useState({ pending: 0, approved: 0, disbursed: 0, disbursedValue: 0, rejected: 0 });
 
   useEffect(() => {
     (async () => {
-      const [p, d, r] = await Promise.all([
+      const [p, ap, d, r] = await Promise.all([
         supabase.from('loan_applications').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+        supabase.from('loan_applications').select('id', { count: 'exact', head: true }).eq('status', 'approved'),
         supabase.from('loan_applications').select('amount, generated_limit').eq('status', 'disbursed'),
         supabase.from('loan_applications').select('id', { count: 'exact', head: true }).eq('status', 'rejected'),
       ]);
       const disbursedValue = (d.data || []).reduce((s: number, l: any) => s + Number(l.generated_limit || l.amount || 0), 0);
-      setStats({ pending: p.count || 0, disbursed: d.data?.length || 0, disbursedValue, rejected: r.count || 0 });
+      setStats({ pending: p.count || 0, approved: ap.count || 0, disbursed: d.data?.length || 0, disbursedValue, rejected: r.count || 0 });
     })();
   }, []);
 
@@ -44,7 +49,7 @@ export function AdminLoansModule() {
       .select('*')
       .eq('status', filter)
       .order('created_at', { ascending: false })
-      .limit(100);
+      .limit(200);
     const userIds = [...new Set((data || []).map((l) => l.user_id))];
     const { data: profiles } = await supabase.from('profiles').select('user_id, full_name, phone').in('user_id', userIds);
     const pmap = new Map((profiles || []).map((p: any) => [p.user_id, p]));
@@ -84,7 +89,6 @@ export function AdminLoansModule() {
     });
     if (error) { toast.error(error.message); setActing(false); return; }
     await supabase.from('loan_applications').update({ status: 'disbursed' }).eq('id', selected.id);
-    // Credit wallet
     const { data: w } = await supabase.from('wallets').select('balance').eq('user_id', selected.user_id).single();
     await supabase.from('wallets').update({ balance: Number(w?.balance || 0) + amount }).eq('user_id', selected.user_id);
     await supabase.from('notifications').insert({
@@ -92,6 +96,24 @@ export function AdminLoansModule() {
       message: `KES ${amount.toLocaleString()} has been credited to your wallet.`,
     });
     toast.success('Loan disbursed'); setSelected(null); load(); setActing(false);
+  };
+
+  const filtered = loans.filter((l) => {
+    if (!search) return true;
+    const q = search.toLowerCase();
+    return l.profile?.full_name?.toLowerCase().includes(q) || l.profile?.phone?.includes(search) || l.loan_type?.toLowerCase().includes(q);
+  });
+
+  const handleExport = () => {
+    exportToCsv(`loans-${filter}-${format(new Date(), 'yyyy-MM-dd')}`, filtered, [
+      { header: 'Applicant', get: (l) => l.profile?.full_name || '' },
+      { header: 'Phone',     get: (l) => l.profile?.phone || '' },
+      { header: 'Type',      get: (l) => l.loan_type || '' },
+      { header: 'Applied',   get: (l) => Number(l.applied_amount || 0) },
+      { header: 'Approved',  get: (l) => Number(l.generated_limit || 0) },
+      { header: 'Status',    get: (l) => l.status },
+      { header: 'Date',      get: (l) => format(new Date(l.created_at), 'yyyy-MM-dd HH:mm') },
+    ]);
   };
 
   return (
@@ -107,23 +129,33 @@ export function AdminLoansModule() {
         <AdminKpiCard label="Rejected" value={stats.rejected.toLocaleString()} icon={XCircle} accent="red" />
       </div>
 
-      <div className="flex gap-2 flex-wrap">
-        {(['pending', 'approved', 'disbursed', 'rejected'] as const).map((s) => (
-          <Button key={s} variant={filter === s ? 'default' : 'outline'} size="sm" onClick={() => setFilter(s)}>
-            {s.charAt(0).toUpperCase() + s.slice(1)}
-          </Button>
-        ))}
-      </div>
+      <AdminToolbar<LoanStatus>
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder="Search applicant, phone, loan type…"
+        filters={[
+          { key: 'pending',   label: 'Pending',   count: stats.pending },
+          { key: 'approved',  label: 'Approved',  count: stats.approved },
+          { key: 'disbursed', label: 'Disbursed', count: stats.disbursed },
+          { key: 'rejected',  label: 'Rejected',  count: stats.rejected },
+        ]}
+        activeFilter={filter}
+        onFilterChange={setFilter}
+        onExport={filtered.length ? handleExport : undefined}
+      />
 
       {loading ? (
         <div className="flex justify-center py-16"><Loader2 className="animate-spin text-accent" /></div>
-      ) : loans.length === 0 ? (
-        <AdminEmptyState icon={FileText} title={`No ${filter} loans`} />
+      ) : filtered.length === 0 ? (
+        <AdminEmptyState icon={FileText} title={search ? 'No matches' : `No ${filter} loans`} />
       ) : (
         <Card className="overflow-hidden">
           <div className="divide-y divide-border">
-            {loans.map((l) => (
-              <button key={l.id} onClick={() => open(l)} className="w-full p-4 hover:bg-muted/60 text-left flex items-center gap-3">
+            {filtered.map((l) => (
+              <button key={l.id} onClick={() => open(l)} className="w-full p-4 hover:bg-muted/60 text-left flex items-center gap-3 transition-colors">
+                <div className="h-10 w-10 rounded-full bg-accent/10 text-accent flex items-center justify-center font-bold text-sm shrink-0">
+                  {(l.profile?.full_name || 'U').slice(0, 1).toUpperCase()}
+                </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-foreground truncate">{l.profile?.full_name || 'Unknown'}</p>
                   <p className="text-xs text-muted-foreground">{l.profile?.phone} • {l.loan_type}</p>
