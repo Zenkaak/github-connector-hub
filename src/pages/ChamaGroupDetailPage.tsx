@@ -434,8 +434,6 @@ export default function ChamaGroupDetailPage() {
                       </span>
                     )}
                   </div>
-                  </div>
-                </div>
                 </div>
               </div>
             </div>
