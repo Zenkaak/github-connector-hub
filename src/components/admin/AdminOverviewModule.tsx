@@ -317,10 +317,47 @@ export function AdminOverviewModule() {
           icon={Banknote}
           accent="gold"
           onClick={() => navigate('/dashboard/admin/loans')}
+      </div>
+
+      {/* Financial / Revenue strip */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <KpiCard
+          label="Platform revenue (30d)"
+          value={fmtKes(stats.revenue30d)}
+          icon={Coins}
+          accent="emerald"
+          onClick={() => navigate('/dashboard/admin/chama')}
+        />
+        <KpiCard
+          label="Joining fees (30d)"
+          value={fmtKes(stats.joiningFees30d)}
+          icon={Receipt}
+          accent="gold"
+        />
+        <KpiCard
+          label="Deposits today"
+          value={fmtKes(stats.depositsToday)}
+          icon={ArrowDownLeft}
+          accent="blue"
+          onClick={() => navigate('/dashboard/admin/mpesa')}
+        />
+        <KpiCard
+          label="Payouts today"
+          value={fmtKes(stats.payoutsToday)}
+          icon={Send}
+          accent="red"
+          onClick={() => navigate('/dashboard/admin/mpesa')}
         />
       </div>
 
-      {/* Pending actions strip */}
+      {/* Quick actions */}
+      <AdminQuickActions
+        pendingKyc={stats.pendingKyc}
+        pendingLoans={stats.pendingLoans}
+        pendingWithdrawals={stats.pendingWithdrawals}
+        pendingHarambees={stats.pendingHarambees}
+        unmappedMpesa={stats.unmappedMpesa}
+      />
       <Card className="p-4">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Pending queue</h3>
