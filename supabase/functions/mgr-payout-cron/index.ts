@@ -59,6 +59,11 @@ Deno.serve(async (req) => {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    if (cy.status === "payout_pending") {
+      return new Response(JSON.stringify({ error: "Payout already in progress — awaiting M-Pesa confirmation" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     // For chair retry, reset payout_failed -> open so processCycle proceeds
     if (cy.status === "payout_failed") {
       await supabase.from("chama_mgr_cycles").update({ status: "open" }).eq("id", cy.id);
@@ -196,23 +201,26 @@ async function processCycle(supabase: any, cycle: any) {
     last_attempt_at: new Date().toISOString(),
   }).eq("id", b2cRow.id);
 
-  // Mark cycle
+  // Mark cycle. NOTE: when Daraja queues the request (ok), payout is still
+  // pending — final state (paid_out / payout_failed) is set by the
+  // mpesa-b2c-result callback. This prevents marking "paid out" before M-Pesa
+  // actually completes the transaction.
   await supabase.from("chama_mgr_cycles").update({
-    status: ok ? "paid_out" : "payout_failed",
+    status: ok ? "payout_pending" : "payout_failed",
     payout_amount: payoutAmount,
     payout_processed_at: new Date().toISOString(),
   }).eq("id", cycle.id);
 
-  // Notifications
+  // Notifications (queued — final confirmation comes from B2C result)
   if (ok) {
     await supabase.from("notifications").insert({
       user_id: cycle.recipient_id,
-      title: "Merry-Go-Round Payout Sent 💰",
-      message: `KES ${payoutAmount.toLocaleString()} is being sent to your M-Pesa (${normalized}) for cycle #${cycle.cycle_number}.`,
+      title: "Merry-Go-Round Payout Queued 💰",
+      message: `KES ${payoutAmount.toLocaleString()} payout for cycle #${cycle.cycle_number} is being processed by M-Pesa to ${normalized}. You will receive a confirmation SMS shortly.`,
       type: "payment",
     });
     await sendUserSMS(supabase, cycle.recipient_id,
-      `Dear {name}, your merry-go-round payout of ${fmt(payoutAmount)} for cycle #${cycle.cycle_number} is being sent to ${normalized}. Thank you for using Dasnet.`);
+      `Dear {name}, your merry-go-round payout of ${fmt(payoutAmount)} for cycle #${cycle.cycle_number} is being processed to ${normalized}. You will receive M-Pesa confirmation shortly.`);
   }
 
   // List non-payers (notify chairperson)

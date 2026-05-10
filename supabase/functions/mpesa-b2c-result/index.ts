@@ -30,6 +30,10 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify(ACK), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    // Detect MGR payouts via the occasion field set in mgr-payout-cron ("MGR cycle #N")
+    const isMgrPayout = String(reqRow.occasion || "").toLowerCase().startsWith("mgr cycle");
+    const mgrCycleNumber = isMgrPayout ? Number(String(reqRow.occasion).match(/#(\d+)/)?.[1] || 0) : 0;
+
     if (resultCode === "0") {
       const params: any[] = result.ResultParameters?.ResultParameter || [];
       const get = (k: string) => params.find((p) => p.Key === k)?.Value;
@@ -44,6 +48,15 @@ Deno.serve(async (req) => {
         receiver_party_public_name: get("ReceiverPartyPublicName") || null,
         result_payload: body,
       }).eq("id", reqRow.id);
+
+      // MGR payout — promote cycle from payout_pending → paid_out
+      if (isMgrPayout && mgrCycleNumber > 0) {
+        await supabase.from("chama_mgr_cycles")
+          .update({ status: "paid_out", payout_processed_at: new Date().toISOString() })
+          .eq("recipient_id", reqRow.user_id)
+          .eq("cycle_number", mgrCycleNumber)
+          .in("status", ["payout_pending", "payout_failed"]);
+      }
 
       await supabase.from("notifications").insert({
         user_id: reqRow.user_id,
@@ -95,13 +108,43 @@ Deno.serve(async (req) => {
         status: "failed", result_code: resultCode, result_desc: resultDesc, result_payload: body,
       }).eq("id", reqRow.id);
 
-      // refund_b2c_withdrawal already inserts the in-app notification — don't duplicate.
-      if (!reqRow.refunded) {
-        await supabase.rpc("refund_b2c_withdrawal", { _request_id: reqRow.id, _reason: resultDesc });
-      }
+      // MGR payout failed — flip cycle back to payout_failed so chair can retry.
+      // Do NOT call refund_b2c_withdrawal: MGR funds were never debited from the
+      // recipient's wallet, they came from contributions held by the cycle.
+      if (isMgrPayout && mgrCycleNumber > 0) {
+        await supabase.from("chama_mgr_cycles")
+          .update({ status: "payout_failed" })
+          .eq("recipient_id", reqRow.user_id)
+          .eq("cycle_number", mgrCycleNumber)
+          .eq("status", "payout_pending");
 
-      await sendUserSMS(supabase, reqRow.user_id,
-        SMS.walletWithdrawalRefunded("{name}", reqRow.amount));
+        // Notify chair to retry
+        const { data: cyRow } = await supabase.from("chama_mgr_cycles")
+          .select("group_id, cycle_number")
+          .eq("recipient_id", reqRow.user_id)
+          .eq("cycle_number", mgrCycleNumber)
+          .maybeSingle();
+        if (cyRow?.group_id) {
+          const { data: chair } = await supabase.from("chama_members")
+            .select("user_id").eq("group_id", cyRow.group_id)
+            .eq("role", "chairperson").eq("is_active", true).maybeSingle();
+          if (chair?.user_id) {
+            await supabase.from("notifications").insert({
+              user_id: chair.user_id,
+              title: `Merry-Go-Round payout FAILED — cycle #${cyRow.cycle_number}`,
+              message: `M-Pesa could not complete the payout. Please retry from the merry-go-round screen.`,
+              type: "alert",
+            });
+          }
+        }
+      } else {
+        // refund_b2c_withdrawal already inserts the in-app notification — don't duplicate.
+        if (!reqRow.refunded) {
+          await supabase.rpc("refund_b2c_withdrawal", { _request_id: reqRow.id, _reason: resultDesc });
+        }
+        await sendUserSMS(supabase, reqRow.user_id,
+          SMS.walletWithdrawalRefunded("{name}", reqRow.amount));
+      }
     }
 
     return new Response(JSON.stringify(ACK), { headers: { ...corsHeaders, "Content-Type": "application/json" } });

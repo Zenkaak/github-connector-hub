@@ -24,7 +24,20 @@ Deno.serve(async (req) => {
       await supabase.from("mpesa_b2c_requests")
         .update({ status: "timeout", result_payload: body })
         .eq("id", reqRow.id);
-      await supabase.rpc("refund_b2c_withdrawal", { _request_id: reqRow.id, _reason: "M-Pesa timeout" });
+
+      const isMgrPayout = String(reqRow.occasion || "").toLowerCase().startsWith("mgr cycle");
+      const mgrCycleNumber = isMgrPayout ? Number(String(reqRow.occasion).match(/#(\d+)/)?.[1] || 0) : 0;
+
+      if (isMgrPayout && mgrCycleNumber > 0) {
+        // MGR payout timed out — flip cycle to payout_failed so chair can retry.
+        await supabase.from("chama_mgr_cycles")
+          .update({ status: "payout_failed" })
+          .eq("recipient_id", reqRow.user_id)
+          .eq("cycle_number", mgrCycleNumber)
+          .eq("status", "payout_pending");
+      } else {
+        await supabase.rpc("refund_b2c_withdrawal", { _request_id: reqRow.id, _reason: "M-Pesa timeout" });
+      }
     }
 
     return new Response(JSON.stringify(ACK), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
