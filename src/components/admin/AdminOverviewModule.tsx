@@ -5,7 +5,8 @@ import {
   Users, Wallet, FileText, Heart, AlertTriangle,
   ShieldAlert, Send, PiggyBank, Activity, TrendingUp,
   Loader2, Server, CheckCircle, XCircle, ArrowUpRight,
-  ArrowDownRight, Banknote, CreditCard, Bell, Eye, BarChart3,
+  ArrowDownRight, Banknote, CreditCard, Eye, BarChart3,
+  Coins, Receipt, ArrowDownLeft,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,7 @@ import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell, CartesianGrid,
 } from 'recharts';
+import { AdminQuickActions } from './AdminQuickActions';
 import { cn } from '@/lib/utils';
 
 interface Stats {
@@ -33,6 +35,12 @@ interface Stats {
   openMgrCycles: number;
   totalLoansActive: number;
   totalLoanValue: number;
+  // Financial / revenue
+  platformFees30d: number;
+  joiningFees30d: number;
+  revenue30d: number;
+  depositsToday: number;
+  payoutsToday: number;
 }
 
 const fmtKes = (n: number) => `KES ${Math.round(n).toLocaleString()}`;
@@ -63,7 +71,7 @@ function KpiCard({ label, value, delta, icon: Icon, accent = 'gold', onClick, tr
   return (
     <button
       onClick={onClick}
-      className="group text-left bg-card border border-border/60 rounded-xl p-4 hover:border-accent/40 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 relative overflow-hidden"
+      className="group text-left bg-card border border-border rounded-xl p-4 hover:border-accent/40 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 relative overflow-hidden"
     >
       <div className={cn('absolute -right-6 -top-6 w-24 h-24 rounded-full bg-gradient-to-br opacity-50', accentMap[accent].split(' ').slice(0, 2).join(' '))} />
       <div className="relative">
@@ -124,6 +132,7 @@ export function AdminOverviewModule() {
         usersTotal, usersToday, kyc, loans, harambees, withdrawals,
         unmapped, b2cFailed, walletSum, transfersToday, transfers7d, chamas, mgrOpen,
         loansActive, users5, transfers5, transfersHist, usersHist, loanByStatus,
+        platformFees, joiningFees, depositsTodayQ, payoutsTodayQ,
       ] = await Promise.all([
         supabase.from('profiles').select('id', { count: 'exact', head: true }),
         supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('created_at', todayIso),
@@ -144,6 +153,10 @@ export function AdminOverviewModule() {
         supabase.from('wallet_transfers').select('amount, created_at').gte('created_at', thirtyDaysAgo).eq('status', 'completed').limit(2000),
         supabase.from('profiles').select('created_at').gte('created_at', thirtyDaysAgo).limit(2000),
         supabase.from('loan_applications').select('status'),
+        supabase.from('chama_platform_fees').select('amount').gte('created_at', thirtyDaysAgo),
+        supabase.from('chama_joining_fees').select('amount').gte('created_at', thirtyDaysAgo),
+        supabase.from('mpesa_c2b_transactions').select('trans_amount').gte('created_at', todayIso),
+        supabase.from('mpesa_b2c_requests').select('amount').gte('created_at', todayIso).eq('status', 'completed'),
       ]);
 
       // Build transfer trend by day (last 14 days)
@@ -181,6 +194,9 @@ export function AdminOverviewModule() {
       });
       setLoanMix(Object.entries(mix).map(([name, value]) => ({ name, value })));
 
+      const platformFees30d = (platformFees.data || []).reduce((s, r: any) => s + Number(r.amount || 0), 0);
+      const joiningFees30d = (joiningFees.data || []).reduce((s, r: any) => s + Number(r.amount || 0), 0);
+
       setStats({
         totalUsers: usersTotal.count || 0,
         newUsersToday: usersToday.count || 0,
@@ -197,6 +213,11 @@ export function AdminOverviewModule() {
         openMgrCycles: mgrOpen.count || 0,
         totalLoansActive: loansActive.data?.length || 0,
         totalLoanValue: (loansActive.data || []).reduce((s: number, l: any) => s + Number(l.amount || 0), 0),
+        platformFees30d,
+        joiningFees30d,
+        revenue30d: platformFees30d + joiningFees30d,
+        depositsToday: (depositsTodayQ.data || []).reduce((s, r: any) => s + Number(r.trans_amount || 0), 0),
+        payoutsToday: (payoutsTodayQ.data || []).reduce((s, r: any) => s + Number(r.amount || 0), 0),
       });
 
       setRecentUsers(users5.data || []);
@@ -299,7 +320,45 @@ export function AdminOverviewModule() {
         />
       </div>
 
-      {/* Pending actions strip */}
+      {/* Financial / Revenue strip */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <KpiCard
+          label="Platform revenue (30d)"
+          value={fmtKes(stats.revenue30d)}
+          icon={Coins}
+          accent="emerald"
+          onClick={() => navigate('/dashboard/admin/chama')}
+        />
+        <KpiCard
+          label="Joining fees (30d)"
+          value={fmtKes(stats.joiningFees30d)}
+          icon={Receipt}
+          accent="gold"
+        />
+        <KpiCard
+          label="Deposits today"
+          value={fmtKes(stats.depositsToday)}
+          icon={ArrowDownLeft}
+          accent="blue"
+          onClick={() => navigate('/dashboard/admin/mpesa')}
+        />
+        <KpiCard
+          label="Payouts today"
+          value={fmtKes(stats.payoutsToday)}
+          icon={Send}
+          accent="red"
+          onClick={() => navigate('/dashboard/admin/mpesa')}
+        />
+      </div>
+
+      {/* Quick actions */}
+      <AdminQuickActions
+        pendingKyc={stats.pendingKyc}
+        pendingLoans={stats.pendingLoans}
+        pendingWithdrawals={stats.pendingWithdrawals}
+        pendingHarambees={stats.pendingHarambees}
+        unmappedMpesa={stats.unmappedMpesa}
+      />
       <Card className="p-4">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Pending queue</h3>
@@ -441,7 +500,7 @@ export function AdminOverviewModule() {
               { label: 'Active chamas', status: 'healthy', badge: stats.activeChamas.toString() },
               { label: 'MGR cycles', status: 'healthy', badge: stats.openMgrCycles.toString() },
             ].map((s) => (
-              <div key={s.label} className="flex items-center justify-between py-1.5 border-b border-border/50 last:border-0">
+              <div key={s.label} className="flex items-center justify-between py-1.5 border-b border-border last:border-0">
                 <div className="flex items-center gap-2">
                   {s.status === 'healthy' && <CheckCircle size={13} className="text-emerald-500" />}
                   {s.status === 'warning' && <AlertTriangle size={13} className="text-amber-500" />}
@@ -480,7 +539,7 @@ export function AdminOverviewModule() {
             {recentUsers.length === 0 ? (
               <p className="text-xs text-muted-foreground py-6 text-center">No members yet</p>
             ) : recentUsers.map((u) => (
-              <div key={u.id} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
+              <div key={u.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500/20 to-amber-500/5 flex items-center justify-center text-xs font-bold text-amber-700 shrink-0">
                     {(u.full_name || 'U').slice(0, 1).toUpperCase()}
@@ -518,7 +577,7 @@ export function AdminOverviewModule() {
             {recentTransfers.length === 0 ? (
               <p className="text-xs text-muted-foreground py-6 text-center">No transfers yet</p>
             ) : recentTransfers.map((t) => (
-              <div key={t.id} className="flex items-center justify-between py-2 border-b border-border/50 last:border-0">
+              <div key={t.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
                     <Send size={13} className="text-emerald-600" />

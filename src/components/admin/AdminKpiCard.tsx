@@ -28,7 +28,7 @@ export function AdminKpiCard({ label, value, delta, icon: Icon, accent = 'gold',
     <Comp
       onClick={onClick}
       className={cn(
-        'group text-left bg-card border border-border/60 rounded-xl p-4 relative overflow-hidden w-full',
+        'group text-left bg-card border border-border rounded-xl p-4 relative overflow-hidden w-full',
         onClick && 'hover:border-accent/40 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200'
       )}
     >

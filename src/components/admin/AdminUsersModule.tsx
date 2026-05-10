@@ -376,7 +376,7 @@ export function AdminUsersModule() {
               <button
                 key={u.id}
                 onClick={() => openUser(u)}
-                className="w-full flex items-center gap-3 p-4 hover:bg-muted/40 transition-colors text-left"
+                className="w-full flex items-center gap-3 p-4 hover:bg-muted/60 transition-colors text-left"
               >
                 <div className="h-11 w-11 rounded-full bg-accent/10 text-accent flex items-center justify-center font-semibold text-sm shrink-0">
                   {(u.full_name || 'U').slice(0, 1).toUpperCase()}
