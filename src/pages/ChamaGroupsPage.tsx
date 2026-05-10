@@ -1,6 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Users, Crown, ChevronRight, Globe } from 'lucide-react';
+import {
+  Plus, Users, Crown, ChevronRight, Globe, Wallet, TrendingUp,
+  Calendar, Sparkles, ShieldCheck, ArrowUpRight, Coins,
+} from 'lucide-react';
+import { motion } from 'framer-motion';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -75,9 +79,32 @@ interface ChamaGroup {
   name: string;
   description: string | null;
   created_at: string;
-  member_count?: number;
-  my_role?: string;
+  contribution_amount: number;
+  contribution_frequency: string;
+  profile_image_url?: string | null;
+  meeting_day?: string | null;
+  member_count: number;
+  my_role: string;
+  my_savings: number;
+  group_pool: number;
 }
+
+const KES = (n: number) =>
+  `KES ${(n || 0).toLocaleString('en-KE', { maximumFractionDigits: 0 })}`;
+
+const initials = (name: string) =>
+  name.split(/\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+
+const roleLabels: Record<string, string> = {
+  chairperson: 'Chairperson', secretary: 'Secretary',
+  treasurer: 'Treasurer', member: 'Member',
+};
+const roleStyles: Record<string, string> = {
+  chairperson: 'bg-accent/15 text-accent border-accent/30',
+  secretary:   'bg-blue-500/15 text-blue-500 border-blue-500/30',
+  treasurer:   'bg-emerald-500/15 text-emerald-500 border-emerald-500/30',
+  member:      'bg-muted text-muted-foreground border-border',
+};
 
 export default function ChamaGroupsPage() {
   const { user } = useAuth();
@@ -106,18 +133,34 @@ export default function ChamaGroupsPage() {
       }
 
       const groupIds = memberships.map(m => m.group_id);
-      const { data: groupsData } = await supabase.from('chama_groups').select('*').in('id', groupIds);
+      const { data: groupsData } = await supabase
+        .from('chama_groups')
+        .select('*')
+        .in('id', groupIds);
 
-      if (groupsData) {
-        const enriched = await Promise.all(
-          groupsData.map(async (g) => {
-            const { count } = await supabase.from('chama_members').select('id', { count: 'exact', head: true }).eq('group_id', g.id).eq('is_active', true);
-            const myRole = memberships.find(m => m.group_id === g.id)?.role;
-            return { ...g, member_count: count || 0, my_role: myRole };
-          })
-        );
-        setGroups(enriched);
-      }
+      if (!groupsData) { setGroups([]); setLoading(false); return; }
+
+      const enriched = await Promise.all(
+        groupsData.map(async (g) => {
+          const [countRes, poolRes, mineRes] = await Promise.all([
+            supabase.from('chama_members').select('id', { count: 'exact', head: true })
+              .eq('group_id', g.id).eq('is_active', true),
+            supabase.from('chama_savings').select('amount').eq('group_id', g.id),
+            supabase.from('chama_savings').select('amount')
+              .eq('group_id', g.id).eq('user_id', user.id),
+          ]);
+          const sum = (rows: any[] | null) =>
+            (rows ?? []).reduce((a, r) => a + Number(r.amount || 0), 0);
+          return {
+            ...g,
+            member_count: countRes.count || 0,
+            my_role: memberships.find(m => m.group_id === g.id)?.role || 'member',
+            group_pool: sum(poolRes.data),
+            my_savings: sum(mineRes.data),
+          } as ChamaGroup;
+        })
+      );
+      setGroups(enriched);
     } catch (error) {
       console.error('Error fetching groups:', error);
     } finally {
@@ -127,14 +170,18 @@ export default function ChamaGroupsPage() {
 
   useEffect(() => { fetchGroups(); }, [user]);
 
+  const totals = useMemo(() => ({
+    pool:    groups.reduce((a, g) => a + g.group_pool, 0),
+    mine:    groups.reduce((a, g) => a + g.my_savings, 0),
+    leading: groups.filter(g => g.my_role === 'chairperson').length,
+  }), [groups]);
+
   const handleCreateGroup = async () => {
     if (!user || !newGroup.name.trim()) return;
     if (chamaCreationDisabled) {
       toast({ title: 'Feature Disabled', description: 'Chama group creation is currently disabled by admin.', variant: 'destructive' });
       return;
     }
-
-    // Check max 3 chama limit
     if (groups.length >= 3) {
       toast({ title: 'Limit Reached', description: 'You can only join or create a maximum of 3 Chama groups.', variant: 'destructive' });
       return;
@@ -174,91 +221,278 @@ export default function ChamaGroupsPage() {
     }
   };
 
-  const roleLabels: Record<string, string> = { chairperson: 'Chairperson', secretary: 'Secretary', treasurer: 'Treasurer', member: 'Member' };
-  const roleColors: Record<string, string> = { chairperson: 'bg-accent/10 text-accent', secretary: 'bg-blue-500/10 text-blue-500', treasurer: 'bg-emerald-500/10 text-emerald-500', member: 'bg-muted text-muted-foreground' };
-
   return (
     <DashboardLayout>
-      <div className="p-4 lg:p-8 max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
+      <div className="p-4 lg:p-8 max-w-5xl mx-auto space-y-6">
+        {/* Header */}
+        <div className="flex items-start justify-between gap-3 flex-wrap">
           <div>
-            <h1 className="text-2xl font-display font-bold">Chama Groups</h1>
-            <p className="text-sm text-muted-foreground mt-1">Create and manage your savings groups</p>
+            <h1 className="text-2xl lg:text-3xl font-display font-bold tracking-tight">
+              My Chamas
+            </h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              Save together, grow together. Manage your savings groups in one place.
+            </p>
           </div>
           <div className="flex gap-2">
             <Link to="/dashboard/chama/explore">
-              <Button variant="outline" className="gap-2">
-                <Globe size={16} /> Explore
+              <Button variant="outline" size="sm" className="gap-2 h-10 rounded-xl">
+                <Globe size={15} /> Explore
               </Button>
             </Link>
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
-                <Button className="gap-2"><Plus size={16} /> New Group</Button>
+                <Button size="sm" className="gap-2 h-10 rounded-xl shadow-sm">
+                  <Plus size={15} /> New Chama
+                </Button>
               </DialogTrigger>
               <DialogContent>
                 <DialogHeader><DialogTitle>Create New Chama Group</DialogTitle></DialogHeader>
                 <div className="space-y-4 mt-2">
                   <div>
                     <Label>Group Name *</Label>
-                    <Input value={newGroup.name} onChange={(e) => setNewGroup(prev => ({ ...prev, name: e.target.value }))} placeholder="e.g. Umoja Savings Group" maxLength={100} />
+                    <Input
+                      value={newGroup.name}
+                      onChange={(e) => setNewGroup(prev => ({ ...prev, name: e.target.value }))}
+                      placeholder="e.g. Umoja Savings Group"
+                      maxLength={100}
+                    />
                   </div>
                   <div>
                     <Label>Description</Label>
-                    <Textarea value={newGroup.description} onChange={(e) => setNewGroup(prev => ({ ...prev, description: e.target.value }))} placeholder="Brief description of your group's purpose..." maxLength={500} rows={3} />
+                    <Textarea
+                      value={newGroup.description}
+                      onChange={(e) => setNewGroup(prev => ({ ...prev, description: e.target.value }))}
+                      placeholder="Brief description of your group's purpose..."
+                      maxLength={500}
+                      rows={3}
+                    />
                   </div>
-                  <Button onClick={handleCreateGroup} disabled={creating || !newGroup.name.trim()} className="w-full">
+                  <Button
+                    onClick={handleCreateGroup}
+                    disabled={creating || !newGroup.name.trim()}
+                    className="w-full"
+                  >
                     {creating ? 'Creating...' : 'Create Group'}
                   </Button>
-                  <p className="text-xs text-muted-foreground text-center">You will be assigned as the Chairperson. Configure settings after creation.</p>
+                  <p className="text-xs text-muted-foreground text-center">
+                    You will be assigned as the Chairperson. Configure settings after creation.
+                  </p>
                 </div>
               </DialogContent>
             </Dialog>
           </div>
         </div>
 
+        {/* Hero summary */}
+        {!loading && groups.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-primary via-primary to-primary/85 text-primary-foreground p-5 lg:p-6 shadow-md"
+          >
+            <div
+              aria-hidden
+              className="absolute -right-10 -top-10 h-48 w-48 rounded-full bg-accent/20 blur-3xl"
+            />
+            <div
+              aria-hidden
+              className="absolute -left-16 -bottom-16 h-56 w-56 rounded-full bg-emerald-400/10 blur-3xl"
+            />
+            <div className="relative">
+              <div className="flex items-center gap-2 mb-1 text-xs uppercase tracking-wider text-primary-foreground/70">
+                <Sparkles size={13} className="text-accent" /> Chama overview
+              </div>
+              <div className="grid grid-cols-3 gap-3 lg:gap-6 mt-3">
+                <Stat
+                  label="My total savings"
+                  value={KES(totals.mine)}
+                  icon={<Wallet size={15} />}
+                  highlight
+                />
+                <Stat
+                  label="Group pool"
+                  value={KES(totals.pool)}
+                  icon={<Coins size={15} />}
+                />
+                <Stat
+                  label={totals.leading ? 'Leading' : 'Member of'}
+                  value={`${totals.leading || groups.length} ${totals.leading ? 'chama' : 'groups'}`}
+                  icon={totals.leading ? <Crown size={15} /> : <Users size={15} />}
+                />
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {/* List */}
         {loading ? (
-          <div className="space-y-3">
-            {[1, 2, 3].map(i => <div key={i} className="h-24 rounded-xl bg-muted animate-pulse" />)}
+          <div className="grid sm:grid-cols-2 gap-4">
+            {[1, 2, 3, 4].map(i => (
+              <div key={i} className="h-44 rounded-2xl bg-muted animate-pulse" />
+            ))}
           </div>
         ) : groups.length === 0 ? (
-          <Card className="p-12 text-center">
-            <Users size={48} className="mx-auto text-muted-foreground/30 mb-4" />
-            <h3 className="font-semibold text-lg mb-1">No Groups Yet</h3>
-            <p className="text-sm text-muted-foreground mb-4">Create your first Chama group or explore existing ones</p>
-            <div className="flex gap-2 justify-center">
-              <Button onClick={() => setDialogOpen(true)} className="gap-2"><Plus size={16} /> Create Group</Button>
-              <Link to="/dashboard/chama/explore"><Button variant="outline" className="gap-2"><Globe size={16} /> Explore Groups</Button></Link>
+          <Card className="p-10 lg:p-14 text-center rounded-2xl border-dashed">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-primary/10 flex items-center justify-center">
+              <Users size={28} className="text-primary" />
+            </div>
+            <h3 className="font-display font-bold text-xl mb-1.5">Start your first Chama</h3>
+            <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto">
+              Pool money with people you trust. Save, lend, and grow together — fully digital and transparent.
+            </p>
+            <div className="flex gap-2 justify-center flex-wrap">
+              <Button onClick={() => setDialogOpen(true)} className="gap-2 rounded-xl">
+                <Plus size={16} /> Create Chama
+              </Button>
+              <Link to="/dashboard/chama/explore">
+                <Button variant="outline" className="gap-2 rounded-xl">
+                  <Globe size={16} /> Explore Groups
+                </Button>
+              </Link>
             </div>
           </Card>
         ) : (
-          <div className="space-y-3">
-            {groups.map((group) => (
-              <Link key={group.id} to={`/dashboard/chama/${group.id}`}>
-                <Card className="p-4 hover:bg-muted/50 transition-colors cursor-pointer">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                        <Users size={22} className="text-primary" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold">{group.name}</h3>
-                        <div className="flex items-center gap-2 mt-1">
-                          <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${roleColors[group.my_role || 'member']}`}>
-                            {group.my_role === 'chairperson' && <Crown size={10} className="inline mr-1" />}
-                            {roleLabels[group.my_role || 'member']}
+          <div className="grid sm:grid-cols-2 gap-4">
+            {groups.map((group, idx) => (
+              <motion.div
+                key={group.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: idx * 0.04 }}
+              >
+                <Link to={`/dashboard/chama/${group.id}`} className="block group h-full">
+                  <Card
+                    className="relative h-full overflow-hidden rounded-2xl border border-border/60 p-5
+                               transition-all duration-200 hover:border-accent/40 hover:shadow-lg
+                               hover:-translate-y-0.5 cursor-pointer"
+                  >
+                    {/* gold accent bar */}
+                    <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-accent/40 via-accent to-accent/40 opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                    <div className="flex items-start gap-3">
+                      {group.profile_image_url ? (
+                        <img
+                          src={group.profile_image_url}
+                          alt={group.name}
+                          className="w-12 h-12 rounded-xl object-cover ring-1 ring-border"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-primary/15 to-accent/15 flex items-center justify-center text-primary font-display font-bold">
+                          {initials(group.name)}
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-start justify-between gap-2">
+                          <h3 className="font-display font-bold text-base leading-tight truncate">
+                            {group.name}
+                          </h3>
+                          <ArrowUpRight
+                            size={16}
+                            className="text-muted-foreground group-hover:text-accent transition-colors shrink-0 mt-0.5"
+                          />
+                        </div>
+                        <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+                          <span
+                            className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border inline-flex items-center gap-1 ${roleStyles[group.my_role]}`}
+                          >
+                            {group.my_role === 'chairperson' && <Crown size={10} />}
+                            {group.my_role === 'treasurer' && <ShieldCheck size={10} />}
+                            {roleLabels[group.my_role]}
                           </span>
-                          <span className="text-xs text-muted-foreground">{group.member_count} members</span>
+                          <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1">
+                            <Users size={11} /> {group.member_count}
+                          </span>
                         </div>
                       </div>
                     </div>
-                    <ChevronRight size={18} className="text-muted-foreground" />
-                  </div>
-                </Card>
-              </Link>
+
+                    {/* Stats */}
+                    <div className="grid grid-cols-2 gap-2 mt-4">
+                      <MiniStat
+                        label="My savings"
+                        value={KES(group.my_savings)}
+                        icon={<Wallet size={12} />}
+                        tone="accent"
+                      />
+                      <MiniStat
+                        label="Group pool"
+                        value={KES(group.group_pool)}
+                        icon={<TrendingUp size={12} />}
+                        tone="emerald"
+                      />
+                    </div>
+
+                    {/* Footer meta */}
+                    <div className="flex items-center justify-between mt-4 pt-3 border-t border-border/60 text-[11px] text-muted-foreground">
+                      <span className="inline-flex items-center gap-1">
+                        <Coins size={12} className="text-accent" />
+                        {group.contribution_amount > 0
+                          ? `${KES(group.contribution_amount)} / ${group.contribution_frequency}`
+                          : 'Open contribution'}
+                      </span>
+                      {group.meeting_day && (
+                        <span className="inline-flex items-center gap-1">
+                          <Calendar size={12} /> {group.meeting_day}
+                        </span>
+                      )}
+                    </div>
+                  </Card>
+                </Link>
+              </motion.div>
             ))}
+
+            {/* "Add another" tile if under limit */}
+            {groups.length < 3 && (
+              <button
+                type="button"
+                onClick={() => setDialogOpen(true)}
+                className="rounded-2xl border-2 border-dashed border-border/70 hover:border-accent/50
+                           hover:bg-accent/5 transition-colors min-h-[180px] flex flex-col items-center
+                           justify-center gap-2 text-muted-foreground hover:text-accent"
+              >
+                <div className="w-11 h-11 rounded-xl bg-muted flex items-center justify-center">
+                  <Plus size={20} />
+                </div>
+                <span className="text-sm font-semibold">Create another Chama</span>
+                <span className="text-[11px]">{3 - groups.length} slot{3 - groups.length === 1 ? '' : 's'} left</span>
+              </button>
+            )}
           </div>
         )}
       </div>
     </DashboardLayout>
+  );
+}
+
+function Stat({
+  label, value, icon, highlight,
+}: { label: string; value: string; icon: React.ReactNode; highlight?: boolean }) {
+  return (
+    <div>
+      <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-wider text-primary-foreground/70">
+        {icon} {label}
+      </div>
+      <div className={`mt-1 font-display font-bold leading-tight ${highlight ? 'text-accent text-xl lg:text-2xl' : 'text-lg lg:text-xl text-primary-foreground'}`}>
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function MiniStat({
+  label, value, icon, tone,
+}: { label: string; value: string; icon: React.ReactNode; tone: 'accent' | 'emerald' }) {
+  const toneClass =
+    tone === 'accent'
+      ? 'bg-accent/8 text-accent'
+      : 'bg-emerald-500/8 text-emerald-600 dark:text-emerald-400';
+  return (
+    <div className="rounded-xl bg-muted/40 px-3 py-2.5 border border-border/40">
+      <div className={`inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider px-1.5 py-0.5 rounded-md ${toneClass}`}>
+        {icon} {label}
+      </div>
+      <div className="mt-1 font-display font-bold text-sm">{value}</div>
+    </div>
   );
 }
