@@ -311,15 +311,18 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
                     </div>
                   )}
 
-                  {/* Members */}
-                  <div className="rounded-lg border border-border/40 divide-y divide-border/30 mb-3 max-h-44 overflow-y-auto">
-                    {members.map(m => {
+                  {/* Members preview (first 5) */}
+                  <div className="rounded-lg border border-border/40 divide-y divide-border/30 mb-3 overflow-hidden">
+                    {members.slice(0, 5).map(m => {
                       const hasPaid = paid.has(m.user_id);
                       const isThisRecipient = m.user_id === cycle.recipient_id;
                       return (
                         <div key={m.user_id} className="flex items-center justify-between text-[11.5px] px-2.5 py-1.5">
-                          <span className="flex items-center gap-1.5 min-w-0">
-                            <UserIcon size={10} className="text-muted-foreground shrink-0" />
+                          <span className="flex items-center gap-2 min-w-0">
+                            <Avatar className="w-6 h-6 shrink-0">
+                              <AvatarImage src={m.profile?.avatar_url || undefined} alt={m.profile?.full_name} />
+                              <AvatarFallback className="text-[9px] bg-muted">{initials(m.profile?.full_name)}</AvatarFallback>
+                            </Avatar>
                             <span className="truncate">{m.profile?.full_name || 'Unknown'}</span>
                             {isThisRecipient && <Badge variant="outline" className="text-[9px] py-0 px-1 shrink-0">Recipient</Badge>}
                           </span>
@@ -333,13 +336,23 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
                     })}
                   </div>
 
-                  {!haveIPaid && cycle.status === 'open' && (
-                    <Button onClick={() => { setPayOpen({ cycle }); setPayMethod('wallet'); }} className="w-full gap-1.5 h-10 shadow-sm" size="sm">
-                      <Wallet size={14} /> Pay {fmt(cycle.contribution_amount)}
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setDetailCycle(cycle)}
+                      className="flex-1 gap-1.5 h-10"
+                    >
+                      <Eye size={14} /> View Details
                     </Button>
-                  )}
+                    {!haveIPaid && cycle.status === 'open' && (
+                      <Button onClick={() => { setPayOpen({ cycle }); setPayMethod('wallet'); }} className="flex-1 gap-1.5 h-10 shadow-sm" size="sm">
+                        <Wallet size={14} /> Pay {fmt(cycle.contribution_amount)}
+                      </Button>
+                    )}
+                  </div>
                   {haveIPaid && cycle.status === 'open' && (
-                    <div className="rounded-md bg-emerald-500/10 border border-emerald-500/30 py-2 text-center">
+                    <div className="rounded-md bg-emerald-500/10 border border-emerald-500/30 py-2 text-center mt-2">
                       <p className="text-[11.5px] text-emerald-600 dark:text-emerald-400 flex items-center justify-center gap-1 font-medium">
                         <CheckCircle2 size={12} /> You have paid this cycle
                       </p>
