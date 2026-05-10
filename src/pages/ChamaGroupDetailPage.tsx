@@ -266,132 +266,199 @@ export default function ChamaGroupDetailPage() {
 
   return (
     <DashboardLayout>
-      <div className="p-4 lg:p-8 max-w-4xl mx-auto">
-        <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard/chama')} className="mb-3 -ml-2 text-muted-foreground gap-1">
-          <ArrowLeft size={16} /> Back to Groups
+      <div className="p-4 lg:p-8 max-w-5xl mx-auto">
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => navigate('/dashboard/chama')}
+          className="mb-3 -ml-2 text-muted-foreground gap-1"
+        >
+          <ArrowLeft size={16} /> Back to Chamas
         </Button>
 
-        {/* Group Header */}
+        {/* Hero header */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          <Card className="border-border/50 mb-5 overflow-hidden">
-            {/* Hero band */}
-            <div className="relative bg-gradient-to-br from-primary/15 via-primary/5 to-transparent p-5 sm:p-6">
-              <div className="absolute -right-10 -top-10 w-44 h-44 rounded-full bg-accent/10 blur-2xl pointer-events-none" />
-              <div className="absolute -left-12 bottom-0 w-32 h-32 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
+          <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-primary via-primary to-primary/85 text-primary-foreground p-5 sm:p-6 shadow-md">
+            <div aria-hidden className="absolute -right-16 -top-16 w-56 h-56 rounded-full bg-accent/20 blur-3xl pointer-events-none" />
+            <div aria-hidden className="absolute -left-20 -bottom-20 w-64 h-64 rounded-full bg-emerald-400/10 blur-3xl pointer-events-none" />
 
-              <div className="relative flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-                  <div className="relative group shrink-0">
-                    {group.profile_image_url ? (
-                      <img src={group.profile_image_url} alt={group.name} className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover ring-2 ring-primary/20 shadow-md" />
-                    ) : (
-                      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-primary/30 to-primary/10 flex items-center justify-center ring-2 ring-primary/20 shadow-md">
-                        <PiggyBank size={28} className="text-primary" />
-                      </div>
-                    )}
-                    {isChair && (
-                      <>
-                        <input ref={profilePicRef} type="file" accept="image/*" className="hidden" onChange={handleProfilePicUpload} />
-                        <button
-                          onClick={() => profilePicRef.current?.click()}
-                          disabled={uploadingPic}
-                          className="absolute inset-0 rounded-2xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
-                        >
-                          {uploadingPic ? <Loader2 size={16} className="text-white animate-spin" /> : <Camera size={16} className="text-white" />}
-                        </button>
-                      </>
-                    )}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[10px] uppercase tracking-[0.18em] font-semibold text-muted-foreground">Chama Group</p>
-                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-display font-bold tracking-tight mt-0.5 truncate">{group.name}</h1>
-                    {group.description && <p className="text-xs sm:text-sm text-muted-foreground mt-1 line-clamp-2">{group.description}</p>}
-                    <div className="flex items-center gap-2 mt-2 flex-wrap">
-                      <span className={cn('text-[11px] px-2.5 py-1 rounded-full font-semibold flex items-center gap-1', roleColors[myRole])}>
-                        <MyRoleIcon size={12} /> {myRoleLabel}
-                      </span>
-                      <span className="text-[11px] px-2.5 py-1 rounded-full font-semibold bg-background/60 text-foreground/80 ring-1 ring-border flex items-center gap-1">
-                        <Users size={11} /> {members.length} members
-                      </span>
+            <div className="relative flex items-start justify-between gap-3 flex-wrap">
+              <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                <div className="relative group shrink-0">
+                  {group.profile_image_url ? (
+                    <img
+                      src={group.profile_image_url}
+                      alt={group.name}
+                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover ring-2 ring-accent/40 shadow-lg"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-accent/30 to-primary-foreground/10 flex items-center justify-center ring-2 ring-accent/40 shadow-lg">
+                      <PiggyBank size={30} className="text-accent" />
                     </div>
+                  )}
+                  {isChair && (
+                    <>
+                      <input ref={profilePicRef} type="file" accept="image/*" className="hidden" onChange={handleProfilePicUpload} />
+                      <button
+                        onClick={() => profilePicRef.current?.click()}
+                        disabled={uploadingPic}
+                        className="absolute inset-0 rounded-2xl bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
+                      >
+                        {uploadingPic ? <Loader2 size={18} className="text-white animate-spin" /> : <Camera size={18} className="text-white" />}
+                      </button>
+                    </>
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase tracking-[0.2em] font-semibold text-primary-foreground/60">
+                    Chama Group
+                  </p>
+                  <h1 className="text-xl sm:text-2xl lg:text-3xl font-display font-bold tracking-tight mt-0.5 truncate">
+                    {group.name}
+                  </h1>
+                  {group.description && (
+                    <p className="text-xs sm:text-sm text-primary-foreground/70 mt-1 line-clamp-2 max-w-md">
+                      {group.description}
+                    </p>
+                  )}
+                  <div className="flex items-center gap-1.5 mt-2.5 flex-wrap">
+                    <span className="text-[11px] px-2.5 py-1 rounded-full font-semibold bg-accent/15 text-accent border border-accent/30 inline-flex items-center gap-1">
+                      <MyRoleIcon size={11} /> {myRoleLabel}
+                    </span>
+                    <span className="text-[11px] px-2.5 py-1 rounded-full font-semibold bg-primary-foreground/10 text-primary-foreground/90 border border-primary-foreground/15 inline-flex items-center gap-1">
+                      <Users size={11} /> {members.length}
+                      {group.max_members ? ` / ${group.max_members}` : ''} members
+                    </span>
+                    {group.contribution_amount > 0 && (
+                      <span className="text-[11px] px-2.5 py-1 rounded-full font-semibold bg-primary-foreground/10 text-primary-foreground/90 border border-primary-foreground/15 inline-flex items-center gap-1">
+                        <Coins size={11} /> KES {group.contribution_amount.toLocaleString()} / {group.contribution_frequency}
+                      </span>
+                    )}
                   </div>
                 </div>
-                {isLeader && (
-                  <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button size="sm" className="gap-1.5 shrink-0"><UserPlus size={14} /> Add</Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader><DialogTitle>Add Member</DialogTitle></DialogHeader>
-                      <div className="space-y-4 mt-2">
-                        <div>
-                          <Label>Search by Phone</Label>
-                          <div className="flex gap-2 mt-1">
-                            <Input value={searchPhone} onChange={e => setSearchPhone(e.target.value)} placeholder="0712345678" maxLength={15} />
-                            <Button onClick={handleSearchUser} disabled={searching || !searchPhone.trim()} variant="secondary"><Search size={16} /></Button>
-                          </div>
+              </div>
+              {isLeader && (
+                <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button size="sm" variant="gold" className="gap-1.5 shrink-0 rounded-xl shadow-md">
+                      <UserPlus size={14} /> Add member
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader><DialogTitle>Add Member</DialogTitle></DialogHeader>
+                    <div className="space-y-4 mt-2">
+                      <div>
+                        <Label>Search by Phone</Label>
+                        <div className="flex gap-2 mt-1">
+                          <Input value={searchPhone} onChange={e => setSearchPhone(e.target.value)} placeholder="0712345678" maxLength={15} />
+                          <Button onClick={handleSearchUser} disabled={searching || !searchPhone.trim()} variant="secondary"><Search size={16} /></Button>
                         </div>
-                        {searchResult && (
-                          <Card className="p-4 bg-muted/50">
-                            <div className="flex items-center gap-3 mb-3">
-                              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
-                                {searchResult.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-                              </div>
-                              <div>
-                                <p className="font-semibold text-sm">{searchResult.full_name}</p>
-                                <p className="text-xs text-muted-foreground">{searchResult.phone}</p>
-                              </div>
-                            </div>
-                            <div className="mb-3">
-                              <Label>Role</Label>
-                              <Select value={selectedRole} onValueChange={setSelectedRole}>
-                                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="member">Member</SelectItem>
-                                  <SelectItem value="treasurer">Treasurer</SelectItem>
-                                  <SelectItem value="secretary">Secretary</SelectItem>
-                                  <SelectItem value="chairperson">Chairperson</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </div>
-                            <Button onClick={handleAddMember} disabled={adding} className="w-full">
-                              {adding ? 'Adding...' : `Add ${searchResult.full_name}`}
-                            </Button>
-                          </Card>
-                        )}
                       </div>
-                    </DialogContent>
-                  </Dialog>
-                )}
+                      {searchResult && (
+                        <Card className="p-4 bg-muted/50">
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
+                              {searchResult.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                            </div>
+                            <div>
+                              <p className="font-semibold text-sm">{searchResult.full_name}</p>
+                              <p className="text-xs text-muted-foreground">{searchResult.phone}</p>
+                            </div>
+                          </div>
+                          <div className="mb-3">
+                            <Label>Role</Label>
+                            <Select value={selectedRole} onValueChange={setSelectedRole}>
+                              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="member">Member</SelectItem>
+                                <SelectItem value="treasurer">Treasurer</SelectItem>
+                                <SelectItem value="secretary">Secretary</SelectItem>
+                                <SelectItem value="chairperson">Chairperson</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <Button onClick={handleAddMember} disabled={adding} className="w-full">
+                            {adding ? 'Adding...' : `Add ${searchResult.full_name}`}
+                          </Button>
+                        </Card>
+                      )}
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              )}
+            </div>
+
+            {/* Headline KPIs inside hero */}
+            <div className="relative grid grid-cols-3 gap-3 lg:gap-6 mt-5 pt-5 border-t border-primary-foreground/10">
+              <div>
+                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-primary-foreground/60">
+                  <Wallet size={12} /> My savings
+                </div>
+                <div className="mt-1 font-display font-bold text-xl lg:text-2xl text-accent leading-tight truncate">
+                  KES {mySavings.toLocaleString()}
+                </div>
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-primary-foreground/60">
+                  <TrendingUp size={12} /> Group pool
+                </div>
+                <div className="mt-1 font-display font-bold text-lg lg:text-xl leading-tight truncate">
+                  KES {totalSavings.toLocaleString()}
+                </div>
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-primary-foreground/60">
+                  <Calendar size={12} /> Deposits
+                </div>
+                <div className="mt-1 font-display font-bold text-lg lg:text-xl leading-tight">
+                  {savingsCount}
+                </div>
               </div>
             </div>
+          </div>
 
-            {/* KPI grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-px bg-border/60 border-t">
-              {[
-                { label: 'Savings Wallet', value: `KES ${totalSavings.toLocaleString()}`, icon: TrendingUp, color: 'text-primary', bg: 'from-primary/10 to-transparent' },
-                { label: 'Joining Fees', value: `KES ${totalJoiningFees.toLocaleString()}`, icon: Coins, color: 'text-amber-500', bg: 'from-amber-500/10 to-transparent' },
-                { label: 'Platform Fees', value: `KES ${totalPlatformFees.toLocaleString()}`, icon: Shield, color: 'text-pink-500', bg: 'from-pink-500/10 to-transparent' },
-                { label: 'My Savings', value: `KES ${mySavings.toLocaleString()}`, icon: Wallet, color: 'text-emerald-500', bg: 'from-emerald-500/10 to-transparent' },
-                { label: 'Members', value: members.length, icon: Users, color: 'text-blue-500', bg: 'from-blue-500/10 to-transparent' },
-                { label: 'Deposits', value: savingsCount, icon: Calendar, color: 'text-violet-500', bg: 'from-violet-500/10 to-transparent' },
-              ].map((stat, i) => (
-                <div key={i} className={cn('relative p-3 lg:p-4 bg-card overflow-hidden')}>
-                  <div className={cn('absolute inset-0 bg-gradient-to-br opacity-60 pointer-events-none', stat.bg)} />
-                  <div className="relative">
-                    <div className={cn('w-7 h-7 rounded-lg bg-background flex items-center justify-center mb-2 ring-1 ring-border', stat.color)}>
-                      <stat.icon size={13} />
-                    </div>
-                    <p className="text-sm lg:text-base font-bold tracking-tight truncate">{stat.value}</p>
-                    <p className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground mt-0.5 truncate">{stat.label}</p>
-                  </div>
+          {/* Secondary stats strip */}
+          <div className="grid grid-cols-3 gap-2 mt-3">
+            {[
+              { label: 'Joining fees', value: `KES ${totalJoiningFees.toLocaleString()}`, icon: Coins, tone: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-500/8' },
+              { label: 'Platform fees', value: `KES ${totalPlatformFees.toLocaleString()}`, icon: Shield, tone: 'text-pink-600 dark:text-pink-400', bg: 'bg-pink-500/8' },
+              { label: 'Members', value: String(members.length), icon: Users, tone: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/8' },
+            ].map((s, i) => (
+              <div key={i} className="rounded-xl border border-border/60 bg-card px-3 py-2.5 flex items-center gap-2.5">
+                <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center shrink-0', s.bg, s.tone)}>
+                  <s.icon size={14} />
                 </div>
-              ))}
-            </div>
-          </Card>
+                <div className="min-w-0">
+                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold truncate">{s.label}</p>
+                  <p className="text-sm font-display font-bold leading-tight truncate">{s.value}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Quick actions */}
+          <div className="grid grid-cols-4 gap-2 mt-3">
+            {[
+              { id: 'savings',     icon: Wallet,   label: 'Contribute' },
+              { id: 'loans',       icon: Landmark, label: 'Loan' },
+              { id: 'withdrawals', icon: HandCoins,label: 'Withdraw' },
+              { id: 'chat',        icon: MessageSquare, label: 'Chat' },
+            ].map((a) => (
+              <button
+                key={a.id}
+                onClick={() => setActiveTab(a.id)}
+                className="group flex flex-col items-center gap-1.5 rounded-xl border border-border/60 bg-card px-2 py-3 hover:border-accent/40 hover:bg-accent/5 transition-all"
+              >
+                <div className="w-9 h-9 rounded-lg bg-primary/8 text-primary group-hover:bg-accent/15 group-hover:text-accent transition-colors flex items-center justify-center">
+                  <a.icon size={16} />
+                </div>
+                <span className="text-[11px] font-semibold">{a.label}</span>
+              </button>
+            ))}
+          </div>
         </motion.div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-5">
           {(() => {
             const primaryTabs = [
               { value: 'members', icon: Users, label: 'Members' },
@@ -419,30 +486,30 @@ export default function ChamaGroupDetailPage() {
             const activeMore = moreTabs.find(t => t.value === activeTab);
             const ActiveMoreIcon = activeMore?.icon || MoreHorizontal;
             return (
-              <div className="overflow-x-auto no-scrollbar">
-                <TabsList className="inline-flex w-auto h-auto p-1 gap-1 flex-nowrap bg-muted/40 rounded-xl">
+              <div className="overflow-x-auto no-scrollbar -mx-4 px-4 lg:mx-0 lg:px-0">
+                <TabsList className="inline-flex w-auto h-auto p-1 gap-1 flex-nowrap bg-muted/50 rounded-xl border border-border/40">
                   {primaryTabs.map((tab) => (
                     <TabsTrigger
                       key={tab.value}
                       value={tab.value}
                       title={tab.label}
-                      className="flex flex-col items-center gap-1 text-[11px] py-2.5 px-3 min-w-[68px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg"
+                      className="flex items-center gap-1.5 text-xs font-semibold py-2 px-3 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm transition-all"
                     >
-                      <tab.icon size={18} className="shrink-0" />
-                      <span className="truncate leading-tight">{tab.label}</span>
+                      <tab.icon size={14} className="shrink-0" />
+                      <span className="truncate leading-none">{tab.label}</span>
                     </TabsTrigger>
                   ))}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <button
                         className={cn(
-                          "flex flex-col items-center gap-1 text-[11px] py-2.5 px-3 min-w-[68px] rounded-lg transition-colors",
-                          activeMore ? "bg-primary text-primary-foreground" : "hover:bg-muted"
+                          "flex items-center gap-1.5 text-xs font-semibold py-2 px-3 rounded-lg transition-colors",
+                          activeMore ? "bg-primary text-primary-foreground shadow-sm" : "hover:bg-background"
                         )}
                         title="More"
                       >
-                        <ActiveMoreIcon size={18} className="shrink-0" />
-                        <span className="truncate leading-tight">{activeMore?.label || 'More'}</span>
+                        <ActiveMoreIcon size={14} className="shrink-0" />
+                        <span className="truncate leading-none">{activeMore?.label || 'More'}</span>
                       </button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-56 max-h-[70vh] overflow-y-auto">
