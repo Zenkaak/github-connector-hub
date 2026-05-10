@@ -95,6 +95,8 @@ export default function AdminHarambeeApplicationsPage() {
   const [adminNotes, setAdminNotes] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const [expandedAnswers, setExpandedAnswers] = useState(false);
+  const [descriptionOpen, setDescriptionOpen] = useState(false);
+  const [listDescription, setListDescription] = useState<{ name: string; text: string } | null>(null);
 
   const fetchData = useCallback(async () => {
     const [appsRes, profilesRes] = await Promise.all([
@@ -335,12 +337,24 @@ export default function AdminHarambeeApplicationsPage() {
                             </Badge>
                           </div>
                           <p className="font-semibold text-sm truncate">For: {app.beneficiary_name}</p>
-                          <p className="text-xs text-muted-foreground line-clamp-2 break-words whitespace-pre-line">{app.description}</p>
-                          <div className="flex items-center gap-4 mt-2 text-xs text-muted-foreground">
-                            <span className="flex items-center gap-1"><User size={12} />{profile?.full_name || 'Unknown'}</span>
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-2 text-xs text-muted-foreground">
+                            <span className="flex items-center gap-1 min-w-0"><User size={12} /><span className="truncate">{profile?.full_name || 'Unknown'}</span></span>
                             <span className="flex items-center gap-1"><DollarSign size={12} />{fmt(app.target_amount)}</span>
                             <span className="flex items-center gap-1"><Calendar size={12} />{format(new Date(app.created_at), 'MMM dd, yyyy')}</span>
                           </div>
+                          {app.description && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="mt-2 h-7 px-2 text-xs text-accent hover:text-accent"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setListDescription({ name: app.beneficiary_name, text: app.description });
+                              }}
+                            >
+                              <FileText size={12} className="mr-1" /> Read description
+                            </Button>
+                          )}
                         </div>
                         <Button variant="ghost" size="icon" className="shrink-0">
                           <Eye size={16} />
@@ -401,10 +415,14 @@ export default function AdminHarambeeApplicationsPage() {
                     <DetailLine label="Fee" value={`${selected.platform_fee_percent}%`} />
                     <DetailLine label="Deadline" value={selected.deadline ? format(new Date(selected.deadline), 'MMM dd, yyyy') : 'None'} />
                     <Separator className="my-2" />
-                    <div>
-                      <p className="text-muted-foreground mb-2 text-xs uppercase tracking-wider font-semibold">Description</p>
-                      <ProseText text={selected.description} className="text-sm text-foreground break-words" />
-                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full justify-center gap-2"
+                      onClick={() => setDescriptionOpen(true)}
+                    >
+                      <FileText size={14} /> Read full description
+                    </Button>
                   </CardContent>
                 </Card>
 
@@ -493,6 +511,34 @@ export default function AdminHarambeeApplicationsPage() {
               </>
             );
           })()}
+        </DialogContent>
+      </Dialog>
+
+      {/* Description modal (from review dialog) */}
+      <Dialog open={descriptionOpen} onOpenChange={setDescriptionOpen}>
+        <DialogContent className="max-w-xl w-[calc(100vw-1.5rem)] max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-base flex items-center gap-2">
+              <FileText size={16} /> Fundraiser Description
+            </DialogTitle>
+          </DialogHeader>
+          {selected && (
+            <ProseText text={selected.description} className="text-sm text-foreground break-words whitespace-pre-line" />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Description modal (from list cards) */}
+      <Dialog open={!!listDescription} onOpenChange={(o) => !o && setListDescription(null)}>
+        <DialogContent className="max-w-xl w-[calc(100vw-1.5rem)] max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-base flex items-center gap-2">
+              <FileText size={16} /> {listDescription?.name}
+            </DialogTitle>
+          </DialogHeader>
+          {listDescription && (
+            <ProseText text={listDescription.text} className="text-sm text-foreground break-words whitespace-pre-line" />
+          )}
         </DialogContent>
       </Dialog>
     </AdminLayout>
