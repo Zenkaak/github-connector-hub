@@ -138,7 +138,9 @@ export default function ForgotPasswordPage() {
               </div>
               <form onSubmit={handleVerifyCode} className="space-y-5">
                 <PinPad value={code} onChange={setCode} length={6} autoFocus />
-                <Button type="submit" variant="gold" className="w-full h-12" disabled={code.length !== 6}>Continue</Button>
+                <Button type="submit" variant="gold" className="w-full h-12" disabled={code.length !== 6 || isLoading}>
+                  {isLoading ? <><Loader2 className="animate-spin" size={18} /> Verifying…</> : 'Continue'}
+                </Button>
               </form>
               <button onClick={handleResend} disabled={isLoading}
                 className="block mx-auto text-xs text-primary font-semibold hover:underline disabled:opacity-50">
