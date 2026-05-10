@@ -68,28 +68,30 @@ export async function classifyBillRef(supabase: any, billRef: string): Promise<R
     if (h) return { type: "harambee_public", harambee_id: h.id, slug: ref };
     return { type: "unmapped", reason: `Harambee with code ${code} not found` };
   }
-  // ⭐ MERRY-GO-ROUND (new): ^\d{4}M[A-F0-9]{6}$ — user code + 6 hex chars of cycle UUID
-  // Globally unique across chamas, so a member of multiple chamas never has account collisions.
-  const mgrHexMatch = ref.match(/^(\d{4})M([A-F0-9]{6})$/);
-  if (mgrHexMatch) {
-    const [, code, cycleHex] = mgrHexMatch;
+  // ⭐ MERRY-GO-ROUND (new short): ^\d{4}[A-Z]\d+$ — userCode + chamaLetter + cycleNumber
+  // chamaLetter = user's chama join order (A=1st joined, B=2nd, …) → unique per user even with multiple chamas.
+  // Excludes reserved letters used by other product flows (S=savings, M=legacy MGR, L=loan, H=harambee).
+  const mgrLetterMatch = ref.match(/^(\d{4})([A-RT-Z])(\d+)$/);
+  if (mgrLetterMatch && mgrLetterMatch[2] !== "M") {
+    const [, code, letter, cycleNumStr] = mgrLetterMatch;
+    const cycleNum = parseInt(cycleNumStr, 10);
+    const orderIdx = letter.charCodeAt(0) - 65; // A=0
     const { data: prof } = await supabase.from("profiles").select("user_id").eq("mpesa_account_code", code).maybeSingle();
     if (!prof) return { type: "unmapped", reason: `MGR: no user with code ${code}` };
-    const hex = cycleHex.toLowerCase();
-    // Match cycle whose id starts with hex (UUID with dashes — first 8 chars contain our 6)
+    const { data: mine } = await supabase
+      .from("chama_members").select("group_id, created_at")
+      .eq("user_id", prof.user_id).eq("is_active", true)
+      .order("created_at", { ascending: true });
+    const groupId = mine?.[orderIdx]?.group_id;
+    if (!groupId) return { type: "wallet", user_id: prof.user_id };
     const { data: cyc } = await supabase
-      .from("chama_mgr_cycles")
-      .select("id, group_id")
-      .ilike("id", `${hex}%`)
-      .maybeSingle();
-    if (cyc) {
-      // Confirm user is a member of that chama
-      const { data: mem } = await supabase.from("chama_members")
-        .select("id").eq("group_id", cyc.group_id).eq("user_id", prof.user_id).eq("is_active", true).maybeSingle();
-      if (mem) return { type: "mgr", group_id: cyc.group_id, cycle_id: cyc.id, user_id: prof.user_id } as any;
-    }
+      .from("chama_mgr_cycles").select("id, group_id")
+      .eq("group_id", groupId).eq("cycle_number", cycleNum)
+      .order("created_at", { ascending: false }).limit(1).maybeSingle();
+    if (cyc) return { type: "mgr", group_id: cyc.group_id, cycle_id: cyc.id, user_id: prof.user_id } as any;
     return { type: "wallet", user_id: prof.user_id };
   }
+
 
   // ⭐ MERRY-GO-ROUND (legacy): ^\d{4}M\d+$ — user code + cycle number (kept for backward compat)
   const mgrMatch = ref.match(/^(\d{4})M(\d+)$/);

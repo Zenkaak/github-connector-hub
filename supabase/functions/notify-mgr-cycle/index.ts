@@ -70,10 +70,18 @@ Deno.serve(async (req) => {
     for (const p of profiles || []) {
       if (!p.phone) { failed++; continue; }
       const first = (p.full_name || "Member").split(" ")[0];
-      const cycleHex = String(cycle.id).replace(/-/g, "").slice(0, 6).toUpperCase();
-      const accountNo = p.mpesa_account_code ? `${p.mpesa_account_code}M${cycleHex}` : "—";
+      // Letter = position of THIS chama in this user's join history (A=1st joined)
+      const { data: mine } = await supabase
+        .from("chama_members").select("group_id, created_at")
+        .eq("user_id", p.user_id).eq("is_active", true)
+        .order("created_at", { ascending: true });
+      const idx = (mine || []).findIndex((m: any) => m.group_id === cycle.group_id);
+      const letter = idx >= 0 && idx < 26 ? String.fromCharCode(65 + idx) : "";
+      const accountNo = p.mpesa_account_code && letter
+        ? `${p.mpesa_account_code}${letter}${cycle.cycle_number}`
+        : "—";
       const msg =
-        `Dear ${first}, a new Merry-Go-Round cycle #${cycle.cycle_number} for ${groupName} has been opened. ` +
+        `Dear ${first}, a new Merry-Go-Round round #${cycle.cycle_number} for ${groupName} has been opened. ` +
         `Recipient: ${cycle.recipient_name}. Amount: ${amount}. Deadline: ${deadline}. ` +
         `Pay via M-Pesa Paybill ${PAYBILL}, Account ${accountNo}. ` +
         `Open ${link} to pay from wallet. — DASNET VENTURES.`;
