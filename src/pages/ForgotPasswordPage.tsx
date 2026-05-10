@@ -10,6 +10,26 @@ import { Label } from '@/components/ui/label';
 import { PinPad } from '@/components/PinPad';
 import { toast } from 'sonner';
 
+// Extract a readable error message from a supabase.functions.invoke error.
+// When the edge function returns a non-2xx response, supabase-js wraps it as
+// FunctionsHttpError and the JSON body lives on error.context (a Response).
+async function readFnError(error: any, data: any, fallback: string): Promise<string> {
+  if (data && typeof data === 'object' && data.error) return String(data.error);
+  try {
+    const res = error?.context;
+    if (res && typeof res.json === 'function') {
+      const body = await res.clone().json();
+      if (body?.error) return String(body.error);
+      if (body?.message) return String(body.message);
+    }
+    if (res && typeof res.text === 'function') {
+      const txt = await res.clone().text();
+      if (txt) return txt;
+    }
+  } catch { /* ignore */ }
+  return error?.message || fallback;
+}
+
 export default function ForgotPasswordPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
@@ -45,10 +65,15 @@ export default function ForgotPasswordPage() {
       const { data, error } = await supabase.functions.invoke('password-recovery-otp', {
         body: { action: 'check', email: email.trim().toLowerCase(), code },
       });
-      if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message || 'Invalid code');
+      if (error || (data as any)?.error) {
+        const msg = await readFnError(error, data, 'Invalid code');
+        setCode('');
+        toast.error(msg);
+        return; // stay on code step
+      }
       setStep('password');
     } catch (err: any) {
-      toast.error(err.message || 'Invalid code');
+      toast.error(err?.message || 'Invalid code');
       setCode('');
     } finally {
       setIsLoading(false);
@@ -69,11 +94,20 @@ export default function ForgotPasswordPage() {
           newPassword: password,
         },
       });
-      if (error || (data as any)?.error) throw new Error((data as any)?.error || error?.message);
+      if (error || (data as any)?.error) {
+        const msg = await readFnError(error, data, 'Could not reset password');
+        toast.error(msg);
+        // If the code became invalid/expired/used, send user back to code step
+        if (/code|expired|attempts|used|incorrect/i.test(msg)) {
+          setCode('');
+          setStep('code');
+        }
+        return;
+      }
       setStep('success');
       toast.success('Password reset successfully');
     } catch (error: any) {
-      toast.error(error.message || 'Could not reset password');
+      toast.error(error?.message || 'Could not reset password');
     } finally {
       setIsLoading(false);
     }
