@@ -500,28 +500,28 @@ export default function ChamaGroupDetailPage() {
 
         {(() => {
           // Section catalogue — every chama function lives at its own URL/route.
-          const allSections: Array<{ id: string; label: string; icon: any; tone: string; bg: string; group: string }> = [
-            { id: 'savings',       label: 'Savings',       icon: Wallet,         tone: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/15', group: 'Money' },
-            { id: 'loans',         label: 'Loans',         icon: Landmark,       tone: 'text-blue-600 dark:text-blue-400',       bg: 'bg-blue-500/15',    group: 'Money' },
-            { id: 'withdrawals',   label: 'Withdrawals',   icon: HandCoins,      tone: 'text-amber-600 dark:text-amber-400',     bg: 'bg-amber-500/15',   group: 'Money' },
-            { id: 'transactions',  label: 'Transactions',  icon: Receipt,        tone: 'text-cyan-600 dark:text-cyan-400',       bg: 'bg-cyan-500/15',    group: 'Money' },
-            { id: 'arrears',       label: 'Arrears',       icon: AlertTriangle,  tone: 'text-orange-600 dark:text-orange-400',   bg: 'bg-orange-500/15',  group: 'Money' },
-            { id: 'penalties',     label: 'Penalties',     icon: Shield,         tone: 'text-rose-600 dark:text-rose-400',       bg: 'bg-rose-500/15',    group: 'Money' },
-            { id: 'emergency',     label: 'Emergency Fund', icon: Shield,        tone: 'text-red-600 dark:text-red-400',         bg: 'bg-red-500/15',     group: 'Money' },
-            { id: 'mgr',           label: 'Merry-Go-Round', icon: RefreshCw,     tone: 'text-purple-600 dark:text-purple-400',   bg: 'bg-purple-500/15',  group: 'Money' },
+          const allSections: Array<{ id: string; label: string; desc: string; icon: any; tone: string; bg: string; group: string }> = [
+            { id: 'savings',       label: 'Savings',        desc: 'Contribute and track member savings',          icon: Wallet,         tone: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/15', group: 'Money' },
+            { id: 'loans',         label: 'Loans',          desc: 'Apply, approve and repay group loans',         icon: Landmark,       tone: 'text-blue-600 dark:text-blue-400',       bg: 'bg-blue-500/15',    group: 'Money' },
+            { id: 'withdrawals',   label: 'Withdrawals',    desc: 'Request and approve cash-outs',                icon: HandCoins,      tone: 'text-amber-600 dark:text-amber-400',     bg: 'bg-amber-500/15',   group: 'Money' },
+            { id: 'transactions',  label: 'Transactions',   desc: 'Full ledger of all chama activity',            icon: Receipt,        tone: 'text-cyan-600 dark:text-cyan-400',       bg: 'bg-cyan-500/15',    group: 'Money' },
+            { id: 'arrears',       label: 'Arrears',        desc: 'Members behind on contributions',              icon: AlertTriangle,  tone: 'text-orange-600 dark:text-orange-400',   bg: 'bg-orange-500/15',  group: 'Money' },
+            { id: 'penalties',     label: 'Penalties',      desc: 'Fines and disciplinary charges',               icon: Shield,         tone: 'text-rose-600 dark:text-rose-400',       bg: 'bg-rose-500/15',    group: 'Money' },
+            { id: 'emergency',     label: 'Emergency Fund', desc: 'Pooled support for member emergencies',        icon: Shield,         tone: 'text-red-600 dark:text-red-400',         bg: 'bg-red-500/15',     group: 'Money' },
+            { id: 'mgr',           label: 'Merry-Go-Round', desc: 'Rotating payouts to members',                  icon: RefreshCw,      tone: 'text-purple-600 dark:text-purple-400',   bg: 'bg-purple-500/15',  group: 'Money' },
 
-            { id: 'members',       label: 'Members',       icon: Users,          tone: 'text-primary',                           bg: 'bg-primary/15',     group: 'People' },
-            { id: 'chat',          label: 'Group Chat',    icon: MessageSquare,  tone: 'text-violet-600 dark:text-violet-400',   bg: 'bg-violet-500/15',  group: 'People' },
-            { id: 'announcements', label: 'Notices',       icon: Megaphone,      tone: 'text-indigo-600 dark:text-indigo-400',   bg: 'bg-indigo-500/15',  group: 'People' },
-            { id: 'meetings',      label: 'Meetings',      icon: CalendarDays,   tone: 'text-teal-600 dark:text-teal-400',       bg: 'bg-teal-500/15',    group: 'People' },
-            { id: 'votes',         label: 'Votes',         icon: Vote,           tone: 'text-fuchsia-600 dark:text-fuchsia-400', bg: 'bg-fuchsia-500/15', group: 'People' },
-            { id: 'support',       label: 'Support',       icon: HeadphonesIcon, tone: 'text-sky-600 dark:text-sky-400',         bg: 'bg-sky-500/15',     group: 'People' },
+            { id: 'members',       label: 'Members',        desc: 'Manage roles and member profiles',             icon: Users,          tone: 'text-primary',                           bg: 'bg-primary/15',     group: 'People' },
+            { id: 'chat',          label: 'Group Chat',     desc: 'Talk with all members in real time',           icon: MessageSquare,  tone: 'text-violet-600 dark:text-violet-400',   bg: 'bg-violet-500/15',  group: 'People' },
+            { id: 'announcements', label: 'Notices',        desc: 'Official announcements from leadership',       icon: Megaphone,      tone: 'text-indigo-600 dark:text-indigo-400',   bg: 'bg-indigo-500/15',  group: 'People' },
+            { id: 'meetings',      label: 'Meetings',       desc: 'Schedule and review group meetings',           icon: CalendarDays,   tone: 'text-teal-600 dark:text-teal-400',       bg: 'bg-teal-500/15',    group: 'People' },
+            { id: 'votes',         label: 'Votes',          desc: 'Group decisions and polls',                    icon: Vote,           tone: 'text-fuchsia-600 dark:text-fuchsia-400', bg: 'bg-fuchsia-500/15', group: 'People' },
+            { id: 'support',       label: 'Support',        desc: 'Get help from the DASNET team',                icon: HeadphonesIcon, tone: 'text-sky-600 dark:text-sky-400',         bg: 'bg-sky-500/15',     group: 'People' },
 
-            { id: 'reports',       label: 'Reports',       icon: Download,       tone: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/15', group: 'Manage' },
-            { id: 'terms',         label: 'Terms',         icon: FileText,       tone: 'text-slate-600 dark:text-slate-300',     bg: 'bg-slate-500/15',   group: 'Manage' },
-            { id: 'leave',         label: 'Leave Group',   icon: LogOut,         tone: 'text-destructive',                       bg: 'bg-destructive/15', group: 'Manage' },
-            ...(isLeader ? [{ id: 'requests',  label: 'Join Requests', icon: UserCheck, tone: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-500/15', group: 'Manage' }] : []),
-            ...(isChair  ? [{ id: 'settings',  label: 'Settings',      icon: Settings,  tone: 'text-primary',                       bg: 'bg-primary/15',   group: 'Manage' }] : []),
+            { id: 'reports',       label: 'Reports',        desc: 'Statements and downloadable reports',          icon: Download,       tone: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/15', group: 'Manage' },
+            { id: 'terms',         label: 'Terms',          desc: 'Constitution and group rules',                 icon: FileText,       tone: 'text-slate-600 dark:text-slate-300',     bg: 'bg-slate-500/15',   group: 'Manage' },
+            { id: 'leave',         label: 'Leave Group',    desc: 'Submit a request to exit this chama',          icon: LogOut,         tone: 'text-destructive',                       bg: 'bg-destructive/15', group: 'Manage' },
+            ...(isLeader ? [{ id: 'requests',  label: 'Join Requests', desc: 'Review and approve new members',           icon: UserCheck, tone: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-500/15', group: 'Manage' }] : []),
+            ...(isChair  ? [{ id: 'settings',  label: 'Settings',      desc: 'Configure rules, fees and chama profile',  icon: Settings,  tone: 'text-primary',                       bg: 'bg-primary/15',   group: 'Manage' }] : []),
           ];
           const active = allSections.find(s => s.id === currentSection);
 
@@ -558,19 +558,33 @@ export default function ChamaGroupDetailPage() {
           // Individual section page: compact header + content
           const ActiveIcon = active?.icon || MoreHorizontal;
           return (
-            <div>
-              <div className="flex items-center justify-between gap-3 mb-4 mt-2">
-                <button
-                  onClick={() => goToSection()}
-                  className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <ArrowLeft size={16} /> <span>Chama home</span>
-                </button>
-                <div className="flex items-center gap-2 min-w-0">
-                  <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center shrink-0', active?.bg, active?.tone)}>
-                    <ActiveIcon size={16} />
+            <div className="mt-2">
+              {/* Breadcrumb */}
+              <nav className="flex items-center gap-1.5 text-[12px] text-muted-foreground mb-3 flex-wrap" aria-label="Breadcrumb">
+                <button onClick={() => navigate('/dashboard/chama')} className="hover:text-foreground transition-colors">Chamas</button>
+                <span className="opacity-50">/</span>
+                <button onClick={() => goToSection()} className="hover:text-foreground transition-colors truncate max-w-[140px]">{group?.name || 'Chama'}</button>
+                <span className="opacity-50">/</span>
+                <span className="font-semibold text-foreground truncate">{active?.label || 'Section'}</span>
+              </nav>
+
+              {/* Page hero */}
+              <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-card via-card to-muted/40 p-4 sm:p-5 mb-5 shadow-sm">
+                <div className={cn('pointer-events-none absolute -top-12 -right-12 w-40 h-40 rounded-full blur-3xl opacity-40', active?.bg)} />
+                <div className="relative flex items-start gap-3">
+                  <div className={cn('w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center shrink-0 ring-1 ring-border/50', active?.bg, active?.tone)}>
+                    <ActiveIcon size={22} strokeWidth={2.2} />
                   </div>
-                  <h2 className="font-display font-bold text-base truncate">{active?.label || 'Section'}</h2>
+                  <div className="flex-1 min-w-0">
+                    <h1 className="font-display font-bold text-lg sm:text-xl leading-tight truncate">{active?.label || 'Section'}</h1>
+                    <p className="text-[12.5px] text-muted-foreground mt-0.5 leading-snug">{active?.desc}</p>
+                  </div>
+                  <button
+                    onClick={() => goToSection()}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-border/60 bg-background/60 hover:bg-muted transition-colors shrink-0"
+                  >
+                    <ArrowLeft size={14} /> <span className="hidden sm:inline">Back</span>
+                  </button>
                 </div>
               </div>
 
