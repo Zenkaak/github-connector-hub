@@ -49,6 +49,8 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
   const [payoutDate, setPayoutDate] = useState('');
   const [creating, setCreating] = useState(false);
 
+  const [chamaLetter, setChamaLetter] = useState<string>('');
+
   const fetchData = async () => {
     setLoading(true);
     const [c1, c2] = await Promise.all([
@@ -57,10 +59,19 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
     ]);
     setCycles((c1.data as any[]) || []);
     setContribs((c2.data as any[]) || []);
+    // Compute this user's letter for THIS chama (A=1st chama joined, B=2nd, ...)
+    if (user) {
+      const { data: mine } = await supabase
+        .from('chama_members').select('group_id, created_at')
+        .eq('user_id', user.id).eq('is_active', true)
+        .order('created_at', { ascending: true });
+      const idx = (mine || []).findIndex((m: any) => m.group_id === groupId);
+      if (idx >= 0 && idx < 26) setChamaLetter(String.fromCharCode(65 + idx));
+    }
     setLoading(false);
   };
 
-  useEffect(() => { fetchData(); }, [groupId]);
+  useEffect(() => { fetchData(); }, [groupId, user?.id]);
 
   const handleCreate = async () => {
     if (!recipient || !amount || !deadline || !payoutDate || !user) {
