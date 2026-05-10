@@ -558,19 +558,33 @@ export default function ChamaGroupDetailPage() {
           // Individual section page: compact header + content
           const ActiveIcon = active?.icon || MoreHorizontal;
           return (
-            <div>
-              <div className="flex items-center justify-between gap-3 mb-4 mt-2">
-                <button
-                  onClick={() => goToSection()}
-                  className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <ArrowLeft size={16} /> <span>Chama home</span>
-                </button>
-                <div className="flex items-center gap-2 min-w-0">
-                  <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center shrink-0', active?.bg, active?.tone)}>
-                    <ActiveIcon size={16} />
+            <div className="mt-2">
+              {/* Breadcrumb */}
+              <nav className="flex items-center gap-1.5 text-[12px] text-muted-foreground mb-3 flex-wrap" aria-label="Breadcrumb">
+                <button onClick={() => navigate('/dashboard/chama')} className="hover:text-foreground transition-colors">Chamas</button>
+                <span className="opacity-50">/</span>
+                <button onClick={() => goToSection()} className="hover:text-foreground transition-colors truncate max-w-[140px]">{group?.name || 'Chama'}</button>
+                <span className="opacity-50">/</span>
+                <span className="font-semibold text-foreground truncate">{active?.label || 'Section'}</span>
+              </nav>
+
+              {/* Page hero */}
+              <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-card via-card to-muted/40 p-4 sm:p-5 mb-5 shadow-sm">
+                <div className={cn('pointer-events-none absolute -top-12 -right-12 w-40 h-40 rounded-full blur-3xl opacity-40', active?.bg)} />
+                <div className="relative flex items-start gap-3">
+                  <div className={cn('w-12 h-12 sm:w-14 sm:h-14 rounded-2xl flex items-center justify-center shrink-0 ring-1 ring-border/50', active?.bg, active?.tone)}>
+                    <ActiveIcon size={22} strokeWidth={2.2} />
                   </div>
-                  <h2 className="font-display font-bold text-base truncate">{active?.label || 'Section'}</h2>
+                  <div className="flex-1 min-w-0">
+                    <h1 className="font-display font-bold text-lg sm:text-xl leading-tight truncate">{active?.label || 'Section'}</h1>
+                    <p className="text-[12.5px] text-muted-foreground mt-0.5 leading-snug">{active?.desc}</p>
+                  </div>
+                  <button
+                    onClick={() => goToSection()}
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border border-border/60 bg-background/60 hover:bg-muted transition-colors shrink-0"
+                  >
+                    <ArrowLeft size={14} /> <span className="hidden sm:inline">Back</span>
+                  </button>
                 </div>
               </div>
 
