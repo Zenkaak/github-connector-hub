@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { RefreshCw, Plus, CheckCircle2, Clock, AlertTriangle, Wallet, Phone, Calendar, User as UserIcon, Loader2, Eye, TrendingDown, TrendingUp, Send } from 'lucide-react';
+import { RefreshCw, Plus, CheckCircle2, Clock, AlertTriangle, Wallet, Phone, Calendar, User as UserIcon, Loader2, Eye, TrendingDown, TrendingUp, Send, Megaphone } from 'lucide-react';
+import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,31 +41,46 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
   const [stkPhone, setStkPhone] = useState(profile?.phone || '');
   const [paying, setPaying] = useState(false);
   const [detailCycle, setDetailCycle] = useState<any | null>(null);
-  const [triggering, setTriggering] = useState<string | null>(null);
+  const [payoutTriggering, setPayoutTriggering] = useState<string | null>(null);
+  const [broadcastOpen, setBroadcastOpen] = useState(false);
+  const [broadcastMsg, setBroadcastMsg] = useState('');
+  const [broadcasting, setBroadcasting] = useState(false);
 
-  const triggerStkForMember = async (cycle: any, member: any) => {
-    if (!member?.profile?.phone) {
-      toast({ title: 'No phone on file', description: `${member?.profile?.full_name || 'Member'} has no phone number.`, variant: 'destructive' });
-      return;
-    }
-    const isLate = new Date() > new Date(cycle.deadline);
-    const pen = isLate ? Number(cycle.penalty_amount || 0) : 0;
-    const total = Number(cycle.contribution_amount) + pen;
-    setTriggering(member.user_id);
+  const triggerB2CPayout = async (cycle: any) => {
+    if (!confirm(`Send M-Pesa payout to ${cycle.recipient_name} now?`)) return;
+    setPayoutTriggering(cycle.id);
     try {
-      const { error } = await supabase.functions.invoke('initiate-stk-push', {
-        body: {
-          phone: member.profile.phone, amount: total,
-          purpose: 'merry_go_round', userId: member.user_id, groupId,
-          cycle_number: cycle.cycle_number,
-          metadata: { type: 'merry_go_round', cycle_id: cycle.id, cycle_number: cycle.cycle_number, penalty: pen, triggered_by_chair: true },
-        },
+      const { data, error } = await supabase.functions.invoke('mgr-payout-cron', {
+        body: { cycle_id: cycle.id },
       });
       if (error) throw error;
-      toast({ title: 'STK push sent', description: `${member.profile.full_name} will receive a prompt for ${fmt(total)}.` });
+      const r = (data as any)?.results?.[0];
+      if (r && r.ok === false) throw new Error(r.reason || r.error || 'Payout failed');
+      toast({ title: 'Payout sent', description: `${fmt(r?.payout || 0)} dispatched to recipient.` });
+      setDetailCycle(null);
+      fetchData();
     } catch (e: any) {
-      toast({ title: 'Failed to send STK', description: e.message, variant: 'destructive' });
-    } finally { setTriggering(null); }
+      toast({ title: 'Payout failed', description: e.message, variant: 'destructive' });
+    } finally { setPayoutTriggering(null); }
+  };
+
+  const sendBroadcast = async () => {
+    if (broadcastMsg.trim().length < 2) {
+      toast({ title: 'Type a message first', variant: 'destructive' }); return;
+    }
+    setBroadcasting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('chama-broadcast', {
+        body: { group_id: groupId, message: broadcastMsg.trim() },
+      });
+      if (error) throw error;
+      const sent = (data as any)?.sent || 0;
+      const failed = (data as any)?.failed || 0;
+      toast({ title: 'Broadcast sent', description: `${sent} delivered${failed ? `, ${failed} failed` : ''}.` });
+      setBroadcastOpen(false); setBroadcastMsg('');
+    } catch (e: any) {
+      toast({ title: 'Broadcast failed', description: e.message, variant: 'destructive' });
+    } finally { setBroadcasting(false); }
   };
 
   // Create form
