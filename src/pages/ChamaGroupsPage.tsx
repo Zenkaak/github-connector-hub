@@ -284,47 +284,6 @@ export default function ChamaGroupsPage() {
           </div>
         </div>
 
-        {/* Hero summary */}
-        {!loading && groups.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-primary via-primary to-primary/85 text-primary-foreground p-5 lg:p-6 shadow-md"
-          >
-            <div
-              aria-hidden
-              className="absolute -right-10 -top-10 h-48 w-48 rounded-full bg-accent/20 blur-3xl"
-            />
-            <div
-              aria-hidden
-              className="absolute -left-16 -bottom-16 h-56 w-56 rounded-full bg-emerald-400/10 blur-3xl"
-            />
-            <div className="relative">
-              <div className="flex items-center gap-2 mb-1 text-xs uppercase tracking-wider text-primary-foreground/70">
-                <Sparkles size={13} className="text-accent" /> Chama overview
-              </div>
-              <div className="grid grid-cols-3 gap-3 lg:gap-6 mt-3">
-                <Stat
-                  label="My total savings"
-                  value={KES(totals.mine)}
-                  icon={<Wallet size={15} />}
-                  highlight
-                />
-                <Stat
-                  label="Group pool"
-                  value={KES(totals.pool)}
-                  icon={<Coins size={15} />}
-                />
-                <Stat
-                  label={totals.leading ? 'Leading' : 'Member of'}
-                  value={`${totals.leading || groups.length} ${totals.leading ? 'chama' : 'groups'}`}
-                  icon={totals.leading ? <Crown size={15} /> : <Users size={15} />}
-                />
-              </div>
-            </div>
-          </motion.div>
-        )}
-
         {/* List */}
         {loading ? (
           <div className="grid sm:grid-cols-2 gap-4">

@@ -278,12 +278,14 @@ export default function ChamaGroupDetailPage() {
   const myRoleLabel = roleLabels[myRole] || 'Member';
   const MyRoleIcon = roleIcons[myRole] || Users;
 
+  // Bottom nav uses DIFFERENT items from the in-hero quick actions (Contribute / Loan / Withdraw / Chat)
+  // so we don't duplicate. These give navigation to the most-used info views.
   const bottomNavItems = [
-    { id: '__home', icon: Home, label: 'Home', action: () => navigate('/dashboard/chama'), isActive: false },
-    { id: 'savings', icon: Wallet, label: 'Save', action: () => setActiveTab('savings'), isActive: activeTab === 'savings' },
-    { id: 'loans', icon: Landmark, label: 'Loans', action: () => setActiveTab('loans'), isActive: activeTab === 'loans' },
-    { id: 'withdrawals', icon: HandCoins, label: 'Withdraw', action: () => setActiveTab('withdrawals'), isActive: activeTab === 'withdrawals' },
-    { id: 'chat', icon: MessageSquare, label: 'Chat', action: () => setActiveTab('chat'), isActive: activeTab === 'chat' },
+    { id: '__home',        icon: Home,         label: 'Home',     action: () => navigate('/dashboard/chama'),  isActive: false },
+    { id: 'members',       icon: Users,        label: 'Members',  action: () => setActiveTab('members'),       isActive: activeTab === 'members' },
+    { id: 'announcements', icon: Megaphone,    label: 'Notices',  action: () => setActiveTab('announcements'), isActive: activeTab === 'announcements' },
+    { id: 'meetings',      icon: CalendarDays, label: 'Meetings', action: () => setActiveTab('meetings'),      isActive: activeTab === 'meetings' },
+    { id: 'reports',       icon: Download,     label: 'Reports',  action: () => setActiveTab('reports'),       isActive: activeTab === 'reports' },
   ];
 
   return (
@@ -293,10 +295,9 @@ export default function ChamaGroupDetailPage() {
           <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard/chama')} className="-ml-2 text-muted-foreground gap-1">
             <ArrowLeft size={16} /> <span className="hidden sm:inline">Back to Chamas</span><span className="sm:hidden">Back</span>
           </Button>
-          <Button variant="ghost" size="sm" onClick={handleShare} className="-mr-2 gap-1.5 text-primary" title="Share chama link">
-            {shareCopied ? <Check size={16} /> : <Share2 size={16} />}
-            <span className="text-xs font-semibold">{shareCopied ? 'Copied' : 'Share'}</span>
-          </Button>
+          <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold truncate">
+            {group?.name}
+          </div>
         </div>
       </div>
 
@@ -363,55 +364,66 @@ export default function ChamaGroupDetailPage() {
                   </div>
                 </div>
               </div>
-              {isLeader && (
-                <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button size="sm" variant="gold" className="gap-1.5 shrink-0 rounded-xl shadow-md">
-                      <UserPlus size={14} /> Add member
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader><DialogTitle>Add Member</DialogTitle></DialogHeader>
-                    <div className="space-y-4 mt-2">
-                      <div>
-                        <Label>Search by Phone</Label>
-                        <div className="flex gap-2 mt-1">
-                          <Input value={searchPhone} onChange={e => setSearchPhone(e.target.value)} placeholder="0712345678" maxLength={15} />
-                          <Button onClick={handleSearchUser} disabled={searching || !searchPhone.trim()} variant="secondary"><Search size={16} /></Button>
+              <div className="flex items-center gap-2 shrink-0">
+                <Button
+                  size="sm"
+                  onClick={handleShare}
+                  className="gap-1.5 rounded-xl bg-accent text-accent-foreground hover:bg-accent/90 shadow-md font-semibold"
+                  title="Share chama link"
+                >
+                  {shareCopied ? <Check size={14} /> : <Share2 size={14} />}
+                  <span>{shareCopied ? 'Copied' : 'Share'}</span>
+                </Button>
+                {isLeader && (
+                  <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button size="sm" variant="outline" className="gap-1.5 rounded-xl bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/20">
+                        <UserPlus size={14} /> <span className="hidden sm:inline">Add</span>
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader><DialogTitle>Add Member</DialogTitle></DialogHeader>
+                      <div className="space-y-4 mt-2">
+                        <div>
+                          <Label>Search by Phone</Label>
+                          <div className="flex gap-2 mt-1">
+                            <Input value={searchPhone} onChange={e => setSearchPhone(e.target.value)} placeholder="0712345678" maxLength={15} />
+                            <Button onClick={handleSearchUser} disabled={searching || !searchPhone.trim()} variant="secondary"><Search size={16} /></Button>
+                          </div>
                         </div>
+                        {searchResult && (
+                          <Card className="p-4 bg-muted/50">
+                            <div className="flex items-center gap-3 mb-3">
+                              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
+                                {searchResult.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                              </div>
+                              <div>
+                                <p className="font-semibold text-sm">{searchResult.full_name}</p>
+                                <p className="text-xs text-muted-foreground">{searchResult.phone}</p>
+                              </div>
+                            </div>
+                            <div className="mb-3">
+                              <Label>Role</Label>
+                              <Select value={selectedRole} onValueChange={setSelectedRole}>
+                                <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="member">Member</SelectItem>
+                                  <SelectItem value="treasurer">Treasurer</SelectItem>
+                                  <SelectItem value="secretary">Secretary</SelectItem>
+                                  <SelectItem value="chairperson">Chairperson</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <Button onClick={handleAddMember} disabled={adding} className="w-full">
+                              {adding ? 'Adding...' : `Add ${searchResult.full_name}`}
+                            </Button>
+                          </Card>
+                        )}
                       </div>
-                      {searchResult && (
-                        <Card className="p-4 bg-muted/50">
-                          <div className="flex items-center gap-3 mb-3">
-                            <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
-                              {searchResult.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-                            </div>
-                            <div>
-                              <p className="font-semibold text-sm">{searchResult.full_name}</p>
-                              <p className="text-xs text-muted-foreground">{searchResult.phone}</p>
-                            </div>
-                          </div>
-                          <div className="mb-3">
-                            <Label>Role</Label>
-                            <Select value={selectedRole} onValueChange={setSelectedRole}>
-                              <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="member">Member</SelectItem>
-                                <SelectItem value="treasurer">Treasurer</SelectItem>
-                                <SelectItem value="secretary">Secretary</SelectItem>
-                                <SelectItem value="chairperson">Chairperson</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <Button onClick={handleAddMember} disabled={adding} className="w-full">
-                            {adding ? 'Adding...' : `Add ${searchResult.full_name}`}
-                          </Button>
-                        </Card>
-                      )}
-                    </div>
-                  </DialogContent>
-                </Dialog>
-              )}
+                    </DialogContent>
+                  </Dialog>
+                )}
+              </div>
             </div>
 
             {/* Headline KPIs inside hero */}
@@ -489,35 +501,34 @@ export default function ChamaGroupDetailPage() {
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-5">
           {(() => {
-            const primaryTabs = [
-              { value: 'members', icon: Users, label: 'Members' },
-              { value: 'savings', icon: Wallet, label: 'Savings' },
-              { value: 'announcements', icon: Megaphone, label: 'Notices' },
-              { value: 'meetings', icon: CalendarDays, label: 'Meetings' },
-              { value: 'mgr', icon: RefreshCw, label: 'Merry-Go-Round' },
-            ];
-            const moreTabs = [
-              { value: 'chat', icon: MessageSquare, label: 'Chat' },
-              { value: 'loans', icon: Landmark, label: 'Loans' },
-              { value: 'withdrawals', icon: Coins, label: 'Withdraw' },
-              { value: 'transactions', icon: Receipt, label: 'Transactions' },
-              { value: 'votes', icon: Vote, label: 'Votes' },
-              { value: 'arrears', icon: AlertTriangle, label: 'Arrears' },
-              { value: 'penalties', icon: Shield, label: 'Penalties' },
-              { value: 'emergency', icon: Shield, label: 'Emergency' },
-              { value: 'reports', icon: Download, label: 'Reports' },
-              { value: 'support', icon: HeadphonesIcon, label: 'Support' },
+            // All tabs visible in a single horizontally-scrollable strip — no "More" dropdown.
+            // Bottom-nav (Home / Members / Notices / Meetings / Reports) and top quick-actions
+            // (Contribute / Loan / Withdraw / Chat) jump here too.
+            const allTabs = [
+              { value: 'members',       icon: Users,          label: 'Members' },
+              { value: 'savings',       icon: Wallet,         label: 'Savings' },
+              { value: 'loans',         icon: Landmark,       label: 'Loans' },
+              { value: 'withdrawals',   icon: HandCoins,      label: 'Withdraw' },
+              { value: 'chat',          icon: MessageSquare,  label: 'Chat' },
+              { value: 'announcements', icon: Megaphone,      label: 'Notices' },
+              { value: 'meetings',      icon: CalendarDays,   label: 'Meetings' },
+              { value: 'mgr',           icon: RefreshCw,      label: 'Merry-Go-Round' },
+              { value: 'transactions',  icon: Receipt,        label: 'Transactions' },
+              { value: 'votes',         icon: Vote,           label: 'Votes' },
+              { value: 'arrears',       icon: AlertTriangle,  label: 'Arrears' },
+              { value: 'penalties',     icon: Shield,         label: 'Penalties' },
+              { value: 'emergency',     icon: Shield,         label: 'Emergency' },
+              { value: 'reports',       icon: Download,       label: 'Reports' },
+              { value: 'support',       icon: HeadphonesIcon, label: 'Support' },
               ...(isLeader ? [{ value: 'requests', icon: UserCheck, label: 'Requests' }] : []),
-              { value: 'terms', icon: FileText, label: 'Terms' },
-              { value: 'leave', icon: LogOut, label: 'Leave' },
+              { value: 'terms',         icon: FileText,       label: 'Terms' },
+              { value: 'leave',         icon: LogOut,         label: 'Leave' },
               ...(isChair ? [{ value: 'settings', icon: Settings, label: 'Settings' }] : []),
             ];
-            const activeMore = moreTabs.find(t => t.value === activeTab);
-            const ActiveMoreIcon = activeMore?.icon || MoreHorizontal;
             return (
               <div className="overflow-x-auto no-scrollbar -mx-4 px-4 lg:mx-0 lg:px-0">
                 <TabsList className="inline-flex w-auto h-auto p-1 gap-1 flex-nowrap bg-muted/50 rounded-xl border border-border/40">
-                  {primaryTabs.map((tab) => (
+                  {allTabs.map((tab) => (
                     <TabsTrigger
                       key={tab.value}
                       value={tab.value}
@@ -528,34 +539,6 @@ export default function ChamaGroupDetailPage() {
                       <span className="truncate leading-none">{tab.label}</span>
                     </TabsTrigger>
                   ))}
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        className={cn(
-                          "flex items-center gap-1.5 text-xs font-semibold py-2 px-3 rounded-lg transition-colors",
-                          activeMore ? "bg-primary text-primary-foreground shadow-sm" : "hover:bg-background"
-                        )}
-                        title="More"
-                      >
-                        <ActiveMoreIcon size={14} className="shrink-0" />
-                        <span className="truncate leading-none">{activeMore?.label || 'More'}</span>
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56 max-h-[70vh] overflow-y-auto">
-                      <DropdownMenuLabel>More options</DropdownMenuLabel>
-                      <DropdownMenuSeparator />
-                      {moreTabs.map((tab) => (
-                        <DropdownMenuItem
-                          key={tab.value}
-                          onSelect={() => setActiveTab(tab.value)}
-                          className={cn("gap-2 cursor-pointer", activeTab === tab.value && "bg-primary/10 text-primary font-medium")}
-                        >
-                          <tab.icon size={16} />
-                          <span>{tab.label}</span>
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
                 </TabsList>
               </div>
             );
