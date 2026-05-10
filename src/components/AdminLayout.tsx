@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { AdminBottomNav } from '@/components/AdminBottomNav';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
@@ -16,14 +16,13 @@ import {
   Send,
   PiggyBank,
   Settings,
-  Bell,
   Activity,
   Heart,
 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Logo } from '@/components/Logo';
 import { Button } from '@/components/ui/button';
+import { AdminAlertsPopover } from '@/components/admin/AdminAlertsPopover';
 import { cn } from '@/lib/utils';
 
 interface AdminLayoutProps {
