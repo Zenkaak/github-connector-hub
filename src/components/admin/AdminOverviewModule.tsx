@@ -132,6 +132,7 @@ export function AdminOverviewModule() {
         usersTotal, usersToday, kyc, loans, harambees, withdrawals,
         unmapped, b2cFailed, walletSum, transfersToday, transfers7d, chamas, mgrOpen,
         loansActive, users5, transfers5, transfersHist, usersHist, loanByStatus,
+        platformFees, joiningFees, depositsTodayQ, payoutsTodayQ,
       ] = await Promise.all([
         supabase.from('profiles').select('id', { count: 'exact', head: true }),
         supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('created_at', todayIso),
@@ -152,6 +153,10 @@ export function AdminOverviewModule() {
         supabase.from('wallet_transfers').select('amount, created_at').gte('created_at', thirtyDaysAgo).eq('status', 'completed').limit(2000),
         supabase.from('profiles').select('created_at').gte('created_at', thirtyDaysAgo).limit(2000),
         supabase.from('loan_applications').select('status'),
+        supabase.from('chama_platform_fees').select('amount').gte('created_at', thirtyDaysAgo),
+        supabase.from('chama_joining_fees').select('amount').gte('created_at', thirtyDaysAgo),
+        supabase.from('mpesa_c2b_transactions').select('trans_amount').gte('created_at', todayIso),
+        supabase.from('mpesa_b2c_requests').select('amount').gte('created_at', todayIso).eq('status', 'completed'),
       ]);
 
       // Build transfer trend by day (last 14 days)
@@ -189,6 +194,9 @@ export function AdminOverviewModule() {
       });
       setLoanMix(Object.entries(mix).map(([name, value]) => ({ name, value })));
 
+      const platformFees30d = (platformFees.data || []).reduce((s, r: any) => s + Number(r.amount || 0), 0);
+      const joiningFees30d = (joiningFees.data || []).reduce((s, r: any) => s + Number(r.amount || 0), 0);
+
       setStats({
         totalUsers: usersTotal.count || 0,
         newUsersToday: usersToday.count || 0,
@@ -205,6 +213,11 @@ export function AdminOverviewModule() {
         openMgrCycles: mgrOpen.count || 0,
         totalLoansActive: loansActive.data?.length || 0,
         totalLoanValue: (loansActive.data || []).reduce((s: number, l: any) => s + Number(l.amount || 0), 0),
+        platformFees30d,
+        joiningFees30d,
+        revenue30d: platformFees30d + joiningFees30d,
+        depositsToday: (depositsTodayQ.data || []).reduce((s, r: any) => s + Number(r.trans_amount || 0), 0),
+        payoutsToday: (payoutsTodayQ.data || []).reduce((s, r: any) => s + Number(r.amount || 0), 0),
       });
 
       setRecentUsers(users5.data || []);
