@@ -415,10 +415,14 @@ export default function AdminHarambeeApplicationsPage() {
                     <DetailLine label="Fee" value={`${selected.platform_fee_percent}%`} />
                     <DetailLine label="Deadline" value={selected.deadline ? format(new Date(selected.deadline), 'MMM dd, yyyy') : 'None'} />
                     <Separator className="my-2" />
-                    <div>
-                      <p className="text-muted-foreground mb-2 text-xs uppercase tracking-wider font-semibold">Description</p>
-                      <ProseText text={selected.description} className="text-sm text-foreground break-words" />
-                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full justify-center gap-2"
+                      onClick={() => setDescriptionOpen(true)}
+                    >
+                      <FileText size={14} /> Read full description
+                    </Button>
                   </CardContent>
                 </Card>
 
