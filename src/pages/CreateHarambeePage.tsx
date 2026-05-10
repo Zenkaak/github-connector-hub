@@ -870,7 +870,7 @@ export default function CreateHarambeePage() {
         </Tabs>
 
         <Dialog open={detailsOpen} onOpenChange={(open) => { setDetailsOpen(open); if (!open) setSelectedApp(null); }}>
-          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogContent className="max-w-2xl w-[calc(100vw-1.5rem)] max-h-[90vh] overflow-y-auto overflow-x-hidden">
             {selectedApplication && (() => {
               const linkedHarambee = selectedApplication.harambee_id ? linkedHarambees[selectedApplication.harambee_id] : null;
               const shareUrl = getApplicationLink(selectedApplication);
