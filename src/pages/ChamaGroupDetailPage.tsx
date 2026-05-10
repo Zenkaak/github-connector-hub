@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -78,6 +79,10 @@ export default function ChamaGroupDetailPage() {
   const [uploadingPic, setUploadingPic] = useState(false);
   const [shareCopied, setShareCopied] = useState(false);
   const profilePicRef = useRef<HTMLInputElement>(null);
+
+  const [broadcastOpen, setBroadcastOpen] = useState(false);
+  const [broadcastMsg, setBroadcastMsg] = useState('');
+  const [broadcasting, setBroadcasting] = useState(false);
 
   const isLeader = ['chairperson', 'secretary', 'treasurer'].includes(myRole);
   const isChair = myRole === 'chairperson';
@@ -260,6 +265,23 @@ export default function ChamaGroupDetailPage() {
   const roleLabels: Record<string, string> = { chairperson: 'Chairperson', secretary: 'Secretary', treasurer: 'Treasurer', member: 'Member' };
   const roleIcons: Record<string, typeof Crown> = { chairperson: Crown, secretary: BookOpen, treasurer: Coins, member: Users };
   const roleColors: Record<string, string> = { chairperson: 'bg-accent/10 text-accent', secretary: 'bg-blue-500/10 text-blue-500', treasurer: 'bg-emerald-500/10 text-emerald-500', member: 'bg-muted text-muted-foreground' };
+
+  const sendBroadcast = async () => {
+    if (!broadcastMsg.trim() || !groupId) return;
+    setBroadcasting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('chama-broadcast', {
+        body: { group_id: groupId, message: broadcastMsg.trim() },
+      });
+      if (error) throw error;
+      const sent = (data as any)?.sent || 0;
+      const failed = (data as any)?.failed || 0;
+      toast({ title: 'Broadcast sent', description: `${sent} delivered${failed ? `, ${failed} failed` : ''}.` });
+      setBroadcastOpen(false); setBroadcastMsg('');
+    } catch (e: any) {
+      toast({ title: 'Broadcast failed', description: e.message, variant: 'destructive' });
+    } finally { setBroadcasting(false); }
+  };
 
   if (loading) {
     return (
@@ -498,16 +520,17 @@ export default function ChamaGroupDetailPage() {
           </div>
 
           {/* Quick actions */}
-          <div className="grid grid-cols-4 gap-2 mt-3">
+          <div className={cn("grid gap-2 mt-3", isChair ? "grid-cols-5" : "grid-cols-4")}>
             {[
               { id: 'savings',     icon: Wallet,        label: 'Contribute', tone: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' },
               { id: 'loans',       icon: Landmark,      label: 'Loan',       tone: 'bg-blue-500/15 text-blue-600 dark:text-blue-400' },
               { id: 'withdrawals', icon: HandCoins,     label: 'Withdraw',   tone: 'bg-amber-500/15 text-amber-600 dark:text-amber-400' },
               { id: 'chat',        icon: MessageSquare, label: 'Chat',       tone: 'bg-violet-500/15 text-violet-600 dark:text-violet-400' },
-            ].map((a) => (
+              ...(isChair ? [{ id: 'broadcast', icon: Megaphone, label: 'Broadcast', tone: 'bg-pink-500/15 text-pink-600 dark:text-pink-400', onClick: () => setBroadcastOpen(true) }] : []),
+            ].map((a: any) => (
               <button
                 key={a.id}
-                onClick={() => goToSection(a.id)}
+                onClick={a.onClick ? a.onClick : () => goToSection(a.id)}
                 className="group flex flex-col items-center gap-1.5 rounded-xl border bg-card px-2 py-3 transition-all border-border/60 hover:border-accent/40"
               >
                 <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center", a.tone)}>
@@ -820,9 +843,34 @@ export default function ChamaGroupDetailPage() {
                     <p className="text-sm font-medium">{new Date(viewMember.created_at).toLocaleDateString()}</p>
                   </div>
                 </div>
-                <p className="text-[11px] text-muted-foreground text-center">Read-only • Only visible to Chairperson</p>
+              <p className="text-[11px] text-muted-foreground text-center">Read-only • Only visible to Chairperson</p>
               </div>
             )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Broadcast Dialog */}
+        <Dialog open={broadcastOpen} onOpenChange={setBroadcastOpen}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader><DialogTitle>Broadcast to Members</DialogTitle></DialogHeader>
+            <div className="space-y-3 mt-2">
+              <p className="text-xs text-muted-foreground">Send an SMS to all active members of <span className="font-semibold text-foreground">{group?.name}</span>.</p>
+              <Textarea
+                value={broadcastMsg}
+                onChange={e => setBroadcastMsg(e.target.value)}
+                placeholder="Type your message..."
+                maxLength={280}
+                rows={4}
+                className="text-sm resize-none"
+              />
+              <p className="text-[10px] text-muted-foreground text-right">{broadcastMsg.length}/280</p>
+            </div>
+            <DialogFooter>
+              <Button variant="ghost" size="sm" onClick={() => { setBroadcastOpen(false); setBroadcastMsg(''); }}>Cancel</Button>
+              <Button size="sm" onClick={sendBroadcast} disabled={broadcasting || broadcastMsg.trim().length < 2}>
+                {broadcasting ? 'Sending...' : 'Send Broadcast'}
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
