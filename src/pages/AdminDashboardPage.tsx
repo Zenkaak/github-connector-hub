@@ -47,6 +47,7 @@ const PATH_TAB: Record<string, keyof typeof moduleMap> = {
   "/dashboard/admin/mgr": "mgr",
   "/dashboard/admin/chama": "chama",
   "/dashboard/admin/audit": "audit",
+  "/dashboard/admin/broadcast": "broadcast",
 };
 
 export default function AdminDashboardPage({ defaultTab }: Props) {
