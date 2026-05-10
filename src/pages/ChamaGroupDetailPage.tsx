@@ -278,12 +278,14 @@ export default function ChamaGroupDetailPage() {
   const myRoleLabel = roleLabels[myRole] || 'Member';
   const MyRoleIcon = roleIcons[myRole] || Users;
 
+  // Bottom nav uses DIFFERENT items from the in-hero quick actions (Contribute / Loan / Withdraw / Chat)
+  // so we don't duplicate. These give navigation to the most-used info views.
   const bottomNavItems = [
-    { id: '__home', icon: Home, label: 'Home', action: () => navigate('/dashboard/chama'), isActive: false },
-    { id: 'savings', icon: Wallet, label: 'Save', action: () => setActiveTab('savings'), isActive: activeTab === 'savings' },
-    { id: 'loans', icon: Landmark, label: 'Loans', action: () => setActiveTab('loans'), isActive: activeTab === 'loans' },
-    { id: 'withdrawals', icon: HandCoins, label: 'Withdraw', action: () => setActiveTab('withdrawals'), isActive: activeTab === 'withdrawals' },
-    { id: 'chat', icon: MessageSquare, label: 'Chat', action: () => setActiveTab('chat'), isActive: activeTab === 'chat' },
+    { id: '__home',        icon: Home,         label: 'Home',     action: () => navigate('/dashboard/chama'),  isActive: false },
+    { id: 'members',       icon: Users,        label: 'Members',  action: () => setActiveTab('members'),       isActive: activeTab === 'members' },
+    { id: 'announcements', icon: Megaphone,    label: 'Notices',  action: () => setActiveTab('announcements'), isActive: activeTab === 'announcements' },
+    { id: 'meetings',      icon: CalendarDays, label: 'Meetings', action: () => setActiveTab('meetings'),      isActive: activeTab === 'meetings' },
+    { id: 'reports',       icon: Download,     label: 'Reports',  action: () => setActiveTab('reports'),       isActive: activeTab === 'reports' },
   ];
 
   return (
@@ -293,10 +295,9 @@ export default function ChamaGroupDetailPage() {
           <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard/chama')} className="-ml-2 text-muted-foreground gap-1">
             <ArrowLeft size={16} /> <span className="hidden sm:inline">Back to Chamas</span><span className="sm:hidden">Back</span>
           </Button>
-          <Button variant="ghost" size="sm" onClick={handleShare} className="-mr-2 gap-1.5 text-primary" title="Share chama link">
-            {shareCopied ? <Check size={16} /> : <Share2 size={16} />}
-            <span className="text-xs font-semibold">{shareCopied ? 'Copied' : 'Share'}</span>
-          </Button>
+          <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold truncate">
+            {group?.name}
+          </div>
         </div>
       </div>
 
