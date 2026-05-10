@@ -30,6 +30,10 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify(ACK), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    // Detect MGR payouts via the occasion field set in mgr-payout-cron ("MGR cycle #N")
+    const isMgrPayout = String(reqRow.occasion || "").toLowerCase().startsWith("mgr cycle");
+    const mgrCycleNumber = isMgrPayout ? Number(String(reqRow.occasion).match(/#(\d+)/)?.[1] || 0) : 0;
+
     if (resultCode === "0") {
       const params: any[] = result.ResultParameters?.ResultParameter || [];
       const get = (k: string) => params.find((p) => p.Key === k)?.Value;
@@ -44,6 +48,15 @@ Deno.serve(async (req) => {
         receiver_party_public_name: get("ReceiverPartyPublicName") || null,
         result_payload: body,
       }).eq("id", reqRow.id);
+
+      // MGR payout — promote cycle from payout_pending → paid_out
+      if (isMgrPayout && mgrCycleNumber > 0) {
+        await supabase.from("chama_mgr_cycles")
+          .update({ status: "paid_out", payout_processed_at: new Date().toISOString() })
+          .eq("recipient_id", reqRow.user_id)
+          .eq("cycle_number", mgrCycleNumber)
+          .in("status", ["payout_pending", "payout_failed"]);
+      }
 
       await supabase.from("notifications").insert({
         user_id: reqRow.user_id,
