@@ -14,6 +14,15 @@ const SITE_NAME = 'DASNET VENTURES'
 const FROM_DOMAIN = 'notify.dasnett.site'
 const SENDER_DOMAIN = 'notify.dasnett.site'
 
+function getFunctionJwt() {
+  return [
+    Deno.env.get('SUPABASE_ANON_KEY'),
+    Deno.env.get('SUPABASE_PUBLISHABLE_KEY'),
+    Deno.env.get('VITE_SUPABASE_PUBLISHABLE_KEY'),
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0cnVidGZ1YmR6b2RhaHNmYWN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5Mjk3MTYsImV4cCI6MjA5MDUwNTcxNn0.y35Z2rDETgRH9wYA60SSoP7yCcCaHoW-fyBeNdkf8qw',
+  ].find((value) => value?.startsWith('eyJ'))
+}
+
 function html6(code: string) {
   return `<!doctype html><html><body style="margin:0;background:#f5f7fb;font-family:'DM Sans',Arial,sans-serif">
   <div style="max-width:480px;margin:0 auto;padding:32px 24px;background:#ffffff">
@@ -78,10 +87,7 @@ Deno.serve(async (req) => {
       // function still uses its own service role internally for database work.
       const idempotencyKey = `pwd-recovery-${email.toLowerCase()}-${Date.now()}`
       try {
-        const functionJwt = Deno.env.get('SUPABASE_ANON_KEY')
-          || Deno.env.get('SUPABASE_PUBLISHABLE_KEY')
-          || Deno.env.get('VITE_SUPABASE_PUBLISHABLE_KEY')
-          || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF0cnVidGZ1YmR6b2RhaHNmYWN2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ5Mjk3MTYsImV4cCI6MjA5MDUwNTcxNn0.y35Z2rDETgRH9wYA60SSoP7yCcCaHoW-fyBeNdkf8qw'
+        const functionJwt = getFunctionJwt()
         const resp = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/send-transactional-email`, {
           method: 'POST',
           headers: {
