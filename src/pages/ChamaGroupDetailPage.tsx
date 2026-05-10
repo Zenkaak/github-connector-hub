@@ -526,26 +526,32 @@ export default function ChamaGroupDetailPage() {
           const active = allSections.find(s => s.id === currentSection);
 
           if (currentSection === 'home') {
+            // Items already exposed via Quick Actions row above — hide here to avoid duplication.
+            const quickActionIds = new Set(['savings', 'loans', 'withdrawals', 'chat']);
             const grouped = ['Money', 'People', 'Manage'].map(g => ({
               group: g,
-              items: allSections.filter(s => s.group === g),
-            }));
+              items: allSections.filter(s => s.group === g && !quickActionIds.has(s.id)),
+            })).filter(g => g.items.length > 0);
             return (
-              <div className="mt-5 space-y-5">
-                {grouped.map(({ group, items }) => (
+              <div className="mt-6 space-y-4">
+                {grouped.map(({ group, items }, gi) => (
                   <div key={group}>
-                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-[0.18em] mb-2 px-1">{group}</p>
-                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
+                    <div className="flex items-center gap-2 mb-2.5 px-1">
+                      <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em]">{group}</p>
+                      <div className="flex-1 h-px bg-border/60" />
+                      <span className="text-[10px] font-semibold text-muted-foreground/70">{items.length}</span>
+                    </div>
+                    <div className="grid grid-cols-4 gap-2">
                       {items.map((s) => (
                         <button
                           key={s.id}
                           onClick={() => goToSection(s.id)}
-                          className="group flex flex-col items-center gap-2 rounded-xl border border-border/60 bg-card p-3 text-center transition-all hover:border-accent/50 hover:shadow-md hover:-translate-y-0.5"
+                          className="group relative flex flex-col items-center gap-1.5 rounded-xl border border-border/50 bg-card/80 backdrop-blur-sm px-1.5 py-3 text-center transition-all hover:border-accent/60 hover:bg-card hover:shadow-md hover:-translate-y-0.5 active:scale-95"
                         >
-                          <div className={cn('w-11 h-11 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110', s.bg, s.tone)}>
-                            <s.icon size={20} strokeWidth={2.2} />
+                          <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 ring-1 ring-border/40', s.bg, s.tone)}>
+                            <s.icon size={18} strokeWidth={2.2} />
                           </div>
-                          <span className="text-[11px] font-semibold leading-tight line-clamp-2">{s.label}</span>
+                          <span className="text-[10.5px] font-semibold leading-tight line-clamp-2 px-0.5">{s.label}</span>
                         </button>
                       ))}
                     </div>
