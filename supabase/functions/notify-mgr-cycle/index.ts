@@ -70,7 +70,8 @@ Deno.serve(async (req) => {
     for (const p of profiles || []) {
       if (!p.phone) { failed++; continue; }
       const first = (p.full_name || "Member").split(" ")[0];
-      const accountNo = p.mpesa_account_code ? `${p.mpesa_account_code}M${cycle.cycle_number}` : "—";
+      const cycleHex = String(cycle.id).replace(/-/g, "").slice(0, 6).toUpperCase();
+      const accountNo = p.mpesa_account_code ? `${p.mpesa_account_code}M${cycleHex}` : "—";
       const msg =
         `Dear ${first}, a new Merry-Go-Round cycle #${cycle.cycle_number} for ${groupName} has been opened. ` +
         `Recipient: ${cycle.recipient_name}. Amount: ${amount}. Deadline: ${deadline}. ` +
