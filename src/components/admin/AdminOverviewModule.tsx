@@ -5,7 +5,8 @@ import {
   Users, Wallet, FileText, Heart, AlertTriangle,
   ShieldAlert, Send, PiggyBank, Activity, TrendingUp,
   Loader2, Server, CheckCircle, XCircle, ArrowUpRight,
-  ArrowDownRight, Banknote, CreditCard, Bell, Eye, BarChart3,
+  ArrowDownRight, Banknote, CreditCard, Eye, BarChart3,
+  Coins, Receipt, ArrowDownLeft,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,7 @@ import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell, CartesianGrid,
 } from 'recharts';
+import { AdminQuickActions } from './AdminQuickActions';
 import { cn } from '@/lib/utils';
 
 interface Stats {
@@ -33,6 +35,12 @@ interface Stats {
   openMgrCycles: number;
   totalLoansActive: number;
   totalLoanValue: number;
+  // Financial / revenue
+  platformFees30d: number;
+  joiningFees30d: number;
+  revenue30d: number;
+  depositsToday: number;
+  payoutsToday: number;
 }
 
 const fmtKes = (n: number) => `KES ${Math.round(n).toLocaleString()}`;
