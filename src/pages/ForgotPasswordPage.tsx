@@ -10,24 +10,31 @@ import { Label } from '@/components/ui/label';
 import { PinPad } from '@/components/PinPad';
 import { toast } from 'sonner';
 
-// Extract a readable error message from a supabase.functions.invoke error.
-// When the edge function returns a non-2xx response, supabase-js wraps it as
-// FunctionsHttpError and the JSON body lives on error.context (a Response).
-async function readFnError(error: any, data: any, fallback: string): Promise<string> {
-  if (data && typeof data === 'object' && data.error) return String(data.error);
+// Call edge function via direct fetch so we can read the JSON error body
+// (supabase.functions.invoke hides it behind a generic "non-2xx" message).
+async function callRecoveryFn(payload: any): Promise<{ ok: boolean; data: any; error?: string }> {
+  const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/password-recovery-otp`;
+  const apikey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
   try {
-    const res = error?.context;
-    if (res && typeof res.json === 'function') {
-      const body = await res.clone().json();
-      if (body?.error) return String(body.error);
-      if (body?.message) return String(body.message);
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apikey}`,
+        'apikey': apikey,
+      },
+      body: JSON.stringify(payload),
+    });
+    let body: any = null;
+    try { body = await res.json(); } catch { /* non-json */ }
+    if (!res.ok) {
+      return { ok: false, data: body, error: body?.error || body?.message || `Request failed (${res.status})` };
     }
-    if (res && typeof res.text === 'function') {
-      const txt = await res.clone().text();
-      if (txt) return txt;
-    }
-  } catch { /* ignore */ }
-  return error?.message || fallback;
+    if (body?.error) return { ok: false, data: body, error: String(body.error) };
+    return { ok: true, data: body };
+  } catch (e: any) {
+    return { ok: false, data: null, error: e?.message || 'Network error' };
+  }
 }
 
 export default function ForgotPasswordPage() {
