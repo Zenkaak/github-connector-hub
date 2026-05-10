@@ -78,9 +78,10 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
         created_by: user.id,
       }).select('id').single();
       if (error) throw error;
+      const newId = (inserted as any)?.id;
       // Notify all members by SMS (Paybill + their unique account no.) — fire-and-forget
-      if (inserted?.id) {
-        supabase.functions.invoke('notify-mgr-cycle', { body: { cycle_id: inserted.id } }).catch(() => {});
+      if (newId) {
+        supabase.functions.invoke('notify-mgr-cycle', { body: { cycle_id: newId } }).catch(() => {});
       }
       toast({ title: `Cycle #${nextNum} created`, description: 'Members are being notified by SMS.' });
       setCreateOpen(false);
