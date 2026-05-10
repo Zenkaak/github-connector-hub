@@ -434,8 +434,11 @@ export default function ChamaGroupDetailPage() {
                       </span>
                     )}
                   </div>
+                  </div>
+                </div>
                 </div>
               </div>
+            </div>
 
             {/* Headline KPIs inside hero */}
             <div className="relative grid grid-cols-3 gap-3 lg:gap-6 mt-5 pt-5 border-t border-primary-foreground/10">
