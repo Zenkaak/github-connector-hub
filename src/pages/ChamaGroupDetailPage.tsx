@@ -80,6 +80,10 @@ export default function ChamaGroupDetailPage() {
   const [shareCopied, setShareCopied] = useState(false);
   const profilePicRef = useRef<HTMLInputElement>(null);
 
+  const [broadcastOpen, setBroadcastOpen] = useState(false);
+  const [broadcastMsg, setBroadcastMsg] = useState('');
+  const [broadcasting, setBroadcasting] = useState(false);
+
   const isLeader = ['chairperson', 'secretary', 'treasurer'].includes(myRole);
   const isChair = myRole === 'chairperson';
 
