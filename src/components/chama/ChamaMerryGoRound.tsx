@@ -232,9 +232,14 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
               </div>
             </div>
             {isChair && (
-              <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5 h-9 shrink-0 shadow-sm">
-                <Plus size={14} /> New Cycle
-              </Button>
+              <div className="flex flex-col gap-1.5 shrink-0">
+                <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5 h-9 shadow-sm">
+                  <Plus size={14} /> New Cycle
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setBroadcastOpen(true)} className="gap-1.5 h-9">
+                  <Megaphone size={14} /> Broadcast
+                </Button>
+              </div>
             )}
           </div>
 
