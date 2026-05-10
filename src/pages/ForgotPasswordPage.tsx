@@ -10,24 +10,31 @@ import { Label } from '@/components/ui/label';
 import { PinPad } from '@/components/PinPad';
 import { toast } from 'sonner';
 
-// Extract a readable error message from a supabase.functions.invoke error.
-// When the edge function returns a non-2xx response, supabase-js wraps it as
-// FunctionsHttpError and the JSON body lives on error.context (a Response).
-async function readFnError(error: any, data: any, fallback: string): Promise<string> {
-  if (data && typeof data === 'object' && data.error) return String(data.error);
+// Call edge function via direct fetch so we can read the JSON error body
+// (supabase.functions.invoke hides it behind a generic "non-2xx" message).
+async function callRecoveryFn(payload: any): Promise<{ ok: boolean; data: any; error?: string }> {
+  const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/password-recovery-otp`;
+  const apikey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string;
   try {
-    const res = error?.context;
-    if (res && typeof res.json === 'function') {
-      const body = await res.clone().json();
-      if (body?.error) return String(body.error);
-      if (body?.message) return String(body.message);
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apikey}`,
+        'apikey': apikey,
+      },
+      body: JSON.stringify(payload),
+    });
+    let body: any = null;
+    try { body = await res.json(); } catch { /* non-json */ }
+    if (!res.ok) {
+      return { ok: false, data: body, error: body?.error || body?.message || `Request failed (${res.status})` };
     }
-    if (res && typeof res.text === 'function') {
-      const txt = await res.clone().text();
-      if (txt) return txt;
-    }
-  } catch { /* ignore */ }
-  return error?.message || fallback;
+    if (body?.error) return { ok: false, data: body, error: String(body.error) };
+    return { ok: true, data: body };
+  } catch (e: any) {
+    return { ok: false, data: null, error: e?.message || 'Network error' };
+  }
 }
 
 export default function ForgotPasswordPage() {
@@ -62,19 +69,15 @@ export default function ForgotPasswordPage() {
     if (code.length !== 6) return toast.error('Enter the 6-digit code');
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('password-recovery-otp', {
-        body: { action: 'check', email: email.trim().toLowerCase(), code },
+      const result = await callRecoveryFn({
+        action: 'check', email: email.trim().toLowerCase(), code,
       });
-      if (error || (data as any)?.error) {
-        const msg = await readFnError(error, data, 'Invalid code');
+      if (!result.ok) {
         setCode('');
-        toast.error(msg);
-        return; // stay on code step
+        toast.error(result.error || 'Invalid code');
+        return;
       }
       setStep('password');
-    } catch (err: any) {
-      toast.error(err?.message || 'Invalid code');
-      setCode('');
     } finally {
       setIsLoading(false);
     }
@@ -86,18 +89,15 @@ export default function ForgotPasswordPage() {
     if (password !== confirmPassword) return toast.error('Passwords don\'t match');
     setIsLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('password-recovery-otp', {
-        body: {
-          action: 'verify',
-          email: email.trim().toLowerCase(),
-          code,
-          newPassword: password,
-        },
+      const result = await callRecoveryFn({
+        action: 'verify',
+        email: email.trim().toLowerCase(),
+        code,
+        newPassword: password,
       });
-      if (error || (data as any)?.error) {
-        const msg = await readFnError(error, data, 'Could not reset password');
+      if (!result.ok) {
+        const msg = result.error || 'Could not reset password';
         toast.error(msg);
-        // If the code became invalid/expired/used, send user back to code step
         if (/code|expired|attempts|used|incorrect/i.test(msg)) {
           setCode('');
           setStep('code');
@@ -106,8 +106,6 @@ export default function ForgotPasswordPage() {
       }
       setStep('success');
       toast.success('Password reset successfully');
-    } catch (error: any) {
-      toast.error(error?.message || 'Could not reset password');
     } finally {
       setIsLoading(false);
     }
