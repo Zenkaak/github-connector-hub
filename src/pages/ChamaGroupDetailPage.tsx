@@ -500,246 +500,226 @@ export default function ChamaGroupDetailPage() {
         </motion.div>
         )}
 
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-5">
-          {(() => {
-            // All tabs visible in a single horizontally-scrollable strip — no "More" dropdown.
-            // Bottom-nav (Home / Members / Notices / Meetings / Reports) and top quick-actions
-            // (Contribute / Loan / Withdraw / Chat) jump here too.
-            const allTabs = [
-              { value: 'members',       icon: Users,          label: 'Members' },
-              { value: 'savings',       icon: Wallet,         label: 'Savings' },
-              { value: 'loans',         icon: Landmark,       label: 'Loans' },
-              { value: 'withdrawals',   icon: HandCoins,      label: 'Withdraw' },
-              { value: 'chat',          icon: MessageSquare,  label: 'Chat' },
-              { value: 'announcements', icon: Megaphone,      label: 'Notices' },
-              { value: 'meetings',      icon: CalendarDays,   label: 'Meetings' },
-              { value: 'mgr',           icon: RefreshCw,      label: 'Merry-Go-Round' },
-              { value: 'transactions',  icon: Receipt,        label: 'Transactions' },
-              { value: 'votes',         icon: Vote,           label: 'Votes' },
-              { value: 'arrears',       icon: AlertTriangle,  label: 'Arrears' },
-              { value: 'penalties',     icon: Shield,         label: 'Penalties' },
-              { value: 'emergency',     icon: Shield,         label: 'Emergency' },
-              { value: 'reports',       icon: Download,       label: 'Reports' },
-              { value: 'support',       icon: HeadphonesIcon, label: 'Support' },
-              ...(isLeader ? [{ value: 'requests', icon: UserCheck, label: 'Requests' }] : []),
-              { value: 'terms',         icon: FileText,       label: 'Terms' },
-              { value: 'leave',         icon: LogOut,         label: 'Leave' },
-              ...(isChair ? [{ value: 'settings', icon: Settings, label: 'Settings' }] : []),
-            ];
-            return (
-              <div className="overflow-x-auto no-scrollbar -mx-4 px-4 lg:mx-0 lg:px-0">
-                <TabsList className="inline-flex w-auto h-auto p-1 gap-1 flex-nowrap bg-muted/50 rounded-xl border border-border/40">
-                  {allTabs.map((tab) => (
-                    <TabsTrigger
-                      key={tab.value}
-                      value={tab.value}
-                      title={tab.label}
-                      className="flex items-center gap-1.5 text-xs font-semibold py-2 px-3 rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-sm transition-all"
-                    >
-                      <tab.icon size={14} className="shrink-0" />
-                      <span className="truncate leading-none">{tab.label}</span>
-                    </TabsTrigger>
-                  ))}
-                </TabsList>
-              </div>
-            );
-          })()}
+        {(() => {
+          // Section catalogue — every chama function lives at its own URL/route.
+          const allSections: Array<{ id: string; label: string; icon: any; tone: string; bg: string; group: string }> = [
+            { id: 'savings',       label: 'Savings',       icon: Wallet,         tone: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/15', group: 'Money' },
+            { id: 'loans',         label: 'Loans',         icon: Landmark,       tone: 'text-blue-600 dark:text-blue-400',       bg: 'bg-blue-500/15',    group: 'Money' },
+            { id: 'withdrawals',   label: 'Withdrawals',   icon: HandCoins,      tone: 'text-amber-600 dark:text-amber-400',     bg: 'bg-amber-500/15',   group: 'Money' },
+            { id: 'transactions',  label: 'Transactions',  icon: Receipt,        tone: 'text-cyan-600 dark:text-cyan-400',       bg: 'bg-cyan-500/15',    group: 'Money' },
+            { id: 'arrears',       label: 'Arrears',       icon: AlertTriangle,  tone: 'text-orange-600 dark:text-orange-400',   bg: 'bg-orange-500/15',  group: 'Money' },
+            { id: 'penalties',     label: 'Penalties',     icon: Shield,         tone: 'text-rose-600 dark:text-rose-400',       bg: 'bg-rose-500/15',    group: 'Money' },
+            { id: 'emergency',     label: 'Emergency Fund', icon: Shield,        tone: 'text-red-600 dark:text-red-400',         bg: 'bg-red-500/15',     group: 'Money' },
+            { id: 'mgr',           label: 'Merry-Go-Round', icon: RefreshCw,     tone: 'text-purple-600 dark:text-purple-400',   bg: 'bg-purple-500/15',  group: 'Money' },
 
-          <TabsContent value="members" className="mt-4">
-            <div className="mb-3">
-              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Active Members ({members.length})</h2>
-            </div>
-            {/* Leaders section */}
-            {(() => {
-              const leaders = members.filter(m => ['chairperson', 'secretary', 'treasurer'].includes(m.role));
-              const regularMembers = members.filter(m => !['chairperson', 'secretary', 'treasurer'].includes(m.role));
-              return (
-                <>
-                  {leaders.length > 0 && (
-                    <div className="mb-3">
-                      <p className="text-[11px] font-bold text-primary uppercase tracking-wider mb-2">👑 Leaders</p>
-                      <div className="space-y-2">
-                        {leaders.map(member => {
-                          const RoleIcon = roleIcons[member.role] || Users;
-                          const isMe = member.user_id === user?.id;
-                          return (
-                            <Card key={member.id} className={cn("p-4 border-primary/20", isChair && !isMe && "cursor-pointer hover:border-accent/30 transition-colors")} onClick={() => { if (isChair && !isMe) setViewMember(member); }}>
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
-                                    {member.profile?.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || '??'}
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="font-medium text-sm">
-                                      {member.profile?.full_name || 'Unknown'}
-                                      {isMe && <span className="text-xs text-muted-foreground ml-1">(You)</span>}
-                                    </p>
-                                    <p className="text-xs text-muted-foreground">{member.profile?.phone}</p>
-                                  </div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                  {isChair && !isMe ? (
-                                    <>
-                                      <Select value={member.role} onValueChange={val => handleUpdateRole(member.id, val)}>
-                                        <SelectTrigger className="h-8 text-xs w-[120px]" onClick={e => e.stopPropagation()}><SelectValue /></SelectTrigger>
-                                        <SelectContent>
-                                          <SelectItem value="member">Member</SelectItem>
-                                          <SelectItem value="treasurer">Treasurer</SelectItem>
-                                          <SelectItem value="secretary">Secretary</SelectItem>
-                                          <SelectItem value="chairperson">Chairperson</SelectItem>
-                                        </SelectContent>
-                                      </Select>
-                                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={(e) => { e.stopPropagation(); openRemoveDialog(member.id, member.profile?.full_name || 'member'); }}>
-                                        <LogOut size={14} />
-                                      </Button>
-                                    </>
-                                  ) : (
-                                    <span className={`text-[11px] px-2.5 py-1 rounded-full font-medium flex items-center gap-1 ${roleColors[member.role]}`}>
-                                      <RoleIcon size={12} /> {roleLabels[member.role]}
-                                    </span>
-                                  )}
-                                </div>
-                              </div>
-                            </Card>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                  <div>
-                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Members ({regularMembers.length})</p>
-                    <div className="space-y-2">
-                      {regularMembers.map(member => {
-                        const RoleIcon = roleIcons[member.role] || Users;
-                        const isMe = member.user_id === user?.id;
-                        return (
-                          <Card key={member.id} className={cn("p-4", isChair && !isMe && "cursor-pointer hover:border-accent/30 transition-colors")} onClick={() => { if (isChair && !isMe) setViewMember(member); }}>
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
-                                  {member.profile?.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || '??'}
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="font-medium text-sm">
-                                    {member.profile?.full_name || 'Unknown'}
-                                    {isMe && <span className="text-xs text-muted-foreground ml-1">(You)</span>}
-                                  </p>
-                                  <p className="text-xs text-muted-foreground">{member.profile?.phone}</p>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                {isChair && !isMe ? (
-                                  <>
-                                    <Select value={member.role} onValueChange={val => handleUpdateRole(member.id, val)}>
-                                      <SelectTrigger className="h-8 text-xs w-[120px]" onClick={e => e.stopPropagation()}><SelectValue /></SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="member">Member</SelectItem>
-                                        <SelectItem value="treasurer">Treasurer</SelectItem>
-                                        <SelectItem value="secretary">Secretary</SelectItem>
-                                        <SelectItem value="chairperson">Chairperson</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={(e) => { e.stopPropagation(); openRemoveDialog(member.id, member.profile?.full_name || 'member'); }}>
-                                      <LogOut size={14} />
-                                    </Button>
-                                  </>
-                                ) : (
-                                  <span className={`text-[11px] px-2.5 py-1 rounded-full font-medium flex items-center gap-1 ${roleColors[member.role]}`}>
-                                    <RoleIcon size={12} /> {roleLabels[member.role]}
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          </Card>
-                        );
-                      })}
+            { id: 'members',       label: 'Members',       icon: Users,          tone: 'text-primary',                           bg: 'bg-primary/15',     group: 'People' },
+            { id: 'chat',          label: 'Group Chat',    icon: MessageSquare,  tone: 'text-violet-600 dark:text-violet-400',   bg: 'bg-violet-500/15',  group: 'People' },
+            { id: 'announcements', label: 'Notices',       icon: Megaphone,      tone: 'text-indigo-600 dark:text-indigo-400',   bg: 'bg-indigo-500/15',  group: 'People' },
+            { id: 'meetings',      label: 'Meetings',      icon: CalendarDays,   tone: 'text-teal-600 dark:text-teal-400',       bg: 'bg-teal-500/15',    group: 'People' },
+            { id: 'votes',         label: 'Votes',         icon: Vote,           tone: 'text-fuchsia-600 dark:text-fuchsia-400', bg: 'bg-fuchsia-500/15', group: 'People' },
+            { id: 'support',       label: 'Support',       icon: HeadphonesIcon, tone: 'text-sky-600 dark:text-sky-400',         bg: 'bg-sky-500/15',     group: 'People' },
+
+            { id: 'reports',       label: 'Reports',       icon: Download,       tone: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/15', group: 'Manage' },
+            { id: 'terms',         label: 'Terms',         icon: FileText,       tone: 'text-slate-600 dark:text-slate-300',     bg: 'bg-slate-500/15',   group: 'Manage' },
+            { id: 'leave',         label: 'Leave Group',   icon: LogOut,         tone: 'text-destructive',                       bg: 'bg-destructive/15', group: 'Manage' },
+            ...(isLeader ? [{ id: 'requests',  label: 'Join Requests', icon: UserCheck, tone: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-500/15', group: 'Manage' }] : []),
+            ...(isChair  ? [{ id: 'settings',  label: 'Settings',      icon: Settings,  tone: 'text-primary',                       bg: 'bg-primary/15',   group: 'Manage' }] : []),
+          ];
+          const active = allSections.find(s => s.id === currentSection);
+
+          if (currentSection === 'home') {
+            const grouped = ['Money', 'People', 'Manage'].map(g => ({
+              group: g,
+              items: allSections.filter(s => s.group === g),
+            }));
+            return (
+              <div className="mt-5 space-y-5">
+                {grouped.map(({ group, items }) => (
+                  <div key={group}>
+                    <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-[0.18em] mb-2 px-1">{group}</p>
+                    <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
+                      {items.map((s) => (
+                        <button
+                          key={s.id}
+                          onClick={() => goToSection(s.id)}
+                          className="group flex flex-col items-center gap-2 rounded-xl border border-border/60 bg-card p-3 text-center transition-all hover:border-accent/50 hover:shadow-md hover:-translate-y-0.5"
+                        >
+                          <div className={cn('w-11 h-11 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110', s.bg, s.tone)}>
+                            <s.icon size={20} strokeWidth={2.2} />
+                          </div>
+                          <span className="text-[11px] font-semibold leading-tight line-clamp-2">{s.label}</span>
+                        </button>
+                      ))}
                     </div>
                   </div>
+                ))}
+              </div>
+            );
+          }
+
+          // Individual section page: compact header + content
+          const ActiveIcon = active?.icon || MoreHorizontal;
+          return (
+            <div>
+              <div className="flex items-center justify-between gap-3 mb-4 mt-2">
+                <button
+                  onClick={() => goToSection()}
+                  className="flex items-center gap-2 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <ArrowLeft size={16} /> <span>Chama home</span>
+                </button>
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center shrink-0', active?.bg, active?.tone)}>
+                    <ActiveIcon size={16} />
+                  </div>
+                  <h2 className="font-display font-bold text-base truncate">{active?.label || 'Section'}</h2>
+                </div>
+              </div>
+
+              {currentSection === 'members' && (
+                <>
+                  <div className="mb-3">
+                    <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Active Members ({members.length})</h2>
+                  </div>
+                  {(() => {
+                    const leaders = members.filter(m => ['chairperson', 'secretary', 'treasurer'].includes(m.role));
+                    const regularMembers = members.filter(m => !['chairperson', 'secretary', 'treasurer'].includes(m.role));
+                    return (
+                      <>
+                        {leaders.length > 0 && (
+                          <div className="mb-3">
+                            <p className="text-[11px] font-bold text-primary uppercase tracking-wider mb-2">👑 Leaders</p>
+                            <div className="space-y-2">
+                              {leaders.map(member => {
+                                const RoleIcon = roleIcons[member.role] || Users;
+                                const isMe = member.user_id === user?.id;
+                                return (
+                                  <Card key={member.id} className={cn("p-4 border-primary/20", isChair && !isMe && "cursor-pointer hover:border-accent/30 transition-colors")} onClick={() => { if (isChair && !isMe) setViewMember(member); }}>
+                                    <div className="flex items-center justify-between">
+                                      <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                                          {member.profile?.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || '??'}
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                          <p className="font-medium text-sm">
+                                            {member.profile?.full_name || 'Unknown'}
+                                            {isMe && <span className="text-xs text-muted-foreground ml-1">(You)</span>}
+                                          </p>
+                                          <p className="text-xs text-muted-foreground">{member.profile?.phone}</p>
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        {isChair && !isMe ? (
+                                          <>
+                                            <Select value={member.role} onValueChange={val => handleUpdateRole(member.id, val)}>
+                                              <SelectTrigger className="h-8 text-xs w-[120px]" onClick={e => e.stopPropagation()}><SelectValue /></SelectTrigger>
+                                              <SelectContent>
+                                                <SelectItem value="member">Member</SelectItem>
+                                                <SelectItem value="treasurer">Treasurer</SelectItem>
+                                                <SelectItem value="secretary">Secretary</SelectItem>
+                                                <SelectItem value="chairperson">Chairperson</SelectItem>
+                                              </SelectContent>
+                                            </Select>
+                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={(e) => { e.stopPropagation(); openRemoveDialog(member.id, member.profile?.full_name || 'member'); }}>
+                                              <LogOut size={14} />
+                                            </Button>
+                                          </>
+                                        ) : (
+                                          <span className={`text-[11px] px-2.5 py-1 rounded-full font-medium flex items-center gap-1 ${roleColors[member.role]}`}>
+                                            <RoleIcon size={12} /> {roleLabels[member.role]}
+                                          </span>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </Card>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                        <div>
+                          <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Members ({regularMembers.length})</p>
+                          <div className="space-y-2">
+                            {regularMembers.map(member => {
+                              const RoleIcon = roleIcons[member.role] || Users;
+                              const isMe = member.user_id === user?.id;
+                              return (
+                                <Card key={member.id} className={cn("p-4", isChair && !isMe && "cursor-pointer hover:border-accent/30 transition-colors")} onClick={() => { if (isChair && !isMe) setViewMember(member); }}>
+                                  <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary font-bold text-sm">
+                                        {member.profile?.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || '??'}
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <p className="font-medium text-sm">
+                                          {member.profile?.full_name || 'Unknown'}
+                                          {isMe && <span className="text-xs text-muted-foreground ml-1">(You)</span>}
+                                        </p>
+                                        <p className="text-xs text-muted-foreground">{member.profile?.phone}</p>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      {isChair && !isMe ? (
+                                        <>
+                                          <Select value={member.role} onValueChange={val => handleUpdateRole(member.id, val)}>
+                                            <SelectTrigger className="h-8 text-xs w-[120px]" onClick={e => e.stopPropagation()}><SelectValue /></SelectTrigger>
+                                            <SelectContent>
+                                              <SelectItem value="member">Member</SelectItem>
+                                              <SelectItem value="treasurer">Treasurer</SelectItem>
+                                              <SelectItem value="secretary">Secretary</SelectItem>
+                                              <SelectItem value="chairperson">Chairperson</SelectItem>
+                                            </SelectContent>
+                                          </Select>
+                                          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive hover:text-destructive" onClick={(e) => { e.stopPropagation(); openRemoveDialog(member.id, member.profile?.full_name || 'member'); }}>
+                                            <LogOut size={14} />
+                                          </Button>
+                                        </>
+                                      ) : (
+                                        <span className={`text-[11px] px-2.5 py-1 rounded-full font-medium flex items-center gap-1 ${roleColors[member.role]}`}>
+                                          <RoleIcon size={12} /> {roleLabels[member.role]}
+                                        </span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </Card>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </>
+                    );
+                  })()}
                 </>
-              );
-            })()}
-          </TabsContent>
+              )}
 
-          <TabsContent value="chat" className="mt-4">
-            <Card className="overflow-hidden">
-              <ChamaChat groupId={groupId!} members={members} myRole={myRole} />
-            </Card>
-          </TabsContent>
+              {currentSection === 'chat'         && <Card className="overflow-hidden"><ChamaChat groupId={groupId!} members={members} myRole={myRole} /></Card>}
+              {currentSection === 'savings'      && <ChamaSavings groupId={groupId!} group={group} members={members} myRole={myRole} onRefreshGroup={fetchGroupData} />}
+              {currentSection === 'withdrawals'  && <ChamaWithdrawals groupId={groupId!} members={members} myRole={myRole} savings={totalSavings} />}
+              {currentSection === 'terms'        && <ChamaTerms groupId={groupId!} group={group} members={members} myRole={myRole} onRefreshGroup={fetchGroupData} />}
+              {currentSection === 'transactions' && <ChamaTransactions groupId={groupId!} members={members} />}
+              {currentSection === 'votes'        && <ChamaVotes groupId={groupId!} members={members} myRole={myRole} />}
+              {currentSection === 'mgr'          && <ChamaMerryGoRound groupId={groupId!} group={group} members={members} myRole={myRole} />}
+              {currentSection === 'support'      && <Card className="overflow-hidden"><ChamaSupportChat groupId={groupId!} members={members} myRole={myRole} /></Card>}
+              {currentSection === 'meetings'     && <ChamaMeetings groupId={groupId!} group={group} members={members} myRole={myRole} />}
+              {currentSection === 'reports'      && <ChamaReports groupId={groupId!} group={group} members={members} />}
+              {currentSection === 'penalties'    && <ChamaPenalties groupId={groupId!} group={group} members={members} myRole={myRole} />}
+              {currentSection === 'emergency'    && <ChamaEmergencyFund groupId={groupId!} members={members} />}
+              {currentSection === 'arrears'      && <ChamaArrears groupId={groupId!} group={group} members={members} />}
+              {currentSection === 'announcements'&& <ChamaAnnouncements groupId={groupId!} members={members} myRole={myRole} />}
+              {currentSection === 'loans'        && <ChamaLoans groupId={groupId!} group={group} members={members} myRole={myRole} />}
+              {currentSection === 'leave'        && <ChamaLeaveRequest groupId={groupId!} group={group} members={members} myRole={myRole} mySavings={mySavings} onRefreshGroup={fetchGroupData} />}
+              {currentSection === 'requests' && isLeader && <ChamaJoinRequests groupId={groupId!} group={group} members={members} myRole={myRole} onRefreshGroup={fetchGroupData} />}
+              {currentSection === 'settings' && isChair  && <ChamaSettings groupId={groupId!} group={group} members={members} onRefreshGroup={fetchGroupData} />}
 
-          <TabsContent value="savings" className="mt-4">
-            <ChamaSavings groupId={groupId!} group={group} members={members} myRole={myRole} onRefreshGroup={fetchGroupData} />
-          </TabsContent>
-
-          <TabsContent value="withdrawals" className="mt-4">
-            <ChamaWithdrawals groupId={groupId!} members={members} myRole={myRole} savings={totalSavings} />
-          </TabsContent>
-
-          <TabsContent value="terms" className="mt-4">
-            <ChamaTerms groupId={groupId!} group={group} members={members} myRole={myRole} onRefreshGroup={fetchGroupData} />
-          </TabsContent>
-
-          <TabsContent value="transactions" className="mt-4">
-            <ChamaTransactions groupId={groupId!} members={members} />
-          </TabsContent>
-
-          <TabsContent value="votes" className="mt-4">
-            <ChamaVotes groupId={groupId!} members={members} myRole={myRole} />
-          </TabsContent>
-
-          <TabsContent value="mgr" className="mt-4">
-            <ChamaMerryGoRound groupId={groupId!} group={group} members={members} myRole={myRole} />
-          </TabsContent>
-
-          <TabsContent value="support" className="mt-4">
-            <Card className="overflow-hidden">
-              <ChamaSupportChat groupId={groupId!} members={members} myRole={myRole} />
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="meetings" className="mt-4">
-            <ChamaMeetings groupId={groupId!} group={group} members={members} myRole={myRole} />
-          </TabsContent>
-
-          <TabsContent value="reports" className="mt-4">
-            <ChamaReports groupId={groupId!} group={group} members={members} />
-          </TabsContent>
-
-          <TabsContent value="penalties" className="mt-4">
-            <ChamaPenalties groupId={groupId!} group={group} members={members} myRole={myRole} />
-          </TabsContent>
-
-          <TabsContent value="emergency" className="mt-4">
-            <ChamaEmergencyFund groupId={groupId!} members={members} />
-          </TabsContent>
-
-          <TabsContent value="arrears" className="mt-4">
-            <ChamaArrears groupId={groupId!} group={group} members={members} />
-          </TabsContent>
-
-          <TabsContent value="announcements" className="mt-4">
-            <ChamaAnnouncements groupId={groupId!} members={members} myRole={myRole} />
-          </TabsContent>
-
-          <TabsContent value="loans" className="mt-4">
-            <ChamaLoans groupId={groupId!} group={group} members={members} myRole={myRole} />
-          </TabsContent>
-
-          <TabsContent value="leave" className="mt-4">
-            <ChamaLeaveRequest groupId={groupId!} group={group} members={members} myRole={myRole} mySavings={mySavings} onRefreshGroup={fetchGroupData} />
-          </TabsContent>
-
-          {isLeader && (
-            <TabsContent value="requests" className="mt-4">
-              <ChamaJoinRequests groupId={groupId!} group={group} members={members} myRole={myRole} onRefreshGroup={fetchGroupData} />
-            </TabsContent>
-          )}
-
-          {isChair && (
-            <TabsContent value="settings" className="mt-4">
-              <ChamaSettings groupId={groupId!} group={group} members={members} onRefreshGroup={fetchGroupData} />
-            </TabsContent>
-          )}
-        </Tabs>
+              {!active && (
+                <Card className="p-10 text-center">
+                  <p className="text-sm text-muted-foreground">Section not found.</p>
+                  <Button variant="link" onClick={() => goToSection()}>Back to Chama home</Button>
+                </Card>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Remove Member Dialog */}
         <Dialog open={removeDialogOpen} onOpenChange={setRemoveDialogOpen}>
