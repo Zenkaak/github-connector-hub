@@ -58,7 +58,7 @@ export default function ChamaGroupDetailPage() {
   const [allMembers, setAllMembers] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [myRole, setMyRole] = useState<string>('member');
-  const [activeTab, setActiveTab] = useState('members');
+  // Section is URL-driven; no local activeTab state needed.
   const [totalSavings, setTotalSavings] = useState(0);
   const [totalJoiningFees, setTotalJoiningFees] = useState(0);
   const [mySavings, setMySavings] = useState(0);
