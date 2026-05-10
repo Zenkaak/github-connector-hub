@@ -311,12 +311,12 @@ export function AdminReconcileDialog({ payment, onClose, onResolved }: Props) {
                 {payment.status || 'pending'}
               </Badge>
             </div>
-            <DetailRow icon={Phone} label="MSISDN" value={payment.msisdn || '—'} mono />
             <DetailRow icon={UserIcon} label="Name" value={senderName || '—'} />
+            <DetailRow icon={Phone} label="Phone" value={realPhone || payment.msisdn || '—'} mono />
+            <DetailRow icon={Receipt} label="Receipt" value={mpesaReceipt || '—'} mono accent />
             <DetailRow icon={Hash} label="Bill Ref" value={payment.bill_ref_number || '—'} mono />
-            <DetailRow icon={Receipt} label="Trans ID" value={payment.c2b_transaction_id || '—'} mono />
             <DetailRow icon={Clock} label="Time" value={ts} />
-            {payment.reason && <DetailRow icon={Settings2} label="Reason" value={payment.reason} accent />}
+            {payment.reason && <DetailRow icon={Settings2} label="Reason" value={payment.reason} />}
           </div>
         </div>
 
