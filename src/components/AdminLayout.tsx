@@ -42,6 +42,7 @@ const adminNavItems = [
   { label: 'MGR Cycles', icon: Activity, path: '/dashboard/admin/mgr' },
   { label: 'Harambee Apps', icon: Heart, path: '/dashboard/admin/harambee-applications' },
   { label: 'Audit Logs', icon: ClipboardList, path: '/dashboard/admin/audit' },
+  { label: 'Broadcast', icon: Megaphone, path: '/dashboard/admin/broadcast' },
   { label: 'Settings', icon: Settings, path: '/dashboard/admin/settings' },
 ];
 
