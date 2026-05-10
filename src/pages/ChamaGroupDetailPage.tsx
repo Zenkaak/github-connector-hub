@@ -283,9 +283,9 @@ export default function ChamaGroupDetailPage() {
   const bottomNavItems = [
     { id: 'home',          icon: Home,         label: 'Home',     action: () => goToSection(),                isActive: currentSection === 'home' },
     { id: 'members',       icon: Users,        label: 'Members',  action: () => goToSection('members'),       isActive: currentSection === 'members' },
-    { id: 'announcements', icon: Megaphone,    label: 'Notices',  action: () => goToSection('announcements'), isActive: currentSection === 'announcements' },
-    { id: 'meetings',      icon: CalendarDays, label: 'Meetings', action: () => goToSection('meetings'),      isActive: currentSection === 'meetings' },
-    { id: 'reports',       icon: Download,     label: 'Reports',  action: () => goToSection('reports'),       isActive: currentSection === 'reports' },
+    { id: 'mgr',           icon: RefreshCw,    label: 'Merry-go',   action: () => goToSection('mgr'),         isActive: currentSection === 'mgr' },
+    { id: 'withdrawals',   icon: Wallet,       label: 'Withdraw',   action: () => goToSection('withdrawals'), isActive: currentSection === 'withdrawals' },
+    { id: 'settings',      icon: Settings,     label: 'Settings',   action: () => goToSection('settings'),    isActive: currentSection === 'settings' },
   ];
 
   return (
