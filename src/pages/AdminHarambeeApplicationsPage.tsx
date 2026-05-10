@@ -95,6 +95,8 @@ export default function AdminHarambeeApplicationsPage() {
   const [adminNotes, setAdminNotes] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
   const [expandedAnswers, setExpandedAnswers] = useState(false);
+  const [descriptionOpen, setDescriptionOpen] = useState(false);
+  const [listDescription, setListDescription] = useState<{ name: string; text: string } | null>(null);
 
   const fetchData = useCallback(async () => {
     const [appsRes, profilesRes] = await Promise.all([
