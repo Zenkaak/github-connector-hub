@@ -498,6 +498,7 @@ export default function ChamaGroupDetailPage() {
             ))}
           </div>
         </motion.div>
+        )}
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-5">
           {(() => {
