@@ -246,9 +246,7 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
                       <div className="relative shrink-0">
                         <Avatar className="w-12 h-12 ring-2 ring-primary/20">
                           <AvatarImage src={recipMember?.profile?.avatar_url || undefined} alt={recipMember?.profile?.full_name || cycle.recipient_name} />
-                          <AvatarFallback className="bg-gradient-to-br from-primary/20 to-accent/15 text-primary font-bold text-sm">
-                            {initials(recipMember?.profile?.full_name || cycle.recipient_name)}
-                          </AvatarFallback>
+                          <AvatarFallback className="bg-gradient-to-br from-primary/20 to-accent/15 text-primary font-bold text-sm"><UserIcon className="w-1/2 h-1/2 opacity-70" /></AvatarFallback>
                         </Avatar>
                         <span className="absolute -bottom-1 -right-1 text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground border border-card shadow-sm">
                           #{cycle.cycle_number}
@@ -321,7 +319,7 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
                           <span className="flex items-center gap-2 min-w-0">
                             <Avatar className="w-6 h-6 shrink-0">
                               <AvatarImage src={m.profile?.avatar_url || undefined} alt={m.profile?.full_name} />
-                              <AvatarFallback className="text-[9px] bg-muted">{initials(m.profile?.full_name)}</AvatarFallback>
+                              <AvatarFallback className="text-[9px] bg-muted"><UserIcon className="w-1/2 h-1/2 opacity-70" /></AvatarFallback>
                             </Avatar>
                             <span className="truncate">{m.profile?.full_name || 'Unknown'}</span>
                             {isThisRecipient && <Badge variant="outline" className="text-[9px] py-0 px-1 shrink-0">Recipient</Badge>}
@@ -501,7 +499,7 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-br from-accent/10 to-transparent border border-accent/20">
                     <Avatar className="w-12 h-12 ring-2 ring-accent/30">
                       <AvatarImage src={recipMember?.profile?.avatar_url || undefined} />
-                      <AvatarFallback className="bg-accent/15 text-accent font-bold">{initials(recipMember?.profile?.full_name || cy.recipient_name)}</AvatarFallback>
+                      <AvatarFallback className="bg-accent/15 text-accent font-bold"><UserIcon className="w-1/2 h-1/2 opacity-70" /></AvatarFallback>
                     </Avatar>
                     <div className="min-w-0 flex-1">
                       <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-medium">Recipient</p>
@@ -561,7 +559,7 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
                             <div key={m.user_id} className="flex items-center gap-2 px-2.5 py-2">
                               <Avatar className="w-7 h-7 shrink-0">
                                 <AvatarImage src={m.profile?.avatar_url || undefined} />
-                                <AvatarFallback className="text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">{initials(m.profile?.full_name)}</AvatarFallback>
+                                <AvatarFallback className="text-[10px] bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"><UserIcon className="w-1/2 h-1/2 opacity-70" /></AvatarFallback>
                               </Avatar>
                               <div className="min-w-0 flex-1">
                                 <p className="text-[12px] font-medium truncate leading-tight">{m.profile?.full_name || 'Unknown'}</p>
@@ -593,7 +591,7 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
                             <div key={m.user_id} className="flex items-center gap-2 px-2.5 py-2">
                               <Avatar className="w-7 h-7 shrink-0">
                                 <AvatarImage src={m.profile?.avatar_url || undefined} />
-                                <AvatarFallback className="text-[10px] bg-amber-500/10 text-amber-600 dark:text-amber-400">{initials(m.profile?.full_name)}</AvatarFallback>
+                                <AvatarFallback className="text-[10px] bg-amber-500/10 text-amber-600 dark:text-amber-400"><UserIcon className="w-1/2 h-1/2 opacity-70" /></AvatarFallback>
                               </Avatar>
                               <div className="min-w-0 flex-1">
                                 <p className="text-[12px] font-medium truncate leading-tight">{m.profile?.full_name || 'Unknown'}</p>

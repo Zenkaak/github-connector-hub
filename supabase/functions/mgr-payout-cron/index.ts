@@ -47,11 +47,17 @@ Deno.serve(async (req) => {
     try {
       const r = await processCycle(supabase, cycle);
       results.push({ cycle_id: cycle.id, ...r });
+      // If processCycle returned ok:false with a B2C/Daraja reason, alert chair too
+      if (r && r.ok === false && r.reason && r.reason !== "no_funds" && r.reason !== "already_in_flight") {
+        await notifyChairOfFailure(supabase, cycle, r.reason);
+      }
     } catch (err) {
-      console.error(`Cycle ${cycle.id} payout failed:`, err);
+      const reason = err instanceof Error ? err.message : String(err);
+      console.error(`Cycle ${cycle.id} payout failed:`, reason);
       await supabase.from("chama_mgr_cycles")
         .update({ status: "payout_failed" }).eq("id", cycle.id);
-      results.push({ cycle_id: cycle.id, ok: false, error: String(err) });
+      await notifyChairOfFailure(supabase, cycle, reason);
+      results.push({ cycle_id: cycle.id, ok: false, error: reason });
     }
   }
 
@@ -197,5 +203,37 @@ async function processCycle(supabase: any, cycle: any) {
     }
   }
 
-  return { ok, payout: payoutAmount, non_payers: nonPayers.length };
+  return {
+    ok,
+    payout: payoutAmount,
+    non_payers: nonPayers.length,
+    reason: ok ? undefined : (data.ResponseDescription || data.errorMessage || `Daraja code ${data.ResponseCode}`),
+  };
+}
+
+async function notifyChairOfFailure(supabase: any, cycle: any, reason: string) {
+  try {
+    const { data: chair } = await supabase
+      .from("chama_members")
+      .select("user_id")
+      .eq("group_id", cycle.group_id)
+      .eq("role", "chairperson")
+      .eq("is_active", true)
+      .maybeSingle();
+    if (!chair?.user_id) return;
+    const shortReason = String(reason || "Unknown error").slice(0, 140);
+    await supabase.from("notifications").insert({
+      user_id: chair.user_id,
+      title: `Merry-Go-Round payout FAILED — cycle #${cycle.cycle_number}`,
+      message: `Automatic payout to recipient could not be completed. Reason: ${shortReason}. Please check the merry-go-round screen and retry.`,
+      type: "alert",
+    });
+    await sendUserSMS(
+      supabase,
+      chair.user_id,
+      `Dear {name}, the merry-go-round payout for cycle #${cycle.cycle_number} FAILED. Reason: ${shortReason}. Please review and retry on the Dasnet app.`
+    );
+  } catch (e) {
+    console.error("notifyChairOfFailure error:", e);
+  }
 }
