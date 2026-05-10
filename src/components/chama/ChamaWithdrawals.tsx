@@ -29,6 +29,7 @@ export function ChamaWithdrawals({ groupId, members, myRole, savings }: Props) {
   const [reason, setReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [voting, setVoting] = useState<string | null>(null);
+  const [detailItem, setDetailItem] = useState<any | null>(null);
 
   const isTreasurer = myRole === 'treasurer';
   const isChair = myRole === 'chairperson';
