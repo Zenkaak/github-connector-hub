@@ -14,40 +14,75 @@ Deno.serve(async (req) => {
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const anonKey = Deno.env.get("SUPABASE_ANON_KEY") || "";
   const auth = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
-  // Accept service-role (manual/admin) OR anon (pg_cron schedule). Function is
-  // idempotent and only acts on cycles whose payout_date has arrived.
-  if (auth !== serviceKey && auth !== anonKey) {
+
+  const supabase = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey);
+
+  // Optional body: { cycle_id } — chairperson-triggered single-cycle payout
+  let body: any = {};
+  try { body = await req.clone().json(); } catch { /* no body */ }
+  const cycleIdOverride: string | undefined = body?.cycle_id;
+
+  // Auth: service-role / anon (cron) OR authenticated chair (with cycle_id)
+  let authorized = auth === serviceKey || auth === anonKey;
+  let chairTriggered = false;
+  if (!authorized && cycleIdOverride && auth) {
+    const { data: u } = await supabase.auth.getUser(auth);
+    if (u?.user?.id) {
+      const { data: cy } = await supabase.from("chama_mgr_cycles")
+        .select("group_id").eq("id", cycleIdOverride).maybeSingle();
+      if (cy?.group_id) {
+        const { data: m } = await supabase.from("chama_members")
+          .select("role").eq("group_id", cy.group_id).eq("user_id", u.user.id)
+          .eq("is_active", true).maybeSingle();
+        if (m?.role === "chairperson") { authorized = true; chairTriggered = true; }
+      }
+    }
+  }
+  if (!authorized) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
 
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    serviceKey
-  );
-
   const nowIso = new Date().toISOString();
-  // Find due cycles
-  const { data: dueCycles, error } = await supabase
-    .from("chama_mgr_cycles")
-    .select("*")
-    .eq("status", "open")
-    .lte("payout_date", nowIso);
-
-  if (error) {
-    console.error("Failed to load due cycles:", error);
-    return new Response(JSON.stringify({ error: "load_failed" }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+  let dueCycles: any[] = [];
+  if (chairTriggered && cycleIdOverride) {
+    const { data: cy, error } = await supabase
+      .from("chama_mgr_cycles").select("*").eq("id", cycleIdOverride).maybeSingle();
+    if (error || !cy) {
+      return new Response(JSON.stringify({ error: "cycle not found" }), {
+        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    if (cy.status === "paid_out") {
+      return new Response(JSON.stringify({ error: "Already paid out" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    // For chair retry, reset payout_failed -> open so processCycle proceeds
+    if (cy.status === "payout_failed") {
+      await supabase.from("chama_mgr_cycles").update({ status: "open" }).eq("id", cy.id);
+      cy.status = "open";
+    }
+    dueCycles = [cy];
+  } else {
+    const { data, error } = await supabase
+      .from("chama_mgr_cycles").select("*")
+      .eq("status", "open").lte("payout_date", nowIso);
+    if (error) {
+      console.error("Failed to load due cycles:", error);
+      return new Response(JSON.stringify({ error: "load_failed" }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    dueCycles = data || [];
   }
 
   const results: any[] = [];
-  for (const cycle of dueCycles || []) {
+  for (const cycle of dueCycles) {
     try {
       const r = await processCycle(supabase, cycle);
       results.push({ cycle_id: cycle.id, ...r });
-      // If processCycle returned ok:false with a B2C/Daraja reason, alert chair too
       if (r && r.ok === false && r.reason && r.reason !== "no_funds" && r.reason !== "already_in_flight") {
         await notifyChairOfFailure(supabase, cycle, r.reason);
       }
