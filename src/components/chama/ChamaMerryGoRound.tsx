@@ -673,7 +673,14 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
 
                 <DialogFooter className="gap-2 flex-col-reverse sm:flex-row">
                   <Button variant="outline" onClick={() => setDetailCycle(null)}>Close</Button>
-                  {isChair && cy.status !== 'paid_out' && cy.status !== 'closed_no_funds' && total >= 10 && (
+                  {isChair && cy.status === 'payout_pending' && (
+                    <div className="flex-1 rounded-md bg-blue-500/10 border border-blue-500/30 px-3 py-2 text-center">
+                      <p className="text-[11.5px] text-blue-700 dark:text-blue-400 flex items-center justify-center gap-1.5 font-medium">
+                        <Loader2 size={12} className="animate-spin" /> Payout pending — awaiting M-Pesa confirmation
+                      </p>
+                    </div>
+                  )}
+                  {isChair && cy.status !== 'paid_out' && cy.status !== 'closed_no_funds' && cy.status !== 'payout_pending' && total >= 10 && (
                     <Button
                       onClick={() => triggerB2CPayout(cy)}
                       disabled={payoutTriggering === cy.id}
