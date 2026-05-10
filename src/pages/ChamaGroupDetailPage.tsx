@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Users, Crown, Search, UserPlus, ArrowLeft, BookOpen, Coins, MessageSquare, Wallet, FileText, AlertTriangle, TrendingUp, Calendar, PiggyBank, Settings, Megaphone, Landmark, LogOut, UserCheck, Receipt, Vote, HandCoins, HeadphonesIcon, Camera, Loader2, CalendarDays, Download, Shield, MoreHorizontal, RefreshCw } from 'lucide-react';
-import { DashboardLayout } from '@/components/DashboardLayout';
+import { Users, Crown, Search, UserPlus, ArrowLeft, BookOpen, Coins, MessageSquare, Wallet, FileText, AlertTriangle, TrendingUp, Calendar, PiggyBank, Settings, Megaphone, Landmark, LogOut, UserCheck, Receipt, Vote, HandCoins, HeadphonesIcon, Camera, Loader2, CalendarDays, Download, Shield, MoreHorizontal, RefreshCw, Share2, Home, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -76,10 +75,25 @@ export default function ChamaGroupDetailPage() {
   const [removing, setRemoving] = useState(false);
   const [viewMember, setViewMember] = useState<Member | null>(null);
   const [uploadingPic, setUploadingPic] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
   const profilePicRef = useRef<HTMLInputElement>(null);
 
   const isLeader = ['chairperson', 'secretary', 'treasurer'].includes(myRole);
   const isChair = myRole === 'chairperson';
+
+  const shareUrl = typeof window !== 'undefined' ? `${window.location.origin}/dashboard/chama/${groupId}` : '';
+  const handleShare = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: group?.name || 'Chama Group', text: `Join "${group?.name}" on DASNET`, url: shareUrl });
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
+        setShareCopied(true);
+        toast({ title: 'Link copied', description: 'Share link copied to clipboard.' });
+        setTimeout(() => setShareCopied(false), 2000);
+      }
+    } catch {}
+  };
 
   const handleProfilePicUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -248,14 +262,14 @@ export default function ChamaGroupDetailPage() {
 
   if (loading) {
     return (
-      <DashboardLayout>
+      <div className="min-h-screen bg-background">
         <div className="p-4 lg:p-8 max-w-4xl mx-auto space-y-4">
           <div className="h-8 w-48 bg-muted animate-pulse rounded" />
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {[1, 2, 3, 4].map(i => <div key={i} className="h-20 bg-muted animate-pulse rounded-xl" />)}
           </div>
         </div>
-      </DashboardLayout>
+      </div>
     );
   }
 
@@ -264,17 +278,29 @@ export default function ChamaGroupDetailPage() {
   const myRoleLabel = roleLabels[myRole] || 'Member';
   const MyRoleIcon = roleIcons[myRole] || Users;
 
+  const bottomNavItems = [
+    { id: '__home', icon: Home, label: 'Home', action: () => navigate('/dashboard/chama'), isActive: false },
+    { id: 'savings', icon: Wallet, label: 'Save', action: () => setActiveTab('savings'), isActive: activeTab === 'savings' },
+    { id: 'loans', icon: Landmark, label: 'Loans', action: () => setActiveTab('loans'), isActive: activeTab === 'loans' },
+    { id: 'withdrawals', icon: HandCoins, label: 'Withdraw', action: () => setActiveTab('withdrawals'), isActive: activeTab === 'withdrawals' },
+    { id: 'chat', icon: MessageSquare, label: 'Chat', action: () => setActiveTab('chat'), isActive: activeTab === 'chat' },
+  ];
+
   return (
-    <DashboardLayout>
+    <div className="min-h-screen bg-background pb-24">
+      <div className="sticky top-0 z-30 bg-background/85 backdrop-blur-md border-b border-border/50">
+        <div className="max-w-5xl mx-auto px-3 sm:px-4 h-12 flex items-center justify-between gap-2">
+          <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard/chama')} className="-ml-2 text-muted-foreground gap-1">
+            <ArrowLeft size={16} /> <span className="hidden sm:inline">Back to Chamas</span><span className="sm:hidden">Back</span>
+          </Button>
+          <Button variant="ghost" size="sm" onClick={handleShare} className="-mr-2 gap-1.5 text-primary" title="Share chama link">
+            {shareCopied ? <Check size={16} /> : <Share2 size={16} />}
+            <span className="text-xs font-semibold">{shareCopied ? 'Copied' : 'Share'}</span>
+          </Button>
+        </div>
+      </div>
+
       <div className="p-4 lg:p-8 max-w-5xl mx-auto">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => navigate('/dashboard/chama')}
-          className="mb-3 -ml-2 text-muted-foreground gap-1"
-        >
-          <ArrowLeft size={16} /> Back to Chamas
-        </Button>
 
         {/* Hero header */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
@@ -439,18 +465,21 @@ export default function ChamaGroupDetailPage() {
           {/* Quick actions */}
           <div className="grid grid-cols-4 gap-2 mt-3">
             {[
-              { id: 'savings',     icon: Wallet,   label: 'Contribute' },
-              { id: 'loans',       icon: Landmark, label: 'Loan' },
-              { id: 'withdrawals', icon: HandCoins,label: 'Withdraw' },
-              { id: 'chat',        icon: MessageSquare, label: 'Chat' },
+              { id: 'savings',     icon: Wallet,        label: 'Contribute', tone: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' },
+              { id: 'loans',       icon: Landmark,      label: 'Loan',       tone: 'bg-blue-500/15 text-blue-600 dark:text-blue-400' },
+              { id: 'withdrawals', icon: HandCoins,     label: 'Withdraw',   tone: 'bg-amber-500/15 text-amber-600 dark:text-amber-400' },
+              { id: 'chat',        icon: MessageSquare, label: 'Chat',       tone: 'bg-violet-500/15 text-violet-600 dark:text-violet-400' },
             ].map((a) => (
               <button
                 key={a.id}
                 onClick={() => setActiveTab(a.id)}
-                className="group flex flex-col items-center gap-1.5 rounded-xl border border-border/60 bg-card px-2 py-3 hover:border-accent/40 hover:bg-accent/5 transition-all"
+                className={cn(
+                  "group flex flex-col items-center gap-1.5 rounded-xl border bg-card px-2 py-3 transition-all",
+                  activeTab === a.id ? "border-accent/60 ring-1 ring-accent/30" : "border-border/60 hover:border-accent/40"
+                )}
               >
-                <div className="w-9 h-9 rounded-lg bg-primary/8 text-primary group-hover:bg-accent/15 group-hover:text-accent transition-colors flex items-center justify-center">
-                  <a.icon size={16} />
+                <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center", a.tone)}>
+                  <a.icon size={18} strokeWidth={2.2} />
                 </div>
                 <span className="text-[11px] font-semibold">{a.label}</span>
               </button>
@@ -463,14 +492,14 @@ export default function ChamaGroupDetailPage() {
             const primaryTabs = [
               { value: 'members', icon: Users, label: 'Members' },
               { value: 'savings', icon: Wallet, label: 'Savings' },
-              { value: 'loans', icon: Landmark, label: 'Loans' },
-              { value: 'withdrawals', icon: Coins, label: 'Withdraw' },
+              { value: 'announcements', icon: Megaphone, label: 'Notices' },
+              { value: 'meetings', icon: CalendarDays, label: 'Meetings' },
               { value: 'mgr', icon: RefreshCw, label: 'Merry-Go-Round' },
             ];
             const moreTabs = [
               { value: 'chat', icon: MessageSquare, label: 'Chat' },
-              { value: 'announcements', icon: Megaphone, label: 'Notices' },
-              { value: 'meetings', icon: CalendarDays, label: 'Meetings' },
+              { value: 'loans', icon: Landmark, label: 'Loans' },
+              { value: 'withdrawals', icon: Coins, label: 'Withdraw' },
               { value: 'transactions', icon: Receipt, label: 'Transactions' },
               { value: 'votes', icon: Vote, label: 'Votes' },
               { value: 'arrears', icon: AlertTriangle, label: 'Arrears' },
@@ -793,6 +822,31 @@ export default function ChamaGroupDetailPage() {
           </DialogContent>
         </Dialog>
       </div>
-    </DashboardLayout>
+
+      {/* Chama-specific bottom navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-primary border-t border-white/[0.06] z-40 safe-area-bottom shadow-[0_-4px_20px_-4px_rgba(0,0,0,0.25)]">
+        <div className="flex items-stretch justify-around h-16 px-2 max-w-5xl mx-auto">
+          {bottomNavItems.map((item) => (
+            <button
+              key={item.id}
+              onClick={item.action}
+              className={cn(
+                'flex flex-col items-center justify-center flex-1 min-w-0 gap-0.5 transition-all duration-200 relative',
+                item.isActive ? 'text-accent' : 'text-white/55 hover:text-white/85'
+              )}
+            >
+              {item.isActive && (
+                <>
+                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-[3px] rounded-b-full bg-accent shadow-[0_0_8px_hsl(var(--accent))]" />
+                  <span className="absolute inset-x-3 inset-y-1.5 rounded-xl bg-accent/[0.08]" />
+                </>
+              )}
+              <item.icon size={20} strokeWidth={item.isActive ? 2.4 : 1.8} className="relative z-10" />
+              <span className={cn('text-[10px] leading-tight relative z-10 tracking-wide', item.isActive ? 'font-semibold' : 'font-medium')}>{item.label}</span>
+            </button>
+          ))}
+        </div>
+      </nav>
+    </div>
   );
 }
