@@ -123,6 +123,7 @@ export function AdminOverviewModule() {
 
   useEffect(() => {
     const load = async () => {
+      try {
       const today = startOfDay(new Date());
       const todayIso = today.toISOString();
       const sevenDaysAgo = subDays(today, 7).toISOString();
@@ -222,7 +223,20 @@ export function AdminOverviewModule() {
 
       setRecentUsers(users5.data || []);
       setRecentTransfers(transfers5.data || []);
-      setLoading(false);
+      } catch (err) {
+        console.error('[AdminOverview] load failed:', err);
+        // Fall back to empty stats so the page still renders
+        setStats({
+          totalUsers: 0, newUsersToday: 0, pendingKyc: 0, pendingLoans: 0,
+          pendingHarambees: 0, pendingWithdrawals: 0, unmappedMpesa: 0, failedB2c: 0,
+          totalWalletBalance: 0, totalTransfersToday: 0, totalTransfers7d: 0,
+          activeChamas: 0, openMgrCycles: 0, totalLoansActive: 0, totalLoanValue: 0,
+          platformFees30d: 0, joiningFees30d: 0, revenue30d: 0,
+          depositsToday: 0, payoutsToday: 0,
+        });
+      } finally {
+        setLoading(false);
+      }
     };
 
     load();

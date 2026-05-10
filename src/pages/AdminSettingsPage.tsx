@@ -82,18 +82,24 @@ export default function AdminSettingsPage() {
     setSaving(true);
     try {
       const changed = settings.filter(s => editedValues[s.key] !== s.value);
+      const failures: string[] = [];
       for (const s of changed) {
-        await supabase
+        const { error } = await supabase
           .from('platform_settings' as any)
-          .update({ value: editedValues[s.key], updated_at: new Date().toISOString(), updated_by: user?.id } as any)
+          .update({ value: editedValues[s.key], updated_at: new Date().toISOString() } as any)
           .eq('key', s.key);
+        if (error) failures.push(`${s.label}: ${error.message}`);
       }
-      await supabase.from('audit_logs').insert({
-        admin_id: user?.id,
-        action: 'settings_updated',
-        details: { changed: changed.map(s => ({ key: s.key, old: s.value, new: editedValues[s.key] })) },
-      });
-      toast.success(`${changed.length} setting(s) updated`);
+      if (failures.length) {
+        toast.error(`Failed to save ${failures.length} setting(s)`, { description: failures.slice(0, 3).join('\n') });
+      } else {
+        await supabase.from('audit_logs').insert({
+          admin_id: user?.id,
+          action: 'settings_updated',
+          details: { changed: changed.map(s => ({ key: s.key, old: s.value, new: editedValues[s.key] })) },
+        });
+        toast.success(`${changed.length} setting(s) updated`);
+      }
       fetchSettings();
     } catch (err: any) {
       toast.error(err.message || 'Failed to save');
