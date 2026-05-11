@@ -255,20 +255,25 @@ export function AdminMpesaModule() {
           ) : (
             <Card className="overflow-hidden">
               <div className="divide-y divide-border">
-                {filteredC2b.map((t) => (
-                  <div key={t.id} className="p-4 flex items-center justify-between gap-3 hover:bg-muted/60 transition-colors">
-                    <div className="min-w-0">
-                      <p className="font-semibold text-foreground truncate">{`${t.first_name || ''} ${t.last_name || ''}`.trim() || '—'}</p>
-                      <p className="text-xs text-muted-foreground truncate">{t.msisdn} · {t.trans_id || '—'}</p>
+                {filteredC2b.map((t) => {
+                  const billDigits = String(t.bill_ref_number || '').replace(/\D/g, '');
+                  const billIsPhone = /^(254|0)?[17]\d{8}$/.test(billDigits);
+                  const phoneDisplay = billIsPhone ? billDigits : (t.bill_ref_number || '—');
+                  return (
+                    <div key={t.id} className="p-4 flex items-center justify-between gap-3 hover:bg-muted/60 transition-colors">
+                      <div className="min-w-0">
+                        <p className="font-semibold text-foreground truncate">{`${t.first_name || ''} ${t.last_name || ''}`.trim() || '—'}</p>
+                        <p className="text-xs text-muted-foreground truncate">{phoneDisplay} · {t.trans_id || '—'}</p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <p className="font-bold text-foreground tabular-nums">KES {Number(t.trans_amount).toLocaleString()}</p>
+                        <Badge variant={t.processed ? 'secondary' : 'outline'} className="text-[10px] mt-1">
+                          {t.processed ? 'Processed' : 'Pending'}
+                        </Badge>
+                      </div>
                     </div>
-                    <div className="text-right shrink-0">
-                      <p className="font-bold text-foreground tabular-nums">KES {Number(t.trans_amount).toLocaleString()}</p>
-                      <Badge variant={t.processed ? 'secondary' : 'outline'} className="text-[10px] mt-1">
-                        {t.processed ? 'Processed' : 'Pending'}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </Card>
           )}
