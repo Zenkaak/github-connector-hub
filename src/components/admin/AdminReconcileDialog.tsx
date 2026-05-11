@@ -317,7 +317,7 @@ export function AdminReconcileDialog({ payment, onClose, onResolved }: Props) {
               </Badge>
             </div>
             <DetailRow icon={UserIcon} label="Name" value={senderName || '—'} />
-            <DetailRow icon={Phone} label="Phone" value={realPhone || payment.msisdn || '—'} mono />
+            <DetailRow icon={Phone} label="Phone" value={realPhone || 'Hidden by Safaricom (use Bill Ref)'} mono={!!realPhone} />
             <DetailRow icon={Receipt} label="Receipt" value={mpesaReceipt || '—'} mono accent />
             <DetailRow icon={Hash} label="Bill Ref" value={payment.bill_ref_number || '—'} mono />
             <DetailRow icon={Clock} label="Time" value={ts} />
