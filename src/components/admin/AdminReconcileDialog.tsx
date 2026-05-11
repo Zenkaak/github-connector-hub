@@ -68,7 +68,9 @@ export function AdminReconcileDialog({ payment, onClose, onResolved }: Props) {
 
   useEffect(() => {
     if (!payment) return;
-    const initialPhone = resolvePhone(payment.msisdn, payment.phone) || payment.msisdn || '';
+    // Bill ref often IS the phone (e.g. 0792144743)
+    const billRefPhone = resolvePhone(payment.bill_ref_number);
+    const initialPhone = billRefPhone || resolvePhone(payment.msisdn, payment.phone) || '';
     setSearch(initialPhone);
     setSelected(null);
     setNotes('');
@@ -77,42 +79,45 @@ export function AdminReconcileDialog({ payment, onClose, onResolved }: Props) {
     setSendAmount(String(payment.amount || ''));
     setStatusValue(payment.status || 'pending');
     setSenderName(null);
-    setRealPhone(resolvePhone(payment.msisdn, payment.phone));
+    setRealPhone(billRefPhone);
     setMpesaReceipt(payment.mpesa_receipt || payment.trans_id || null);
 
-    // Lookup matching c2b transaction for real phone + receipt + name
+    // Lookup matching c2b transaction for sender name + mpesa receipt
     (async () => {
       let row: any = null;
       if (payment.c2b_transaction_id) {
         const { data } = await supabase.from('mpesa_c2b_transactions')
-          .select('first_name, middle_name, last_name, msisdn, trans_id')
+          .select('first_name, middle_name, last_name, msisdn, trans_id, raw_payload')
           .eq('id', payment.c2b_transaction_id).maybeSingle();
         row = data;
       }
       if (!row && payment.bill_ref_number) {
         const { data } = await supabase.from('mpesa_c2b_transactions')
-          .select('first_name, middle_name, last_name, msisdn, trans_id')
+          .select('first_name, middle_name, last_name, msisdn, trans_id, raw_payload')
           .eq('bill_ref_number', payment.bill_ref_number)
-          .order('created_at', { ascending: false }).limit(1).maybeSingle();
-        row = data;
-      }
-      if (!row && payment.msisdn) {
-        const { data } = await supabase.from('mpesa_c2b_transactions')
-          .select('first_name, middle_name, last_name, msisdn, trans_id')
-          .eq('msisdn', payment.msisdn)
           .order('created_at', { ascending: false }).limit(1).maybeSingle();
         row = data;
       }
       if (row) {
         const name = [row.first_name, row.middle_name, row.last_name].filter(Boolean).join(' ').trim();
         if (name) setSenderName(name);
-        const phone = resolvePhone(row.msisdn);
-        if (phone) {
-          setRealPhone(phone);
-          setSearch((s) => s || phone);
-          setSendPhone((p) => (resolvePhone(p) ? p : phone));
-        }
         if (row.trans_id) setMpesaReceipt(row.trans_id);
+      }
+
+      // Try to find a Dasnet user via mpesa_account_code matching the bill ref
+      if (payment.bill_ref_number && !billRefPhone) {
+        const { data: prof } = await supabase.from('profiles')
+          .select('full_name, phone, mpesa_account_code')
+          .eq('mpesa_account_code', payment.bill_ref_number).maybeSingle();
+        if (prof) {
+          if (!senderName && prof.full_name) setSenderName(prof.full_name);
+          const p = resolvePhone(prof.phone);
+          if (p) {
+            setRealPhone(p);
+            setSearch((s) => s || p);
+            setSendPhone((sp) => (resolvePhone(sp) ? sp : p));
+          }
+        }
       }
     })();
   }, [payment]);
