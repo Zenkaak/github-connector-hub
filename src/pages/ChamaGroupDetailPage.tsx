@@ -591,12 +591,16 @@ export default function ChamaGroupDetailPage() {
                         <button
                           key={s.id}
                           onClick={() => goToSection(s.id)}
-                          className="group relative flex flex-col items-center gap-1.5 rounded-xl border border-border/50 bg-card/80 backdrop-blur-sm px-1.5 py-3 text-center transition-all hover:border-accent/60 hover:bg-card hover:shadow-md hover:-translate-y-0.5 active:scale-95"
+                          className={cn(
+                            "group relative flex flex-col items-center gap-1.5 rounded-xl border px-1.5 py-3 text-center transition-all hover:shadow-lg hover:-translate-y-0.5 active:scale-95 overflow-hidden",
+                            s.bg,
+                            "border-border/40 hover:border-current/40"
+                          )}
                         >
-                          <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 ring-1 ring-border/40', s.bg, s.tone)}>
+                          <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center transition-transform group-hover:scale-110 bg-card/90 ring-1 ring-border/40', s.tone)}>
                             <s.icon size={18} strokeWidth={2.2} />
                           </div>
-                          <span className="text-[10.5px] font-semibold leading-tight line-clamp-2 px-0.5">{s.label}</span>
+                          <span className={cn("text-[10.5px] font-semibold leading-tight line-clamp-2 px-0.5", s.tone)}>{s.label}</span>
                         </button>
                       ))}
                     </div>
