@@ -57,6 +57,23 @@ Deno.serve(async (req) => {
       { auth: { persistSession: false } },
     )
 
+    // Verify the email belongs to a real account before doing anything else
+    {
+      const { data: prof } = await admin
+        .from('profiles').select('user_id').eq('email', email.toLowerCase()).maybeSingle()
+      if (!prof) {
+        return new Response(JSON.stringify({ error: 'No account found with that email' }), {
+          status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        })
+      }
+    }
+
+    if (action === 'check_exists') {
+      return new Response(JSON.stringify({ ok: true }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
+    }
+
     if (action === 'request') {
       // Generate 6 digits
       const otp = Math.floor(100000 + Math.random() * 900000).toString()

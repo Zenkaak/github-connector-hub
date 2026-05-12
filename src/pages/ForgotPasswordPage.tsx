@@ -51,6 +51,12 @@ export default function ForgotPasswordPage() {
     if (!email) return;
     setIsLoading(true);
     try {
+      // Pre-flight: confirm the account exists so users get instant feedback
+      const exists = await callRecoveryFn({ action: 'check_exists', email: email.trim().toLowerCase() });
+      if (!exists.ok) {
+        toast.error(exists.error || 'No account found with that email');
+        return;
+      }
       const { error } = await supabase.functions.invoke('password-recovery-otp', {
         body: { action: 'request', email: email.trim().toLowerCase() },
       });

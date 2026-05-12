@@ -285,8 +285,13 @@ export function ChamaMerryGoRound({ groupId, group, members, myRole }: Props) {
         <div className="space-y-3">
           {cycles.map((cycle) => {
             const { paid, total, haveIPaid, count } = cycleStats(cycle);
-            const isOverdue = new Date(cycle.deadline) < new Date() && cycle.status === 'open';
             const expectedTotal = cycle.contribution_amount * members.length;
+            // "Open" cycles past deadline AND not yet fully collected. If everyone paid,
+            // the cycle is awaiting the auto B2C payout, not overdue.
+            const isOverdue =
+              cycle.status === 'open' &&
+              new Date(cycle.deadline) < new Date() &&
+              total < expectedTotal;
             const recipMember = members.find(m => m.user_id === cycle.recipient_id);
             const isRecipient = user?.id === cycle.recipient_id;
             const progress = Math.min(100, expectedTotal > 0 ? (total / expectedTotal) * 100 : 0);
