@@ -122,7 +122,7 @@ Deno.serve(async (req) => {
           .update({ status: "payout_failed" })
           .eq("recipient_id", reqRow.user_id)
           .eq("cycle_number", mgrCycleNumber)
-          .eq("status", "payout_pending");
+          .neq("status", "paid_out");
 
         // Notify chair to retry
         const { data: cyRow } = await supabase.from("chama_mgr_cycles")
