@@ -49,13 +49,19 @@ Deno.serve(async (req) => {
         result_payload: body,
       }).eq("id", reqRow.id);
 
-      // MGR payout — promote cycle from payout_pending → paid_out
+      // MGR payout — promote cycle to paid_out. We intentionally do NOT filter on
+      // current cycle status: M-Pesa's callback can race ahead of the cron's
+      // `open → payout_pending` flip, so we must accept any non-final status.
       if (isMgrPayout && mgrCycleNumber > 0) {
         await supabase.from("chama_mgr_cycles")
-          .update({ status: "paid_out", payout_processed_at: new Date().toISOString() })
+          .update({
+            status: "paid_out",
+            payout_amount: Math.floor(Number(reqRow.amount || 0)),
+            payout_processed_at: new Date().toISOString(),
+          })
           .eq("recipient_id", reqRow.user_id)
           .eq("cycle_number", mgrCycleNumber)
-          .in("status", ["payout_pending", "payout_failed"]);
+          .neq("status", "paid_out");
       }
 
       await supabase.from("notifications").insert({
@@ -116,7 +122,7 @@ Deno.serve(async (req) => {
           .update({ status: "payout_failed" })
           .eq("recipient_id", reqRow.user_id)
           .eq("cycle_number", mgrCycleNumber)
-          .eq("status", "payout_pending");
+          .neq("status", "paid_out");
 
         // Notify chair to retry
         const { data: cyRow } = await supabase.from("chama_mgr_cycles")
