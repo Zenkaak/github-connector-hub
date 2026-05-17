@@ -546,15 +546,17 @@ export default function ChamaGroupDetailPage() {
         {(() => {
           // Section catalogue — every chama function lives at its own URL/route.
           const allSections: Array<{ id: string; label: string; desc: string; icon: any; tone: string; bg: string; group: string }> = [
+            // MONEY — core financial operations first, oversight last
             { id: 'savings',       label: 'Savings',        desc: 'Contribute and track member savings',          icon: Wallet,         tone: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/15', group: 'Money' },
             { id: 'loans',         label: 'Loans',          desc: 'Apply, approve and repay group loans',         icon: Landmark,       tone: 'text-blue-600 dark:text-blue-400',       bg: 'bg-blue-500/15',    group: 'Money' },
+            { id: 'mgr',           label: 'Merry-Go-Round', desc: 'Rotating payouts to members',                  icon: RefreshCw,      tone: 'text-purple-600 dark:text-purple-400',   bg: 'bg-purple-500/15',  group: 'Money' },
             { id: 'withdrawals',   label: 'Withdrawals',    desc: 'Request and approve cash-outs',                icon: HandCoins,      tone: 'text-amber-600 dark:text-amber-400',     bg: 'bg-amber-500/15',   group: 'Money' },
+            { id: 'emergency',     label: 'Emergency Fund', desc: 'Pooled support for member emergencies',        icon: Shield,         tone: 'text-red-600 dark:text-red-400',         bg: 'bg-red-500/15',     group: 'Money' },
             { id: 'transactions',  label: 'Transactions',   desc: 'Full ledger of all chama activity',            icon: Receipt,        tone: 'text-cyan-600 dark:text-cyan-400',       bg: 'bg-cyan-500/15',    group: 'Money' },
             { id: 'arrears',       label: 'Arrears',        desc: 'Members behind on contributions',              icon: AlertTriangle,  tone: 'text-orange-600 dark:text-orange-400',   bg: 'bg-orange-500/15',  group: 'Money' },
-            { id: 'penalties',     label: 'Penalties',      desc: 'Fines and disciplinary charges',               icon: Shield,         tone: 'text-rose-600 dark:text-rose-400',       bg: 'bg-rose-500/15',    group: 'Money' },
-            { id: 'emergency',     label: 'Emergency Fund', desc: 'Pooled support for member emergencies',        icon: Shield,         tone: 'text-red-600 dark:text-red-400',         bg: 'bg-red-500/15',     group: 'Money' },
-            { id: 'mgr',           label: 'Merry-Go-Round', desc: 'Rotating payouts to members',                  icon: RefreshCw,      tone: 'text-purple-600 dark:text-purple-400',   bg: 'bg-purple-500/15',  group: 'Money' },
+            { id: 'penalties',     label: 'Penalties',      desc: 'Fines and disciplinary charges',               icon: Shield,         tone: 'text-rose-600 dark:text-rose-400',       bg: 'bg-rose-500/15',     group: 'Money' },
 
+            // PEOPLE — communication and coordination
             { id: 'members',       label: 'Members',        desc: 'Manage roles and member profiles',             icon: Users,          tone: 'text-primary',                           bg: 'bg-primary/15',     group: 'People' },
             { id: 'chat',          label: 'Group Chat',     desc: 'Talk with all members in real time',           icon: MessageSquare,  tone: 'text-violet-600 dark:text-violet-400',   bg: 'bg-violet-500/15',  group: 'People' },
             { id: 'announcements', label: 'Notices',        desc: 'Official announcements from leadership',       icon: Megaphone,      tone: 'text-indigo-600 dark:text-indigo-400',   bg: 'bg-indigo-500/15',  group: 'People' },
@@ -562,11 +564,12 @@ export default function ChamaGroupDetailPage() {
             { id: 'votes',         label: 'Votes',          desc: 'Group decisions and polls',                    icon: Vote,           tone: 'text-fuchsia-600 dark:text-fuchsia-400', bg: 'bg-fuchsia-500/15', group: 'People' },
             { id: 'support',       label: 'Support',        desc: 'Get help from the DASNET team',                icon: HeadphonesIcon, tone: 'text-sky-600 dark:text-sky-400',         bg: 'bg-sky-500/15',     group: 'People' },
 
+            // MANAGE — governance & administration, destructive last
             { id: 'reports',       label: 'Reports',        desc: 'Statements and downloadable reports',          icon: Download,       tone: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/15', group: 'Manage' },
             { id: 'terms',         label: 'Terms',          desc: 'Constitution and group rules',                 icon: FileText,       tone: 'text-slate-600 dark:text-slate-300',     bg: 'bg-slate-500/15',   group: 'Manage' },
-            { id: 'leave',         label: 'Leave Group',    desc: 'Submit a request to exit this chama',          icon: LogOut,         tone: 'text-destructive',                       bg: 'bg-destructive/15', group: 'Manage' },
             ...(isLeader ? [{ id: 'requests',  label: 'Join Requests', desc: 'Review and approve new members',           icon: UserCheck, tone: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-500/15', group: 'Manage' }] : []),
             ...(isChair  ? [{ id: 'settings',  label: 'Settings',      desc: 'Configure rules, fees and chama profile',  icon: Settings,  tone: 'text-primary',                       bg: 'bg-primary/15',   group: 'Manage' }] : []),
+            { id: 'leave',         label: 'Leave Group',    desc: 'Submit a request to exit this chama',          icon: LogOut,         tone: 'text-destructive',                       bg: 'bg-destructive/15', group: 'Manage' },
           ];
           const active = allSections.find(s => s.id === currentSection);
 
