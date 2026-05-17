@@ -260,17 +260,20 @@ Deno.serve(async (req) => {
       }
     } else if ((route as any).type === "mgr") {
       const r: any = route;
-      // Insert MGR contribution
-      await supabase.from("chama_mgr_contributions").insert({
-        cycle_id: r.cycle_id, group_id: r.group_id, user_id: r.user_id,
-        amount, payment_method: "paybill", reference: transId,
-      });
-      const { data: g } = await supabase.from("chama_groups").select("name").eq("id", r.group_id).maybeSingle();
-      await supabase.from("notifications").insert({
-        user_id: r.user_id, title: "Merry-Go-Round Payment",
-        message: `KES ${amount.toLocaleString()} contributed to merry-go-round in ${g?.name || "your chama"}. Receipt: ${transId}`, type: "payment",
-      });
-      await sendUserSMS(supabase, r.user_id, SMS.chamaContribution("{name}", amount, `${g?.name || "your chama"} (Merry-go-round)`, amount));
+      // Idempotency: STK callback (mpesa-callback) may already have inserted the
+      // contribution for this same receipt. Skip insert + notification + SMS to
+      // avoid double credit and duplicate confirmation messages.
+      const { data: existing } = await supabase
+        .from("chama_mgr_contributions")
+        .select("id").eq("reference", transId).maybeSingle();
+      if (!existing) {
+        await supabase.from("chama_mgr_contributions").insert({
+          cycle_id: r.cycle_id, group_id: r.group_id, user_id: r.user_id,
+          amount, payment_method: "paybill", reference: transId,
+        });
+        // NOTE: per-contribution SMS is sent by mpesa-callback (mgrPaidForRecipient).
+        // We intentionally do NOT send a second "your contribution received" SMS here.
+      }
     } else {
       await supabase.from("mpesa_unmapped_payments").insert({
         c2b_transaction_id: c2bRow.id, bill_ref_number: billRef, amount, msisdn,
