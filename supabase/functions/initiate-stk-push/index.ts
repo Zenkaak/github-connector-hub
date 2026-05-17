@@ -195,6 +195,20 @@ Deno.serve(async (req) => {
         }
       } else if (purpose === "merry_go_round" && userCode && body.cycle_number) {
         accountRef = `${userCode}M${body.cycle_number}`;
+        // Block duplicate payment: if this user already has a contribution for the
+        // target cycle, refuse the STK push so they don't pay twice.
+        const cycleId = body.metadata?.cycle_id;
+        if (cycleId && userId) {
+          const { data: already } = await tempSb
+            .from("chama_mgr_contributions")
+            .select("id").eq("cycle_id", cycleId).eq("user_id", userId).maybeSingle();
+          if (already) {
+            return new Response(
+              JSON.stringify({ error: "You have already paid for this cycle." }),
+              { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+            );
+          }
+        }
       }
     } catch (refErr) {
       console.warn("AccountReference lookup failed, falling back to generated ref:", refErr);
