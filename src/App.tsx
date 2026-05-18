@@ -157,6 +157,11 @@ function AppRoutes() {
       <Route path="/dashboard/admin/settings" element={<ProtectedRoute requireAdmin><AdminSettingsPage /></ProtectedRoute>} />
       <Route path="/dashboard/admin/harambee-applications" element={<ProtectedRoute requireAdmin><AdminHarambeeApplicationsPage /></ProtectedRoute>} />
       <Route path="/dashboard/admin/chama" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="chama" /></ProtectedRoute>} />
+      <Route path="/dashboard/admin/tenants" element={<ProtectedRoute requireAdmin><AdminDashboardPage defaultTab="tenants" /></ProtectedRoute>} />
+
+      {/* TENANT (SACCO white-label) PORTALS */}
+      <Route path="/sacco/:slug/login" element={<TenantLoginPage />} />
+      <Route path="/sacco/:slug/admin" element={<ProtectedRoute><TenantAdminPage /></ProtectedRoute>} />
 
       <Route path="*" element={<NotFound />} />
     </Routes>
