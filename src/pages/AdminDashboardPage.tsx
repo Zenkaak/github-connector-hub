@@ -12,6 +12,7 @@ import { AdminMgrModule } from "@/components/admin/AdminMgrModule";
 import { AdminWithdrawalsModule } from "@/components/admin/AdminWithdrawalsModule";
 import { AdminAuditModule } from "@/components/admin/AdminAuditModule";
 import { AdminBroadcastModule } from "@/components/admin/AdminBroadcastModule";
+import { AdminTenantsModule } from "@/components/admin/AdminTenantsModule";
 
 const moduleMap = {
   overview: AdminOverviewModule,
@@ -25,6 +26,7 @@ const moduleMap = {
   withdrawals: AdminWithdrawalsModule,
   audit: AdminAuditModule,
   broadcast: AdminBroadcastModule,
+  tenants: AdminTenantsModule,
 };
 
 interface Props {
