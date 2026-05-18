@@ -2576,6 +2576,65 @@ export type Database = {
           },
         ]
       }
+      tenant_paybill_transactions: {
+        Row: {
+          account_reference: string | null
+          amount: number
+          created_at: string
+          id: string
+          matched_loan_id: string | null
+          matched_user_id: string | null
+          mpesa_receipt: string | null
+          notes: string | null
+          payer_name: string | null
+          payer_phone: string | null
+          raw_payload: Json | null
+          status: string
+          tenant_id: string
+          trans_time: string | null
+        }
+        Insert: {
+          account_reference?: string | null
+          amount: number
+          created_at?: string
+          id?: string
+          matched_loan_id?: string | null
+          matched_user_id?: string | null
+          mpesa_receipt?: string | null
+          notes?: string | null
+          payer_name?: string | null
+          payer_phone?: string | null
+          raw_payload?: Json | null
+          status?: string
+          tenant_id: string
+          trans_time?: string | null
+        }
+        Update: {
+          account_reference?: string | null
+          amount?: number
+          created_at?: string
+          id?: string
+          matched_loan_id?: string | null
+          matched_user_id?: string | null
+          mpesa_receipt?: string | null
+          notes?: string | null
+          payer_name?: string | null
+          payer_phone?: string | null
+          raw_payload?: Json | null
+          status?: string
+          tenant_id?: string
+          trans_time?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_paybill_transactions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       tenants: {
         Row: {
           callback_token: string
