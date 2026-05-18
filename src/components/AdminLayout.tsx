@@ -44,6 +44,7 @@ const adminNavItems = [
   { label: 'Harambee Apps', icon: Heart, path: '/dashboard/admin/harambee-applications' },
   { label: 'Audit Logs', icon: ClipboardList, path: '/dashboard/admin/audit' },
   { label: 'Broadcast', icon: Megaphone, path: '/dashboard/admin/broadcast' },
+  { label: 'SACCO Tenants', icon: Building2, path: '/dashboard/admin/tenants' },
   { label: 'Settings', icon: Settings, path: '/dashboard/admin/settings' },
 ];
 
