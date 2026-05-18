@@ -41,6 +41,8 @@ import PublicHarambeePage from "./pages/PublicHarambeePage";
 import PublicHarambeesListPage from "./pages/PublicHarambeesListPage";
 import NotFound from "./pages/NotFound";
 import UnsubscribePage from "./pages/UnsubscribePage";
+import TenantLoginPage from "./pages/tenant/TenantLoginPage";
+import TenantAdminPage from "./pages/tenant/TenantAdminPage";
 
 /* SEO LANDING PAGES - Corrected to match exact filenames in screenshots */
 import ChamaManagementKenyaPage from "./pages/ChamaManagementKenyaPage";
