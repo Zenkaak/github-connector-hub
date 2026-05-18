@@ -19,6 +19,7 @@ import {
   Activity,
   Heart,
   Megaphone,
+  Building2,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Logo } from '@/components/Logo';
