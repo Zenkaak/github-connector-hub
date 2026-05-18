@@ -43,3 +43,7 @@ verify_jwt = false
 
 [functions.password-recovery-otp]
 verify_jwt = false
+  [functions.mpesa-tenant-c2b]
+    verify_jwt = false
+  [functions.create-tenant]
+    verify_jwt = true

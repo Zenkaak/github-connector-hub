@@ -240,6 +240,7 @@ export type Database = {
           require_guarantor_for_loans: boolean | null
           share_transfer_allowed: boolean | null
           special_contribution_enabled: boolean | null
+          tenant_id: string | null
           terms: string | null
           terms_updated_at: string | null
           voting_required_for: string | null
@@ -306,6 +307,7 @@ export type Database = {
           require_guarantor_for_loans?: boolean | null
           share_transfer_allowed?: boolean | null
           special_contribution_enabled?: boolean | null
+          tenant_id?: string | null
           terms?: string | null
           terms_updated_at?: string | null
           voting_required_for?: string | null
@@ -372,13 +374,22 @@ export type Database = {
           require_guarantor_for_loans?: boolean | null
           share_transfer_allowed?: boolean | null
           special_contribution_enabled?: boolean | null
+          tenant_id?: string | null
           terms?: string | null
           terms_updated_at?: string | null
           voting_required_for?: string | null
           welfare_fund_amount?: number | null
           welfare_fund_enabled?: boolean | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "chama_groups_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       chama_harambee_contributions: {
         Row: {
@@ -2388,6 +2399,7 @@ export type Database = {
           result_desc: string | null
           savings_id: string | null
           status: string
+          tenant_id: string | null
           updated_at: string
           user_id: string | null
         }
@@ -2415,6 +2427,7 @@ export type Database = {
           result_desc?: string | null
           savings_id?: string | null
           status?: string
+          tenant_id?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -2442,6 +2455,7 @@ export type Database = {
           result_desc?: string | null
           savings_id?: string | null
           status?: string
+          tenant_id?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -2465,6 +2479,13 @@ export type Database = {
             columns: ["savings_id"]
             isOneToOne: false
             referencedRelation: "personal_savings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "stk_transactions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
             referencedColumns: ["id"]
           },
         ]
@@ -2520,6 +2541,157 @@ export type Database = {
           id?: string
           metadata?: Json | null
           reason?: string
+        }
+        Relationships: []
+      }
+      tenant_admins: {
+        Row: {
+          created_at: string
+          id: string
+          role: string
+          tenant_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: string
+          tenant_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: string
+          tenant_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_admins_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenant_paybill_transactions: {
+        Row: {
+          account_reference: string | null
+          amount: number
+          created_at: string
+          id: string
+          matched_loan_id: string | null
+          matched_user_id: string | null
+          mpesa_receipt: string | null
+          notes: string | null
+          payer_name: string | null
+          payer_phone: string | null
+          raw_payload: Json | null
+          status: string
+          tenant_id: string
+          trans_time: string | null
+        }
+        Insert: {
+          account_reference?: string | null
+          amount: number
+          created_at?: string
+          id?: string
+          matched_loan_id?: string | null
+          matched_user_id?: string | null
+          mpesa_receipt?: string | null
+          notes?: string | null
+          payer_name?: string | null
+          payer_phone?: string | null
+          raw_payload?: Json | null
+          status?: string
+          tenant_id: string
+          trans_time?: string | null
+        }
+        Update: {
+          account_reference?: string | null
+          amount?: number
+          created_at?: string
+          id?: string
+          matched_loan_id?: string | null
+          matched_user_id?: string | null
+          mpesa_receipt?: string | null
+          notes?: string | null
+          payer_name?: string | null
+          payer_phone?: string | null
+          raw_payload?: Json | null
+          status?: string
+          tenant_id?: string
+          trans_time?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_paybill_transactions_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenants: {
+        Row: {
+          callback_token: string
+          created_at: string
+          created_by: string | null
+          custom_domain: string | null
+          features_enabled: Json
+          id: string
+          logo_url: string | null
+          name: string
+          paybill_consumer_key_ref: string | null
+          paybill_consumer_secret_ref: string | null
+          paybill_passkey_ref: string | null
+          paybill_shortcode: string | null
+          primary_color: string | null
+          secondary_color: string | null
+          slug: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          callback_token?: string
+          created_at?: string
+          created_by?: string | null
+          custom_domain?: string | null
+          features_enabled?: Json
+          id?: string
+          logo_url?: string | null
+          name: string
+          paybill_consumer_key_ref?: string | null
+          paybill_consumer_secret_ref?: string | null
+          paybill_passkey_ref?: string | null
+          paybill_shortcode?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          slug: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          callback_token?: string
+          created_at?: string
+          created_by?: string | null
+          custom_domain?: string | null
+          features_enabled?: Json
+          id?: string
+          logo_url?: string | null
+          name?: string
+          paybill_consumer_key_ref?: string | null
+          paybill_consumer_secret_ref?: string | null
+          paybill_passkey_ref?: string | null
+          paybill_shortcode?: string | null
+          primary_color?: string | null
+          secondary_color?: string | null
+          slug?: string
+          status?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -2930,6 +3102,7 @@ export type Database = {
           total_contributions: number
         }[]
       }
+      get_user_tenant: { Args: { _user_id: string }; Returns: string }
       handle_chama_withdrawal_decision: {
         Args: {
           _admin_id: string
@@ -2977,6 +3150,10 @@ export type Database = {
       }
       is_chama_member: {
         Args: { _group_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_tenant_admin: {
+        Args: { _tenant_id: string; _user_id: string }
         Returns: boolean
       }
       lookup_dasnet_user_by_phone: {
