@@ -14,6 +14,8 @@ function slugify(s: string) {
   return s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
 }
 
+const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
@@ -21,29 +23,34 @@ Deno.serve(async (req) => {
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const admin = createClient(SUPABASE_URL, SERVICE_KEY, { auth: { persistSession: false } });
 
-    // Authenticate caller — must be super admin
     const authHeader = req.headers.get("Authorization") || "";
     const token = authHeader.replace(/^Bearer\s+/i, "");
-    if (!token) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if (!token) { console.error("create-tenant: missing auth"); return json({ error: "Unauthorized — no token" }, 401); }
     const { data: userRes, error: uErr } = await admin.auth.getUser(token);
-    if (uErr || !userRes?.user) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if (uErr || !userRes?.user) { console.error("create-tenant: getUser", uErr); return json({ error: "Unauthorized — invalid token" }, 401); }
     const callerId = userRes.user.id;
-    const { data: hasRole } = await admin.rpc("has_role", { _user_id: callerId, _role: "admin" });
-    if (!hasRole) return new Response(JSON.stringify({ error: "Forbidden — admin only" }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    const { data: hasRole, error: rErr } = await admin.rpc("has_role", { _user_id: callerId, _role: "admin" });
+    if (rErr) console.error("has_role error:", rErr);
+    if (!hasRole) { console.error("create-tenant: not admin", callerId); return json({ error: "Forbidden — admin only" }, 403); }
 
-    const body = await req.json();
+    const body = await req.json().catch((e) => { console.error("bad json", e); return {}; });
+    console.log("create-tenant body:", JSON.stringify(body));
     const {
       name, slug: rawSlug, logo_url, primary_color, custom_domain,
       paybill_shortcode, features_enabled,
       admin_full_name, admin_phone, admin_email,
-    } = body;
+    } = body as any;
 
     if (!name || !admin_full_name || !admin_phone || !admin_email) {
-      return new Response(JSON.stringify({ error: "name, admin_full_name, admin_phone, admin_email required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return json({ error: "name, admin_full_name, admin_phone, admin_email required" }, 400);
     }
 
     const slug = slugify(rawSlug || name);
-    if (!slug) return new Response(JSON.stringify({ error: "Invalid slug" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    if (!slug) return json({ error: "Invalid slug" }, 400);
+
+    // Check slug uniqueness early for a clean error
+    const { data: existing } = await admin.from("tenants").select("id").eq("slug", slug).maybeSingle();
+    if (existing) return json({ error: `Slug "${slug}" already in use — choose another` }, 400);
 
     // Normalize phone to 2547XXXXXXXX
     let phone = admin_phone.trim().replace(/[^0-9+]/g, "");
@@ -64,7 +71,8 @@ Deno.serve(async (req) => {
       },
     });
     if (cErr || !created?.user) {
-      return new Response(JSON.stringify({ error: cErr?.message || "Failed to create admin user" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      console.error("createUser failed:", cErr);
+      return json({ error: cErr?.message || "Failed to create admin user" }, 400);
     }
     const newUserId = created.user.id;
 
@@ -76,9 +84,9 @@ Deno.serve(async (req) => {
       created_by: callerId,
     }).select("*").single();
     if (tErr) {
-      // rollback user
+      console.error("tenants insert failed:", tErr);
       await admin.auth.admin.deleteUser(newUserId);
-      return new Response(JSON.stringify({ error: tErr.message }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return json({ error: tErr.message }, 400);
     }
 
     // 3. Link as tenant admin
