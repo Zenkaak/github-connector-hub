@@ -84,9 +84,9 @@ Deno.serve(async (req) => {
       created_by: callerId,
     }).select("*").single();
     if (tErr) {
-      // rollback user
+      console.error("tenants insert failed:", tErr);
       await admin.auth.admin.deleteUser(newUserId);
-      return new Response(JSON.stringify({ error: tErr.message }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      return json({ error: tErr.message }, 400);
     }
 
     // 3. Link as tenant admin
