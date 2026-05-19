@@ -71,7 +71,8 @@ Deno.serve(async (req) => {
       },
     });
     if (cErr || !created?.user) {
-      return new Response(JSON.stringify({ error: cErr?.message || "Failed to create admin user" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      console.error("createUser failed:", cErr);
+      return json({ error: cErr?.message || "Failed to create admin user" }, 400);
     }
     const newUserId = created.user.id;
 
