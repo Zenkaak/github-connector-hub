@@ -191,7 +191,7 @@ export default function SignupPage() {
           role: 'user',
         }, { onConflict: 'user_id' });
 
-        if (roleError) console.error('Role assignment error:', roleError);
+        if (roleError) { /* role assignment handled by DB trigger */ }
 
         toast.success('Your account has been created successfully!');
         
@@ -201,7 +201,6 @@ export default function SignupPage() {
         }, 1200);
       }
     } catch (error: any) {
-      console.error('Full Signup Error:', error);
       toast.error(error.message || 'An unexpected error occurred. Please try again.');
     } finally {
       setIsLoading(false);
@@ -511,7 +510,7 @@ export default function SignupPage() {
       {/* Simplified Footer */}
       <footer className="py-10 border-t border-border/40 text-center">
         <p className="text-[10px] md:text-xs text-muted-foreground font-bold uppercase tracking-[0.2em]">
-          &copy; {new Date().getFullYear()} DATAVEND VENTURES LTD. All Rights Reserved.
+          &copy; {new Date().getFullYear()} DASNET VENTURES LTD. All Rights Reserved.
         </p>
       </footer>
     </div>
