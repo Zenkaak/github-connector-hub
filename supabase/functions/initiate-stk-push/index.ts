@@ -16,8 +16,6 @@ Deno.serve(async (req) => {
       throw new Error("Invalid JSON body");
     });
 
-    console.log("RAW BODY:", body);
-
     const phone = body.phone;
     const amount = body.amount;
     const purpose = body.purpose || body.metadata?.type || "harambee";
@@ -214,8 +212,6 @@ Deno.serve(async (req) => {
       console.warn("AccountReference lookup failed, falling back to generated ref:", refErr);
     }
 
-    console.log(`AccountReference for ${purpose}: ${accountRef}`);
-
     const stkBody = {
       BusinessShortCode: shortcode,
       Password: password,
@@ -230,8 +226,6 @@ Deno.serve(async (req) => {
       TransactionDesc: purpose,
     };
 
-    console.log("Sending STK Push for purpose:", purpose, "isHarambee:", isHarambee, "userId:", userId);
-
     const stkRes = await fetch(
       "https://api.safaricom.co.ke/mpesa/stkpush/v1/processrequest",
       {
@@ -245,7 +239,6 @@ Deno.serve(async (req) => {
     );
 
     const stkData = await stkRes.json();
-    console.log("STK Daraja response:", JSON.stringify(stkData));
 
     if (stkData.ResponseCode !== "0") {
       const errMsg =
@@ -295,8 +288,6 @@ Deno.serve(async (req) => {
     if (savingsId) {
       insertData.savings_id = savingsId;
     }
-
-    console.log("Inserting stk_transaction:", JSON.stringify(insertData));
 
     const { error: insertError } = await supabase.from("stk_transactions").insert(insertData);
 
