@@ -4,9 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   Users, Wallet, FileText, Heart, AlertTriangle,
   ShieldAlert, Send, PiggyBank, Activity, TrendingUp,
-  Loader2, Server, CheckCircle, XCircle, ArrowUpRight,
-  ArrowDownRight, Banknote, CreditCard, Eye, BarChart3,
-  Coins, Receipt, ArrowDownLeft,
+  Loader2, Server, CheckCircle, XCircle,
+  Banknote, CreditCard, Eye, BarChart3,
+  Coins, Receipt, ArrowDownLeft, RefreshCw,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -35,7 +35,6 @@ interface Stats {
   openMgrCycles: number;
   totalLoansActive: number;
   totalLoanValue: number;
-  // Financial / revenue
   platformFees30d: number;
   joiningFees30d: number;
   revenue30d: number;
@@ -50,64 +49,72 @@ const fmtCompact = (n: number) => {
   return n.toString();
 };
 
-interface KpiCardProps {
+interface MetricCardProps {
   label: string;
   value: string | number;
-  delta?: number;
+  sub?: string;
   icon: any;
-  accent?: 'gold' | 'emerald' | 'red' | 'blue';
+  color: 'amber' | 'emerald' | 'red' | 'blue' | 'violet';
   onClick?: () => void;
   trend?: number[];
+  alert?: boolean;
 }
 
-function KpiCard({ label, value, delta, icon: Icon, accent = 'gold', onClick, trend }: KpiCardProps) {
-  const accentMap = {
-    gold: 'from-amber-500/10 to-amber-500/0 text-amber-600 ring-amber-500/15',
-    emerald: 'from-emerald-500/10 to-emerald-500/0 text-emerald-600 ring-emerald-500/15',
-    red: 'from-red-500/10 to-red-500/0 text-red-600 ring-red-500/15',
-    blue: 'from-blue-500/10 to-blue-500/0 text-blue-600 ring-blue-500/15',
-  };
-  const positive = (delta ?? 0) >= 0;
+const colorMap = {
+  amber:   { bg: 'bg-amber-500/10',   text: 'text-amber-600',   border: 'hover:border-amber-500/30',   dot: 'bg-amber-500',   stroke: 'hsl(42,92%,56%)' },
+  emerald: { bg: 'bg-emerald-500/10', text: 'text-emerald-600', border: 'hover:border-emerald-500/30', dot: 'bg-emerald-500', stroke: 'hsl(160,84%,39%)' },
+  red:     { bg: 'bg-red-500/10',     text: 'text-red-600',     border: 'hover:border-red-500/30',     dot: 'bg-red-500',     stroke: 'hsl(0,84%,60%)' },
+  blue:    { bg: 'bg-blue-500/10',    text: 'text-blue-600',    border: 'hover:border-blue-500/30',    dot: 'bg-blue-500',    stroke: 'hsl(213,72%,50%)' },
+  violet:  { bg: 'bg-violet-500/10',  text: 'text-violet-600',  border: 'hover:border-violet-500/30',  dot: 'bg-violet-500',  stroke: 'hsl(270,60%,60%)' },
+};
+
+function MetricCard({ label, value, sub, icon: Icon, color, onClick, trend, alert }: MetricCardProps) {
+  const c = colorMap[color];
   return (
     <button
       onClick={onClick}
-      className="group text-left bg-card border border-border rounded-xl p-4 hover:border-accent/40 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 relative overflow-hidden"
+      className={cn(
+        'group text-left bg-card border rounded-xl p-4 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md relative overflow-hidden',
+        alert ? 'border-red-500/30 bg-red-500/5' : `border-border ${c.border}`
+      )}
     >
-      <div className={cn('absolute -right-6 -top-6 w-24 h-24 rounded-full bg-gradient-to-br opacity-50', accentMap[accent].split(' ').slice(0, 2).join(' '))} />
+      <div className={cn('absolute top-0 right-0 w-20 h-20 rounded-bl-full opacity-40', c.bg)} />
       <div className="relative">
-        <div className="flex items-start justify-between mb-3">
-          <div className={cn('w-9 h-9 rounded-lg bg-background flex items-center justify-center ring-1', accentMap[accent].split(' ').slice(2).join(' '))}>
-            <Icon size={16} />
-          </div>
-          {delta !== undefined && (
-            <span className={cn('text-[11px] font-bold inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded',
-              positive ? 'text-emerald-600 bg-emerald-500/10' : 'text-red-600 bg-red-500/10'
-            )}>
-              {positive ? <ArrowUpRight size={11} /> : <ArrowDownRight size={11} />}
-              {Math.abs(delta).toFixed(1)}%
-            </span>
-          )}
+        <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center mb-3', c.bg)}>
+          <Icon size={15} className={c.text} />
         </div>
-        <p className="text-[11px] uppercase tracking-wider font-semibold text-muted-foreground">{label}</p>
-        <p className="text-xl md:text-2xl font-bold text-foreground mt-1 tracking-tight">{value}</p>
+        <p className="text-[10px] uppercase tracking-widest font-semibold text-muted-foreground mb-0.5">{label}</p>
+        <p className="text-xl font-bold text-foreground tracking-tight">{value}</p>
+        {sub && <p className="text-[11px] text-muted-foreground mt-0.5">{sub}</p>}
         {trend && trend.length > 1 && (
-          <div className="h-8 mt-2 -mx-1">
+          <div className="h-7 mt-2 -mx-1">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={trend.map((v, i) => ({ i, v }))}>
                 <defs>
-                  <linearGradient id={`spark-${label}`} x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="currentColor" stopOpacity={0.3} className={accent === 'emerald' ? 'text-emerald-500' : accent === 'red' ? 'text-red-500' : accent === 'blue' ? 'text-blue-500' : 'text-amber-500'} />
-                    <stop offset="100%" stopColor="currentColor" stopOpacity={0} className={accent === 'emerald' ? 'text-emerald-500' : accent === 'red' ? 'text-red-500' : accent === 'blue' ? 'text-blue-500' : 'text-amber-500'} />
+                  <linearGradient id={`sg-${label.replace(/\s/g,'')}`} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={c.stroke} stopOpacity={0.35} />
+                    <stop offset="100%" stopColor={c.stroke} stopOpacity={0} />
                   </linearGradient>
                 </defs>
-                <Area type="monotone" dataKey="v" stroke="currentColor" strokeWidth={1.5} fill={`url(#spark-${label})`}
-                  className={accent === 'emerald' ? 'text-emerald-500' : accent === 'red' ? 'text-red-500' : accent === 'blue' ? 'text-blue-500' : 'text-amber-500'} />
+                <Area type="monotone" dataKey="v" stroke={c.stroke} strokeWidth={1.5} fill={`url(#sg-${label.replace(/\s/g,'')})`} dot={false} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         )}
       </div>
     </button>
+  );
+}
+
+function SectionHeader({ title, sub }: { title: string; sub?: string }) {
+  return (
+    <div className="flex items-end gap-3 mb-3">
+      <div>
+        <h2 className="text-sm font-bold text-foreground tracking-tight">{title}</h2>
+        {sub && <p className="text-[11px] text-muted-foreground mt-0.5">{sub}</p>}
+      </div>
+      <div className="flex-1 h-px bg-border mb-1" />
+    </div>
   );
 }
 
@@ -121,9 +128,9 @@ export function AdminOverviewModule() {
   const [loanMix, setLoanMix] = useState<{ name: string; value: number }[]>([]);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const load = async () => {
-      try {
+  const load = async () => {
+    setLoading(true);
+    try {
       const today = startOfDay(new Date());
       const todayIso = today.toISOString();
       const sevenDaysAgo = subDays(today, 7).toISOString();
@@ -160,7 +167,6 @@ export function AdminOverviewModule() {
         supabase.from('mpesa_b2c_requests').select('amount').gte('created_at', todayIso).eq('status', 'completed'),
       ]);
 
-      // Build transfer trend by day (last 14 days)
       const days = 14;
       const dayBuckets: Record<string, { amount: number; count: number }> = {};
       for (let i = days - 1; i >= 0; i--) {
@@ -169,34 +175,24 @@ export function AdminOverviewModule() {
       }
       (transfersHist.data || []).forEach((t: any) => {
         const d = format(new Date(t.created_at), 'MMM d');
-        if (dayBuckets[d]) {
-          dayBuckets[d].amount += Number(t.amount || 0);
-          dayBuckets[d].count += 1;
-        }
+        if (dayBuckets[d]) { dayBuckets[d].amount += Number(t.amount || 0); dayBuckets[d].count += 1; }
       });
       setTransferTrend(Object.entries(dayBuckets).map(([day, v]) => ({ day, ...v })));
 
-      // User signups trend
       const userBuckets: Record<string, number> = {};
-      for (let i = days - 1; i >= 0; i--) {
-        const d = format(subDays(today, i), 'MMM d');
-        userBuckets[d] = 0;
-      }
+      for (let i = days - 1; i >= 0; i--) { userBuckets[format(subDays(today, i), 'MMM d')] = 0; }
       (usersHist.data || []).forEach((u: any) => {
         const d = format(new Date(u.created_at), 'MMM d');
         if (userBuckets[d] !== undefined) userBuckets[d] += 1;
       });
       setUserTrend(Object.entries(userBuckets).map(([day, users]) => ({ day, users })));
 
-      // Loan status mix
       const mix: Record<string, number> = {};
-      (loanByStatus.data || []).forEach((l: any) => {
-        mix[l.status] = (mix[l.status] || 0) + 1;
-      });
+      (loanByStatus.data || []).forEach((l: any) => { mix[l.status] = (mix[l.status] || 0) + 1; });
       setLoanMix(Object.entries(mix).map(([name, value]) => ({ name, value })));
 
       const platformFees30d = (platformFees.data || []).reduce((s, r: any) => s + Number(r.amount || 0), 0);
-      const joiningFees30d = (joiningFees.data || []).reduce((s, r: any) => s + Number(r.amount || 0), 0);
+      const joiningFees30d  = (joiningFees.data  || []).reduce((s, r: any) => s + Number(r.amount || 0), 0);
 
       setStats({
         totalUsers: usersTotal.count || 0,
@@ -223,24 +219,22 @@ export function AdminOverviewModule() {
 
       setRecentUsers(users5.data || []);
       setRecentTransfers(transfers5.data || []);
-      } catch (err) {
-        console.error('[AdminOverview] load failed:', err);
-        // Fall back to empty stats so the page still renders
-        setStats({
-          totalUsers: 0, newUsersToday: 0, pendingKyc: 0, pendingLoans: 0,
-          pendingHarambees: 0, pendingWithdrawals: 0, unmappedMpesa: 0, failedB2c: 0,
-          totalWalletBalance: 0, totalTransfersToday: 0, totalTransfers7d: 0,
-          activeChamas: 0, openMgrCycles: 0, totalLoansActive: 0, totalLoanValue: 0,
-          platformFees30d: 0, joiningFees30d: 0, revenue30d: 0,
-          depositsToday: 0, payoutsToday: 0,
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
+    } catch (err) {
+      console.error('[AdminOverview] load failed:', err);
+      setStats({
+        totalUsers: 0, newUsersToday: 0, pendingKyc: 0, pendingLoans: 0,
+        pendingHarambees: 0, pendingWithdrawals: 0, unmappedMpesa: 0, failedB2c: 0,
+        totalWalletBalance: 0, totalTransfersToday: 0, totalTransfers7d: 0,
+        activeChamas: 0, openMgrCycles: 0, totalLoansActive: 0, totalLoanValue: 0,
+        platformFees30d: 0, joiningFees30d: 0, revenue30d: 0,
+        depositsToday: 0, payoutsToday: 0,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    load();
-  }, []);
+  useEffect(() => { load(); }, []);
 
   const totalActions = useMemo(() => {
     if (!stats) return 0;
@@ -250,362 +244,340 @@ export function AdminOverviewModule() {
 
   if (loading || !stats) {
     return (
-      <div className="flex items-center justify-center py-24">
-        <Loader2 className="animate-spin text-accent" size={32} />
+      <div className="flex items-center justify-center py-32">
+        <Loader2 className="animate-spin text-accent" size={28} />
       </div>
     );
   }
 
-  const PIE_COLORS = ['hsl(42, 92%, 56%)', 'hsl(160, 84%, 39%)', 'hsl(0, 84%, 60%)', 'hsl(213, 72%, 50%)', 'hsl(270, 60%, 60%)'];
+  const PIE_COLORS = ['hsl(42,92%,56%)', 'hsl(160,84%,39%)', 'hsl(0,84%,60%)', 'hsl(213,72%,50%)', 'hsl(270,60%,60%)'];
 
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+    <div className="p-5 sm:p-7 space-y-8 max-w-[1400px] mx-auto">
+
+      {/* Page header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <p className="text-[11px] uppercase tracking-[0.18em] font-semibold text-muted-foreground">Executive overview</p>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight font-display mt-1">Control Center</h1>
-          <p className="text-sm text-muted-foreground mt-1">{format(new Date(), 'EEEE, MMMM d, yyyy')} · Real-time platform metrics</p>
+          <p className="text-[10px] uppercase tracking-[0.2em] font-semibold text-muted-foreground">Executive overview</p>
+          <h1 className="text-2xl font-bold tracking-tight mt-0.5">Control Center</h1>
+          <p className="text-[12px] text-muted-foreground mt-0.5">{format(new Date(), "EEEE, MMMM d, yyyy")} · Real-time</p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="outline" className="gap-1.5 border-emerald-500/30 text-emerald-600 bg-emerald-500/5">
+          <Badge variant="outline" className="gap-1.5 border-emerald-500/30 text-emerald-600 bg-emerald-500/5 text-[11px]">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live
           </Badge>
-          <Button size="sm" variant="outline" onClick={() => window.location.reload()}>
-            <Activity size={14} className="mr-1.5" /> Refresh
+          <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs" onClick={load}>
+            <RefreshCw size={13} /> Refresh
           </Button>
         </div>
       </div>
 
-      {/* Critical alert */}
+      {/* Alert banner */}
       {totalActions > 0 && (
-        <Card className="p-4 border-red-500/30 bg-gradient-to-r from-red-500/10 to-red-500/5">
-          <div className="flex items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-red-500/15 flex items-center justify-center">
-                <AlertTriangle className="text-red-500" size={20} />
-              </div>
-              <div>
-                <p className="font-semibold text-foreground">{totalActions} action{totalActions === 1 ? '' : 's'} require attention</p>
-                <p className="text-xs text-muted-foreground">KYC reviews, loan approvals, M-Pesa reconciliations</p>
-              </div>
-            </div>
-            <Button size="sm" variant="destructive" onClick={() => navigate('/dashboard/admin/kyc')}>
-              Review now
-            </Button>
+        <div className="flex items-center gap-4 p-4 rounded-xl border border-red-500/25 bg-red-500/5">
+          <div className="w-9 h-9 rounded-lg bg-red-500/15 flex items-center justify-center shrink-0">
+            <AlertTriangle size={18} className="text-red-500" />
           </div>
-        </Card>
+          <div className="flex-1">
+            <p className="font-semibold text-sm text-foreground">{totalActions} item{totalActions !== 1 ? 's' : ''} need attention</p>
+            <p className="text-[11px] text-muted-foreground">KYC reviews, loan approvals, M-Pesa reconciliations</p>
+          </div>
+          <Button size="sm" variant="destructive" className="shrink-0 h-8 text-xs" onClick={() => navigate('/dashboard/admin/kyc')}>
+            Review now
+          </Button>
+        </div>
       )}
 
-      {/* Top KPI grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <KpiCard
-          label="Total wallet balance"
-          value={fmtKes(stats.totalWalletBalance)}
-          icon={Wallet}
-          accent="gold"
-          trend={transferTrend.map((t) => t.amount)}
-          onClick={() => navigate('/dashboard/admin/users')}
-        />
-        <KpiCard
-          label="Transfers (7d)"
-          value={fmtKes(stats.totalTransfers7d)}
-          delta={stats.totalTransfersToday > 0 ? 12.4 : 0}
-          icon={TrendingUp}
-          accent="emerald"
-          trend={transferTrend.map((t) => t.count)}
-          onClick={() => navigate('/dashboard/admin/transfers')}
-        />
-        <KpiCard
-          label="Active members"
-          value={stats.totalUsers.toLocaleString()}
-          delta={stats.newUsersToday > 0 ? (stats.newUsersToday / Math.max(stats.totalUsers, 1)) * 100 : 0}
-          icon={Users}
-          accent="blue"
-          trend={userTrend.map((u) => u.users)}
-          onClick={() => navigate('/dashboard/admin/users')}
-        />
-        <KpiCard
-          label="Active loans"
-          value={fmtKes(stats.totalLoanValue)}
-          icon={Banknote}
-          accent="gold"
-          onClick={() => navigate('/dashboard/admin/loans')}
-        />
-      </div>
-
-      {/* Financial / Revenue strip */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <KpiCard
-          label="Platform revenue (30d)"
-          value={fmtKes(stats.revenue30d)}
-          icon={Coins}
-          accent="emerald"
-          onClick={() => navigate('/dashboard/admin/chama')}
-        />
-        <KpiCard
-          label="Joining fees (30d)"
-          value={fmtKes(stats.joiningFees30d)}
-          icon={Receipt}
-          accent="gold"
-        />
-        <KpiCard
-          label="Deposits today"
-          value={fmtKes(stats.depositsToday)}
-          icon={ArrowDownLeft}
-          accent="blue"
-          onClick={() => navigate('/dashboard/admin/mpesa')}
-        />
-        <KpiCard
-          label="Payouts today"
-          value={fmtKes(stats.payoutsToday)}
-          icon={Send}
-          accent="red"
-          onClick={() => navigate('/dashboard/admin/mpesa')}
-        />
-      </div>
-
-      {/* Quick actions */}
-      <AdminQuickActions
-        pendingKyc={stats.pendingKyc}
-        pendingLoans={stats.pendingLoans}
-        pendingWithdrawals={stats.pendingWithdrawals}
-        pendingHarambees={stats.pendingHarambees}
-        unmappedMpesa={stats.unmappedMpesa}
-      />
-      <Card className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Pending queue</h3>
-          <span className="text-[11px] text-muted-foreground">Click any to review</span>
+      {/* Core metrics */}
+      <div>
+        <SectionHeader title="Platform metrics" sub="Live balances and activity" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <MetricCard
+            label="Wallet balance"
+            value={fmtKes(stats.totalWalletBalance)}
+            icon={Wallet}
+            color="amber"
+            trend={transferTrend.map((t) => t.amount)}
+            onClick={() => navigate('/dashboard/admin/users')}
+          />
+          <MetricCard
+            label="Transfers (7d)"
+            value={fmtKes(stats.totalTransfers7d)}
+            sub={`${fmtKes(stats.totalTransfersToday)} today`}
+            icon={TrendingUp}
+            color="emerald"
+            trend={transferTrend.map((t) => t.count)}
+            onClick={() => navigate('/dashboard/admin/transfers')}
+          />
+          <MetricCard
+            label="Total members"
+            value={stats.totalUsers.toLocaleString()}
+            sub={`+${stats.newUsersToday} today`}
+            icon={Users}
+            color="blue"
+            trend={userTrend.map((u) => u.users)}
+            onClick={() => navigate('/dashboard/admin/users')}
+          />
+          <MetricCard
+            label="Loan book"
+            value={fmtKes(stats.totalLoanValue)}
+            sub={`${stats.totalLoansActive} active loans`}
+            icon={Banknote}
+            color="violet"
+            onClick={() => navigate('/dashboard/admin/loans')}
+          />
         </div>
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+      </div>
+
+      {/* Revenue */}
+      <div>
+        <SectionHeader title="Revenue" sub="Last 30 days" />
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          <MetricCard label="Total revenue" value={fmtKes(stats.revenue30d)} icon={Coins} color="emerald" onClick={() => navigate('/dashboard/admin/chama')} />
+          <MetricCard label="Joining fees" value={fmtKes(stats.joiningFees30d)} icon={Receipt} color="amber" />
+          <MetricCard label="Deposits today" value={fmtKes(stats.depositsToday)} icon={ArrowDownLeft} color="blue" onClick={() => navigate('/dashboard/admin/mpesa')} />
+          <MetricCard label="Payouts today" value={fmtKes(stats.payoutsToday)} icon={Send} color="red" onClick={() => navigate('/dashboard/admin/mpesa')} />
+        </div>
+      </div>
+
+      {/* Pending queue */}
+      <div>
+        <SectionHeader title="Action queue" sub="Items requiring review" />
+        <AdminQuickActions
+          pendingKyc={stats.pendingKyc}
+          pendingLoans={stats.pendingLoans}
+          pendingWithdrawals={stats.pendingWithdrawals}
+          pendingHarambees={stats.pendingHarambees}
+          unmappedMpesa={stats.unmappedMpesa}
+        />
+        <div className="grid grid-cols-3 md:grid-cols-6 gap-2 mt-3">
           {[
-            { label: 'KYC', value: stats.pendingKyc, icon: ShieldAlert, color: 'amber', path: '/dashboard/admin/kyc' },
-            { label: 'Loans', value: stats.pendingLoans, icon: FileText, color: 'amber', path: '/dashboard/admin/loans' },
-            { label: 'Harambees', value: stats.pendingHarambees, icon: Heart, color: 'amber', path: '/dashboard/admin/harambee-applications' },
-            { label: 'Withdrawals', value: stats.pendingWithdrawals, icon: PiggyBank, color: 'amber', path: '/dashboard/admin/withdrawals' },
-            { label: 'Unmapped', value: stats.unmappedMpesa, icon: AlertTriangle, color: 'red', path: '/dashboard/admin/mpesa' },
-            { label: 'Failed B2C', value: stats.failedB2c, icon: Send, color: 'red', path: '/dashboard/admin/mpesa' },
+            { label: 'KYC',        value: stats.pendingKyc,        icon: ShieldAlert, urgent: false, path: '/dashboard/admin/kyc' },
+            { label: 'Loans',      value: stats.pendingLoans,      icon: FileText,    urgent: false, path: '/dashboard/admin/loans' },
+            { label: 'Harambees',  value: stats.pendingHarambees,  icon: Heart,       urgent: false, path: '/dashboard/admin/harambee-applications' },
+            { label: 'Withdrawals',value: stats.pendingWithdrawals,icon: PiggyBank,   urgent: false, path: '/dashboard/admin/withdrawals' },
+            { label: 'Unmapped',   value: stats.unmappedMpesa,     icon: AlertTriangle, urgent: true, path: '/dashboard/admin/mpesa' },
+            { label: 'Failed B2C', value: stats.failedB2c,         icon: Send,        urgent: true, path: '/dashboard/admin/mpesa' },
           ].map((p) => (
             <button
               key={p.label}
               onClick={() => navigate(p.path)}
               className={cn(
-                'p-3 rounded-lg border transition-all hover:-translate-y-0.5 text-left',
+                'p-3 rounded-xl border text-left transition-all hover:-translate-y-0.5 hover:shadow-sm',
                 p.value > 0
-                  ? p.color === 'red'
-                    ? 'border-red-500/30 bg-red-500/5 hover:border-red-500/60'
-                    : 'border-amber-500/30 bg-amber-500/5 hover:border-amber-500/60'
-                  : 'border-border bg-card hover:border-accent/40'
+                  ? p.urgent
+                    ? 'border-red-500/30 bg-red-500/5 hover:border-red-500/50'
+                    : 'border-amber-500/30 bg-amber-500/5 hover:border-amber-500/50'
+                  : 'border-border bg-card hover:border-accent/30'
               )}
             >
-              <p.icon size={15} className={cn(
-                'mb-1.5',
-                p.value > 0 ? (p.color === 'red' ? 'text-red-500' : 'text-amber-500') : 'text-muted-foreground'
-              )} />
-              <p className="text-lg font-bold tracking-tight">{p.value}</p>
-              <p className="text-[10px] uppercase font-semibold text-muted-foreground tracking-wider">{p.label}</p>
+              <p.icon size={14} className={cn('mb-1.5', p.value > 0 ? (p.urgent ? 'text-red-500' : 'text-amber-500') : 'text-muted-foreground')} />
+              <p className="text-lg font-bold leading-none mb-1">{p.value}</p>
+              <p className="text-[10px] uppercase font-semibold text-muted-foreground tracking-wider leading-tight">{p.label}</p>
             </button>
           ))}
         </div>
-      </Card>
-
-      {/* Charts row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Revenue / transfer chart */}
-        <Card className="p-5 lg:col-span-2">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <h3 className="font-semibold text-foreground">Transfer volume (14 days)</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">Daily completed transfer total</p>
-            </div>
-            <BarChart3 size={16} className="text-muted-foreground" />
-          </div>
-          <div className="h-56">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={transferTrend} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="trGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="hsl(42, 92%, 56%)" stopOpacity={0.4} />
-                    <stop offset="100%" stopColor="hsl(42, 92%, 56%)" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} vertical={false} />
-                <XAxis dataKey="day" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} tickFormatter={(v) => fmtCompact(v)} />
-                <Tooltip
-                  contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }}
-                  formatter={(v: number) => fmtKes(v)}
-                />
-                <Area type="monotone" dataKey="amount" stroke="hsl(42, 92%, 56%)" strokeWidth={2} fill="url(#trGrad)" />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-
-        {/* Loan status pie */}
-        <Card className="p-5">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <h3 className="font-semibold text-foreground">Loan portfolio</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">By application status</p>
-            </div>
-            <CreditCard size={16} className="text-muted-foreground" />
-          </div>
-          {loanMix.length === 0 ? (
-            <div className="h-56 flex items-center justify-center text-xs text-muted-foreground">No loan data yet</div>
-          ) : (
-            <div className="h-56">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie data={loanMix} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={45} outerRadius={75} paddingAngle={2}>
-                    {loanMix.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
-                  </Pie>
-                  <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          )}
-          <div className="flex flex-wrap gap-1.5 mt-2 justify-center">
-            {loanMix.map((m, i) => (
-              <span key={m.name} className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
-                <span className="w-2 h-2 rounded-sm" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
-                {m.name} ({m.value})
-              </span>
-            ))}
-          </div>
-        </Card>
       </div>
 
-      {/* User growth + System status */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <Card className="p-5 lg:col-span-2">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <h3 className="font-semibold text-foreground">New member signups</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">Daily new accounts (last 14 days)</p>
-            </div>
-            <Users size={16} className="text-muted-foreground" />
-          </div>
-          <div className="h-44">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={userTrend} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} vertical={false} />
-                <XAxis dataKey="day" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} allowDecimals={false} />
-                <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '12px' }} />
-                <Bar dataKey="users" fill="hsl(160, 84%, 39%)" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-
-        <Card className="p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <Server size={16} className="text-muted-foreground" />
-            <h3 className="font-semibold text-foreground">System health</h3>
-          </div>
-          <div className="space-y-2.5">
-            {[
-              { label: 'Database', status: 'healthy' },
-              { label: 'M-Pesa API', status: 'healthy' },
-              { label: 'Email queue', status: stats.failedB2c > 0 ? 'warning' : 'healthy' },
-              { label: 'B2C payouts', status: stats.failedB2c > 5 ? 'error' : stats.failedB2c > 0 ? 'warning' : 'healthy' },
-              { label: 'Active chamas', status: 'healthy', badge: stats.activeChamas.toString() },
-              { label: 'MGR cycles', status: 'healthy', badge: stats.openMgrCycles.toString() },
-            ].map((s) => (
-              <div key={s.label} className="flex items-center justify-between py-1.5 border-b border-border last:border-0">
-                <div className="flex items-center gap-2">
-                  {s.status === 'healthy' && <CheckCircle size={13} className="text-emerald-500" />}
-                  {s.status === 'warning' && <AlertTriangle size={13} className="text-amber-500" />}
-                  {s.status === 'error' && <XCircle size={13} className="text-red-500" />}
-                  <span className="text-xs font-medium">{s.label}</span>
-                </div>
-                {s.badge ? (
-                  <span className="text-[11px] font-bold text-muted-foreground">{s.badge}</span>
-                ) : (
-                  <span className={cn(
-                    'text-[10px] uppercase font-bold tracking-wider',
-                    s.status === 'healthy' && 'text-emerald-600',
-                    s.status === 'warning' && 'text-amber-600',
-                    s.status === 'error' && 'text-red-600',
-                  )}>{s.status}</span>
-                )}
+      {/* Charts */}
+      <div>
+        <SectionHeader title="Trends" sub="14-day activity" />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <Card className="p-5 lg:col-span-2">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="font-semibold text-sm text-foreground">Transfer volume</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Daily completed transfer total (14 days)</p>
               </div>
-            ))}
-          </div>
-        </Card>
+              <BarChart3 size={14} className="text-muted-foreground" />
+            </div>
+            <div className="h-52">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={transferTrend} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+                  <defs>
+                    <linearGradient id="trGrad" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="0%" stopColor="hsl(42,92%,56%)" stopOpacity={0.35} />
+                      <stop offset="100%" stopColor="hsl(42,92%,56%)" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} vertical={false} />
+                  <XAxis dataKey="day" tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} interval={1} />
+                  <YAxis tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} tickFormatter={fmtCompact} />
+                  <Tooltip
+                    contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '11px' }}
+                    formatter={(v: number) => [fmtKes(v), 'Volume']}
+                  />
+                  <Area type="monotone" dataKey="amount" stroke="hsl(42,92%,56%)" strokeWidth={2} fill="url(#trGrad)" dot={false} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+
+          <Card className="p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="font-semibold text-sm text-foreground">Loan portfolio</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">By application status</p>
+              </div>
+              <CreditCard size={14} className="text-muted-foreground" />
+            </div>
+            {loanMix.length === 0 ? (
+              <div className="h-52 flex items-center justify-center text-xs text-muted-foreground">No loan data</div>
+            ) : (
+              <>
+                <div className="h-44">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie data={loanMix} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={44} outerRadius={70} paddingAngle={2}>
+                        {loanMix.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+                      </Pie>
+                      <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '11px' }} />
+                    </PieChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="flex flex-wrap gap-x-3 gap-y-1 justify-center">
+                  {loanMix.map((m, i) => (
+                    <span key={m.name} className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+                      <span className="w-2 h-2 rounded-sm shrink-0" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
+                      {m.name} ({m.value})
+                    </span>
+                  ))}
+                </div>
+              </>
+            )}
+          </Card>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mt-4">
+          <Card className="p-5 lg:col-span-2">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="font-semibold text-sm text-foreground">New member signups</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Daily new accounts (14 days)</p>
+              </div>
+              <Users size={14} className="text-muted-foreground" />
+            </div>
+            <div className="h-44">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={userTrend} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} vertical={false} />
+                  <XAxis dataKey="day" tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} interval={1} />
+                  <YAxis tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} allowDecimals={false} />
+                  <Tooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px', fontSize: '11px' }} formatter={(v: number) => [v, 'Signups']} />
+                  <Bar dataKey="users" fill="hsl(160,84%,39%)" radius={[3, 3, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+
+          <Card className="p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <Server size={14} className="text-muted-foreground" />
+              <p className="font-semibold text-sm text-foreground">System health</p>
+            </div>
+            <div className="space-y-2">
+              {[
+                { label: 'Database',     status: 'healthy' },
+                { label: 'M-Pesa API',   status: 'healthy' },
+                { label: 'Email queue',  status: stats.failedB2c > 0 ? 'warning' : 'healthy' },
+                { label: 'B2C payouts',  status: stats.failedB2c > 5 ? 'error' : stats.failedB2c > 0 ? 'warning' : 'healthy' },
+                { label: 'Chamas',       status: 'healthy', badge: stats.activeChamas.toString() },
+                { label: 'MGR cycles',   status: 'healthy', badge: stats.openMgrCycles.toString() },
+              ].map((s) => (
+                <div key={s.label} className="flex items-center justify-between py-1.5 border-b border-border/60 last:border-0">
+                  <div className="flex items-center gap-2">
+                    {s.status === 'healthy' && <CheckCircle size={12} className="text-emerald-500 shrink-0" />}
+                    {s.status === 'warning' && <AlertTriangle size={12} className="text-amber-500 shrink-0" />}
+                    {s.status === 'error' && <XCircle size={12} className="text-red-500 shrink-0" />}
+                    <span className="text-[12px] font-medium">{s.label}</span>
+                  </div>
+                  {s.badge ? (
+                    <span className="text-[11px] font-bold text-muted-foreground">{s.badge}</span>
+                  ) : (
+                    <span className={cn('text-[10px] uppercase font-bold tracking-wider',
+                      s.status === 'healthy' && 'text-emerald-600',
+                      s.status === 'warning' && 'text-amber-600',
+                      s.status === 'error' && 'text-red-600',
+                    )}>{s.status}</span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
       </div>
 
       {/* Recent activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card className="p-5">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="font-semibold text-foreground">Recent members</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">Latest signups</p>
-            </div>
-            <Button size="sm" variant="ghost" onClick={() => navigate('/dashboard/admin/users')} className="text-xs h-7 gap-1">
-              View all <Eye size={12} />
-            </Button>
-          </div>
-          <div className="space-y-2">
-            {recentUsers.length === 0 ? (
-              <p className="text-xs text-muted-foreground py-6 text-center">No members yet</p>
-            ) : recentUsers.map((u) => (
-              <div key={u.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-amber-500/20 to-amber-500/5 flex items-center justify-center text-xs font-bold text-amber-700 shrink-0">
-                    {(u.full_name || 'U').slice(0, 1).toUpperCase()}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">{u.full_name || 'Unnamed'}</p>
-                    <p className="text-[11px] text-muted-foreground truncate">{u.phone || '—'}</p>
-                  </div>
-                </div>
-                <div className="text-right shrink-0">
-                  <span className={cn(
-                    'text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded',
-                    u.is_verified ? 'bg-emerald-500/10 text-emerald-600' : 'bg-muted text-muted-foreground'
-                  )}>
-                    {u.is_verified ? 'Verified' : 'Pending'}
-                  </span>
-                  <p className="text-[10px] text-muted-foreground mt-0.5">{format(new Date(u.created_at), 'MMM d')}</p>
-                </div>
+      <div>
+        <SectionHeader title="Recent activity" />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <Card className="p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="font-semibold text-sm text-foreground">Recent members</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Latest signups</p>
               </div>
-            ))}
-          </div>
-        </Card>
+              <Button size="sm" variant="ghost" onClick={() => navigate('/dashboard/admin/users')} className="text-[11px] h-7 gap-1 px-2">
+                View all <Eye size={11} />
+              </Button>
+            </div>
+            <div className="space-y-1">
+              {recentUsers.length === 0 ? (
+                <p className="text-xs text-muted-foreground py-6 text-center">No members yet</p>
+              ) : recentUsers.map((u) => (
+                <div key={u.id} className="flex items-center justify-between py-2 border-b border-border/60 last:border-0">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center text-[11px] font-bold text-amber-700 shrink-0">
+                      {(u.full_name || 'U').slice(0, 1).toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[13px] font-medium truncate">{u.full_name || 'Unnamed'}</p>
+                      <p className="text-[11px] text-muted-foreground truncate">{u.phone || '—'}</p>
+                    </div>
+                  </div>
+                  <div className="text-right shrink-0 ml-2">
+                    <span className={cn('text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded',
+                      u.is_verified ? 'bg-emerald-500/10 text-emerald-600' : 'bg-muted text-muted-foreground'
+                    )}>
+                      {u.is_verified ? 'Verified' : 'Pending'}
+                    </span>
+                    <p className="text-[10px] text-muted-foreground mt-0.5">{format(new Date(u.created_at), 'MMM d')}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
 
-        <Card className="p-5">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h3 className="font-semibold text-foreground">Recent transfers</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">Latest wallet movements</p>
-            </div>
-            <Button size="sm" variant="ghost" onClick={() => navigate('/dashboard/admin/transfers')} className="text-xs h-7 gap-1">
-              View all <Eye size={12} />
-            </Button>
-          </div>
-          <div className="space-y-2">
-            {recentTransfers.length === 0 ? (
-              <p className="text-xs text-muted-foreground py-6 text-center">No transfers yet</p>
-            ) : recentTransfers.map((t) => (
-              <div key={t.id} className="flex items-center justify-between py-2 border-b border-border last:border-0">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
-                    <Send size={13} className="text-emerald-600" />
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium truncate">{t.sender_name || '—'} → {t.receiver_name || '—'}</p>
-                    <p className="text-[11px] text-muted-foreground">{format(new Date(t.created_at), 'MMM d, HH:mm')}</p>
-                  </div>
-                </div>
-                <p className="text-sm font-bold text-emerald-700 shrink-0 ml-2">{fmtKes(Number(t.amount))}</p>
+          <Card className="p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="font-semibold text-sm text-foreground">Recent transfers</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Latest wallet movements</p>
               </div>
-            ))}
-          </div>
-        </Card>
+              <Button size="sm" variant="ghost" onClick={() => navigate('/dashboard/admin/transfers')} className="text-[11px] h-7 gap-1 px-2">
+                View all <Eye size={11} />
+              </Button>
+            </div>
+            <div className="space-y-1">
+              {recentTransfers.length === 0 ? (
+                <p className="text-xs text-muted-foreground py-6 text-center">No transfers yet</p>
+              ) : recentTransfers.map((t) => (
+                <div key={t.id} className="flex items-center justify-between py-2 border-b border-border/60 last:border-0">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center shrink-0">
+                      <Send size={12} className="text-emerald-600" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[13px] font-medium truncate">{t.sender_name || '—'} → {t.receiver_name || '—'}</p>
+                      <p className="text-[11px] text-muted-foreground">{format(new Date(t.created_at), 'MMM d, HH:mm')}</p>
+                    </div>
+                  </div>
+                  <p className="text-[13px] font-bold text-emerald-700 shrink-0 ml-2">{fmtKes(Number(t.amount))}</p>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
       </div>
     </div>
   );
