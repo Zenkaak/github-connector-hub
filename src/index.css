@@ -430,3 +430,27 @@
     100% { background-position: 0% 50%; }
   }
 }
+
+/* ── Admin dashboard: force light content area regardless of global dark theme ── */
+.admin-light {
+  --background: 216 33% 97%;
+  --foreground: 215 28% 17%;
+  --card: 0 0% 100%;
+  --card-foreground: 215 28% 17%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 215 28% 17%;
+  --primary: 213 72% 18%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 214 20% 93%;
+  --secondary-foreground: 215 28% 17%;
+  --muted: 214 20% 93%;
+  --muted-foreground: 215 16% 47%;
+  --accent: 42 92% 56%;
+  --accent-foreground: 213 72% 12%;
+  --destructive: 0 62% 50%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 214 20% 88%;
+  --input: 214 20% 88%;
+  --ring: 42 92% 56%;
+  color-scheme: light;
+}
