@@ -224,7 +224,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       )}
 
       {/* ── Main Content ── */}
-      <main className="lg:ml-64 min-h-screen">
+      <main className="lg:ml-64 min-h-screen admin-light bg-background">
 
         {/* Desktop top bar */}
         <div className="hidden lg:flex items-center justify-between h-16 px-8 border-b border-border/50 bg-card/60 backdrop-blur-xl sticky top-0 z-20">
