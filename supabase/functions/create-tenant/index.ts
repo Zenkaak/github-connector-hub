@@ -96,21 +96,36 @@ Deno.serve(async (req) => {
       return json({ error: "A user with that phone number already exists" }, 409);
     }
 
-    // 1. Create auth user (auto-confirm so they can log in immediately)
+    // 1. Create auth user (auto-confirm so they can log in immediately).
+    // All NOT NULL profile columns are supplied as empty strings so both
+    // handle_new_user and handle_new_user_signup triggers succeed without
+    // hitting NOT NULL constraint violations on fields not relevant here.
     const password = generatePassword();
     const { data: created, error: cErr } = await admin.auth.admin.createUser({
-      email: admin_email.toLowerCase().trim(),
+      email: emailNorm,
       password,
       email_confirm: true,
       user_metadata: {
         full_name: admin_full_name,
         phone,
         is_tenant_admin: true,
+        // Provide empty-string defaults for every NOT NULL profile column so
+        // the DB trigger doesn't receive NULL and violate a NOT NULL constraint.
+        county: "",
+        sub_county: "",
+        ward: "",
+        address: "",
+        id_number: "",
+        date_of_birth: "",
       },
     });
     if (cErr || !created?.user) {
-      console.error("createUser failed:", cErr);
-      return json({ error: cErr?.message || "Failed to create admin user" }, 400);
+      const msg = cErr?.message ?? "Failed to create admin user";
+      // Give a friendlier message for the opaque Supabase trigger-failure error.
+      const friendly = msg.toLowerCase().includes("database error")
+        ? "Could not create user account — the email may already exist or a database rule blocked it. Please verify the details and try again."
+        : msg;
+      return json({ error: friendly }, 400);
     }
     const newUserId = created.user.id;
 
