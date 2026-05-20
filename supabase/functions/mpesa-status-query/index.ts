@@ -20,11 +20,14 @@ Deno.serve(async (req) => {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const { data: isAdmin } = await admin.rpc("has_role", { _user_id: userData.user.id, _role: "admin" });
-    if (!isAdmin) {
-      return new Response(JSON.stringify({ error: "Admin only" }), {
-        status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    const { data: adminProf } = await admin.from("profiles").select("is_admin").eq("user_id", userData.user.id).maybeSingle();
+    if (!adminProf?.is_admin) {
+      const { data: roleCheck } = await admin.rpc("has_role", { _user_id: userData.user.id, _role: "admin" });
+      if (!roleCheck) {
+        return new Response(JSON.stringify({ error: "Admin only" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     const { transactionId, remarks = "Status check", occasion = "Check" } = await req.json();
