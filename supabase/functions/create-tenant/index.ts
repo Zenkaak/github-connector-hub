@@ -58,8 +58,7 @@ Deno.serve(async (req) => {
       return json({ error: "Forbidden — admin only" }, 403);
     }
 
-    const body = await req.json().catch((e) => { console.error("bad json", e); return {}; });
-    console.log("create-tenant body:", JSON.stringify(body));
+    const body = await req.json().catch(() => ({}));
     const {
       name, slug: rawSlug, logo_url, primary_color, custom_domain,
       paybill_shortcode, features_enabled,
@@ -82,6 +81,20 @@ Deno.serve(async (req) => {
     if (phone.startsWith("+")) phone = phone.slice(1);
     if (phone.startsWith("0")) phone = "254" + phone.slice(1);
     if (phone.startsWith("7") || phone.startsWith("1")) phone = "254" + phone;
+
+    // Pre-check: ensure no profile already has this email or phone.
+    // Supabase wraps trigger failures as "Database error creating new user" which
+    // is confusing — we surface a clear message before that can happen.
+    const emailNorm = admin_email.toLowerCase().trim();
+    const { data: dupProfile } = await admin
+      .from("profiles")
+      .select("email, phone")
+      .or(`email.eq.${emailNorm},phone.eq.${phone}`)
+      .maybeSingle();
+    if (dupProfile) {
+      if (dupProfile.email === emailNorm) return json({ error: "A user with that email already exists" }, 409);
+      return json({ error: "A user with that phone number already exists" }, 409);
+    }
 
     // 1. Create auth user (auto-confirm so they can log in immediately)
     const password = generatePassword();
