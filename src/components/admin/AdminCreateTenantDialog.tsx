@@ -44,7 +44,14 @@ export function AdminCreateTenantDialog({ open, onOpenChange, onCreated }: Props
           admin_email: adminEmail.trim(),
         },
       });
-      if (error) throw error;
+      if (error) {
+        const response = (error as any).context;
+        if (response && typeof response.json === "function") {
+          const body = await response.json().catch(() => null);
+          throw new Error(body?.error || error.message);
+        }
+        throw error;
+      }
       if ((data as any)?.error) throw new Error((data as any).error);
       toast.success("SACCO created — invite sent via SMS & email");
       onOpenChange(false);

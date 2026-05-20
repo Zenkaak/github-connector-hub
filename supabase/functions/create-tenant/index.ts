@@ -14,10 +14,16 @@ function slugify(s: string) {
   return s.toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40);
 }
 
-const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+const responseHeaders = {
+  ...corsHeaders,
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Content-Type": "application/json",
+};
+
+const json = (b: unknown, status = 200) => new Response(JSON.stringify(b), { status, headers: responseHeaders });
 
 Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (req.method === "OPTIONS") return new Response("ok", { headers: responseHeaders });
   try {
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
     const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -90,7 +96,13 @@ Deno.serve(async (req) => {
     }
 
     // 3. Link as tenant admin
-    await admin.from("tenant_admins").insert({ tenant_id: tenant.id, user_id: newUserId, role: "admin" });
+    const { error: linkErr } = await admin.from("tenant_admins").insert({ tenant_id: tenant.id, user_id: newUserId, role: "admin" });
+    if (linkErr) {
+      console.error("tenant_admins insert failed:", linkErr);
+      await admin.from("tenants").delete().eq("id", tenant.id);
+      await admin.auth.admin.deleteUser(newUserId);
+      return json({ error: linkErr.message }, 400);
+    }
 
     // 4. Build login URL
     const loginUrl = custom_domain
@@ -121,13 +133,9 @@ Deno.serve(async (req) => {
       });
     } catch (e) { console.error("Email failed:", e); }
 
-    return new Response(JSON.stringify({ ok: true, tenant, login_url: loginUrl }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return json({ ok: true, tenant, login_url: loginUrl });
   } catch (err) {
     console.error("create-tenant error:", err);
-    return new Response(JSON.stringify({ error: String(err) }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    return json({ error: String(err) }, 500);
   }
 });
