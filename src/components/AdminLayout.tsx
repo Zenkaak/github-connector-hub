@@ -10,7 +10,6 @@ import {
   LogOut,
   Menu,
   X,
-  ChevronRight,
   Shield,
   Wallet,
   Send,
@@ -20,6 +19,7 @@ import {
   Heart,
   Megaphone,
   Building2,
+  ChevronDown,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Logo } from '@/components/Logo';
@@ -31,21 +31,46 @@ interface AdminLayoutProps {
   children: React.ReactNode;
 }
 
-const adminNavItems = [
-  { label: 'Overview', icon: LayoutDashboard, path: '/dashboard/admin' },
-  { label: 'Users', icon: Users, path: '/dashboard/admin/users' },
-  { label: 'KYC Reviews', icon: ShieldCheck, path: '/dashboard/admin/kyc' },
-  { label: 'Loans', icon: FileText, path: '/dashboard/admin/loans' },
-  { label: 'Transfers', icon: Send, path: '/dashboard/admin/transfers' },
-  { label: 'M-Pesa', icon: Wallet, path: '/dashboard/admin/mpesa' },
-  { label: 'Withdrawals', icon: PiggyBank, path: '/dashboard/admin/withdrawals' },
-  { label: 'Chamas', icon: Users, path: '/dashboard/admin/chama' },
-  { label: 'MGR Cycles', icon: Activity, path: '/dashboard/admin/mgr' },
-  { label: 'Harambee Apps', icon: Heart, path: '/dashboard/admin/harambee-applications' },
-  { label: 'Audit Logs', icon: ClipboardList, path: '/dashboard/admin/audit' },
-  { label: 'Broadcast', icon: Megaphone, path: '/dashboard/admin/broadcast' },
-  { label: 'SACCO Tenants', icon: Building2, path: '/dashboard/admin/tenants' },
-  { label: 'Settings', icon: Settings, path: '/dashboard/admin/settings' },
+const navSections = [
+  {
+    label: 'Dashboard',
+    items: [
+      { label: 'Overview', icon: LayoutDashboard, path: '/dashboard/admin' },
+    ],
+  },
+  {
+    label: 'Members',
+    items: [
+      { label: 'Users', icon: Users, path: '/dashboard/admin/users' },
+      { label: 'KYC Reviews', icon: ShieldCheck, path: '/dashboard/admin/kyc' },
+    ],
+  },
+  {
+    label: 'Finance',
+    items: [
+      { label: 'Loans', icon: FileText, path: '/dashboard/admin/loans' },
+      { label: 'Transfers', icon: Send, path: '/dashboard/admin/transfers' },
+      { label: 'M-Pesa', icon: Wallet, path: '/dashboard/admin/mpesa' },
+      { label: 'Withdrawals', icon: PiggyBank, path: '/dashboard/admin/withdrawals' },
+    ],
+  },
+  {
+    label: 'Community',
+    items: [
+      { label: 'Chamas', icon: Users, path: '/dashboard/admin/chama' },
+      { label: 'MGR Cycles', icon: Activity, path: '/dashboard/admin/mgr' },
+      { label: 'Harambee Apps', icon: Heart, path: '/dashboard/admin/harambee-applications' },
+    ],
+  },
+  {
+    label: 'Platform',
+    items: [
+      { label: 'SACCO Tenants', icon: Building2, path: '/dashboard/admin/tenants' },
+      { label: 'Broadcast', icon: Megaphone, path: '/dashboard/admin/broadcast' },
+      { label: 'Audit Logs', icon: ClipboardList, path: '/dashboard/admin/audit' },
+      { label: 'Settings', icon: Settings, path: '/dashboard/admin/settings' },
+    ],
+  },
 ];
 
 export function AdminLayout({ children }: AdminLayoutProps) {
@@ -66,21 +91,24 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     .slice(0, 2)
     .toUpperCase() || 'A';
 
+  const currentLabel = navSections
+    .flatMap((s) => s.items)
+    .find((i) => i.path === location.pathname)?.label || 'Admin Panel';
+
   return (
     <div className="min-h-screen bg-background">
       {/* Mobile Header */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 h-16 bg-card/95 backdrop-blur-xl border-b border-border z-50 flex items-center justify-between px-4">
-        <div className="flex items-center gap-2">
-          <Shield size={18} className="text-accent" />
-          <span className="font-bold text-sm">Admin Panel</span>
+      <header className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-card/95 backdrop-blur-xl border-b border-border z-50 flex items-center justify-between px-4">
+        <div className="flex items-center gap-2.5">
+          <div className="w-7 h-7 rounded-lg bg-destructive/90 flex items-center justify-center">
+            <Shield size={14} className="text-white" />
+          </div>
+          <span className="font-semibold text-sm text-foreground">{currentLabel}</span>
         </div>
         <div className="flex items-center gap-1">
           <AdminAlertsPopover />
-          <Button variant="ghost" size="icon" onClick={handleSignOut} className="text-muted-foreground hover:text-destructive">
-            <LogOut size={18} />
-          </Button>
-          <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)}>
-            {sidebarOpen ? <X size={22} /> : <Menu size={22} />}
+          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setSidebarOpen(!sidebarOpen)}>
+            {sidebarOpen ? <X size={20} /> : <Menu size={20} />}
           </Button>
         </div>
       </header>
@@ -88,65 +116,68 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       {/* Sidebar */}
       <aside
         className={cn(
-          'fixed top-0 left-0 h-full w-[272px] bg-primary z-40 transform transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] flex flex-col',
+          'fixed top-0 left-0 h-full w-64 bg-[#0d1117] z-40 transform transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] flex flex-col border-r border-white/[0.05]',
           'lg:translate-x-0',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
         )}
       >
-        {/* Logo */}
-        <div className="h-[72px] flex items-center px-6 border-b border-white/[0.06]">
+        {/* Logo area */}
+        <div className="h-16 flex items-center px-5 border-b border-white/[0.06] shrink-0">
           <Logo size="md" variant="white" />
         </div>
 
-        {/* Admin Badge */}
-        <div className="mx-4 mt-5 mb-2 p-4 rounded-2xl bg-white/[0.05] border border-white/[0.06]">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-destructive/80 flex items-center justify-center text-white font-bold text-sm">
-              <Shield size={20} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="font-semibold text-white text-sm truncate">{profile?.full_name || 'Admin'}</p>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <span className="w-1.5 h-1.5 rounded-full bg-red-400 animate-pulse" />
-                <span className="text-[11px] text-red-300/80">Administrator</span>
-              </div>
+        {/* Admin profile chip */}
+        <div className="mx-3 mt-4 mb-3 px-3 py-2.5 rounded-xl bg-white/[0.04] border border-white/[0.07] flex items-center gap-3 shrink-0">
+          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-red-500/80 to-red-700/80 flex items-center justify-center shrink-0">
+            <Shield size={16} className="text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold text-white text-[13px] truncate leading-tight">{profile?.full_name || 'Admin'}</p>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+              <span className="text-[10px] text-white/40 uppercase tracking-wider font-medium">Super Admin</span>
             </div>
           </div>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
-          <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/25 px-3 mb-2">Admin Menu</p>
-          {adminNavItems.map((item) => {
-            const isActive = location.pathname === item.path;
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                onClick={() => setSidebarOpen(false)}
-                className={cn(
-                  'group flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-200 relative',
-                  isActive
-                    ? 'bg-accent text-accent-foreground font-semibold shadow-gold/20 shadow-md'
-                    : 'text-white/50 hover:bg-white/[0.06] hover:text-white/80'
-                )}
-              >
-                <item.icon size={18} strokeWidth={isActive ? 2.5 : 1.8} />
-                <span className="text-sm">{item.label}</span>
-                {isActive && <ChevronRight size={14} className="ml-auto opacity-60" />}
-              </Link>
-            );
-          })}
+        <nav className="flex-1 overflow-y-auto px-3 py-1 space-y-4">
+          {navSections.map((section) => (
+            <div key={section.label}>
+              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-white/20 px-2 mb-1">{section.label}</p>
+              <div className="space-y-0.5">
+                {section.items.map((item) => {
+                  const isActive = location.pathname === item.path;
+                  return (
+                    <Link
+                      key={item.path}
+                      to={item.path}
+                      onClick={() => setSidebarOpen(false)}
+                      className={cn(
+                        'group flex items-center gap-2.5 px-3 py-2 rounded-lg transition-all duration-150 text-[13px]',
+                        isActive
+                          ? 'bg-accent/90 text-black font-semibold shadow-sm'
+                          : 'text-white/45 hover:bg-white/[0.05] hover:text-white/75'
+                      )}
+                    >
+                      <item.icon size={15} strokeWidth={isActive ? 2.5 : 1.8} className="shrink-0" />
+                      <span>{item.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
 
-        {/* Bottom */}
-        <div className="p-3 border-t border-white/[0.06]">
+        {/* Bottom sign out */}
+        <div className="p-3 border-t border-white/[0.06] shrink-0">
           <button
             onClick={handleSignOut}
-            className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-white/40 hover:text-white/70 hover:bg-white/[0.06] transition-all"
+            className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-white/35 hover:text-white/65 hover:bg-white/[0.05] transition-all text-[13px]"
           >
-            <LogOut size={18} />
-            <span className="text-sm">Sign Out</span>
+            <LogOut size={15} />
+            <span>Sign Out</span>
           </button>
         </div>
       </aside>
@@ -154,37 +185,42 @@ export function AdminLayout({ children }: AdminLayoutProps) {
       {/* Mobile Overlay */}
       {sidebarOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-30"
+          className="lg:hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-30"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Main Content */}
-      <main className="lg:ml-[272px] min-h-screen">
+      <main className="lg:ml-64 min-h-screen">
         {/* Desktop Top Bar */}
-        <div className="hidden lg:flex items-center justify-between h-[72px] px-8 border-b border-border bg-card/80 backdrop-blur-sm sticky top-0 z-20">
+        <div className="hidden lg:flex items-center justify-between h-16 px-8 border-b border-border bg-card/70 backdrop-blur-sm sticky top-0 z-20">
           <div className="flex items-center gap-2">
-            <Shield size={16} className="text-destructive" />
-            <p className="text-sm font-semibold text-foreground">Admin Panel</p>
+            <div className="w-6 h-6 rounded-md bg-destructive/80 flex items-center justify-center">
+              <Shield size={13} className="text-white" />
+            </div>
+            <p className="text-sm font-semibold text-foreground">{currentLabel}</p>
           </div>
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-3">
             <AdminAlertsPopover />
-            <div className="w-px h-6 bg-border" />
-            <div className="w-8 h-8 rounded-lg bg-destructive/80 flex items-center justify-center text-white text-xs font-bold">
-              {initials}
-            </div>
-            <div className="text-sm">
-              <p className="font-medium leading-tight text-foreground">{profile?.full_name?.split(' ')[0] || 'Admin'}</p>
-              <p className="text-[11px] text-muted-foreground leading-tight">Administrator</p>
-            </div>
-            <div className="w-px h-6 bg-border ml-2" />
-            <Button variant="ghost" size="icon" onClick={handleSignOut} className="text-muted-foreground hover:text-destructive">
-              <LogOut size={18} />
+            <div className="w-px h-5 bg-border" />
+            <button className="flex items-center gap-2 hover:bg-muted/60 px-2 py-1.5 rounded-lg transition-colors">
+              <div className="w-7 h-7 rounded-lg bg-destructive/80 flex items-center justify-center text-white text-[11px] font-bold">
+                {initials}
+              </div>
+              <div className="text-left">
+                <p className="text-[12px] font-semibold leading-tight text-foreground">{profile?.full_name?.split(' ')[0] || 'Admin'}</p>
+                <p className="text-[10px] text-muted-foreground leading-tight">Administrator</p>
+              </div>
+              <ChevronDown size={12} className="text-muted-foreground ml-1" />
+            </button>
+            <div className="w-px h-5 bg-border" />
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive" onClick={handleSignOut}>
+              <LogOut size={16} />
             </Button>
           </div>
         </div>
 
-        <div className="pt-16 lg:pt-0 pb-20 lg:pb-0">{children}</div>
+        <div className="pt-14 lg:pt-0 pb-20 lg:pb-0">{children}</div>
       </main>
 
       {/* Mobile Bottom Nav */}
