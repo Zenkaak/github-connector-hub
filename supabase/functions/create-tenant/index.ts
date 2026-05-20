@@ -35,9 +35,28 @@ Deno.serve(async (req) => {
     const { data: userRes, error: uErr } = await admin.auth.getUser(token);
     if (uErr || !userRes?.user) { console.error("create-tenant: getUser", uErr); return json({ error: "Unauthorized — invalid token" }, 401); }
     const callerId = userRes.user.id;
-    const { data: hasRole, error: rErr } = await admin.rpc("has_role", { _user_id: callerId, _role: "admin" });
-    if (rErr) console.error("has_role error:", rErr);
-    if (!hasRole) { console.error("create-tenant: not admin", callerId); return json({ error: "Forbidden — admin only" }, 403); }
+
+    // Check admin status: first via profiles.is_admin, then fall back to has_role RPC.
+    // This handles users who are admin via profiles but don't have a user_roles row.
+    const { data: callerProfile, error: pErr } = await admin
+      .from("profiles")
+      .select("is_admin")
+      .eq("user_id", callerId)
+      .maybeSingle();
+    if (pErr) console.error("create-tenant: profiles lookup error", pErr);
+
+    let isAdmin = callerProfile?.is_admin === true;
+
+    if (!isAdmin) {
+      const { data: hasRole, error: rErr } = await admin.rpc("has_role", { _user_id: callerId, _role: "admin" });
+      if (rErr) console.error("create-tenant: has_role error", rErr);
+      isAdmin = !!hasRole;
+    }
+
+    if (!isAdmin) {
+      console.error("create-tenant: not admin", callerId);
+      return json({ error: "Forbidden — admin only" }, 403);
+    }
 
     const body = await req.json().catch((e) => { console.error("bad json", e); return {}; });
     console.log("create-tenant body:", JSON.stringify(body));
