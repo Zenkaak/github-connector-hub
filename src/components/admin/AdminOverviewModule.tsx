@@ -39,24 +39,35 @@ const fmtCompact = (n: number) => {
   return n.toString();
 };
 
-const PIE_COLORS = ['hsl(42,92%,56%)', 'hsl(160,84%,39%)', 'hsl(0,84%,60%)', 'hsl(213,72%,50%)', 'hsl(270,60%,60%)'];
+const PIE_COLORS = ['hsl(42,92%,56%)', 'hsl(160,84%,39%)', 'hsl(0,72%,51%)', 'hsl(213,72%,50%)', 'hsl(270,60%,56%)'];
+
+const CHART_TICK_COLOR = '#94a3b8';
+const CHART_GRID_COLOR = '#e2e8f0';
+const customTooltipStyle = {
+  background: '#ffffff',
+  border: '1px solid #e2e8f0',
+  borderRadius: '8px',
+  fontSize: '11px',
+  color: '#334155',
+  boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+};
 
 function Divider() {
-  return <div className="h-px bg-white/[0.06]" />;
+  return <div className="h-px bg-border" />;
 }
 
 function StatPill({ label, value, up }: { label: string; value: string; up?: boolean }) {
   return (
-    <div className="flex items-center gap-2 bg-white/[0.04] border border-white/[0.07] rounded-lg px-3 py-1.5">
+    <div className="flex items-center gap-2 bg-muted/60 border border-border rounded-lg px-3 py-1.5">
       {up !== undefined ? (
         up
-          ? <ArrowUpRight size={12} className="text-emerald-400 shrink-0" />
-          : <ArrowDownRight size={12} className="text-red-400 shrink-0" />
+          ? <ArrowUpRight size={12} className="text-emerald-600 shrink-0" />
+          : <ArrowDownRight size={12} className="text-red-500 shrink-0" />
       ) : (
         <span className="w-1.5 h-1.5 rounded-full bg-accent shrink-0" />
       )}
-      <span className="text-[10px] font-medium text-white/40 uppercase tracking-wider whitespace-nowrap">{label}</span>
-      <span className="text-[11px] font-bold text-white/80 ml-1">{value}</span>
+      <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">{label}</span>
+      <span className="text-[11px] font-bold text-foreground ml-1">{value}</span>
     </div>
   );
 }
@@ -70,30 +81,30 @@ function ActionChip({
       onClick={() => navigate(path)}
       className={cn(
         'flex flex-col gap-2 p-4 rounded-xl border text-left transition-all duration-200',
-        'hover:-translate-y-0.5 hover:shadow-lg active:scale-[0.98]',
+        'hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98]',
         count > 0
           ? urgent
-            ? 'bg-red-500/8 border-red-500/30 hover:border-red-500/55 hover:shadow-red-500/10'
-            : 'bg-amber-500/8 border-amber-500/25 hover:border-amber-500/50 hover:shadow-amber-500/10'
-          : 'bg-white/[0.02] border-white/[0.06] hover:border-white/[0.14]',
+            ? 'bg-red-50 border-red-200 hover:border-red-400 hover:shadow-red-100'
+            : 'bg-amber-50 border-amber-200 hover:border-amber-400 hover:shadow-amber-100'
+          : 'bg-muted/30 border-border hover:border-slate-300',
       )}
     >
       <div className={cn(
         'w-8 h-8 rounded-lg flex items-center justify-center',
-        count > 0 ? (urgent ? 'bg-red-500/15' : 'bg-amber-500/15') : 'bg-white/[0.06]',
+        count > 0 ? (urgent ? 'bg-red-100' : 'bg-amber-100') : 'bg-muted',
       )}>
         <Icon size={14} className={cn(
-          count > 0 ? (urgent ? 'text-red-400' : 'text-amber-400') : 'text-white/30',
+          count > 0 ? (urgent ? 'text-red-600' : 'text-amber-600') : 'text-muted-foreground/50',
         )} />
       </div>
       <div>
         <p className={cn(
           'text-xl font-extrabold leading-none tracking-tight',
-          count > 0 ? (urgent ? 'text-red-400' : 'text-amber-400') : 'text-white/25',
+          count > 0 ? (urgent ? 'text-red-600' : 'text-amber-600') : 'text-muted-foreground/40',
         )}>
           {count}
         </p>
-        <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-white/35 mt-1 leading-tight">
+        <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground/60 mt-1 leading-tight">
           {label}
         </p>
       </div>
@@ -106,20 +117,20 @@ function TransactionRow({ sender, receiver, amount, status, time }: {
 }) {
   const ok = status === 'completed';
   return (
-    <div className="flex items-center gap-3 py-2.5 border-b border-white/[0.04] last:border-0 group">
+    <div className="flex items-center gap-3 py-2.5 border-b border-border/50 last:border-0">
       <div className={cn(
         'w-8 h-8 rounded-lg flex items-center justify-center shrink-0',
-        ok ? 'bg-emerald-500/10' : 'bg-red-500/10',
+        ok ? 'bg-emerald-50' : 'bg-red-50',
       )}>
-        <Send size={12} className={ok ? 'text-emerald-400' : 'text-red-400'} />
+        <Send size={12} className={ok ? 'text-emerald-600' : 'text-red-500'} />
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[11px] font-semibold text-white/80 truncate leading-tight">{sender}</p>
-        <p className="text-[10px] text-white/30 truncate leading-tight">→ {receiver}</p>
+        <p className="text-[11px] font-semibold text-foreground truncate leading-tight">{sender}</p>
+        <p className="text-[10px] text-muted-foreground truncate leading-tight">→ {receiver}</p>
       </div>
       <div className="text-right shrink-0">
-        <p className="text-[12px] font-bold text-white/80">{fmtKesCompact(amount)}</p>
-        <p className="text-[9px] text-white/25">{time}</p>
+        <p className="text-[12px] font-bold text-foreground">{fmtKesCompact(amount)}</p>
+        <p className="text-[9px] text-muted-foreground/60">{time}</p>
       </div>
     </div>
   );
@@ -130,35 +141,27 @@ function MemberRow({ name, phone, verified, time }: {
 }) {
   const initials = name?.split(' ').filter(Boolean).map((n: string) => n[0]).join('').slice(0, 2).toUpperCase() || '?';
   return (
-    <div className="flex items-center gap-3 py-2.5 border-b border-white/[0.04] last:border-0">
+    <div className="flex items-center gap-3 py-2.5 border-b border-border/50 last:border-0">
       <div className="w-8 h-8 rounded-lg bg-accent/15 flex items-center justify-center shrink-0">
         <span className="text-[10px] font-bold text-accent">{initials}</span>
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[11px] font-semibold text-white/80 truncate leading-tight">{name || 'Unknown'}</p>
-        <p className="text-[10px] text-white/30 truncate">{phone || '—'}</p>
+        <p className="text-[11px] font-semibold text-foreground truncate leading-tight">{name || 'Unknown'}</p>
+        <p className="text-[10px] text-muted-foreground truncate">{phone || '—'}</p>
       </div>
       <div className="flex flex-col items-end gap-1 shrink-0">
         <span className={cn(
           'inline-flex items-center gap-1 text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-md',
-          verified ? 'bg-emerald-500/15 text-emerald-400' : 'bg-amber-500/15 text-amber-400',
+          verified ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700',
         )}>
           {verified ? <CheckCircle size={8} /> : <Clock size={8} />}
           {verified ? 'KYC' : 'Pending'}
         </span>
-        <p className="text-[9px] text-white/25">{time}</p>
+        <p className="text-[9px] text-muted-foreground/60">{time}</p>
       </div>
     </div>
   );
 }
-
-const customTooltipStyle = {
-  background: 'hsl(220,18%,10%)',
-  border: '1px solid rgba(255,255,255,0.08)',
-  borderRadius: '8px',
-  fontSize: '11px',
-  color: 'rgba(255,255,255,0.75)',
-};
 
 export function AdminOverviewModule() {
   const [stats, setStats] = useState<Stats | null>(null);
@@ -280,7 +283,7 @@ export function AdminOverviewModule() {
     return (
       <div className="flex flex-col items-center justify-center py-40 gap-3">
         <Loader2 className="animate-spin text-accent" size={28} />
-        <p className="text-[11px] text-white/30 uppercase tracking-widest font-medium">Loading overview</p>
+        <p className="text-[11px] text-muted-foreground uppercase tracking-widest font-medium">Loading overview</p>
       </div>
     );
   }
@@ -288,38 +291,38 @@ export function AdminOverviewModule() {
   const urgentCount = stats.unmappedMpesa + stats.failedB2c;
 
   return (
-    <div className="space-y-0 bg-[#0a0d13] rounded-2xl border border-white/[0.06] overflow-hidden">
+    <div className="space-y-0 bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
 
       {/* ── Header strip ──────────────────────────────── */}
-      <div className="px-6 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-[#0d1117]">
+      <div className="px-6 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-muted/40">
         <div>
           <div className="flex items-center gap-2 mb-1">
-            <span className="text-[9px] font-bold uppercase tracking-[0.28em] text-accent/70">Dasnet Ventures</span>
-            <span className="text-white/15">·</span>
-            <span className="text-[9px] font-medium text-white/30 uppercase tracking-widest">Control Centre</span>
+            <span className="text-[9px] font-bold uppercase tracking-[0.28em] text-accent">Dasnet Ventures</span>
+            <span className="text-border">·</span>
+            <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-widest">Control Centre</span>
           </div>
-          <h1 className="text-xl font-extrabold text-white tracking-tight leading-none">
+          <h1 className="text-xl font-extrabold text-foreground tracking-tight leading-none">
             Executive Overview
           </h1>
-          <p className="text-[11px] text-white/30 mt-1 font-medium">
+          <p className="text-[11px] text-muted-foreground mt-1 font-medium">
             {format(new Date(), "EEEE, d MMM yyyy")}
           </p>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex items-center gap-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-2.5 py-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider">Live</span>
+          <div className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Live</span>
           </div>
           {urgentCount > 0 && (
-            <div className="flex items-center gap-1.5 bg-red-500/10 border border-red-500/20 rounded-lg px-2.5 py-1">
-              <Zap size={10} className="text-red-400" />
-              <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider">{urgentCount} Urgent</span>
+            <div className="flex items-center gap-1.5 bg-red-50 border border-red-200 rounded-lg px-2.5 py-1">
+              <Zap size={10} className="text-red-600" />
+              <span className="text-[10px] font-bold text-red-600 uppercase tracking-wider">{urgentCount} Urgent</span>
             </div>
           )}
           <Button
             size="sm"
             variant="ghost"
-            className="h-7 gap-1.5 text-[11px] text-white/40 hover:text-white/70 hover:bg-white/[0.06] border border-white/[0.07]"
+            className="h-7 gap-1.5 text-[11px] text-muted-foreground hover:text-foreground border border-border hover:bg-muted"
             onClick={load}
           >
             <RefreshCw size={11} /> Refresh
@@ -330,7 +333,7 @@ export function AdminOverviewModule() {
       <Divider />
 
       {/* ── Hero financial row ─────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-white/[0.06] bg-[#0d1117]">
+      <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-border bg-card">
         {[
           {
             label: 'Total Assets Under Management',
@@ -339,7 +342,6 @@ export function AdminOverviewModule() {
             icon: Wallet,
             path: '/dashboard/admin/users',
             accent: 'text-accent',
-            glow: 'shadow-[0_0_40px_-12px_hsl(42_92%_56%_/_0.25)]',
           },
           {
             label: 'Transfer Volume (7 days)',
@@ -347,8 +349,7 @@ export function AdminOverviewModule() {
             sub: `${fmtKesCompact(stats.totalTransfersToday)} today`,
             icon: TrendingUp,
             path: '/dashboard/admin/transfers',
-            accent: 'text-emerald-400',
-            glow: 'shadow-[0_0_40px_-12px_hsl(160_84%_39%_/_0.2)]',
+            accent: 'text-emerald-600',
           },
           {
             label: 'Active Loan Portfolio',
@@ -356,28 +357,24 @@ export function AdminOverviewModule() {
             sub: `${stats.totalLoansActive} active loans`,
             icon: Banknote,
             path: '/dashboard/admin/loans',
-            accent: 'text-violet-400',
-            glow: 'shadow-[0_0_40px_-12px_hsl(270_60%_60%_/_0.2)]',
+            accent: 'text-violet-600',
           },
-        ].map(({ label, value, sub, icon: Icon, path, accent, glow }) => (
+        ].map(({ label, value, sub, icon: Icon, path, accent }) => (
           <button
             key={label}
             onClick={() => navigate(path)}
-            className={cn(
-              'group flex flex-col gap-3 px-6 py-6 text-left transition-all duration-200',
-              'hover:bg-white/[0.025] active:bg-white/[0.04]',
-            )}
+            className="group flex flex-col gap-3 px-6 py-6 text-left transition-all duration-200 hover:bg-muted/30 active:bg-muted/50"
           >
             <div className="flex items-center justify-between">
-              <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/25">{label}</span>
-              <ChevronRight size={12} className="text-white/15 group-hover:text-white/35 transition-colors" />
+              <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-muted-foreground/60">{label}</span>
+              <ChevronRight size={12} className="text-muted-foreground/40 group-hover:text-muted-foreground transition-colors" />
             </div>
-            <div className={cn('text-3xl font-extrabold tracking-tight leading-none', accent, glow)}>
+            <div className={cn('text-3xl font-extrabold tracking-tight leading-none', accent)}>
               {value}
             </div>
             <div className="flex items-center gap-2">
-              <Icon size={11} className="text-white/25" />
-              <span className="text-[11px] text-white/35 font-medium">{sub}</span>
+              <Icon size={11} className="text-muted-foreground/50" />
+              <span className="text-[11px] text-muted-foreground font-medium">{sub}</span>
             </div>
           </button>
         ))}
@@ -388,21 +385,21 @@ export function AdminOverviewModule() {
       {/* ── Alert banner ───────────────────────────────── */}
       {totalActions > 0 && (
         <>
-          <div className="px-6 py-3 flex items-center gap-4 bg-amber-500/5 border-y border-amber-500/15">
-            <div className="w-7 h-7 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0">
-              <AlertTriangle size={13} className="text-amber-400" />
+          <div className="px-6 py-3 flex items-center gap-4 bg-amber-50 border-y border-amber-200">
+            <div className="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
+              <AlertTriangle size={13} className="text-amber-600" />
             </div>
             <div className="flex-1">
-              <span className="text-[12px] font-bold text-amber-300">
+              <span className="text-[12px] font-bold text-amber-800">
                 {totalActions} item{totalActions !== 1 ? 's' : ''} pending review
               </span>
-              <span className="text-[11px] text-amber-400/50 ml-2">
+              <span className="text-[11px] text-amber-600/70 ml-2">
                 KYC · loans · withdrawals · M-Pesa reconciliation
               </span>
             </div>
             <Button
               size="sm"
-              className="h-7 text-[11px] shrink-0 bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/25"
+              className="h-7 text-[11px] shrink-0 bg-amber-100 hover:bg-amber-200 text-amber-800 border border-amber-300"
               variant="ghost"
               onClick={() => navigate('/dashboard/admin/kyc')}
             >
@@ -416,29 +413,29 @@ export function AdminOverviewModule() {
       {/* ── Revenue metrics ─────────────────────────────── */}
       <div className="px-6 py-5">
         <div className="flex items-center gap-2 mb-4">
-          <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/25">Revenue · Last 30 days</span>
-          <div className="flex-1 h-px bg-white/[0.06]" />
+          <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-muted-foreground/60">Revenue · Last 30 days</span>
+          <div className="flex-1 h-px bg-border" />
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[
-            { label: 'Net Revenue', value: fmtKesCompact(stats.revenue30d), icon: Coins, color: 'emerald' as const },
-            { label: 'Joining Fees', value: fmtKesCompact(stats.joiningFees30d), icon: Receipt, color: 'amber' as const },
-            { label: 'M-Pesa Inflow', value: fmtKesCompact(stats.depositsToday), icon: ArrowDownLeft, color: 'blue' as const },
-            { label: 'Payouts Today', value: fmtKesCompact(stats.payoutsToday), icon: Send, color: 'red' as const },
+            { label: 'Net Revenue',    value: fmtKesCompact(stats.revenue30d),     icon: Coins,        color: 'emerald' as const },
+            { label: 'Joining Fees',   value: fmtKesCompact(stats.joiningFees30d), icon: Receipt,      color: 'amber'   as const },
+            { label: 'M-Pesa Inflow',  value: fmtKesCompact(stats.depositsToday),  icon: ArrowDownLeft,color: 'blue'    as const },
+            { label: 'Payouts Today',  value: fmtKesCompact(stats.payoutsToday),   icon: Send,         color: 'red'     as const },
           ].map(({ label, value, icon: Icon, color }) => {
             const styles = {
-              emerald: { bg: 'bg-emerald-500/10', text: 'text-emerald-400', border: 'border-emerald-500/15' },
-              amber:   { bg: 'bg-amber-500/10',   text: 'text-amber-400',   border: 'border-amber-500/15' },
-              blue:    { bg: 'bg-blue-500/10',     text: 'text-blue-400',     border: 'border-blue-500/15' },
-              red:     { bg: 'bg-red-500/10',      text: 'text-red-400',      border: 'border-red-500/15' },
+              emerald: { bg: 'bg-emerald-50',  text: 'text-emerald-600', border: 'border-emerald-200', val: 'text-emerald-700' },
+              amber:   { bg: 'bg-amber-50',    text: 'text-amber-600',   border: 'border-amber-200',   val: 'text-amber-700'   },
+              blue:    { bg: 'bg-blue-50',     text: 'text-blue-600',    border: 'border-blue-200',    val: 'text-blue-700'    },
+              red:     { bg: 'bg-red-50',      text: 'text-red-600',     border: 'border-red-200',     val: 'text-red-700'     },
             }[color];
             return (
-              <div key={label} className={cn('p-4 rounded-xl border bg-white/[0.02]', styles.border)}>
+              <div key={label} className={cn('p-4 rounded-xl border bg-white shadow-sm', styles.border)}>
                 <div className={cn('w-7 h-7 rounded-lg flex items-center justify-center mb-3', styles.bg)}>
                   <Icon size={13} className={styles.text} />
                 </div>
-                <p className="text-lg font-extrabold text-white/85 tracking-tight leading-none">{value}</p>
-                <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-white/30 mt-1.5">{label}</p>
+                <p className={cn('text-lg font-extrabold tracking-tight leading-none', styles.val)}>{value}</p>
+                <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground mt-1.5">{label}</p>
               </div>
             );
           })}
@@ -450,14 +447,14 @@ export function AdminOverviewModule() {
       {/* ── Platform stats ──────────────────────────────── */}
       <div className="px-6 py-5">
         <div className="flex items-center gap-2 mb-4">
-          <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/25">Platform · Live</span>
-          <div className="flex-1 h-px bg-white/[0.06]" />
+          <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-muted-foreground/60">Platform · Live</span>
+          <div className="flex-1 h-px bg-border" />
         </div>
         <div className="flex flex-wrap gap-2">
-          <StatPill label="Members" value={stats.totalUsers.toLocaleString()} up={stats.newUsersToday > 0} />
-          <StatPill label="New today" value={`+${stats.newUsersToday}`} />
-          <StatPill label="Chamas" value={stats.activeChamas.toLocaleString()} />
-          <StatPill label="MGR Cycles" value={stats.openMgrCycles.toLocaleString()} />
+          <StatPill label="Members"     value={stats.totalUsers.toLocaleString()} up={stats.newUsersToday > 0} />
+          <StatPill label="New today"   value={`+${stats.newUsersToday}`} />
+          <StatPill label="Chamas"      value={stats.activeChamas.toLocaleString()} />
+          <StatPill label="MGR Cycles"  value={stats.openMgrCycles.toLocaleString()} />
           <StatPill label="Active loans" value={stats.totalLoansActive.toLocaleString()} />
         </div>
       </div>
@@ -467,55 +464,55 @@ export function AdminOverviewModule() {
       {/* ── Action queue ────────────────────────────────── */}
       <div className="px-6 py-5">
         <div className="flex items-center gap-2 mb-4">
-          <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-white/25">Action Queue</span>
-          <div className="flex-1 h-px bg-white/[0.06]" />
+          <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-muted-foreground/60">Action Queue</span>
+          <div className="flex-1 h-px bg-border" />
           {totalActions > 0 && (
-            <span className="text-[9px] font-bold text-amber-400 uppercase tracking-wider">
+            <span className="text-[9px] font-bold text-amber-600 uppercase tracking-wider">
               {totalActions} pending
             </span>
           )}
         </div>
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-          <ActionChip label="KYC"         count={stats.pendingKyc}         icon={ShieldAlert}    path="/dashboard/admin/kyc" />
-          <ActionChip label="Loans"       count={stats.pendingLoans}       icon={FileText}        path="/dashboard/admin/loans" />
-          <ActionChip label="Harambee"    count={stats.pendingHarambees}   icon={Heart}           path="/dashboard/admin/harambee-applications" />
-          <ActionChip label="Withdrawal"  count={stats.pendingWithdrawals} icon={PiggyBank}       path="/dashboard/admin/withdrawals" />
-          <ActionChip label="Unmapped"    count={stats.unmappedMpesa}      icon={AlertTriangle}   path="/dashboard/admin/mpesa" urgent />
-          <ActionChip label="Failed B2C"  count={stats.failedB2c}          icon={Send}            path="/dashboard/admin/mpesa" urgent />
+          <ActionChip label="KYC"        count={stats.pendingKyc}         icon={ShieldAlert} path="/dashboard/admin/kyc" />
+          <ActionChip label="Loans"      count={stats.pendingLoans}       icon={FileText}    path="/dashboard/admin/loans" />
+          <ActionChip label="Harambee"   count={stats.pendingHarambees}   icon={Heart}       path="/dashboard/admin/harambee-applications" />
+          <ActionChip label="Withdrawal" count={stats.pendingWithdrawals} icon={PiggyBank}   path="/dashboard/admin/withdrawals" />
+          <ActionChip label="Unmapped"   count={stats.unmappedMpesa}      icon={AlertTriangle} path="/dashboard/admin/mpesa" urgent />
+          <ActionChip label="Failed B2C" count={stats.failedB2c}          icon={Send}        path="/dashboard/admin/mpesa" urgent />
         </div>
       </div>
 
       <Divider />
 
       {/* ── Charts ──────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-white/[0.06]">
+      <div className="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-border">
 
         {/* Transfer volume chart */}
         <div className="lg:col-span-2 px-6 py-5">
           <div className="flex items-center justify-between mb-5">
             <div>
-              <p className="text-[11px] font-bold text-white/60 uppercase tracking-wider">Transfer Volume</p>
-              <p className="text-[10px] text-white/25 mt-0.5">Daily completed total · 14 days</p>
+              <p className="text-[11px] font-bold text-foreground/75 uppercase tracking-wider">Transfer Volume</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Daily completed total · 14 days</p>
             </div>
-            <span className="text-[10px] font-semibold text-white/25">KES</span>
+            <span className="text-[10px] font-semibold text-muted-foreground/60">KES</span>
           </div>
           <div className="h-52">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={transferTrend} margin={{ top: 5, right: 5, left: -22, bottom: 0 }}>
                 <defs>
                   <linearGradient id="trGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="hsl(42,92%,56%)" stopOpacity={0.3} />
-                    <stop offset="100%" stopColor="hsl(42,92%,56%)" stopOpacity={0} />
+                    <stop offset="0%" stopColor="hsl(42,92%,56%)" stopOpacity={0.25} />
+                    <stop offset="100%" stopColor="hsl(42,92%,56%)" stopOpacity={0.02} />
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_COLOR} vertical={false} />
                 <XAxis
                   dataKey="day"
-                  tick={{ fontSize: 9, fill: 'rgba(255,255,255,0.25)', fontWeight: 600 }}
+                  tick={{ fontSize: 9, fill: CHART_TICK_COLOR, fontWeight: 600 }}
                   axisLine={false} tickLine={false} interval={1}
                 />
                 <YAxis
-                  tick={{ fontSize: 9, fill: 'rgba(255,255,255,0.25)', fontWeight: 600 }}
+                  tick={{ fontSize: 9, fill: CHART_TICK_COLOR, fontWeight: 600 }}
                   axisLine={false} tickLine={false} tickFormatter={fmtCompact}
                 />
                 <Tooltip
@@ -537,14 +534,14 @@ export function AdminOverviewModule() {
         <div className="px-6 py-5">
           <div className="flex items-center justify-between mb-5">
             <div>
-              <p className="text-[11px] font-bold text-white/60 uppercase tracking-wider">Loan Portfolio</p>
-              <p className="text-[10px] text-white/25 mt-0.5">By application status</p>
+              <p className="text-[11px] font-bold text-foreground/75 uppercase tracking-wider">Loan Portfolio</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">By application status</p>
             </div>
-            <CreditCard size={13} className="text-white/20" />
+            <CreditCard size={13} className="text-muted-foreground/40" />
           </div>
           {loanMix.length === 0 ? (
             <div className="h-52 flex items-center justify-center">
-              <p className="text-[11px] text-white/20">No loan data</p>
+              <p className="text-[11px] text-muted-foreground/40">No loan data</p>
             </div>
           ) : (
             <>
@@ -569,9 +566,9 @@ export function AdminOverviewModule() {
                   <div key={m.name} className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <span className="w-2 h-2 rounded-sm shrink-0" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
-                      <span className="text-[10px] text-white/40 capitalize">{m.name}</span>
+                      <span className="text-[10px] text-muted-foreground capitalize">{m.name}</span>
                     </div>
-                    <span className="text-[11px] font-bold text-white/55">{m.value}</span>
+                    <span className="text-[11px] font-bold text-foreground/70">{m.value}</span>
                   </div>
                 ))}
               </div>
@@ -586,22 +583,22 @@ export function AdminOverviewModule() {
       <div className="px-6 py-5">
         <div className="flex items-center justify-between mb-5">
           <div>
-            <p className="text-[11px] font-bold text-white/60 uppercase tracking-wider">Member Growth</p>
-            <p className="text-[10px] text-white/25 mt-0.5">Daily new signups · 14 days</p>
+            <p className="text-[11px] font-bold text-foreground/75 uppercase tracking-wider">Member Growth</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Daily new signups · 14 days</p>
           </div>
-          <Users size={13} className="text-white/20" />
+          <Users size={13} className="text-muted-foreground/40" />
         </div>
         <div className="h-40">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={userTrend} margin={{ top: 5, right: 5, left: -22, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_COLOR} vertical={false} />
               <XAxis
                 dataKey="day"
-                tick={{ fontSize: 9, fill: 'rgba(255,255,255,0.25)', fontWeight: 600 }}
+                tick={{ fontSize: 9, fill: CHART_TICK_COLOR, fontWeight: 600 }}
                 axisLine={false} tickLine={false} interval={1}
               />
               <YAxis
-                tick={{ fontSize: 9, fill: 'rgba(255,255,255,0.25)', fontWeight: 600 }}
+                tick={{ fontSize: 9, fill: CHART_TICK_COLOR, fontWeight: 600 }}
                 axisLine={false} tickLine={false} allowDecimals={false}
               />
               <Tooltip
@@ -617,24 +614,24 @@ export function AdminOverviewModule() {
       <Divider />
 
       {/* ── Recent activity tables ──────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-white/[0.06]">
+      <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-border">
 
         {/* Recent transfers */}
         <div className="px-6 py-5">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <p className="text-[11px] font-bold text-white/60 uppercase tracking-wider">Recent Transfers</p>
-              <p className="text-[10px] text-white/25 mt-0.5">Latest wallet transactions</p>
+              <p className="text-[11px] font-bold text-foreground/75 uppercase tracking-wider">Recent Transfers</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Latest wallet transactions</p>
             </div>
             <button
               onClick={() => navigate('/dashboard/admin/transfers')}
-              className="flex items-center gap-1 text-[10px] font-semibold text-accent/60 hover:text-accent transition-colors"
+              className="flex items-center gap-1 text-[10px] font-semibold text-accent/70 hover:text-accent transition-colors"
             >
               View all <ChevronRight size={11} />
             </button>
           </div>
           {recentTransfers.length === 0 ? (
-            <p className="text-[11px] text-white/20 py-8 text-center">No transfers yet</p>
+            <p className="text-[11px] text-muted-foreground/40 py-8 text-center">No transfers yet</p>
           ) : (
             <div>
               {recentTransfers.map((t: any) => (
@@ -655,18 +652,18 @@ export function AdminOverviewModule() {
         <div className="px-6 py-5">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <p className="text-[11px] font-bold text-white/60 uppercase tracking-wider">New Members</p>
-              <p className="text-[10px] text-white/25 mt-0.5">Latest registrations</p>
+              <p className="text-[11px] font-bold text-foreground/75 uppercase tracking-wider">New Members</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Latest registrations</p>
             </div>
             <button
               onClick={() => navigate('/dashboard/admin/users')}
-              className="flex items-center gap-1 text-[10px] font-semibold text-accent/60 hover:text-accent transition-colors"
+              className="flex items-center gap-1 text-[10px] font-semibold text-accent/70 hover:text-accent transition-colors"
             >
               View all <ChevronRight size={11} />
             </button>
           </div>
           {recentUsers.length === 0 ? (
-            <p className="text-[11px] text-white/20 py-8 text-center">No members yet</p>
+            <p className="text-[11px] text-muted-foreground/40 py-8 text-center">No members yet</p>
           ) : (
             <div>
               {recentUsers.map((u: any) => (
