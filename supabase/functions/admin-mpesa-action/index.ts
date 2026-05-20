@@ -34,8 +34,11 @@ Deno.serve(async (req) => {
     const userId = u?.user?.id;
     if (!userId) return json({ error: "Unauthorized" }, 401);
 
-    const { data: isAdmin } = await admin.rpc("has_role", { _user_id: userId, _role: "admin" });
-    if (!isAdmin) return json({ error: "Forbidden" }, 403);
+    const { data: adminProf } = await admin.from("profiles").select("is_admin").eq("user_id", userId).maybeSingle();
+    if (!adminProf?.is_admin) {
+      const { data: roleCheck } = await admin.rpc("has_role", { _user_id: userId, _role: "admin" });
+      if (!roleCheck) return json({ error: "Forbidden" }, 403);
+    }
 
     const { action, payment_id, amount, phone, remarks, status, notes } = await req.json();
 
