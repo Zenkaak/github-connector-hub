@@ -8,6 +8,7 @@ import { PlatformSettingsProvider } from "@/contexts/PlatformSettingsContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { useInactivityTimeout } from "@/hooks/useInactivityTimeout";
 import { useNotificationListener } from "@/hooks/useNotificationListener";
+import { useCustomDomainRouter } from "@/hooks/useCustomDomainRouter";
 
 /* CORE */
 import Index from "./pages/Index";
