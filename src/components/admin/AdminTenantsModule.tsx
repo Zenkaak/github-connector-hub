@@ -6,11 +6,13 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { AdminCreateTenantDialog } from "./AdminCreateTenantDialog";
+import { AdminTenantConfigDialog } from "./AdminTenantConfigDialog";
 
 export function AdminTenantsModule() {
   const [tenants, setTenants] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [openCreate, setOpenCreate] = useState(false);
+  const [configTenant, setConfigTenant] = useState<any | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -70,12 +72,16 @@ export function AdminTenantsModule() {
                     <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { navigator.clipboard.writeText(callback); toast.success("Callback URL copied"); }}><Copy size={12} /></Button>
                   </div>
                 </div>
+                <div className="flex justify-end pt-1">
+                  <Button size="sm" variant="outline" onClick={() => setConfigTenant(t)}><Settings size={13} className="mr-1.5" />Configure</Button>
+                </div>
               </Card>
             );
           })}
         </div>}
 
       <AdminCreateTenantDialog open={openCreate} onOpenChange={setOpenCreate} onCreated={load} />
+      <AdminTenantConfigDialog tenant={configTenant} open={!!configTenant} onOpenChange={(o) => !o && setConfigTenant(null)} onSaved={load} />
     </div>
   );
 }

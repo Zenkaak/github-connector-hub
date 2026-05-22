@@ -1,0 +1,1 @@
+ALTER TABLE public.tenants ADD COLUMN IF NOT EXISTS auto_sync_updates BOOLEAN NOT NULL DEFAULT true;
