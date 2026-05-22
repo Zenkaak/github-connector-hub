@@ -48,7 +48,54 @@ Deno.serve(async (req) => {
     const accountRef = body.BillRefNumber || body.AccountReference || null;
     const transTime = body.TransTime ? parseTransTime(body.TransTime) : new Date().toISOString();
 
+    let matchedStatus: "matched" | "unmatched" = "unmatched";
+    let matchedUserId: string | null = null;
+    let matchedLoanId: string | null = null;
+    let notes: string | null = null;
+
     if (receipt) {
+      // 1. Try to auto-match by ID number → active loan disbursement
+      if (accountRef) {
+        const cleanRef = String(accountRef).trim();
+        const { data: profile } = await supabase
+          .from("profiles").select("user_id, full_name, id_number")
+          .eq("id_number", cleanRef).maybeSingle();
+
+        if (profile?.user_id) {
+          matchedUserId = profile.user_id;
+          const { data: loan } = await supabase
+            .from("loan_disbursements")
+            .select("id, loan_id, outstanding_balance")
+            .eq("user_id", profile.user_id)
+            .eq("status", "active")
+            .gt("outstanding_balance", 0)
+            .order("created_at", { ascending: true })
+            .limit(1).maybeSingle();
+
+          if (loan) {
+            const newBalance = Math.max(Number(loan.outstanding_balance || 0) - amount, 0);
+            await supabase.from("loan_disbursements")
+              .update({ outstanding_balance: newBalance, status: newBalance === 0 ? "paid" : "active" })
+              .eq("id", loan.id);
+            await supabase.from("wallet_transactions").insert({
+              user_id: profile.user_id,
+              type: "loan_repayment",
+              amount,
+              description: `SACCO ${tenant.name}: Paybill repayment (Ref ${cleanRef})`,
+              reference_id: receipt,
+              status: "completed",
+            });
+            matchedStatus = "matched";
+            matchedLoanId = loan.loan_id;
+            notes = `Applied to loan; new balance KES ${newBalance.toLocaleString()}.`;
+          } else {
+            notes = `ID ${cleanRef} matched user but no active loan found.`;
+          }
+        } else {
+          notes = `ID ${cleanRef} not registered. Awaiting manual reconciliation.`;
+        }
+      }
+
       await supabase.from("tenant_paybill_transactions").upsert({
         tenant_id: tenant.id,
         mpesa_receipt: receipt,
@@ -58,6 +105,10 @@ Deno.serve(async (req) => {
         account_reference: accountRef,
         trans_time: transTime,
         raw_payload: body,
+        status: matchedStatus,
+        matched_user_id: matchedUserId,
+        matched_loan_id: matchedLoanId,
+        notes,
       }, { onConflict: "tenant_id,mpesa_receipt" });
     }
 
