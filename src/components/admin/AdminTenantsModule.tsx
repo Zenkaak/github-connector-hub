@@ -72,12 +72,16 @@ export function AdminTenantsModule() {
                     <Button size="icon" variant="ghost" className="h-7 w-7" onClick={() => { navigator.clipboard.writeText(callback); toast.success("Callback URL copied"); }}><Copy size={12} /></Button>
                   </div>
                 </div>
+                <div className="flex justify-end pt-1">
+                  <Button size="sm" variant="outline" onClick={() => setConfigTenant(t)}><Settings size={13} className="mr-1.5" />Configure</Button>
+                </div>
               </Card>
             );
           })}
         </div>}
 
       <AdminCreateTenantDialog open={openCreate} onOpenChange={setOpenCreate} onCreated={load} />
+      <AdminTenantConfigDialog tenant={configTenant} open={!!configTenant} onOpenChange={(o) => !o && setConfigTenant(null)} onSaved={load} />
     </div>
   );
 }
