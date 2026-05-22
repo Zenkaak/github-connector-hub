@@ -2637,6 +2637,7 @@ export type Database = {
       }
       tenants: {
         Row: {
+          auto_sync_updates: boolean
           callback_token: string
           created_at: string
           created_by: string | null
@@ -2656,6 +2657,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          auto_sync_updates?: boolean
           callback_token?: string
           created_at?: string
           created_by?: string | null
@@ -2675,6 +2677,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          auto_sync_updates?: boolean
           callback_token?: string
           created_at?: string
           created_by?: string | null
