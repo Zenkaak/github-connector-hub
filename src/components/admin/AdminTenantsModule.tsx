@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { AdminCreateTenantDialog } from "./AdminCreateTenantDialog";
+import { AdminTenantConfigDialog } from "./AdminTenantConfigDialog";
 
 export function AdminTenantsModule() {
   const [tenants, setTenants] = useState<any[]>([]);
