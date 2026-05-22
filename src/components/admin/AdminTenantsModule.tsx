@@ -12,6 +12,7 @@ export function AdminTenantsModule() {
   const [tenants, setTenants] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [openCreate, setOpenCreate] = useState(false);
+  const [configTenant, setConfigTenant] = useState<any | null>(null);
 
   const load = async () => {
     setLoading(true);
