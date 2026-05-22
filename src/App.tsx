@@ -78,6 +78,8 @@ const queryClient = new QueryClient();
 function AppRoutes() {
   useInactivityTimeout();
   useNotificationListener();
+  useCustomDomainRouter();
+
 
   return (
     <Routes>
