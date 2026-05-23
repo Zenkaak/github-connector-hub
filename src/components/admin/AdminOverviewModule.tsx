@@ -430,17 +430,18 @@ export function AdminOverviewModule() {
         </div>
       </div>
 
-      <Divider />
-
-      {/* ── Charts ──────────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 divide-y lg:divide-y-0 lg:divide-x divide-border">
-
-        {/* Transfer volume chart */}
-        <div className="lg:col-span-2 px-6 py-5">
-          <div className="flex items-center justify-between mb-5">
-            <div>
-              <p className="text-[11px] font-bold text-foreground/75 uppercase tracking-wider">Transfer Volume</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">Daily completed total · 14 days</p>
+      {/* ── Charts row ──────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2 rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
+                <TrendingUp size={13} className="text-white" />
+              </div>
+              <div>
+                <p className="text-[11px] font-bold text-foreground uppercase tracking-[0.2em]">Transfer Volume</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">Daily completed total · 14 days</p>
+              </div>
             </div>
             <span className="text-[10px] font-semibold text-muted-foreground/60">KES</span>
           </div>
@@ -449,61 +450,41 @@ export function AdminOverviewModule() {
               <AreaChart data={transferTrend} margin={{ top: 5, right: 5, left: -22, bottom: 0 }}>
                 <defs>
                   <linearGradient id="trGrad" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="hsl(42,92%,56%)" stopOpacity={0.25} />
+                    <stop offset="0%" stopColor="hsl(42,92%,56%)" stopOpacity={0.35} />
                     <stop offset="100%" stopColor="hsl(42,92%,56%)" stopOpacity={0.02} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_COLOR} vertical={false} />
-                <XAxis
-                  dataKey="day"
-                  tick={{ fontSize: 9, fill: CHART_TICK_COLOR, fontWeight: 600 }}
-                  axisLine={false} tickLine={false} interval={1}
-                />
-                <YAxis
-                  tick={{ fontSize: 9, fill: CHART_TICK_COLOR, fontWeight: 600 }}
-                  axisLine={false} tickLine={false} tickFormatter={fmtCompact}
-                />
-                <Tooltip
-                  contentStyle={customTooltipStyle}
-                  formatter={(v: number) => [fmtKes(v), 'Volume']}
-                />
-                <Area
-                  type="monotone" dataKey="amount"
-                  stroke="hsl(42,92%,56%)" strokeWidth={2}
-                  fill="url(#trGrad)" dot={false}
-                  activeDot={{ r: 4, fill: 'hsl(42,92%,56%)', strokeWidth: 0 }}
-                />
+                <XAxis dataKey="day" tick={{ fontSize: 9, fill: CHART_TICK_COLOR, fontWeight: 600 }} axisLine={false} tickLine={false} interval={1} />
+                <YAxis tick={{ fontSize: 9, fill: CHART_TICK_COLOR, fontWeight: 600 }} axisLine={false} tickLine={false} tickFormatter={fmtCompact} />
+                <Tooltip contentStyle={customTooltipStyle} formatter={(v: number) => [fmtKes(v), 'Volume']} />
+                <Area type="monotone" dataKey="amount" stroke="hsl(42,92%,56%)" strokeWidth={2.5} fill="url(#trGrad)" dot={false} activeDot={{ r: 4, fill: 'hsl(42,92%,56%)', strokeWidth: 0 }} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        {/* Loan portfolio donut */}
-        <div className="px-6 py-5">
-          <div className="flex items-center justify-between mb-5">
-            <div>
-              <p className="text-[11px] font-bold text-foreground/75 uppercase tracking-wider">Loan Portfolio</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">By application status</p>
+        <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center">
+                <CreditCard size={13} className="text-white" />
+              </div>
+              <div>
+                <p className="text-[11px] font-bold text-foreground uppercase tracking-[0.2em]">Loan Portfolio</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">By status</p>
+              </div>
             </div>
-            <CreditCard size={13} className="text-muted-foreground/40" />
           </div>
           {loanMix.length === 0 ? (
-            <div className="h-52 flex items-center justify-center">
-              <p className="text-[11px] text-muted-foreground/40">No loan data</p>
-            </div>
+            <div className="h-52 flex items-center justify-center"><p className="text-[11px] text-muted-foreground/40">No loan data</p></div>
           ) : (
             <>
               <div className="h-40">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie
-                      data={loanMix} dataKey="value" nameKey="name"
-                      cx="50%" cy="50%" innerRadius={42} outerRadius={66}
-                      paddingAngle={3} strokeWidth={0}
-                    >
-                      {loanMix.map((_, i) => (
-                        <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
-                      ))}
+                    <Pie data={loanMix} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={42} outerRadius={66} paddingAngle={3} strokeWidth={0}>
+                      {loanMix.map((_, i) => (<Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />))}
                     </Pie>
                     <Tooltip contentStyle={customTooltipStyle} />
                   </PieChart>
@@ -525,47 +506,36 @@ export function AdminOverviewModule() {
         </div>
       </div>
 
-      <Divider />
-
-      {/* New member signups chart */}
-      <div className="px-6 py-5">
-        <div className="flex items-center justify-between mb-5">
-          <div>
-            <p className="text-[11px] font-bold text-foreground/75 uppercase tracking-wider">Member Growth</p>
-            <p className="text-[10px] text-muted-foreground mt-0.5">Daily new signups · 14 days</p>
+      {/* ── Member growth ───────────────────────────────── */}
+      <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center">
+              <Users size={13} className="text-white" />
+            </div>
+            <div>
+              <p className="text-[11px] font-bold text-foreground uppercase tracking-[0.2em]">Member Growth</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Daily new signups · 14 days</p>
+            </div>
           </div>
-          <Users size={13} className="text-muted-foreground/40" />
         </div>
         <div className="h-40">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={userTrend} margin={{ top: 5, right: 5, left: -22, bottom: 0 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID_COLOR} vertical={false} />
-              <XAxis
-                dataKey="day"
-                tick={{ fontSize: 9, fill: CHART_TICK_COLOR, fontWeight: 600 }}
-                axisLine={false} tickLine={false} interval={1}
-              />
-              <YAxis
-                tick={{ fontSize: 9, fill: CHART_TICK_COLOR, fontWeight: 600 }}
-                axisLine={false} tickLine={false} allowDecimals={false}
-              />
-              <Tooltip
-                contentStyle={customTooltipStyle}
-                formatter={(v: number) => [v, 'New members']}
-              />
-              <Bar dataKey="users" fill="hsl(213,72%,50%)" radius={[3, 3, 0, 0]} maxBarSize={28} />
+              <XAxis dataKey="day" tick={{ fontSize: 9, fill: CHART_TICK_COLOR, fontWeight: 600 }} axisLine={false} tickLine={false} interval={1} />
+              <YAxis tick={{ fontSize: 9, fill: CHART_TICK_COLOR, fontWeight: 600 }} axisLine={false} tickLine={false} allowDecimals={false} />
+              <Tooltip contentStyle={customTooltipStyle} formatter={(v: number) => [v, 'New members']} />
+              <Bar dataKey="users" fill="hsl(213,72%,50%)" radius={[4, 4, 0, 0]} maxBarSize={28} />
             </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      <Divider />
-
       {/* ── Recent activity tables ──────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 divide-y lg:divide-y-0 lg:divide-x divide-border">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
 
-        {/* Recent transfers */}
-        <div className="px-6 py-5">
+        <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <div>
               <p className="text-[11px] font-bold text-foreground/75 uppercase tracking-wider">Recent Transfers</p>
