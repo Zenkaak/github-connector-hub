@@ -567,7 +567,7 @@ export function AdminOverviewModule() {
         </div>
 
         {/* Recent members */}
-        <div className="px-6 py-5">
+        <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <div>
               <p className="text-[11px] font-bold text-foreground/75 uppercase tracking-wider">New Members</p>
