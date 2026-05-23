@@ -184,7 +184,7 @@ Deno.serve(async (req) => {
       else { emailQueued = true; console.log("invite email queued:", eData); }
     } catch (e) { emailError = String(e); console.error("Email invoke failed:", e); }
 
-    return json({ ok: true, tenant, login_url: loginUrl, sms: smsResult, email_queued: emailQueued });
+    return json({ ok: true, tenant, login_url: loginUrl, sms: smsResult, email_queued: emailQueued, email_error: emailError });
   } catch (err) {
     console.error("create-tenant error:", err);
     return json({ error: String(err) }, 500);
