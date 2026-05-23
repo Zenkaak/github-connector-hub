@@ -291,194 +291,142 @@ export function AdminOverviewModule() {
   const urgentCount = stats.unmappedMpesa + stats.failedB2c;
 
   return (
-    <div className="space-y-0 bg-card rounded-2xl border border-border shadow-sm overflow-hidden">
+    <div className="space-y-4">
 
-      {/* ── Header strip ──────────────────────────────── */}
-      <div className="px-6 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 bg-muted/40">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-[9px] font-bold uppercase tracking-[0.28em] text-accent">Dasnet Ventures</span>
-            <span className="text-border">·</span>
-            <span className="text-[9px] font-medium text-muted-foreground uppercase tracking-widest">Control Centre</span>
-          </div>
-          <h1 className="text-xl font-extrabold text-foreground tracking-tight leading-none">
-            Executive Overview
-          </h1>
-          <p className="text-[11px] text-muted-foreground mt-1 font-medium">
-            {format(new Date(), "EEEE, d MMM yyyy")}
-          </p>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <div className="flex items-center gap-1.5 bg-emerald-50 border border-emerald-200 rounded-lg px-2.5 py-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Live</span>
-          </div>
-          {urgentCount > 0 && (
-            <div className="flex items-center gap-1.5 bg-red-50 border border-red-200 rounded-lg px-2.5 py-1">
-              <Zap size={10} className="text-red-600" />
-              <span className="text-[10px] font-bold text-red-600 uppercase tracking-wider">{urgentCount} Urgent</span>
+      {/* ── Hero header ──────────────────────────────── */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[hsl(213,72%,14%)] via-[hsl(213,72%,18%)] to-[hsl(160,84%,20%)] p-6 sm:p-8 text-white shadow-lg">
+        <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-accent/20 blur-3xl" />
+        <div className="absolute -bottom-16 -left-16 w-64 h-64 rounded-full bg-emerald-400/15 blur-3xl" />
+        <div className="relative flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="px-2 py-0.5 rounded-full bg-accent/20 text-accent text-[9px] font-bold uppercase tracking-[0.22em] border border-accent/30">DASNET</span>
+              <span className="text-[10px] font-medium text-white/50 uppercase tracking-widest">Control Centre</span>
             </div>
-          )}
-          <Button
-            size="sm"
-            variant="ghost"
-            className="h-7 gap-1.5 text-[11px] text-muted-foreground hover:text-foreground border border-border hover:bg-muted"
-            onClick={load}
-          >
-            <RefreshCw size={11} /> Refresh
-          </Button>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight leading-none">Executive Overview</h1>
+            <p className="text-[12px] text-white/60 mt-2 font-medium">{format(new Date(), "EEEE, d MMM yyyy")}</p>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <div className="flex items-center gap-1.5 bg-emerald-500/20 border border-emerald-400/30 backdrop-blur rounded-lg px-3 py-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-[10px] font-bold text-emerald-300 uppercase tracking-wider">Live</span>
+            </div>
+            {urgentCount > 0 && (
+              <div className="flex items-center gap-1.5 bg-red-500/20 border border-red-400/30 backdrop-blur rounded-lg px-3 py-1.5">
+                <Zap size={11} className="text-red-300" />
+                <span className="text-[10px] font-bold text-red-200 uppercase tracking-wider">{urgentCount} Urgent</span>
+              </div>
+            )}
+            <Button size="sm" variant="ghost" className="h-8 gap-1.5 text-[11px] text-white/80 hover:text-white border border-white/15 hover:bg-white/10" onClick={load}>
+              <RefreshCw size={11} /> Refresh
+            </Button>
+          </div>
         </div>
       </div>
 
-      <Divider />
-
-      {/* ── Hero financial row ─────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-border bg-card">
+      {/* ── Hero KPI tiles (gradient) ─────────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {[
-          {
-            label: 'Total Assets Under Management',
-            value: fmtKesCompact(stats.totalWalletBalance),
-            sub: `${stats.totalUsers.toLocaleString()} member wallets`,
-            icon: Wallet,
-            path: '/dashboard/admin/users',
-            accent: 'text-accent',
-          },
-          {
-            label: 'Transfer Volume (7 days)',
-            value: fmtKesCompact(stats.totalTransfers7d),
-            sub: `${fmtKesCompact(stats.totalTransfersToday)} today`,
-            icon: TrendingUp,
-            path: '/dashboard/admin/transfers',
-            accent: 'text-emerald-600',
-          },
-          {
-            label: 'Active Loan Portfolio',
-            value: fmtKesCompact(stats.totalLoanValue),
-            sub: `${stats.totalLoansActive} active loans`,
-            icon: Banknote,
-            path: '/dashboard/admin/loans',
-            accent: 'text-violet-600',
-          },
-        ].map(({ label, value, sub, icon: Icon, path, accent }) => (
-          <button
-            key={label}
-            onClick={() => navigate(path)}
-            className="group flex flex-col gap-3 px-6 py-6 text-left transition-all duration-200 hover:bg-muted/30 active:bg-muted/50"
-          >
-            <div className="flex items-center justify-between">
-              <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-muted-foreground/60">{label}</span>
-              <ChevronRight size={12} className="text-muted-foreground/40 group-hover:text-muted-foreground transition-colors" />
+          { label: 'Assets Under Management', value: fmtKesCompact(stats.totalWalletBalance), sub: `${stats.totalUsers.toLocaleString()} member wallets`, icon: Wallet, path: '/dashboard/admin/users', grad: 'from-amber-400 via-amber-500 to-orange-500', shadow: 'shadow-amber-200' },
+          { label: 'Transfer Volume · 7d', value: fmtKesCompact(stats.totalTransfers7d), sub: `${fmtKesCompact(stats.totalTransfersToday)} today`, icon: TrendingUp, path: '/dashboard/admin/transfers', grad: 'from-emerald-400 via-emerald-500 to-teal-600', shadow: 'shadow-emerald-200' },
+          { label: 'Active Loan Portfolio', value: fmtKesCompact(stats.totalLoanValue), sub: `${stats.totalLoansActive} active loans`, icon: Banknote, path: '/dashboard/admin/loans', grad: 'from-violet-500 via-purple-500 to-fuchsia-500', shadow: 'shadow-violet-200' },
+        ].map(({ label, value, sub, icon: Icon, path, grad, shadow }) => (
+          <button key={label} onClick={() => navigate(path)} className={cn('group relative overflow-hidden rounded-2xl p-5 text-left text-white bg-gradient-to-br transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.99]', grad, shadow)}>
+            <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/15 blur-2xl" />
+            <div className="relative flex items-start justify-between mb-4">
+              <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
+                <Icon size={18} />
+              </div>
+              <ChevronRight size={14} className="text-white/70 group-hover:translate-x-0.5 transition-transform" />
             </div>
-            <div className={cn('text-3xl font-extrabold tracking-tight leading-none', accent)}>
-              {value}
-            </div>
-            <div className="flex items-center gap-2">
-              <Icon size={11} className="text-muted-foreground/50" />
-              <span className="text-[11px] text-muted-foreground font-medium">{sub}</span>
-            </div>
+            <p className="relative text-[9px] font-bold uppercase tracking-[0.22em] text-white/80 mb-2">{label}</p>
+            <p className="relative text-2xl sm:text-3xl font-extrabold tracking-tight leading-none">{value}</p>
+            <p className="relative text-[11px] text-white/75 font-medium mt-2">{sub}</p>
           </button>
         ))}
       </div>
 
-      <Divider />
-
       {/* ── Alert banner ───────────────────────────────── */}
       {totalActions > 0 && (
-        <>
-          <div className="px-6 py-3 flex items-center gap-4 bg-amber-50 border-y border-amber-200">
-            <div className="w-7 h-7 rounded-lg bg-amber-100 flex items-center justify-center shrink-0">
-              <AlertTriangle size={13} className="text-amber-600" />
-            </div>
-            <div className="flex-1">
-              <span className="text-[12px] font-bold text-amber-800">
-                {totalActions} item{totalActions !== 1 ? 's' : ''} pending review
-              </span>
-              <span className="text-[11px] text-amber-600/70 ml-2">
-                KYC · loans · withdrawals · M-Pesa reconciliation
-              </span>
-            </div>
-            <Button
-              size="sm"
-              className="h-7 text-[11px] shrink-0 bg-amber-100 hover:bg-amber-200 text-amber-800 border border-amber-300"
-              variant="ghost"
-              onClick={() => navigate('/dashboard/admin/kyc')}
-            >
-              Review <ChevronRight size={12} />
-            </Button>
+        <div className="px-4 py-3 rounded-xl flex items-center gap-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200">
+          <div className="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
+            <AlertTriangle size={15} className="text-amber-600" />
           </div>
-          <Divider />
-        </>
+          <div className="flex-1">
+            <span className="text-[12px] font-bold text-amber-800">{totalActions} item{totalActions !== 1 ? 's' : ''} pending review</span>
+            <span className="text-[11px] text-amber-600/70 ml-2">KYC · loans · withdrawals · M-Pesa</span>
+          </div>
+          <Button size="sm" className="h-7 text-[11px] shrink-0 bg-amber-500 hover:bg-amber-600 text-white border-0" onClick={() => navigate('/dashboard/admin/kyc')}>
+            Review <ChevronRight size={12} />
+          </Button>
+        </div>
       )}
 
       {/* ── Revenue metrics ─────────────────────────────── */}
-      <div className="px-6 py-5">
+      <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm">
         <div className="flex items-center gap-2 mb-4">
-          <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-muted-foreground/60">Revenue · Last 30 days</span>
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center">
+            <Coins size={13} className="text-white" />
+          </div>
+          <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-foreground">Revenue · Last 30 days</span>
           <div className="flex-1 h-px bg-border" />
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[
-            { label: 'Net Revenue',    value: fmtKesCompact(stats.revenue30d),     icon: Coins,        color: 'emerald' as const },
-            { label: 'Joining Fees',   value: fmtKesCompact(stats.joiningFees30d), icon: Receipt,      color: 'amber'   as const },
-            { label: 'M-Pesa Inflow',  value: fmtKesCompact(stats.depositsToday),  icon: ArrowDownLeft,color: 'blue'    as const },
-            { label: 'Payouts Today',  value: fmtKesCompact(stats.payoutsToday),   icon: Send,         color: 'red'     as const },
-          ].map(({ label, value, icon: Icon, color }) => {
-            const styles = {
-              emerald: { bg: 'bg-emerald-50',  text: 'text-emerald-600', border: 'border-emerald-200', val: 'text-emerald-700' },
-              amber:   { bg: 'bg-amber-50',    text: 'text-amber-600',   border: 'border-amber-200',   val: 'text-amber-700'   },
-              blue:    { bg: 'bg-blue-50',     text: 'text-blue-600',    border: 'border-blue-200',    val: 'text-blue-700'    },
-              red:     { bg: 'bg-red-50',      text: 'text-red-600',     border: 'border-red-200',     val: 'text-red-700'     },
-            }[color];
-            return (
-              <div key={label} className={cn('p-4 rounded-xl border bg-white shadow-sm', styles.border)}>
-                <div className={cn('w-7 h-7 rounded-lg flex items-center justify-center mb-3', styles.bg)}>
-                  <Icon size={13} className={styles.text} />
-                </div>
-                <p className={cn('text-lg font-extrabold tracking-tight leading-none', styles.val)}>{value}</p>
-                <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground mt-1.5">{label}</p>
+            { label: 'Net Revenue', value: fmtKesCompact(stats.revenue30d), icon: Coins, grad: 'from-emerald-400 to-teal-500' },
+            { label: 'Joining Fees', value: fmtKesCompact(stats.joiningFees30d), icon: Receipt, grad: 'from-amber-400 to-orange-500' },
+            { label: 'M-Pesa Inflow', value: fmtKesCompact(stats.depositsToday), icon: ArrowDownLeft, grad: 'from-blue-400 to-indigo-500' },
+            { label: 'Payouts Today', value: fmtKesCompact(stats.payoutsToday), icon: Send, grad: 'from-rose-400 to-red-500' },
+          ].map(({ label, value, icon: Icon, grad }) => (
+            <div key={label} className="relative overflow-hidden p-4 rounded-xl border border-border bg-white shadow-sm hover:shadow-md transition-shadow">
+              <div className={cn('absolute top-0 left-0 w-full h-1 bg-gradient-to-r', grad)} />
+              <div className={cn('w-9 h-9 rounded-xl bg-gradient-to-br flex items-center justify-center mb-3 shadow-sm', grad)}>
+                <Icon size={15} className="text-white" />
               </div>
-            );
-          })}
+              <p className="text-xl font-extrabold tracking-tight leading-none text-foreground">{value}</p>
+              <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground mt-2">{label}</p>
+            </div>
+          ))}
         </div>
       </div>
 
-      <Divider />
-
       {/* ── Platform stats ──────────────────────────────── */}
-      <div className="px-6 py-5">
+      <div className="rounded-2xl border border-border bg-gradient-to-br from-card to-muted/30 p-5 sm:p-6 shadow-sm">
         <div className="flex items-center gap-2 mb-4">
-          <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-muted-foreground/60">Platform · Live</span>
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center">
+            <Activity size={13} className="text-white" />
+          </div>
+          <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-foreground">Platform · Live</span>
           <div className="flex-1 h-px bg-border" />
         </div>
         <div className="flex flex-wrap gap-2">
-          <StatPill label="Members"     value={stats.totalUsers.toLocaleString()} up={stats.newUsersToday > 0} />
-          <StatPill label="New today"   value={`+${stats.newUsersToday}`} />
-          <StatPill label="Chamas"      value={stats.activeChamas.toLocaleString()} />
-          <StatPill label="MGR Cycles"  value={stats.openMgrCycles.toLocaleString()} />
+          <StatPill label="Members" value={stats.totalUsers.toLocaleString()} up={stats.newUsersToday > 0} />
+          <StatPill label="New today" value={`+${stats.newUsersToday}`} />
+          <StatPill label="Chamas" value={stats.activeChamas.toLocaleString()} />
+          <StatPill label="MGR Cycles" value={stats.openMgrCycles.toLocaleString()} />
           <StatPill label="Active loans" value={stats.totalLoansActive.toLocaleString()} />
         </div>
       </div>
 
-      <Divider />
-
       {/* ── Action queue ────────────────────────────────── */}
-      <div className="px-6 py-5">
+      <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm">
         <div className="flex items-center gap-2 mb-4">
-          <span className="text-[9px] font-bold uppercase tracking-[0.22em] text-muted-foreground/60">Action Queue</span>
+          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
+            <Clock size={13} className="text-white" />
+          </div>
+          <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-foreground">Action Queue</span>
           <div className="flex-1 h-px bg-border" />
           {totalActions > 0 && (
-            <span className="text-[9px] font-bold text-amber-600 uppercase tracking-wider">
-              {totalActions} pending
-            </span>
+            <span className="px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 text-[9px] font-bold uppercase tracking-wider">{totalActions} pending</span>
           )}
         </div>
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-          <ActionChip label="KYC"        count={stats.pendingKyc}         icon={ShieldAlert} path="/dashboard/admin/kyc" />
-          <ActionChip label="Loans"      count={stats.pendingLoans}       icon={FileText}    path="/dashboard/admin/loans" />
-          <ActionChip label="Harambee"   count={stats.pendingHarambees}   icon={Heart}       path="/dashboard/admin/harambee-applications" />
-          <ActionChip label="Withdrawal" count={stats.pendingWithdrawals} icon={PiggyBank}   path="/dashboard/admin/withdrawals" />
-          <ActionChip label="Unmapped"   count={stats.unmappedMpesa}      icon={AlertTriangle} path="/dashboard/admin/mpesa" urgent />
-          <ActionChip label="Failed B2C" count={stats.failedB2c}          icon={Send}        path="/dashboard/admin/mpesa" urgent />
+          <ActionChip label="KYC" count={stats.pendingKyc} icon={ShieldAlert} path="/dashboard/admin/kyc" />
+          <ActionChip label="Loans" count={stats.pendingLoans} icon={FileText} path="/dashboard/admin/loans" />
+          <ActionChip label="Harambee" count={stats.pendingHarambees} icon={Heart} path="/dashboard/admin/harambee-applications" />
+          <ActionChip label="Withdrawal" count={stats.pendingWithdrawals} icon={PiggyBank} path="/dashboard/admin/withdrawals" />
+          <ActionChip label="Unmapped" count={stats.unmappedMpesa} icon={AlertTriangle} path="/dashboard/admin/mpesa" urgent />
+          <ActionChip label="Failed B2C" count={stats.failedB2c} icon={Send} path="/dashboard/admin/mpesa" urgent />
         </div>
       </div>
 
