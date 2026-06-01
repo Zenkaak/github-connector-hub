@@ -311,216 +311,201 @@ export default function ChamaGroupDetailPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background pb-24">
-      <div className="sticky top-0 z-30 bg-background/85 backdrop-blur-md border-b border-border/50">
-        <div className="max-w-5xl mx-auto px-3 sm:px-4 h-12 flex items-center justify-between gap-2">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/dashboard/chama')} className="-ml-2 text-muted-foreground gap-1">
-            <ArrowLeft size={16} /> <span className="hidden sm:inline">Back to Chamas</span><span className="sm:hidden">Back</span>
-          </Button>
-          <div className="text-[11px] uppercase tracking-wider text-muted-foreground font-semibold truncate">
-            {group?.name}
+    <div className="min-h-screen bg-gradient-to-b from-background to-muted/30 pb-24">
+      {/* ── Sticky compact header ── */}
+      <div className="sticky top-0 z-30 bg-background/80 backdrop-blur-xl border-b border-border/50">
+        <div className="max-w-6xl mx-auto px-3 sm:px-6 h-14 flex items-center justify-between gap-3">
+          <button
+            onClick={() => navigate('/dashboard/chama')}
+            className="-ml-2 inline-flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors text-[13px] font-medium"
+          >
+            <ArrowLeft size={16} />
+            <span className="hidden sm:inline">All chamas</span>
+          </button>
+          <div className="flex-1 min-w-0 text-center">
+            <p className="text-[10px] uppercase tracking-[0.2em] font-semibold text-muted-foreground/70 leading-none">Chama</p>
+            <p className="text-[13px] font-display font-bold text-foreground truncate leading-tight mt-0.5">{group?.name}</p>
           </div>
+          <button
+            onClick={handleShare}
+            title="Share chama link"
+            aria-label="Share chama link"
+            className="w-9 h-9 inline-flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/60 transition-colors"
+          >
+            {shareCopied ? <Check size={16} /> : <Share2 size={16} />}
+          </button>
         </div>
       </div>
 
-      <div className="p-4 lg:p-8 max-w-5xl mx-auto">
+      <div className="p-3 sm:p-6 lg:p-8 max-w-6xl mx-auto">
 
-        {/* Hero header — only on the chama "home" view */}
+        {/* ── HOME: Banking-grade hero ── */}
         {currentSection === 'home' && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-gradient-to-br from-primary via-primary to-primary/85 text-primary-foreground p-5 sm:p-6 shadow-md">
-            <div aria-hidden className="absolute -right-16 -top-16 w-56 h-56 rounded-full bg-accent/20 blur-3xl pointer-events-none" />
-            <div aria-hidden className="absolute -left-20 -bottom-20 w-64 h-64 rounded-full bg-emerald-400/10 blur-3xl pointer-events-none" />
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
 
-            <div className="relative flex items-start justify-between gap-3 flex-wrap">
-              <div className="flex items-center gap-3 sm:gap-4 min-w-0">
-                <div className="relative group shrink-0">
-                  {group.profile_image_url ? (
-                    <img
-                      src={group.profile_image_url}
-                      alt={group.name}
-                      className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl object-cover ring-2 ring-accent/40 shadow-lg"
-                    />
-                  ) : (
-                    <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-accent/30 to-primary-foreground/10 flex items-center justify-center ring-2 ring-accent/40 shadow-lg">
-                      <PiggyBank size={30} className="text-accent" />
-                    </div>
-                  )}
-                  {isChair && (
-                    <>
-                      <input ref={profilePicRef} type="file" accept="image/*" className="hidden" onChange={handleProfilePicUpload} />
-                      <button
-                        onClick={() => profilePicRef.current?.click()}
-                        disabled={uploadingPic}
-                        className="absolute inset-0 rounded-2xl bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
-                      >
-                        {uploadingPic ? <Loader2 size={18} className="text-white animate-spin" /> : <Camera size={18} className="text-white" />}
-                      </button>
-                    </>
-                  )}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[10px] uppercase tracking-[0.2em] font-semibold text-primary-foreground/60">
-                        Chama Group
-                      </p>
-                      <h1 className="text-xl sm:text-2xl lg:text-3xl font-display font-bold tracking-tight mt-0.5 truncate">
-                        {group.name}
-                      </h1>
-                      {group.description && (
-                        <p className="text-xs sm:text-sm text-primary-foreground/70 mt-1 line-clamp-1 max-w-md">
-                          {group.description}
-                        </p>
-                      )}
-                    </div>
-                    {/* Compact icon actions, top-right */}
-                    <div className="flex items-center gap-1.5 shrink-0">
-                      <button
-                        onClick={handleShare}
-                        title="Share chama link"
-                        aria-label="Share chama link"
-                        className="h-9 w-9 sm:w-auto sm:px-3 inline-flex items-center justify-center gap-1.5 rounded-xl bg-accent text-accent-foreground hover:bg-accent/90 shadow-md font-semibold text-xs transition-colors"
-                      >
-                        {shareCopied ? <Check size={15} /> : <Share2 size={15} />}
-                        <span className="hidden sm:inline">{shareCopied ? 'Copied' : 'Share'}</span>
-                      </button>
-                      {isChair && (
-                        <button
-                          onClick={() => goToSection('settings')}
-                          title="Edit chama"
-                          aria-label="Edit chama settings"
-                          className="h-9 w-9 sm:w-auto sm:px-3 inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary-foreground/10 border border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/20 text-xs font-semibold transition-colors"
-                        >
-                          <Settings size={15} />
-                          <span className="hidden sm:inline">Edit</span>
+          {/* Hero card — dark navy with subtle aurora */}
+          <div className="relative overflow-hidden rounded-3xl bg-[#0d1f3d] text-white shadow-[0_20px_60px_-25px_rgba(13,31,61,0.55)]">
+            <div aria-hidden className="absolute -top-32 -right-24 w-[420px] h-[420px] rounded-full bg-accent/25 blur-[120px] pointer-events-none" />
+            <div aria-hidden className="absolute -bottom-40 -left-32 w-[420px] h-[420px] rounded-full bg-emerald-400/15 blur-[120px] pointer-events-none" />
+            <div aria-hidden className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(255,255,255,0.08),_transparent_60%)] pointer-events-none" />
+
+            <div className="relative p-5 sm:p-7">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                  <div className="relative group shrink-0">
+                    {group.profile_image_url ? (
+                      <img src={group.profile_image_url} alt={group.name} className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover ring-2 ring-accent/50 shadow-xl" />
+                    ) : (
+                      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br from-accent/40 to-white/5 flex items-center justify-center ring-2 ring-accent/50 shadow-xl">
+                        <PiggyBank size={26} className="text-accent" />
+                      </div>
+                    )}
+                    {isChair && (
+                      <>
+                        <input ref={profilePicRef} type="file" accept="image/*" className="hidden" onChange={handleProfilePicUpload} />
+                        <button onClick={() => profilePicRef.current?.click()} disabled={uploadingPic} className="absolute inset-0 rounded-2xl bg-black/55 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer">
+                          {uploadingPic ? <Loader2 size={16} className="text-white animate-spin" /> : <Camera size={16} className="text-white" />}
                         </button>
-                      )}
-                      {isLeader && (
-                        <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
-                          <DialogTrigger asChild>
-                            <button
-                              title="Add member"
-                              aria-label="Add member"
-                              className="h-9 w-9 sm:w-auto sm:px-3 inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary-foreground/10 border border-primary-foreground/20 text-primary-foreground hover:bg-primary-foreground/20 text-xs font-semibold transition-colors"
-                            >
-                              <UserPlus size={15} />
-                              <span className="hidden sm:inline">Add</span>
-                            </button>
-                          </DialogTrigger>
-                          <DialogContent>
-                            <DialogHeader><DialogTitle>Add Member</DialogTitle></DialogHeader>
-                            <div className="space-y-4 mt-2">
-                              <div>
-                                <Label>Search by Phone</Label>
-                                <div className="flex gap-2 mt-1">
-                                  <Input value={searchPhone} onChange={e => setSearchPhone(e.target.value)} placeholder="0712345678" maxLength={15} />
-                                  <Button onClick={handleSearchUser} disabled={searching || !searchPhone.trim()} variant="secondary"><Search size={16} /></Button>
-                                </div>
-                              </div>
-                              {searchResult && (
-                                <Card className="p-4 bg-muted/50">
-                                  <div className="flex items-center gap-3 mb-3">
-                                    <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
-                                      {searchResult.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
-                                    </div>
-                                    <div>
-                                      <p className="font-semibold text-sm">{searchResult.full_name}</p>
-                                      <p className="text-xs text-muted-foreground">{searchResult.phone}</p>
-                                    </div>
-                                  </div>
-                                  <div className="mb-3">
-                                    <Label>Role</Label>
-                                    <Select value={selectedRole} onValueChange={setSelectedRole}>
-                                      <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
-                                      <SelectContent>
-                                        <SelectItem value="member">Member</SelectItem>
-                                        <SelectItem value="treasurer">Treasurer</SelectItem>
-                                        <SelectItem value="secretary">Secretary</SelectItem>
-                                        <SelectItem value="chairperson">Chairperson</SelectItem>
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-                                  <Button onClick={handleAddMember} disabled={adding} className="w-full">
-                                    {adding ? 'Adding...' : `Add ${searchResult.full_name}`}
-                                  </Button>
-                                </Card>
-                              )}
-                            </div>
-                          </DialogContent>
-                        </Dialog>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Chips row — compact, single line, scrollable on overflow */}
-                  <div className="flex items-center gap-1.5 mt-3 overflow-x-auto no-scrollbar -mx-0.5 px-0.5">
-                    <span className="text-[10.5px] px-2 py-1 rounded-full font-semibold bg-accent/15 text-accent border border-accent/30 inline-flex items-center gap-1 whitespace-nowrap">
-                      <MyRoleIcon size={11} /> {myRoleLabel}
-                    </span>
-                    <span className="text-[10.5px] px-2 py-1 rounded-full font-semibold bg-primary-foreground/10 text-primary-foreground/90 border border-primary-foreground/15 inline-flex items-center gap-1 whitespace-nowrap">
-                      <Users size={11} /> {members.length}{group.max_members ? `/${group.max_members}` : ''}
-                    </span>
-                    {group.contribution_amount > 0 && (
-                      <span className="text-[10.5px] px-2 py-1 rounded-full font-semibold bg-primary-foreground/10 text-primary-foreground/90 border border-primary-foreground/15 inline-flex items-center gap-1 whitespace-nowrap">
-                        <Coins size={11} /> KES {group.contribution_amount.toLocaleString()}/{group.contribution_frequency}
-                      </span>
+                      </>
                     )}
                   </div>
+                  <div className="min-w-0">
+                    <p className="text-[10px] uppercase tracking-[0.22em] font-semibold text-white/45">Group balance</p>
+                    <h1 className="text-base sm:text-lg font-display font-semibold text-white/90 truncate mt-0.5">{group.name}</h1>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {isChair && (
+                    <button onClick={() => goToSection('settings')} title="Edit chama" aria-label="Edit chama settings" className="h-9 w-9 inline-flex items-center justify-center rounded-xl bg-white/[0.07] border border-white/10 text-white/75 hover:bg-white/15 transition-colors">
+                      <Settings size={15} />
+                    </button>
+                  )}
+                  {isLeader && (
+                    <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
+                      <DialogTrigger asChild>
+                        <button title="Add member" aria-label="Add member" className="h-9 px-3 inline-flex items-center justify-center gap-1.5 rounded-xl bg-accent text-accent-foreground hover:bg-accent/90 shadow-[0_8px_24px_-8px_hsl(42_92%_56%_/_0.6)] font-semibold text-xs transition-colors">
+                          <UserPlus size={14} />
+                          <span>Add</span>
+                        </button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader><DialogTitle>Add Member</DialogTitle></DialogHeader>
+                        <div className="space-y-4 mt-2">
+                          <div>
+                            <Label>Search by Phone</Label>
+                            <div className="flex gap-2 mt-1">
+                              <Input value={searchPhone} onChange={e => setSearchPhone(e.target.value)} placeholder="0712345678" maxLength={15} />
+                              <Button onClick={handleSearchUser} disabled={searching || !searchPhone.trim()} variant="secondary"><Search size={16} /></Button>
+                            </div>
+                          </div>
+                          {searchResult && (
+                            <Card className="p-4 bg-muted/50">
+                              <div className="flex items-center gap-3 mb-3">
+                                <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center text-primary-foreground font-bold text-sm">
+                                  {searchResult.full_name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                                </div>
+                                <div>
+                                  <p className="font-semibold text-sm">{searchResult.full_name}</p>
+                                  <p className="text-xs text-muted-foreground">{searchResult.phone}</p>
+                                </div>
+                              </div>
+                              <div className="mb-3">
+                                <Label>Role</Label>
+                                <Select value={selectedRole} onValueChange={setSelectedRole}>
+                                  <SelectTrigger className="mt-1"><SelectValue /></SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="member">Member</SelectItem>
+                                    <SelectItem value="treasurer">Treasurer</SelectItem>
+                                    <SelectItem value="secretary">Secretary</SelectItem>
+                                    <SelectItem value="chairperson">Chairperson</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <Button onClick={handleAddMember} disabled={adding} className="w-full">
+                                {adding ? 'Adding...' : `Add ${searchResult.full_name}`}
+                              </Button>
+                            </Card>
+                          )}
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  )}
                 </div>
               </div>
-            </div>
 
-            {/* Headline KPIs inside hero */}
-            <div className="relative grid grid-cols-3 gap-3 lg:gap-6 mt-5 pt-5 border-t border-primary-foreground/10">
-              <div>
-                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-primary-foreground/60">
-                  <Wallet size={12} /> My savings
+              {/* Hero balance */}
+              <div className="mt-5">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-[11px] uppercase tracking-wider text-white/45 font-semibold">KES</span>
+                  <span className="font-display font-bold text-3xl sm:text-4xl lg:text-5xl tracking-tight text-white tabular-nums">
+                    {totalSavings.toLocaleString()}
+                  </span>
                 </div>
-                <div className="mt-1 font-display font-bold text-xl lg:text-2xl text-accent leading-tight truncate">
-                  KES {mySavings.toLocaleString()}
+                <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                  <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-300/90 bg-emerald-400/10 border border-emerald-300/20 rounded-full px-2 py-0.5">
+                    <TrendingUp size={11} /> Group pool
+                  </span>
+                  <span className="text-[11px] text-white/45">
+                    My share: <span className="font-semibold text-accent">KES {mySavings.toLocaleString()}</span>
+                  </span>
                 </div>
               </div>
-              <div>
-                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-primary-foreground/60">
-                  <TrendingUp size={12} /> Group pool
-                </div>
-                <div className="mt-1 font-display font-bold text-lg lg:text-xl leading-tight truncate">
-                  KES {totalSavings.toLocaleString()}
-                </div>
-              </div>
-              <div>
-                <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider text-primary-foreground/60">
-                  <Calendar size={12} /> Deposits
-                </div>
-                <div className="mt-1 font-display font-bold text-lg lg:text-xl leading-tight">
-                  {savingsCount}
-                </div>
+
+              {/* Identity chips */}
+              <div className="flex items-center gap-1.5 mt-4 overflow-x-auto no-scrollbar -mx-0.5 px-0.5">
+                <span className="text-[10.5px] px-2.5 py-1 rounded-full font-semibold bg-accent/15 text-accent border border-accent/30 inline-flex items-center gap-1 whitespace-nowrap">
+                  <MyRoleIcon size={11} /> {myRoleLabel}
+                </span>
+                <span className="text-[10.5px] px-2.5 py-1 rounded-full font-semibold bg-white/[0.06] text-white/80 border border-white/10 inline-flex items-center gap-1 whitespace-nowrap">
+                  <Users size={11} /> {members.length}{group.max_members ? `/${group.max_members}` : ''} members
+                </span>
+                {group.contribution_amount > 0 && (
+                  <span className="text-[10.5px] px-2.5 py-1 rounded-full font-semibold bg-white/[0.06] text-white/80 border border-white/10 inline-flex items-center gap-1 whitespace-nowrap">
+                    <Coins size={11} /> KES {group.contribution_amount.toLocaleString()}/{group.contribution_frequency}
+                  </span>
+                )}
+                <span className="text-[10.5px] px-2.5 py-1 rounded-full font-semibold bg-white/[0.06] text-white/80 border border-white/10 inline-flex items-center gap-1 whitespace-nowrap">
+                  <Calendar size={11} /> {savingsCount} deposits
+                </span>
               </div>
             </div>
           </div>
 
-          {/* Secondary stats strip */}
-          <div className="grid grid-cols-3 gap-2 mt-3">
-            {[
-              { label: 'Joining fees', value: `KES ${totalJoiningFees.toLocaleString()}`, icon: Coins, tone: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-500/8' },
-              { label: 'Platform fees', value: `KES ${totalPlatformFees.toLocaleString()}`, icon: Shield, tone: 'text-pink-600 dark:text-pink-400', bg: 'bg-pink-500/8' },
-              { label: 'Members', value: String(members.length), icon: Users, tone: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/8' },
-            ].map((s, i) => (
-              <div key={i} className="rounded-xl border border-border/60 bg-card px-3 py-2.5 flex items-center gap-2.5">
-                <div className={cn('w-8 h-8 rounded-lg flex items-center justify-center shrink-0', s.bg, s.tone)}>
-                  <s.icon size={14} />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold truncate">{s.label}</p>
-                  <p className="text-sm font-display font-bold leading-tight truncate">{s.value}</p>
-                </div>
+          {/* Dense info ribbon — single row, no boxes */}
+          <div className="flex items-center gap-x-5 gap-y-2 flex-wrap rounded-2xl border border-border/60 bg-card px-4 py-3">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+                <Coins size={13} />
               </div>
-            ))}
+              <div className="leading-tight">
+                <p className="text-[9.5px] uppercase tracking-wider text-muted-foreground font-semibold">Joining fees</p>
+                <p className="text-[12.5px] font-display font-bold tabular-nums">KES {totalJoiningFees.toLocaleString()}</p>
+              </div>
+            </div>
+            <div className="hidden sm:block w-px h-7 bg-border/60" />
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-pink-500/10 text-pink-600 dark:text-pink-400 flex items-center justify-center">
+                <Shield size={13} />
+              </div>
+              <div className="leading-tight">
+                <p className="text-[9.5px] uppercase tracking-wider text-muted-foreground font-semibold">Platform fees</p>
+                <p className="text-[12.5px] font-display font-bold tabular-nums">KES {totalPlatformFees.toLocaleString()}</p>
+              </div>
+            </div>
+            <div className="hidden sm:block w-px h-7 bg-border/60" />
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
+                <Users size={13} />
+              </div>
+              <div className="leading-tight">
+                <p className="text-[9.5px] uppercase tracking-wider text-muted-foreground font-semibold">Active members</p>
+                <p className="text-[12.5px] font-display font-bold tabular-nums">{members.length}</p>
+              </div>
+            </div>
           </div>
 
           {/* Quick actions */}
-          <div className={cn("grid gap-2 mt-3", isChair ? "grid-cols-5" : "grid-cols-4")}>
+          <div className={cn("grid gap-2", isChair ? "grid-cols-5" : "grid-cols-4")}>
             {[
               { id: 'savings',     icon: Wallet,        label: 'Contribute', tone: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' },
               { id: 'loans',       icon: Landmark,      label: 'Loan',       tone: 'bg-blue-500/15 text-blue-600 dark:text-blue-400' },
@@ -531,10 +516,10 @@ export default function ChamaGroupDetailPage() {
               <button
                 key={a.id}
                 onClick={a.onClick ? a.onClick : () => goToSection(a.id)}
-                className="group flex flex-col items-center gap-1.5 rounded-xl border bg-card px-2 py-3 transition-all border-border/60 hover:border-accent/40"
+                className="group flex flex-col items-center gap-1.5 rounded-2xl border bg-card px-2 py-3 transition-all border-border/60 hover:border-accent/40 hover:-translate-y-0.5 hover:shadow-md"
               >
-                <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center", a.tone)}>
-                  <a.icon size={18} strokeWidth={2.2} />
+                <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center", a.tone)}>
+                  <a.icon size={17} strokeWidth={2.2} />
                 </div>
                 <span className="text-[11px] font-semibold">{a.label}</span>
               </button>
@@ -542,6 +527,7 @@ export default function ChamaGroupDetailPage() {
           </div>
         </motion.div>
         )}
+
 
         {(() => {
           // Section catalogue — every chama function lives at its own URL/route.
