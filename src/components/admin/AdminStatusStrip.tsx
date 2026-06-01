@@ -24,9 +24,9 @@ export function AdminStatusStrip() {
     const load = async () => {
       try {
         const [kyc, mpesa, withdraws] = await Promise.all([
-          supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('kyc_status', 'pending'),
-          supabase.from('paybill_transactions').select('id', { count: 'exact', head: true }).eq('status', 'unmatched'),
-          supabase.from('wallet_withdrawals').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+          supabase.from('kyc_documents').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+          supabase.from('mpesa_unmapped_payments').select('id', { count: 'exact', head: true }).eq('resolved', false),
+          supabase.from('chama_withdrawals').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
         ]);
         if (!mounted) return;
         setCounts({
