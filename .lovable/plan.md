@@ -1,77 +1,86 @@
-# Multi-Tenant SACCO White-Label System
+## Sample SACCO tenant (timjeru835@gmail.com / 0702536866)
 
-Build a tenant layer **inside the existing Dasnet app** — no separate deployments, no breaking changes. Each SACCO becomes a "tenant" with its own admin, branded chama portal, isolated paybill, and optional custom domain. Main Dasnet keeps working exactly as it does today.
+The `create-tenant` function requires an **admin JWT** (it verifies `is_admin` on the caller). I cannot trigger it from the server without your login session. After this plan is approved, please:
 
-## What you'll be able to do after this ships
+1. Open **/dashboard/admin/tenants**
+2. Click **Create SACCO**
+3. Fill: Name = "Sample SACCO", Admin = "Tim Jeru", Phone = `0702536866`, Email = `timjeru835@gmail.com`
+4. Submit — SMS goes through Africa's Talking and email through the verified `notify.dasnett.site` queue (both confirmed working last test).
 
-1. From **Main Admin → Tenants**, click **Create SACCO** → enter name, logo, admin name, phone, email, custom paybill (optional).
-2. System auto-generates a username + random password, sends **SMS + email** to the new SACCO admin with login link.
-3. SACCO admin logs in → lands **directly on `/sacco/:slug/admin`** (chama + MGR system only — no wallet, no harambee, no Dasnet branding).
-4. Their members pay loans/contributions to **the SACCO's own paybill** using **ID number as account reference**.
-5. M-Pesa callbacks for that paybill hit a **tenant-aware** confirmation URL (`/functions/v1/mpesa-callback?tenant=xyz`) — fully isolated from your Dasnet paybill.
-6. Optionally connect a **custom domain** (e.g. `chama.saccoabc.co.ke`) that points at the same Dasnet app but auto-loads that tenant's branding/portal.
-7. **"Push update to tenants"** toggle on main admin — every code change you make in Dasnet automatically reaches all tenants (since it's one app). The toggle controls whether **new features** (e.g. emergency fund, MGR v2) are enabled per-tenant.
+If either fails, I'll inspect the `email_send_log` + edge function logs and patch the specific failure.
 
-## Architecture (no separate hosting — one app, many tenants)
+---
 
+## Redesign 1 — Admin Dashboard (full reimagining)
+
+Goal: move from "polished sidebar shell" to a **command-center workspace** that feels like Linear meets a Bloomberg terminal, in the DASNET dark-navy / emerald / gold language.
+
+### Shell (`AdminLayout.tsx`)
+- Replace the static sidebar with **`shadcn Sidebar` (`collapsible="icon"`)** so desktop users can collapse to a 56px icon rail.
+- New three-zone top bar: **breadcrumb + workspace switcher** (left) · **global search ⌘K** (centre) · **alerts + profile menu** (right).
+- Persistent **status strip** under the top bar: M-Pesa queue depth · pending KYC · open withdrawals · system health dot. Live, click-through to the relevant module.
+- Dark-navy chrome with a single accent (gold) for active state; emerald reserved for "healthy" status dots only.
+
+### Overview module (`AdminOverviewModule.tsx`)
+- **Hero KPI band** — 4 oversized tiles (AUM, 24h Transfer Volume, Active Loans, MoM Growth) with embedded sparklines (Recharts) and delta chips.
+- **Operations row** — three cards side-by-side:
+  - *Action Queue* (KYC, unmapped M-Pesa, withdrawal approvals, removal requests) as a tabbed list with one-click resolve.
+  - *Live Activity* (real-time feed of transactions / signups via Supabase realtime channel).
+  - *Tenants Pulse* (mini bar chart of contributions per SACCO, top 5).
+- **Analytics row** — full-width revenue area chart + portfolio donut.
+- All cards use the same token system: `rounded-2xl`, `border-border/60`, soft inner gradient, no harsh shadows.
+
+### Module pages
+- Standardise every module on a new `AdminPageHeader` component (title, description, primary action, filter bar) so Users / Loans / Tenants / M-Pesa all share the same skeleton.
+- Replace ad-hoc filter rows with a single `AdminToolbar` variant.
+
+---
+
+## Redesign 2 — ChamaGroupDetailPage (full reimagining, recommended style)
+
+Recommended direction = **professional Kenyan banking workspace**: dark-navy hero with the group's balance front-and-centre, gold accents, emerald for positive deltas, sidebar-driven section navigation on desktop, bottom nav on mobile. Matches DASNET brand and pairs visually with the new admin shell.
+
+### New layout
 ```text
-                      ┌──────────────────────────┐
-   dasnet.lovable.app │  MAIN DASNET (unchanged) │
-   /dashboard/admin   │  wallet, harambee, etc.  │
-                      └──────────────────────────┘
-                                  │ same app
-                      ┌──────────────────────────┐
-   sacco-a.co.ke      │  TENANT A — chama+mgr    │
-   /sacco/sacco-a/*   │  own paybill, own logo   │
-                      └──────────────────────────┘
-                      ┌──────────────────────────┐
-   sacco-b.co.ke      │  TENANT B — chama+mgr    │
-   /sacco/sacco-b/*   │  own paybill, own logo   │
-                      └──────────────────────────┘
+┌────────────────────────────────────────────────────────────────┐
+│  Sticky compact header: ← Back · GroupName · Share · Settings  │
+├──────────────┬─────────────────────────────────────────────────┤
+│              │  HERO                                           │
+│  Section     │  ┌───────────────────────────────────────────┐  │
+│  rail        │  │ avatar  Group name + chips                │  │
+│  (desktop)   │  │ ────────────────────────────────────────  │  │
+│   Money      │  │ Group pool KES 0   ▲ 12%   sparkline      │  │
+│   People     │  │ My savings · Deposits · Members           │  │
+│   Manage     │  └───────────────────────────────────────────┘  │
+│              │  Quick actions row (Contribute · Loan · …)      │
+│              │  Section content (renders ChamaSavings etc.)    │
+└──────────────┴─────────────────────────────────────────────────┘
 ```
 
-## Build steps
+### Concrete changes
+- Extract the existing section list into a new **`ChamaSectionRail`** sidebar (desktop) + keep the current `MobileBottomNav` pattern below 1024px.
+- Rebuild the home hero as a single dark-navy card with:
+  - 30-day group-pool sparkline behind the balance number
+  - emerald/red delta chip vs previous period
+  - role chip, members chip, contribution-rate chip in a single line
+  - gold "Contribute" CTA as the primary action
+- Replace the "secondary stats strip" with a **dense ribbon** (joining fees · platform fees · arrears count · next meeting) — single row, no boxes.
+- Section catalog grid (Money/People/Manage) becomes a **compact 2-column list with descriptions** on desktop, current 4-col grid on mobile.
+- Each individual section page (savings, loans, etc.) gets the same `ChamaSectionHeader` (icon + title + description + close-to-home button) — already roughly in place, just tighten typography and remove the breadcrumb (sidebar makes it redundant on desktop).
+- Preserve all existing functional components (`ChamaSavings`, `ChamaLoans`, `ChamaChat`, dialogs, profile-pic upload, broadcast, member add/remove, role updates) — only the shell around them changes.
 
-### 1. Database (additive — nothing renamed/dropped)
-- `tenants` table: id, slug, name, logo_url, primary_color, custom_domain, paybill_shortcode, paybill_passkey_secret_ref, callback_token, features_enabled jsonb, created_at.
-- `tenant_admins` table: tenant_id, user_id, role.
-- Add nullable `tenant_id` to: `chama_groups`, `chama_loans`, `chama_members`, `stk_transactions`, `mgr_cycles`. Existing rows stay NULL → treated as "Dasnet main" → zero behaviour change.
-- RLS helper `is_tenant_admin(_tenant, _user)` and `current_tenant_id()` (reads from JWT claim or URL).
+---
 
-### 2. Main admin UI (new tab)
-- `AdminTenantsModule` added to existing `AdminDashboardPage` tab map.
-- List, create, edit, suspend SACCOs.
-- Create dialog: name, slug, logo upload, admin (name/phone/email), paybill shortcode, paybill consumer key/secret (stored in vault), feature toggles (chama on/off, mgr on/off).
-- On create → calls `create-tenant` edge function → creates auth user, hashes random password, fires SMS via existing Africa's Talking integration + email via existing branded template.
+## Technical notes
 
-### 3. Tenant portal routing
-- New routes: `/sacco/:slug/login`, `/sacco/:slug/admin`, `/sacco/:slug/chama/:groupId`, `/sacco/:slug/mgr`.
-- `TenantLayout` wraps these — loads tenant by slug, applies logo + primary color via CSS variables, hides Dasnet nav.
-- Tenant admins land on `/sacco/:slug/admin` after login (existing admin redirect logic extended).
-- Reuse existing `ChamaGroupDetailPage`, `ChamaMerryGoRound`, etc. — they just receive `tenant_id` from context.
+- New files: `src/components/admin/AdminPageHeader.tsx`, `src/components/admin/AdminStatusStrip.tsx`, `src/components/chama/ChamaSectionRail.tsx`, `src/components/chama/ChamaHeroBalance.tsx`.
+- `AdminLayout.tsx` rewritten to use `SidebarProvider` + `Sidebar` from shadcn.
+- `AdminOverviewModule.tsx` restructured; existing chart data hooks retained.
+- `ChamaGroupDetailPage.tsx` shell rewritten; all child component imports and data hooks unchanged.
+- No database migrations needed. No edge-function changes.
+- Risk: the sidebar rewrite touches every admin route header. Mitigation: keep the old `AdminBottomNav` for mobile so existing mobile nav UX is untouched.
 
-### 4. Isolated M-Pesa
-- New edge function `mpesa-tenant-callback` — reads `?tenant=<callback_token>` from URL, looks up tenant, credits the right loan/contribution scoped by `tenant_id` + ID-number reference.
-- Existing `mpesa-callback` stays untouched (Dasnet paybill).
-- Main admin UI shows the confirmation/validation URLs to paste into Safaricom portal per tenant.
-
-### 5. Custom domain (optional, per tenant)
-- Tenant record stores `custom_domain`.
-- Add middleware in `App.tsx` that reads `window.location.hostname` → if it matches a tenant's custom_domain, auto-routes to `/sacco/:slug/*`.
-- User points their DNS at Lovable (existing custom-domain flow) — no extra hosting.
-
-### 6. "Push updates" control
-- Since it's one codebase, every Dasnet code change automatically reaches tenants on next deploy.
-- The admin toggle controls **feature flags** per tenant (`features_enabled` jsonb): which modules are visible. So you can ship a new module to Dasnet first, then enable it per SACCO when ready.
-
-## Safety guarantees
-- Every new column is **nullable**; existing queries with no `tenant_id` filter behave identically.
-- No existing route, component, edge function, or RLS policy is renamed or removed.
-- Main Dasnet admin, wallet, harambee, loans, MGR all unchanged.
-- New tenant code lives under `/sacco/*` routes and `src/components/tenant/*` — fully isolated.
-- Rollback = drop the new tables + delete the new routes. Zero impact on Dasnet.
-
-## Scope for this first build
-I'll ship steps **1–4** in this turn (DB + main admin "Create SACCO" + SMS/email invite + tenant login + tenant chama/MGR portal + isolated paybill callback). Custom domains (step 5) and feature-flag toggles (step 6) come next once you confirm step 1–4 works end-to-end with a test SACCO.
-
-Approve and I'll start with the migration.
+## Out of scope (would need a follow-up)
+- Per-module redesign beyond the shared header/toolbar (Users, Loans, M-Pesa internals stay as-is).
+- Per-section redesign inside the chama (ChamaSavings, ChamaLoans, etc. internals stay as-is).
+- Any backend / RLS / edge function changes.
