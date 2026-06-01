@@ -25,6 +25,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Logo } from '@/components/Logo';
 import { Button } from '@/components/ui/button';
 import { AdminAlertsPopover } from '@/components/admin/AdminAlertsPopover';
+import { AdminStatusStrip } from '@/components/admin/AdminStatusStrip';
 import { cn } from '@/lib/utils';
 
 interface AdminLayoutProps {
@@ -265,6 +266,9 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             </Button>
           </div>
         </div>
+
+        {/* Live operational pulse */}
+        <AdminStatusStrip />
 
         {/* Page content — top-pad for mobile bar, bottom-pad for mobile nav */}
         <div className="pt-14 lg:pt-0 pb-20 lg:pb-0">
