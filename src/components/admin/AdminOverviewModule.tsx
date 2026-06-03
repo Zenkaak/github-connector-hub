@@ -39,7 +39,7 @@ const fmtCompact = (n: number) => {
   return n.toString();
 };
 
-const PIE_COLORS = ['hsl(42,92%,56%)', 'hsl(160,84%,39%)', 'hsl(0,72%,51%)', 'hsl(213,72%,50%)', 'hsl(270,60%,56%)'];
+const PIE_COLORS = ['hsl(42,92%,56%)', 'hsl(213,72%,40%)', 'hsl(156,72%,38%)', 'hsl(213,40%,55%)', 'hsl(213,30%,72%)'];
 
 const CHART_TICK_COLOR = '#94a3b8';
 const CHART_GRID_COLOR = '#e2e8f0';
@@ -324,27 +324,41 @@ export function AdminOverviewModule() {
         </div>
       </div>
 
-      {/* ── Hero KPI tiles (gradient) ─────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      {/* ── Hero KPI tiles · Bento (Navy Trust) ──────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-6 gap-3">
         {[
-          { label: 'Assets Under Management', value: fmtKesCompact(stats.totalWalletBalance), sub: `${stats.totalUsers.toLocaleString()} member wallets`, icon: Wallet, path: '/dashboard/admin/users', grad: 'from-amber-400 via-amber-500 to-orange-500', shadow: 'shadow-amber-200' },
-          { label: 'Transfer Volume · 7d', value: fmtKesCompact(stats.totalTransfers7d), sub: `${fmtKesCompact(stats.totalTransfersToday)} today`, icon: TrendingUp, path: '/dashboard/admin/transfers', grad: 'from-emerald-400 via-emerald-500 to-teal-600', shadow: 'shadow-emerald-200' },
-          { label: 'Active Loan Portfolio', value: fmtKesCompact(stats.totalLoanValue), sub: `${stats.totalLoansActive} active loans`, icon: Banknote, path: '/dashboard/admin/loans', grad: 'from-violet-500 via-purple-500 to-fuchsia-500', shadow: 'shadow-violet-200' },
-        ].map(({ label, value, sub, icon: Icon, path, grad, shadow }) => (
-          <button key={label} onClick={() => navigate(path)} className={cn('group relative overflow-hidden rounded-2xl p-5 text-left text-white bg-gradient-to-br transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl active:scale-[0.99]', grad, shadow)}>
-            <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/15 blur-2xl" />
-            <div className="relative flex items-start justify-between mb-4">
-              <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
-                <Icon size={18} />
+          { label: 'Assets Under Management', value: fmtKesCompact(stats.totalWalletBalance), sub: `${stats.totalUsers.toLocaleString()} member wallets`, icon: Wallet, path: '/dashboard/admin/users', span: 'sm:col-span-3', primary: true },
+          { label: 'Transfer Volume · 7d', value: fmtKesCompact(stats.totalTransfers7d), sub: `${fmtKesCompact(stats.totalTransfersToday)} today`, icon: TrendingUp, path: '/dashboard/admin/transfers', span: 'sm:col-span-3', primary: false },
+          { label: 'Active Loan Portfolio', value: fmtKesCompact(stats.totalLoanValue), sub: `${stats.totalLoansActive} active loans`, icon: Banknote, path: '/dashboard/admin/loans', span: 'sm:col-span-6', primary: false },
+        ].map(({ label, value, sub, icon: Icon, path, span, primary }) => (
+          <button
+            key={label}
+            onClick={() => navigate(path)}
+            className={cn(
+              'group relative overflow-hidden rounded-2xl p-5 sm:p-6 text-left transition-all duration-200 hover:-translate-y-0.5 active:scale-[0.995] border',
+              span,
+              primary
+                ? 'text-white bg-[radial-gradient(120%_120%_at_0%_0%,hsl(213_72%_22%)_0%,hsl(213_72%_14%)_45%,hsl(213_72%_10%)_100%)] border-white/5 shadow-[0_24px_60px_-30px_hsl(213_72%_8%/0.9)]'
+                : 'text-foreground bg-card border-border hover:border-accent/40 shadow-sm hover:shadow-md',
+            )}
+          >
+            {primary && <div aria-hidden className="absolute -top-12 -right-12 w-56 h-56 rounded-full bg-accent/15 blur-3xl pointer-events-none" />}
+            <div className="relative flex items-start justify-between mb-5">
+              <div className={cn(
+                'w-10 h-10 rounded-xl flex items-center justify-center ring-1',
+                primary ? 'bg-white/10 ring-white/15 backdrop-blur' : 'bg-accent/10 ring-accent/20 text-accent',
+              )}>
+                <Icon size={17} className={primary ? 'text-accent' : undefined} />
               </div>
-              <ChevronRight size={14} className="text-white/70 group-hover:translate-x-0.5 transition-transform" />
+              <ChevronRight size={14} className={cn('transition-transform group-hover:translate-x-0.5', primary ? 'text-white/50' : 'text-muted-foreground/50')} />
             </div>
-            <p className="relative text-[9px] font-bold uppercase tracking-[0.22em] text-white/80 mb-2">{label}</p>
-            <p className="relative text-2xl sm:text-3xl font-extrabold tracking-tight leading-none">{value}</p>
-            <p className="relative text-[11px] text-white/75 font-medium mt-2">{sub}</p>
+            <p className={cn('relative text-[9px] font-bold uppercase tracking-[0.22em] mb-2', primary ? 'text-white/55' : 'text-muted-foreground')}>{label}</p>
+            <p className={cn('relative font-display text-2xl sm:text-3xl font-bold tracking-tight tabular-nums leading-none', primary ? 'text-white' : 'text-foreground')}>{value}</p>
+            <p className={cn('relative text-[11px] font-medium mt-2', primary ? 'text-white/60' : 'text-muted-foreground')}>{sub}</p>
           </button>
         ))}
       </div>
+
 
       {/* ── Alert banner ───────────────────────────────── */}
       {totalActions > 0 && (
@@ -365,25 +379,25 @@ export function AdminOverviewModule() {
       {/* ── Revenue metrics ─────────────────────────────── */}
       <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm">
         <div className="flex items-center gap-2 mb-4">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center">
-            <Coins size={13} className="text-white" />
+          <div className="w-7 h-7 rounded-lg bg-accent/10 ring-1 ring-accent/20 text-accent flex items-center justify-center">
+            <Coins size={13} />
           </div>
           <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-foreground">Revenue · Last 30 days</span>
           <div className="flex-1 h-px bg-border" />
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[
-            { label: 'Net Revenue', value: fmtKesCompact(stats.revenue30d), icon: Coins, grad: 'from-emerald-400 to-teal-500' },
-            { label: 'Joining Fees', value: fmtKesCompact(stats.joiningFees30d), icon: Receipt, grad: 'from-amber-400 to-orange-500' },
-            { label: 'M-Pesa Inflow', value: fmtKesCompact(stats.depositsToday), icon: ArrowDownLeft, grad: 'from-blue-400 to-indigo-500' },
-            { label: 'Payouts Today', value: fmtKesCompact(stats.payoutsToday), icon: Send, grad: 'from-rose-400 to-red-500' },
-          ].map(({ label, value, icon: Icon, grad }) => (
-            <div key={label} className="relative overflow-hidden p-4 rounded-xl border border-border bg-white shadow-sm hover:shadow-md transition-shadow">
-              <div className={cn('absolute top-0 left-0 w-full h-1 bg-gradient-to-r', grad)} />
-              <div className={cn('w-9 h-9 rounded-xl bg-gradient-to-br flex items-center justify-center mb-3 shadow-sm', grad)}>
-                <Icon size={15} className="text-white" />
+            { label: 'Net Revenue', value: fmtKesCompact(stats.revenue30d), icon: Coins, accent: true },
+            { label: 'Joining Fees', value: fmtKesCompact(stats.joiningFees30d), icon: Receipt },
+            { label: 'M-Pesa Inflow', value: fmtKesCompact(stats.depositsToday), icon: ArrowDownLeft },
+            { label: 'Payouts Today', value: fmtKesCompact(stats.payoutsToday), icon: Send },
+          ].map(({ label, value, icon: Icon, accent }) => (
+            <div key={label} className={cn('relative overflow-hidden p-4 rounded-xl border bg-card hover:shadow-md transition-shadow', accent ? 'border-accent/30 bg-accent/[0.04]' : 'border-border')}>
+              <div className={cn('absolute top-0 left-0 w-full h-[2px]', accent ? 'bg-accent' : 'bg-border')} />
+              <div className={cn('w-9 h-9 rounded-xl flex items-center justify-center mb-3 ring-1', accent ? 'bg-accent/15 ring-accent/30 text-accent' : 'bg-muted ring-border text-foreground/70')}>
+                <Icon size={15} />
               </div>
-              <p className="text-xl font-extrabold tracking-tight leading-none text-foreground">{value}</p>
+              <p className="font-display text-xl font-bold tracking-tight tabular-nums leading-none text-foreground">{value}</p>
               <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground mt-2">{label}</p>
             </div>
           ))}
@@ -393,8 +407,8 @@ export function AdminOverviewModule() {
       {/* ── Platform stats ──────────────────────────────── */}
       <div className="rounded-2xl border border-border bg-gradient-to-br from-card to-muted/30 p-5 sm:p-6 shadow-sm">
         <div className="flex items-center gap-2 mb-4">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center">
-            <Activity size={13} className="text-white" />
+          <div className="w-7 h-7 rounded-lg bg-primary/10 ring-1 ring-primary/20 text-primary-foreground/80 flex items-center justify-center">
+            <Activity size={13} className="text-accent" />
           </div>
           <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-foreground">Platform · Live</span>
           <div className="flex-1 h-px bg-border" />
@@ -411,8 +425,8 @@ export function AdminOverviewModule() {
       {/* ── Action queue ────────────────────────────────── */}
       <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm">
         <div className="flex items-center gap-2 mb-4">
-          <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
-            <Clock size={13} className="text-white" />
+          <div className="w-7 h-7 rounded-lg bg-accent/10 ring-1 ring-accent/20 text-accent flex items-center justify-center">
+            <Clock size={13} />
           </div>
           <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-foreground">Action Queue</span>
           <div className="flex-1 h-px bg-border" />
@@ -435,8 +449,8 @@ export function AdminOverviewModule() {
         <div className="lg:col-span-2 rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center">
-                <TrendingUp size={13} className="text-white" />
+              <div className="w-7 h-7 rounded-lg bg-accent/10 ring-1 ring-accent/20 text-accent flex items-center justify-center">
+                <TrendingUp size={13} />
               </div>
               <div>
                 <p className="text-[11px] font-bold text-foreground uppercase tracking-[0.2em]">Transfer Volume</p>
@@ -467,8 +481,8 @@ export function AdminOverviewModule() {
         <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center">
-                <CreditCard size={13} className="text-white" />
+              <div className="w-7 h-7 rounded-lg bg-primary/10 ring-1 ring-primary/20 text-accent flex items-center justify-center">
+                <CreditCard size={13} />
               </div>
               <div>
                 <p className="text-[11px] font-bold text-foreground uppercase tracking-[0.2em]">Loan Portfolio</p>
@@ -510,8 +524,8 @@ export function AdminOverviewModule() {
       <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center">
-              <Users size={13} className="text-white" />
+            <div className="w-7 h-7 rounded-lg bg-primary/10 ring-1 ring-primary/20 text-accent flex items-center justify-center">
+              <Users size={13} />
             </div>
             <div>
               <p className="text-[11px] font-bold text-foreground uppercase tracking-[0.2em]">Member Growth</p>
