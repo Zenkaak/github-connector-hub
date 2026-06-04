@@ -162,12 +162,21 @@ Deno.serve(async (req) => {
     try { smsResult = await sendSMS(phone, smsMsg); } catch (e) { console.error("SMS failed:", e); smsResult = { ok: false, error: String(e) }; }
     console.log("create-tenant SMS:", smsResult);
 
-    // 6. Send branded invite email via send-transactional-email (handles unsubscribe tokens automatically).
+    // 6. Send branded invite email via send-transactional-email.
+    // Use direct fetch with explicit service-role Authorization (functions.invoke
+    // has historically dropped the auth header on server-to-server calls here,
+    // causing silent JWT failures with no email_send_log entry).
     let emailQueued = false;
     let emailError: string | null = null;
     try {
-      const { data: eData, error: eErr } = await admin.functions.invoke("send-transactional-email", {
-        body: {
+      const resp = await fetch(`${SUPABASE_URL}/functions/v1/send-transactional-email`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${SERVICE_KEY}`,
+          "apikey": SERVICE_KEY,
+        },
+        body: JSON.stringify({
           templateName: "tenant-admin-invite",
           recipientEmail: admin_email,
           idempotencyKey: `tenant-invite-${tenant.id}`,
@@ -178,11 +187,17 @@ Deno.serve(async (req) => {
             email: admin_email,
             password,
           },
-        },
+        }),
       });
-      if (eErr) { emailError = eErr.message; console.error("send-transactional-email error:", eErr); }
-      else { emailQueued = true; console.log("invite email queued:", eData); }
-    } catch (e) { emailError = String(e); console.error("Email invoke failed:", e); }
+      const txt = await resp.text();
+      if (!resp.ok) {
+        emailError = `HTTP ${resp.status}: ${txt}`;
+        console.error("send-transactional-email failed:", emailError);
+      } else {
+        emailQueued = true;
+        console.log("invite email queued:", txt);
+      }
+    } catch (e) { emailError = String(e); console.error("Email fetch failed:", e); }
 
     return json({ ok: true, tenant, login_url: loginUrl, sms: smsResult, email_queued: emailQueued, email_error: emailError });
   } catch (err) {
