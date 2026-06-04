@@ -471,60 +471,50 @@ export default function ChamaGroupDetailPage() {
             </div>
           </div>
 
-          {/* Dense info ribbon — single row, no boxes */}
-          <div className="flex items-center gap-x-5 gap-y-2 flex-wrap rounded-2xl border border-border/60 bg-card px-4 py-3">
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center">
-                <Coins size={13} />
+          {/* Dense info ribbon — monochrome, banking-grade */}
+          <div className="grid grid-cols-3 rounded-2xl border border-border bg-card overflow-hidden">
+            {[
+              { label: 'Joining fees', value: `KES ${totalJoiningFees.toLocaleString()}` },
+              { label: 'Platform fees', value: `KES ${totalPlatformFees.toLocaleString()}` },
+              { label: 'Active members', value: members.length.toString() },
+            ].map((s, i) => (
+              <div key={s.label} className={cn("px-3 py-3 sm:px-4 sm:py-4", i > 0 && "border-l border-border")}>
+                <p className="text-[9.5px] uppercase tracking-[0.16em] text-muted-foreground font-semibold">{s.label}</p>
+                <p className="text-[13px] sm:text-[15px] font-display font-bold tabular-nums mt-1 text-foreground">{s.value}</p>
               </div>
-              <div className="leading-tight">
-                <p className="text-[9.5px] uppercase tracking-wider text-muted-foreground font-semibold">Joining fees</p>
-                <p className="text-[12.5px] font-display font-bold tabular-nums">KES {totalJoiningFees.toLocaleString()}</p>
-              </div>
-            </div>
-            <div className="hidden sm:block w-px h-7 bg-border/60" />
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-pink-500/10 text-pink-600 dark:text-pink-400 flex items-center justify-center">
-                <Shield size={13} />
-              </div>
-              <div className="leading-tight">
-                <p className="text-[9.5px] uppercase tracking-wider text-muted-foreground font-semibold">Platform fees</p>
-                <p className="text-[12.5px] font-display font-bold tabular-nums">KES {totalPlatformFees.toLocaleString()}</p>
-              </div>
-            </div>
-            <div className="hidden sm:block w-px h-7 bg-border/60" />
-            <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
-                <Users size={13} />
-              </div>
-              <div className="leading-tight">
-                <p className="text-[9.5px] uppercase tracking-wider text-muted-foreground font-semibold">Active members</p>
-                <p className="text-[12.5px] font-display font-bold tabular-nums">{members.length}</p>
-              </div>
-            </div>
+            ))}
           </div>
 
-          {/* Quick actions */}
+          {/* Quick actions — restrained palette */}
           <div className={cn("grid gap-2", isChair ? "grid-cols-5" : "grid-cols-4")}>
             {[
-              { id: 'savings',     icon: Wallet,        label: 'Contribute', tone: 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' },
-              { id: 'loans',       icon: Landmark,      label: 'Loan',       tone: 'bg-blue-500/15 text-blue-600 dark:text-blue-400' },
-              { id: 'withdrawals', icon: HandCoins,     label: 'Withdraw',   tone: 'bg-amber-500/15 text-amber-600 dark:text-amber-400' },
-              { id: 'chat',        icon: MessageSquare, label: 'Chat',       tone: 'bg-violet-500/15 text-violet-600 dark:text-violet-400' },
-              ...(isChair ? [{ id: 'broadcast', icon: Megaphone, label: 'Broadcast', tone: 'bg-pink-500/15 text-pink-600 dark:text-pink-400', onClick: () => setBroadcastOpen(true) }] : []),
+              { id: 'savings',     icon: Wallet,        label: 'Contribute', primary: true },
+              { id: 'loans',       icon: Landmark,      label: 'Loan' },
+              { id: 'withdrawals', icon: HandCoins,     label: 'Withdraw' },
+              { id: 'chat',        icon: MessageSquare, label: 'Chat' },
+              ...(isChair ? [{ id: 'broadcast', icon: Megaphone, label: 'Broadcast', onClick: () => setBroadcastOpen(true) }] : []),
             ].map((a: any) => (
               <button
                 key={a.id}
                 onClick={a.onClick ? a.onClick : () => goToSection(a.id)}
-                className="group flex flex-col items-center gap-1.5 rounded-2xl border bg-card px-2 py-3 transition-all border-border/60 hover:border-accent/40 hover:-translate-y-0.5 hover:shadow-md"
+                className={cn(
+                  "group flex flex-col items-center gap-1.5 rounded-2xl border px-2 py-3 transition-all hover:-translate-y-0.5 hover:shadow-md",
+                  a.primary
+                    ? "bg-accent text-accent-foreground border-accent shadow-[0_8px_24px_-10px_hsl(42_92%_56%_/_0.7)]"
+                    : "bg-card border-border hover:border-accent/40"
+                )}
               >
-                <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center", a.tone)}>
+                <div className={cn(
+                  "w-9 h-9 rounded-xl flex items-center justify-center",
+                  a.primary ? "bg-accent-foreground/10" : "bg-muted text-foreground/70"
+                )}>
                   <a.icon size={17} strokeWidth={2.2} />
                 </div>
                 <span className="text-[11px] font-semibold">{a.label}</span>
               </button>
             ))}
           </div>
+
         </motion.div>
         )}
 
@@ -532,30 +522,30 @@ export default function ChamaGroupDetailPage() {
         {(() => {
           // Section catalogue — every chama function lives at its own URL/route.
           const allSections: Array<{ id: string; label: string; desc: string; icon: any; tone: string; bg: string; group: string }> = [
-            // MONEY — core financial operations first, oversight last
-            { id: 'savings',       label: 'Savings',        desc: 'Contribute and track member savings',          icon: Wallet,         tone: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/15', group: 'Money' },
-            { id: 'loans',         label: 'Loans',          desc: 'Apply, approve and repay group loans',         icon: Landmark,       tone: 'text-blue-600 dark:text-blue-400',       bg: 'bg-blue-500/15',    group: 'Money' },
-            { id: 'mgr',           label: 'Merry-Go-Round', desc: 'Rotating payouts to members',                  icon: RefreshCw,      tone: 'text-purple-600 dark:text-purple-400',   bg: 'bg-purple-500/15',  group: 'Money' },
-            { id: 'withdrawals',   label: 'Withdrawals',    desc: 'Request and approve cash-outs',                icon: HandCoins,      tone: 'text-amber-600 dark:text-amber-400',     bg: 'bg-amber-500/15',   group: 'Money' },
-            { id: 'emergency',     label: 'Emergency Fund', desc: 'Pooled support for member emergencies',        icon: Shield,         tone: 'text-red-600 dark:text-red-400',         bg: 'bg-red-500/15',     group: 'Money' },
-            { id: 'transactions',  label: 'Transactions',   desc: 'Full ledger of all chama activity',            icon: Receipt,        tone: 'text-cyan-600 dark:text-cyan-400',       bg: 'bg-cyan-500/15',    group: 'Money' },
-            { id: 'arrears',       label: 'Arrears',        desc: 'Members behind on contributions',              icon: AlertTriangle,  tone: 'text-orange-600 dark:text-orange-400',   bg: 'bg-orange-500/15',  group: 'Money' },
-            { id: 'penalties',     label: 'Penalties',      desc: 'Fines and disciplinary charges',               icon: Shield,         tone: 'text-rose-600 dark:text-rose-400',       bg: 'bg-rose-500/15',     group: 'Money' },
+            // MONEY
+            { id: 'savings',       label: 'Savings',        desc: 'Contribute and track member savings',          icon: Wallet,         tone: 'text-foreground', bg: 'bg-muted', group: 'Money' },
+            { id: 'loans',         label: 'Loans',          desc: 'Apply, approve and repay group loans',         icon: Landmark,       tone: 'text-foreground', bg: 'bg-muted', group: 'Money' },
+            { id: 'mgr',           label: 'Merry-Go-Round', desc: 'Rotating payouts to members',                  icon: RefreshCw,      tone: 'text-foreground', bg: 'bg-muted', group: 'Money' },
+            { id: 'withdrawals',   label: 'Withdrawals',    desc: 'Request and approve cash-outs',                icon: HandCoins,      tone: 'text-foreground', bg: 'bg-muted', group: 'Money' },
+            { id: 'emergency',     label: 'Emergency Fund', desc: 'Pooled support for member emergencies',        icon: Shield,         tone: 'text-foreground', bg: 'bg-muted', group: 'Money' },
+            { id: 'transactions',  label: 'Transactions',   desc: 'Full ledger of all chama activity',            icon: Receipt,        tone: 'text-foreground', bg: 'bg-muted', group: 'Money' },
+            { id: 'arrears',       label: 'Arrears',        desc: 'Members behind on contributions',              icon: AlertTriangle,  tone: 'text-foreground', bg: 'bg-muted', group: 'Money' },
+            { id: 'penalties',     label: 'Penalties',      desc: 'Fines and disciplinary charges',               icon: Shield,         tone: 'text-foreground', bg: 'bg-muted', group: 'Money' },
 
-            // PEOPLE — communication and coordination
-            { id: 'members',       label: 'Members',        desc: 'Manage roles and member profiles',             icon: Users,          tone: 'text-primary',                           bg: 'bg-primary/15',     group: 'People' },
-            { id: 'chat',          label: 'Group Chat',     desc: 'Talk with all members in real time',           icon: MessageSquare,  tone: 'text-violet-600 dark:text-violet-400',   bg: 'bg-violet-500/15',  group: 'People' },
-            { id: 'announcements', label: 'Notices',        desc: 'Official announcements from leadership',       icon: Megaphone,      tone: 'text-indigo-600 dark:text-indigo-400',   bg: 'bg-indigo-500/15',  group: 'People' },
-            { id: 'meetings',      label: 'Meetings',       desc: 'Schedule and review group meetings',           icon: CalendarDays,   tone: 'text-teal-600 dark:text-teal-400',       bg: 'bg-teal-500/15',    group: 'People' },
-            { id: 'votes',         label: 'Votes',          desc: 'Group decisions and polls',                    icon: Vote,           tone: 'text-fuchsia-600 dark:text-fuchsia-400', bg: 'bg-fuchsia-500/15', group: 'People' },
-            { id: 'support',       label: 'Support',        desc: 'Get help from the DASNET team',                icon: HeadphonesIcon, tone: 'text-sky-600 dark:text-sky-400',         bg: 'bg-sky-500/15',     group: 'People' },
+            // PEOPLE
+            { id: 'members',       label: 'Members',        desc: 'Manage roles and member profiles',             icon: Users,          tone: 'text-foreground', bg: 'bg-muted', group: 'People' },
+            { id: 'chat',          label: 'Group Chat',     desc: 'Talk with all members in real time',           icon: MessageSquare,  tone: 'text-foreground', bg: 'bg-muted', group: 'People' },
+            { id: 'announcements', label: 'Notices',        desc: 'Official announcements from leadership',       icon: Megaphone,      tone: 'text-foreground', bg: 'bg-muted', group: 'People' },
+            { id: 'meetings',      label: 'Meetings',       desc: 'Schedule and review group meetings',           icon: CalendarDays,   tone: 'text-foreground', bg: 'bg-muted', group: 'People' },
+            { id: 'votes',         label: 'Votes',          desc: 'Group decisions and polls',                    icon: Vote,           tone: 'text-foreground', bg: 'bg-muted', group: 'People' },
+            { id: 'support',       label: 'Support',        desc: 'Get help from the DASNET team',                icon: HeadphonesIcon, tone: 'text-foreground', bg: 'bg-muted', group: 'People' },
 
-            // MANAGE — governance & administration, destructive last
-            { id: 'reports',       label: 'Reports',        desc: 'Statements and downloadable reports',          icon: Download,       tone: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/15', group: 'Manage' },
-            { id: 'terms',         label: 'Terms',          desc: 'Constitution and group rules',                 icon: FileText,       tone: 'text-slate-600 dark:text-slate-300',     bg: 'bg-slate-500/15',   group: 'Manage' },
-            ...(isLeader ? [{ id: 'requests',  label: 'Join Requests', desc: 'Review and approve new members',           icon: UserCheck, tone: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-500/15', group: 'Manage' }] : []),
-            ...(isChair  ? [{ id: 'settings',  label: 'Settings',      desc: 'Configure rules, fees and chama profile',  icon: Settings,  tone: 'text-primary',                       bg: 'bg-primary/15',   group: 'Manage' }] : []),
-            { id: 'leave',         label: 'Leave Group',    desc: 'Submit a request to exit this chama',          icon: LogOut,         tone: 'text-destructive',                       bg: 'bg-destructive/15', group: 'Manage' },
+            // MANAGE
+            { id: 'reports',       label: 'Reports',        desc: 'Statements and downloadable reports',          icon: Download,       tone: 'text-foreground', bg: 'bg-muted', group: 'Manage' },
+            { id: 'terms',         label: 'Terms',          desc: 'Constitution and group rules',                 icon: FileText,       tone: 'text-foreground', bg: 'bg-muted', group: 'Manage' },
+            ...(isLeader ? [{ id: 'requests',  label: 'Join Requests', desc: 'Review and approve new members',           icon: UserCheck, tone: 'text-foreground', bg: 'bg-muted', group: 'Manage' }] : []),
+            ...(isChair  ? [{ id: 'settings',  label: 'Settings',      desc: 'Configure rules, fees and chama profile',  icon: Settings,  tone: 'text-foreground', bg: 'bg-muted', group: 'Manage' }] : []),
+            { id: 'leave',         label: 'Leave Group',    desc: 'Submit a request to exit this chama',          icon: LogOut,         tone: 'text-destructive', bg: 'bg-destructive/10', group: 'Manage' },
           ];
           const active = allSections.find(s => s.id === currentSection);
 

@@ -76,41 +76,41 @@ function ActionChip({
   label, count, icon: Icon, urgent, path,
 }: { label: string; count: number; icon: any; urgent?: boolean; path: string }) {
   const navigate = useNavigate();
+  const hasItems = count > 0;
   return (
     <button
       onClick={() => navigate(path)}
       className={cn(
         'flex flex-col gap-2 p-4 rounded-xl border text-left transition-all duration-200',
         'hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98]',
-        count > 0
+        hasItems
           ? urgent
-            ? 'bg-red-50 border-red-200 hover:border-red-400 hover:shadow-red-100'
-            : 'bg-amber-50 border-amber-200 hover:border-amber-400 hover:shadow-amber-100'
-          : 'bg-muted/30 border-border hover:border-slate-300',
+            ? 'bg-card border-destructive/30 hover:border-destructive/60'
+            : 'bg-card border-accent/40 hover:border-accent'
+          : 'bg-muted/30 border-border hover:border-border',
       )}
     >
       <div className={cn(
         'w-8 h-8 rounded-lg flex items-center justify-center',
-        count > 0 ? (urgent ? 'bg-red-100' : 'bg-amber-100') : 'bg-muted',
+        hasItems ? (urgent ? 'bg-destructive/10 text-destructive' : 'bg-accent/10 text-accent') : 'bg-muted text-muted-foreground/40',
       )}>
-        <Icon size={14} className={cn(
-          count > 0 ? (urgent ? 'text-red-600' : 'text-amber-600') : 'text-muted-foreground/50',
-        )} />
+        <Icon size={14} />
       </div>
       <div>
         <p className={cn(
-          'text-xl font-extrabold leading-none tracking-tight',
-          count > 0 ? (urgent ? 'text-red-600' : 'text-amber-600') : 'text-muted-foreground/40',
+          'font-display text-xl font-bold leading-none tracking-tight tabular-nums',
+          hasItems ? (urgent ? 'text-destructive' : 'text-foreground') : 'text-muted-foreground/40',
         )}>
           {count}
         </p>
-        <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground/60 mt-1 leading-tight">
+        <p className="text-[9px] font-bold uppercase tracking-[0.18em] text-muted-foreground mt-1.5 leading-tight">
           {label}
         </p>
       </div>
     </button>
   );
 }
+
 
 function TransactionRow({ sender, receiver, amount, status, time }: {
   sender: string; receiver: string; amount: number; status: string; time: string;
@@ -362,19 +362,20 @@ export function AdminOverviewModule() {
 
       {/* ── Alert banner ───────────────────────────────── */}
       {totalActions > 0 && (
-        <div className="px-4 py-3 rounded-xl flex items-center gap-3 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200">
-          <div className="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
-            <AlertTriangle size={15} className="text-amber-600" />
+        <div className="px-4 py-3 rounded-xl flex items-center gap-3 bg-card border border-accent/30">
+          <div className="w-9 h-9 rounded-xl bg-accent/10 text-accent flex items-center justify-center shrink-0">
+            <AlertTriangle size={15} />
           </div>
           <div className="flex-1">
-            <span className="text-[12px] font-bold text-amber-800">{totalActions} item{totalActions !== 1 ? 's' : ''} pending review</span>
-            <span className="text-[11px] text-amber-600/70 ml-2">KYC · loans · withdrawals · M-Pesa</span>
+            <span className="text-[12px] font-bold text-foreground">{totalActions} item{totalActions !== 1 ? 's' : ''} pending review</span>
+            <span className="text-[11px] text-muted-foreground ml-2">KYC · loans · withdrawals · M-Pesa</span>
           </div>
-          <Button size="sm" className="h-7 text-[11px] shrink-0 bg-amber-500 hover:bg-amber-600 text-white border-0" onClick={() => navigate('/dashboard/admin/kyc')}>
+          <Button size="sm" className="h-7 text-[11px] shrink-0 bg-accent hover:bg-accent/90 text-accent-foreground border-0" onClick={() => navigate('/dashboard/admin/kyc')}>
             Review <ChevronRight size={12} />
           </Button>
         </div>
       )}
+
 
       {/* ── Revenue metrics ─────────────────────────────── */}
       <div className="rounded-2xl border border-border bg-card p-5 sm:p-6 shadow-sm">
