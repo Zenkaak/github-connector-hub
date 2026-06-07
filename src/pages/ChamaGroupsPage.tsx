@@ -112,10 +112,12 @@ export default function ChamaGroupsPage() {
   const { isEnabled } = usePlatformSettings();
   const chamaCreationDisabled = !isEnabled('chama_creation_enabled');
   const [groups, setGroups] = useState<ChamaGroup[]>([]);
+  const [available, setAvailable] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newGroup, setNewGroup] = useState({ name: '', description: '' });
+  const [myRequests, setMyRequests] = useState<Record<string, string>>({});
 
   const fetchGroups = async () => {
     if (!user) return;
