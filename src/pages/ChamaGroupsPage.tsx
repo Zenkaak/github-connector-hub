@@ -112,10 +112,12 @@ export default function ChamaGroupsPage() {
   const { isEnabled } = usePlatformSettings();
   const chamaCreationDisabled = !isEnabled('chama_creation_enabled');
   const [groups, setGroups] = useState<ChamaGroup[]>([]);
+  const [available, setAvailable] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [newGroup, setNewGroup] = useState({ name: '', description: '' });
+  const [myRequests, setMyRequests] = useState<Record<string, string>>({});
 
   const fetchGroups = async () => {
     if (!user) return;
@@ -168,7 +170,65 @@ export default function ChamaGroupsPage() {
     }
   };
 
-  useEffect(() => { fetchGroups(); }, [user]);
+  const fetchAvailable = async (joinedIds: string[]) => {
+    if (!user) return;
+    const { data: allGroups } = await supabase
+      .from('chama_groups')
+      .select('id, name, description, contribution_amount, contribution_frequency, joining_fee, profile_image_url')
+      .order('created_at', { ascending: false })
+      .limit(20);
+    if (!allGroups) { setAvailable([]); return; }
+    const open = allGroups.filter((g: any) => !joinedIds.includes(g.id));
+    const enriched = await Promise.all(
+      open.map(async (g: any) => {
+        const { count } = await supabase
+          .from('chama_members')
+          .select('id', { count: 'exact', head: true })
+          .eq('group_id', g.id)
+          .eq('is_active', true);
+        return { ...g, member_count: count || 0 };
+      })
+    );
+    setAvailable(enriched.slice(0, 6));
+
+    const { data: reqs } = await supabase
+      .from('chama_join_requests')
+      .select('group_id, status')
+      .eq('user_id', user.id);
+    const map: Record<string, string> = {};
+    (reqs || []).forEach((r: any) => { map[r.group_id] = r.status; });
+    setMyRequests(map);
+  };
+
+  useEffect(() => {
+    (async () => {
+      await fetchGroups();
+    })();
+  }, [user]);
+
+  useEffect(() => {
+    if (!loading) fetchAvailable(groups.map(g => g.id));
+  }, [loading, groups.length]);
+
+  const handleJoinRequest = async (groupId: string) => {
+    if (!user) return;
+    if (groups.length >= 3) {
+      toast({ title: 'Limit Reached', description: 'You can only join a maximum of 3 Chama groups.', variant: 'destructive' });
+      return;
+    }
+    try {
+      const { error } = await supabase.from('chama_join_requests').insert({
+        group_id: groupId,
+        user_id: user.id,
+      } as any);
+      if (error) throw error;
+      setMyRequests(prev => ({ ...prev, [groupId]: 'pending' }));
+      toast({ title: 'Request Sent', description: 'Group leaders will review your request.' });
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    }
+  };
+
 
   const totals = useMemo(() => ({
     pool:    groups.reduce((a, g) => a + g.group_pool, 0),
@@ -401,22 +461,84 @@ export default function ChamaGroupsPage() {
               </motion.div>
             ))}
 
-            {/* "Add another" tile if under limit */}
-            {groups.length < 3 && (
-              <button
-                type="button"
-                onClick={() => setDialogOpen(true)}
-                className="rounded-2xl border-2 border-dashed border-border/70 hover:border-accent/50
-                           hover:bg-accent/5 transition-colors min-h-[180px] flex flex-col items-center
-                           justify-center gap-2 text-muted-foreground hover:text-accent"
-              >
-                <div className="w-11 h-11 rounded-xl bg-muted flex items-center justify-center">
-                  <Plus size={20} />
-                </div>
-                <span className="text-sm font-semibold">Create another Chama</span>
-                <span className="text-[11px]">{3 - groups.length} slot{3 - groups.length === 1 ? '' : 's'} left</span>
-              </button>
-            )}
+          </div>
+        )}
+
+        {/* Discover other chamas to join */}
+        {!loading && groups.length < 3 && available.length > 0 && (
+          <div className="space-y-3 pt-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg lg:text-xl font-display font-bold tracking-tight">
+                  Chamas you can join
+                </h2>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Browse active groups looking for members. {3 - groups.length} slot{3 - groups.length === 1 ? '' : 's'} left on your account.
+                </p>
+              </div>
+              <Link to="/dashboard/chama/explore">
+                <Button variant="ghost" size="sm" className="gap-1 text-accent hover:text-accent">
+                  See all <ChevronRight size={14} />
+                </Button>
+              </Link>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-3">
+              {available.map((g) => {
+                const status = myRequests[g.id];
+                return (
+                  <Card key={g.id} className="rounded-2xl p-4 border border-border/60 hover:border-accent/40 transition-colors">
+                    <div className="flex items-start gap-3">
+                      {g.profile_image_url ? (
+                        <img src={g.profile_image_url} alt={g.name} className="w-11 h-11 rounded-xl object-cover ring-1 ring-border" />
+                      ) : (
+                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary/15 to-accent/15 flex items-center justify-center text-primary font-display font-bold text-sm">
+                          {initials(g.name)}
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <h3 className="font-display font-bold text-[15px] leading-tight truncate">{g.name}</h3>
+                        {g.description && (
+                          <p className="text-[11px] text-muted-foreground line-clamp-1 mt-0.5">{g.description}</p>
+                        )}
+                        <div className="flex items-center gap-3 mt-1.5 text-[11px] text-muted-foreground">
+                          <span className="inline-flex items-center gap-1"><Users size={11} /> {g.member_count}</span>
+                          {g.contribution_amount > 0 && (
+                            <span className="inline-flex items-center gap-1"><Coins size={11} className="text-accent" /> {KES(g.contribution_amount)} / {g.contribution_frequency}</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between gap-2">
+                      <span className="text-[11px] text-muted-foreground">
+                        {g.joining_fee > 0 ? `Joining fee: ${KES(g.joining_fee)}` : 'Free to join'}
+                      </span>
+                      {status === 'pending' ? (
+                        <span className="text-[11px] px-2.5 py-1 rounded-full bg-yellow-500/10 text-yellow-600 font-semibold">Pending</span>
+                      ) : status === 'approved' ? (
+                        <Link to="/dashboard/chama/explore">
+                          <Button size="sm" className="h-8 rounded-lg text-[12px]">Pay & Join</Button>
+                        </Link>
+                      ) : status === 'rejected' ? (
+                        <span className="text-[11px] px-2.5 py-1 rounded-full bg-destructive/10 text-destructive font-semibold">Rejected</span>
+                      ) : (
+                        <Button size="sm" className="h-8 rounded-lg text-[12px] gap-1" onClick={() => handleJoinRequest(g.id)}>
+                          <Plus size={12} /> Join
+                        </Button>
+                      )}
+                    </div>
+                  </Card>
+                );
+              })}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setDialogOpen(true)}
+              className="w-full rounded-2xl border-2 border-dashed border-border/70 hover:border-accent/50 hover:bg-accent/5 transition-colors py-4 flex items-center justify-center gap-2 text-sm font-semibold text-muted-foreground hover:text-accent"
+            >
+              <Plus size={16} /> Or create your own Chama
+            </button>
           </div>
         )}
       </div>
