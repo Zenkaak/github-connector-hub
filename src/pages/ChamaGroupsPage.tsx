@@ -170,7 +170,65 @@ export default function ChamaGroupsPage() {
     }
   };
 
-  useEffect(() => { fetchGroups(); }, [user]);
+  const fetchAvailable = async (joinedIds: string[]) => {
+    if (!user) return;
+    const { data: allGroups } = await supabase
+      .from('chama_groups')
+      .select('id, name, description, contribution_amount, contribution_frequency, joining_fee, profile_image_url')
+      .order('created_at', { ascending: false })
+      .limit(20);
+    if (!allGroups) { setAvailable([]); return; }
+    const open = allGroups.filter((g: any) => !joinedIds.includes(g.id));
+    const enriched = await Promise.all(
+      open.map(async (g: any) => {
+        const { count } = await supabase
+          .from('chama_members')
+          .select('id', { count: 'exact', head: true })
+          .eq('group_id', g.id)
+          .eq('is_active', true);
+        return { ...g, member_count: count || 0 };
+      })
+    );
+    setAvailable(enriched.slice(0, 6));
+
+    const { data: reqs } = await supabase
+      .from('chama_join_requests')
+      .select('group_id, status')
+      .eq('user_id', user.id);
+    const map: Record<string, string> = {};
+    (reqs || []).forEach((r: any) => { map[r.group_id] = r.status; });
+    setMyRequests(map);
+  };
+
+  useEffect(() => {
+    (async () => {
+      await fetchGroups();
+    })();
+  }, [user]);
+
+  useEffect(() => {
+    if (!loading) fetchAvailable(groups.map(g => g.id));
+  }, [loading, groups.length]);
+
+  const handleJoinRequest = async (groupId: string) => {
+    if (!user) return;
+    if (groups.length >= 3) {
+      toast({ title: 'Limit Reached', description: 'You can only join a maximum of 3 Chama groups.', variant: 'destructive' });
+      return;
+    }
+    try {
+      const { error } = await supabase.from('chama_join_requests').insert({
+        group_id: groupId,
+        user_id: user.id,
+      } as any);
+      if (error) throw error;
+      setMyRequests(prev => ({ ...prev, [groupId]: 'pending' }));
+      toast({ title: 'Request Sent', description: 'Group leaders will review your request.' });
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+    }
+  };
+
 
   const totals = useMemo(() => ({
     pool:    groups.reduce((a, g) => a + g.group_pool, 0),
