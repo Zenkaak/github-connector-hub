@@ -86,6 +86,20 @@
     --gold-500: 40 92% 50%;
     --gold-600: 38 92% 42%;
 
+    /* Ocean Deep Teal Accent */
+    --teal-50: 184 55% 95%;
+    --teal-100: 184 55% 85%;
+    --teal-200: 184 50% 72%;
+    --teal-300: 184 45% 56%;
+    --teal-400: 191 55% 40%;
+    --teal-500: 191 55% 34%;
+    --teal-600: 200 55% 26%;
+    --teal-700: 208 60% 20%;
+    --ocean-deep: 212 60% 15%;
+    --ocean-mid: 205 58% 27%;
+    --ocean-teal: 191 55% 40%;
+    --ocean-mist: 184 45% 55%;
+
     /* Premium Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(213 72% 14%) 0%, hsl(213 72% 22%) 50%, hsl(213 60% 28%) 100%);
     --gradient-accent: linear-gradient(135deg, hsl(42 92% 56%) 0%, hsl(40 92% 50%) 100%);
