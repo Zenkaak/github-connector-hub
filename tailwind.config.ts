@@ -95,6 +95,22 @@ export default {
           500: "hsl(var(--gold-500))",
           600: "hsl(var(--gold-600))",
         },
+        teal: {
+          50: "hsl(var(--teal-50))",
+          100: "hsl(var(--teal-100))",
+          200: "hsl(var(--teal-200))",
+          300: "hsl(var(--teal-300))",
+          400: "hsl(var(--teal-400))",
+          500: "hsl(var(--teal-500))",
+          600: "hsl(var(--teal-600))",
+          700: "hsl(var(--teal-700))",
+        },
+        ocean: {
+          deep: "hsl(var(--ocean-deep))",
+          mid: "hsl(var(--ocean-mid))",
+          teal: "hsl(var(--ocean-teal))",
+          mist: "hsl(var(--ocean-mist))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
