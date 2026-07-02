@@ -352,12 +352,12 @@ export default function Index() {
           <motion.div
             variants={fadeUp}
             custom={0}
-            className="inline-flex items-center gap-2 pl-1.5 pr-3.5 py-1 rounded-full bg-white/[0.04] border border-white/[0.07] text-[12px] mb-7"
+            className="inline-flex items-center gap-2 pl-1.5 pr-3.5 py-1 rounded-full bg-[hsl(191_55%_40%_/_0.10)] border border-[hsl(191_65%_55%_/_0.22)] text-[12px] mb-7 backdrop-blur-sm"
           >
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent/15 text-accent text-[10px] font-bold uppercase tracking-wider">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[hsl(184_65%_55%)]/20 text-[hsl(184_75%_72%)] text-[10px] font-bold uppercase tracking-wider">
               <Sparkles size={9} /> New
             </span>
-            <span className="text-white/70">All-in-one Chama, Wallet, Loans &amp; Harambee</span>
+            <span className="text-white/75">All-in-one Chama, Wallet, Loans &amp; Harambee</span>
           </motion.div>
 
           <motion.h1
@@ -367,7 +367,7 @@ export default function Index() {
           >
             Save smarter.
             <br />
-            <span className="text-accent">Grow together.</span>
+            <span className="bg-gradient-to-r from-[hsl(184_75%_72%)] via-[hsl(191_65%_55%)] to-[hsl(42_92%_60%)] bg-clip-text text-transparent">Grow together.</span>
           </motion.h1>
 
           <motion.p
