@@ -196,13 +196,13 @@ export default function AuthPage() {
   return (
     <div className="min-h-screen flex">
       {/* Left brand panel */}
-      <div className="hidden lg:flex lg:w-[45%] hero-gradient relative overflow-hidden flex-col justify-between p-10">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_hsl(42_92%_56%_/_0.1),_transparent_50%)]" />
+      <div className="hidden lg:flex lg:w-[45%] bg-gradient-to-br from-[hsl(212_65%_10%)] via-[hsl(205_58%_18%)] to-[hsl(191_55%_24%)] relative overflow-hidden flex-col justify-between p-10">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_hsl(184_65%_55%_/_0.14),_transparent_50%)]" />
         <div className="relative z-10"><Link to="/"><Logo variant="white" size="lg" /></Link></div>
         <div className="relative z-10 space-y-6">
           <h2 className="font-display text-3xl font-bold text-white leading-tight">
             Welcome back to<br />
-            <span className="bg-gradient-to-r from-accent to-gold-300 bg-clip-text text-transparent">DASNET VENTURES</span>
+            <span className="bg-gradient-to-r from-[hsl(184_75%_72%)] via-[hsl(191_65%_58%)] to-[hsl(42_92%_60%)] bg-clip-text text-transparent">DASNET VENTURES</span>
           </h2>
           <p className="text-white/50 leading-relaxed max-w-sm">
             Sign in with your password or a one-time code sent by SMS and email.
