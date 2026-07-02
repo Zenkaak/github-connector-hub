@@ -344,10 +344,10 @@ export default function ChamaGroupDetailPage() {
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-3">
 
           {/* Hero card — dark navy with subtle aurora */}
-          <div className="relative overflow-hidden rounded-3xl bg-[#0d1f3d] text-white shadow-[0_20px_60px_-25px_rgba(13,31,61,0.55)]">
-            <div aria-hidden className="absolute -top-32 -right-24 w-[420px] h-[420px] rounded-full bg-accent/25 blur-[120px] pointer-events-none" />
-            <div aria-hidden className="absolute -bottom-40 -left-32 w-[420px] h-[420px] rounded-full bg-emerald-400/15 blur-[120px] pointer-events-none" />
-            <div aria-hidden className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(255,255,255,0.08),_transparent_60%)] pointer-events-none" />
+          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[hsl(212_65%_10%)] via-[hsl(205_58%_16%)] to-[hsl(191_55%_22%)] text-white shadow-[0_20px_60px_-25px_hsl(191_60%_20%_/_0.6)]">
+            <div aria-hidden className="absolute -top-32 -right-24 w-[420px] h-[420px] rounded-full bg-[hsl(184_65%_55%)]/25 blur-[120px] pointer-events-none" />
+            <div aria-hidden className="absolute -bottom-40 -left-32 w-[420px] h-[420px] rounded-full bg-[hsl(42_92%_60%)]/12 blur-[120px] pointer-events-none" />
+            <div aria-hidden className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_hsl(184_75%_75%_/_0.10),_transparent_60%)] pointer-events-none" />
 
             <div className="relative p-5 sm:p-7">
               <div className="flex items-start justify-between gap-3">
