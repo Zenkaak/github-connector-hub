@@ -85,6 +85,7 @@ function AppRoutes() {
     <Routes>
       {/* PUBLIC */}
       <Route path="/" element={<Index />} />
+      <Route path="/index" element={<Navigate to="/" replace />} />
       <Route path="/auth" element={<AuthPage />} />
       <Route path="/signup" element={<SignupPage />} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
