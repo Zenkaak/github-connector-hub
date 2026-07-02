@@ -595,7 +595,7 @@ export default function Index() {
                 transition={{ delay: i * 0.05 }}
                 className="group p-5 sm:p-6 rounded-2xl bg-white/[0.015] border border-white/[0.05] hover:bg-white/[0.03] hover:border-white/[0.1] transition-all duration-300"
               >
-                <div className="w-10 h-10 rounded-xl bg-[hsl(218,55%,12%)] border border-white/[0.08] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-inner">
+                <div className="w-10 h-10 rounded-xl bg-[hsl(208,55%,14%)] border border-white/[0.08] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-inner">
                   <feature.icon size={18} className="text-accent" />
                 </div>
                 <h3 className="text-[15px] font-semibold text-white mb-2 tracking-[-0.01em]">{feature.title}</h3>
@@ -653,7 +653,7 @@ export default function Index() {
                 <Link to={`/signup`} className="block group h-full">
                   <div className="p-5 sm:p-6 rounded-xl bg-white/[0.02] border border-white/[0.06] group-hover:border-white/[0.15] group-hover:bg-white/[0.04] transition-all duration-300 flex flex-col h-full">
                     <div className="flex justify-between items-start mb-4">
-                      <div className="w-12 h-12 rounded-xl bg-[hsl(218,55%,12%)] border border-white/[0.08] flex items-center justify-center shrink-0">
+                      <div className="w-12 h-12 rounded-xl bg-[hsl(208,55%,14%)] border border-white/[0.08] flex items-center justify-center shrink-0">
                         <Users size={20} className="text-white/70" />
                       </div>
                       <div className="flex flex-col items-end">
