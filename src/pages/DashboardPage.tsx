@@ -303,7 +303,7 @@ export default function DashboardPage() {
             transition={{ delay: 0.1 }}
             className="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary via-primary/90 to-primary/80 p-3"
           >
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_right,_hsl(42_92%_56%_/_0.15),_transparent_60%)]" />
+            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_right,_hsl(184_65%_55%_/_0.18),_transparent_60%)]" />
             <div className="absolute inset-0 grid-pattern opacity-[0.02]" />
             <div className="relative z-10 flex items-center justify-between gap-2">
               <div className="flex items-center gap-2 min-w-0">
@@ -366,7 +366,7 @@ export default function DashboardPage() {
           <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22 }}>
             <Card className="border-border/50 overflow-hidden">
               <div className="relative p-3 bg-gradient-to-r from-primary via-primary/90 to-primary/80">
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_right,_hsl(42_92%_56%_/_0.15),_transparent_60%)]" />
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_right,_hsl(184_65%_55%_/_0.18),_transparent_60%)]" />
                 <div className="relative z-10 flex items-center justify-between gap-2">
                   <div>
                     <p className="text-[10px] text-white/60 uppercase tracking-wider">Wallet Balance</p>
