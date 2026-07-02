@@ -240,12 +240,12 @@ export default function Index() {
   };
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[hsl(218,42%,13%)] antialiased text-white/90 selection:bg-accent/25 selection:text-white">
+    <div className="min-h-screen overflow-x-hidden bg-[hsl(212,55%,14%)] antialiased text-white/90 selection:bg-accent/25 selection:text-white">
 
       {/* ───── HEADER ───── */}
       <header className="fixed top-0 left-0 right-0 z-50">
         {/* Top contact strip */}
-        <div className="hidden md:block bg-[hsl(218,55%,4%)]/95 backdrop-blur-xl border-b border-white/[0.05]">
+        <div className="hidden md:block bg-[hsl(212,65%,6%)]/95 backdrop-blur-xl border-b border-white/[0.05]">
           <div className="max-w-6xl mx-auto px-6 flex items-center justify-between text-[11px] text-white/60 h-9">
             <div className="flex items-center gap-5">
               <span className="flex items-center gap-1.5"><Phone size={11} className="text-accent" /> +254 700 000 000</span>
@@ -262,7 +262,7 @@ export default function Index() {
         </div>
 
         <div className="mx-3 sm:mx-6 mt-3 sm:mt-3">
-          <div className="rounded-2xl sm:rounded-full bg-[hsl(218,55%,8%)]/85 backdrop-blur-xl border border-white/[0.06] shadow-[0_4px_24px_-8px_rgba(0,0,0,0.4)] max-w-6xl mx-auto">
+          <div className="rounded-2xl sm:rounded-full bg-[hsl(212,60%,10%)]/85 backdrop-blur-xl border border-white/[0.06] shadow-[0_4px_24px_-8px_rgba(0,0,0,0.4)] max-w-6xl mx-auto">
             <div className="flex items-center justify-between h-[56px] sm:h-[60px] pl-4 pr-2.5 sm:pl-6 sm:pr-3">
               <div className="flex items-center gap-2.5">
                 <Logo size="md" variant="white" />
@@ -314,7 +314,7 @@ export default function Index() {
               transition={{ duration: 0.18 }}
               className="md:hidden mx-3 mt-2"
             >
-              <div className="rounded-2xl bg-[hsl(218,55%,8%)]/95 backdrop-blur-xl border border-white/[0.06] p-2 space-y-0.5 shadow-2xl shadow-black/40">
+              <div className="rounded-2xl bg-[hsl(212,60%,10%)]/95 backdrop-blur-xl border border-white/[0.06] p-2 space-y-0.5 shadow-2xl shadow-black/40">
                 {navLinks.map(link => (
                   <a
                     key={link.href}
@@ -343,21 +343,21 @@ export default function Index() {
         </AnimatePresence>
       </header>
             {/* ───── HERO ───── */}
-      <section className="relative pt-28 pb-20 sm:pt-36 sm:pb-28 md:pt-52 md:pb-36 px-4 overflow-hidden bg-[hsl(218,45%,12%)]">
+      <section className="relative pt-28 pb-20 sm:pt-36 sm:pb-28 md:pt-52 md:pb-36 px-4 overflow-hidden bg-[hsl(212,55%,15%)]">
         <div className="absolute inset-0" style={{ backgroundImage: `url(${bgHero})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-        <div className="absolute inset-0 bg-gradient-to-b from-[hsl(218,45%,8%)]/85 via-[hsl(218,45%,9%)]/75 to-[hsl(218,45%,6%)]/95" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_0%,_hsl(42_88%_55%_/_0.12),_transparent_70%)]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[hsl(212,60%,11%)]/85 via-[hsl(212,58%,13%)]/75 to-[hsl(212,62%,8%)]/95" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_0%,_hsl(191_65%_50%_/_0.16),_transparent_70%)]" />
         
         <motion.div className="container max-w-4xl text-center relative z-10" initial="hidden" animate="visible" variants={stagger}>
           <motion.div
             variants={fadeUp}
             custom={0}
-            className="inline-flex items-center gap-2 pl-1.5 pr-3.5 py-1 rounded-full bg-white/[0.04] border border-white/[0.07] text-[12px] mb-7"
+            className="inline-flex items-center gap-2 pl-1.5 pr-3.5 py-1 rounded-full bg-[hsl(191_55%_40%_/_0.10)] border border-[hsl(191_65%_55%_/_0.22)] text-[12px] mb-7 backdrop-blur-sm"
           >
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent/15 text-accent text-[10px] font-bold uppercase tracking-wider">
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-[hsl(184_65%_55%)]/20 text-[hsl(184_75%_72%)] text-[10px] font-bold uppercase tracking-wider">
               <Sparkles size={9} /> New
             </span>
-            <span className="text-white/70">All-in-one Chama, Wallet, Loans &amp; Harambee</span>
+            <span className="text-white/75">All-in-one Chama, Wallet, Loans &amp; Harambee</span>
           </motion.div>
 
           <motion.h1
@@ -367,7 +367,7 @@ export default function Index() {
           >
             Save smarter.
             <br />
-            <span className="text-accent">Grow together.</span>
+            <span className="bg-gradient-to-r from-[hsl(184_75%_72%)] via-[hsl(191_65%_55%)] to-[hsl(42_92%_60%)] bg-clip-text text-transparent">Grow together.</span>
           </motion.h1>
 
           <motion.p
@@ -439,7 +439,7 @@ export default function Index() {
       </section>
 
       {/* ───── TRUST BAR ───── */}
-      <section className="py-7 sm:py-8 px-4 bg-[hsl(218,42%,11%)] border-y border-white/[0.04]">
+      <section className="py-7 sm:py-8 px-4 bg-[hsl(210,52%,13%)] border-y border-white/[0.04]">
         <div className="container max-w-5xl">
           <div className="flex flex-wrap items-center justify-center gap-x-8 sm:gap-x-12 gap-y-3">
             {trustBadges.map((badge, i) => (
@@ -458,7 +458,7 @@ export default function Index() {
       {/* ───── ACTIVE HARAMBEES ───── */}
       <section className="py-16 sm:py-24 px-4 relative">
         <div className="absolute inset-0" style={{ backgroundImage: `url(${bgHarambee})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-        <div className="absolute inset-0 bg-gradient-to-b from-[hsl(218,42%,15%)]/95 via-[hsl(218,42%,15%)]/90 to-[hsl(218,42%,15%)]/95" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[hsl(208,50%,17%)]/95 via-[hsl(208,50%,17%)]/90 to-[hsl(208,50%,17%)]/95" />
         <div className="container max-w-6xl relative z-10">
           <motion.div
             className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10 sm:mb-12"
@@ -569,7 +569,7 @@ export default function Index() {
       </section>
 
       {/* ───── PLATFORM FEATURES ───── */}
-      <section id="features" className="py-20 sm:py-28 px-4 border-t border-white/[0.04] bg-[hsl(218,42%,13%)]">
+      <section id="features" className="py-20 sm:py-28 px-4 border-t border-white/[0.04] bg-[hsl(212,55%,14%)]">
         <div className="container max-w-6xl">
           <motion.div
             className="text-center max-w-2xl mx-auto mb-16 sm:mb-20"
@@ -595,7 +595,7 @@ export default function Index() {
                 transition={{ delay: i * 0.05 }}
                 className="group p-5 sm:p-6 rounded-2xl bg-white/[0.015] border border-white/[0.05] hover:bg-white/[0.03] hover:border-white/[0.1] transition-all duration-300"
               >
-                <div className="w-10 h-10 rounded-xl bg-[hsl(218,55%,12%)] border border-white/[0.08] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-inner">
+                <div className="w-10 h-10 rounded-xl bg-[hsl(208,55%,14%)] border border-white/[0.08] flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300 shadow-inner">
                   <feature.icon size={18} className="text-accent" />
                 </div>
                 <h3 className="text-[15px] font-semibold text-white mb-2 tracking-[-0.01em]">{feature.title}</h3>
@@ -608,7 +608,7 @@ export default function Index() {
             {/* ───── PUBLIC CHAMAS ───── */}
       <section className="py-16 sm:py-24 px-4 relative">
         <div className="absolute inset-0" style={{ backgroundImage: `url(${bgChama})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-        <div className="absolute inset-0 bg-gradient-to-b from-[hsl(218,42%,13%)]/95 via-[hsl(218,42%,13%)]/90 to-[hsl(218,42%,13%)]/95" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[hsl(212,55%,14%)]/95 via-[hsl(212,55%,14%)]/90 to-[hsl(212,55%,14%)]/95" />
         <div className="container max-w-6xl relative z-10">
           <motion.div
             className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-10 sm:mb-12"
@@ -653,7 +653,7 @@ export default function Index() {
                 <Link to={`/signup`} className="block group h-full">
                   <div className="p-5 sm:p-6 rounded-xl bg-white/[0.02] border border-white/[0.06] group-hover:border-white/[0.15] group-hover:bg-white/[0.04] transition-all duration-300 flex flex-col h-full">
                     <div className="flex justify-between items-start mb-4">
-                      <div className="w-12 h-12 rounded-xl bg-[hsl(218,55%,12%)] border border-white/[0.08] flex items-center justify-center shrink-0">
+                      <div className="w-12 h-12 rounded-xl bg-[hsl(208,55%,14%)] border border-white/[0.08] flex items-center justify-center shrink-0">
                         <Users size={20} className="text-white/70" />
                       </div>
                       <div className="flex flex-col items-end">
@@ -705,7 +705,7 @@ export default function Index() {
       {/* ───── WALLET ───── */}
       <section id="wallet" className="py-20 sm:py-28 px-4 border-t border-white/[0.04] relative">
         <div className="absolute inset-0" style={{ backgroundImage: `url(${bgWallet})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-        <div className="absolute inset-0 bg-gradient-to-b from-[hsl(218,42%,13%)]/95 via-[hsl(218,42%,13%)]/90 to-[hsl(218,42%,13%)]/95" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[hsl(212,55%,14%)]/95 via-[hsl(212,55%,14%)]/90 to-[hsl(212,55%,14%)]/95" />
         <div className="container max-w-6xl relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 lg:gap-24 items-center">
             <motion.div
@@ -753,7 +753,7 @@ export default function Index() {
               className="relative"
             >
               <div className="absolute inset-0 bg-accent/20 blur-[100px] rounded-full" />
-              <div className="relative rounded-3xl bg-[hsl(218,55%,8%)] border border-white/[0.08] shadow-2xl p-6 sm:p-8 overflow-hidden">
+              <div className="relative rounded-3xl bg-[hsl(212,60%,10%)] border border-white/[0.08] shadow-2xl p-6 sm:p-8 overflow-hidden">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-accent/5 rounded-full blur-[60px] -translate-y-1/2 translate-x-1/2" />
                 
                 <div className="flex items-center justify-between mb-8">
@@ -820,7 +820,7 @@ export default function Index() {
       {/* ───── LOANS ───── */}
       <section id="loans" className="py-20 sm:py-28 px-4 relative border-t border-white/[0.04]">
         <div className="absolute inset-0" style={{ backgroundImage: `url(${bgLoans})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-        <div className="absolute inset-0 bg-gradient-to-b from-[hsl(218,42%,11%)]/95 via-[hsl(218,42%,11%)]/90 to-[hsl(218,42%,11%)]/95" />
+        <div className="absolute inset-0 bg-gradient-to-b from-[hsl(210,52%,13%)]/95 via-[hsl(210,52%,13%)]/90 to-[hsl(210,52%,13%)]/95" />
         <div className="container max-w-5xl relative z-10">
           <motion.div
             className="text-center max-w-2xl mx-auto mb-16"
@@ -879,7 +879,7 @@ export default function Index() {
             {/* ───── SECURITY ───── */}
       <section className="py-20 sm:py-28 px-4 relative border-t border-white/[0.04]">
         <div className="absolute inset-0" style={{ backgroundImage: `url(${bgSecurity})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
-        <div className="absolute inset-0 bg-[hsl(218,42%,13%)]/95" />
+        <div className="absolute inset-0 bg-[hsl(212,55%,14%)]/95" />
         <div className="container max-w-5xl relative z-10">
           <motion.div
             className="text-center max-w-2xl mx-auto mb-16"
@@ -915,7 +915,7 @@ export default function Index() {
         </div>
       </section>
             {/* ───── HOW IT WORKS ───── */}
-      <section id="how-it-works" className="py-20 sm:py-28 px-4 border-t border-white/[0.04] bg-[hsl(218,42%,15%)]">
+      <section id="how-it-works" className="py-20 sm:py-28 px-4 border-t border-white/[0.04] bg-[hsl(208,50%,17%)]">
         <div className="container max-w-4xl">
           <motion.div
             className="text-center mb-16 sm:mb-20"
@@ -971,7 +971,7 @@ export default function Index() {
       </section>
 
       {/* ───── TESTIMONIALS ───── */}
-      <section className="py-20 sm:py-28 px-4 border-t border-white/[0.04] bg-[hsl(218,42%,13%)]">
+      <section className="py-20 sm:py-28 px-4 border-t border-white/[0.04] bg-[hsl(212,55%,14%)]">
         <div className="container max-w-6xl">
           <motion.div
             className="text-center max-w-2xl mx-auto mb-14"
@@ -1019,7 +1019,7 @@ export default function Index() {
         </div>
       </section>
             {/* ───── FAQ ───── */}
-      <section id="faq" className="py-20 sm:py-28 px-4 border-t border-white/[0.04] bg-[hsl(218,42%,11%)]">
+      <section id="faq" className="py-20 sm:py-28 px-4 border-t border-white/[0.04] bg-[hsl(210,52%,13%)]">
         <div className="container max-w-3xl">
           <motion.div
             className="text-center mb-12 sm:mb-16"
@@ -1076,7 +1076,7 @@ export default function Index() {
       </section>
 
       {/* ───── DOWNLOAD APP ───── */}
-      <section id="download" className="py-20 sm:py-28 px-4 border-t border-white/[0.04] bg-[hsl(218,42%,15%)] relative overflow-hidden">
+      <section id="download" className="py-20 sm:py-28 px-4 border-t border-white/[0.04] bg-[hsl(208,50%,17%)] relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_70%_50%,_hsl(42_88%_55%_/_0.07),_transparent_60%)]" />
         <div className="container max-w-5xl relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -1131,7 +1131,7 @@ export default function Index() {
         </div>
       </section>
             {/* ───── CTA FOOTER ───── */}
-      <section className="py-24 sm:py-32 px-4 border-t border-white/[0.04] bg-[hsl(218,42%,13%)] relative overflow-hidden">
+      <section className="py-24 sm:py-32 px-4 border-t border-white/[0.04] bg-[hsl(212,55%,14%)] relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_100%,_hsl(42_88%_55%_/_0.08),_transparent_60%)]" />
         <div className="container max-w-4xl text-center relative z-10">
           <h2 className="font-display text-[2rem] sm:text-[3rem] font-semibold mb-6 text-white tracking-[-0.02em] leading-[1.05]">
@@ -1156,7 +1156,7 @@ export default function Index() {
       </section>
 
       {/* ───── FOOTER ───── */}
-      <footer className="border-t border-white/[0.06] bg-[hsl(218,55%,4%)] pt-16 pb-8 px-4">
+      <footer className="border-t border-white/[0.06] bg-[hsl(212,65%,6%)] pt-16 pb-8 px-4">
         <div className="container max-w-6xl">
           <div className="grid grid-cols-2 md:grid-cols-5 gap-y-12 gap-x-8 mb-16">
             <div className="col-span-2">
